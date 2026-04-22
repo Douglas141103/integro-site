@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Parceiro | INTEGRO</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="dashboard-body">
+  <header class="topbar">
+    <div class="topbar-left">
+      <img src="../logo-whatsapp.png" alt="Ícone do INTEGRO" class="brand-mark small" />
+      <div>
+        <div class="eyebrow">Portal do Parceiro</div>
+        <h1 class="topbar-title">INTEGRO</h1>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div id="user-chip" class="user-chip">Carregando...</div>
+      <button id="logout-button" class="btn btn-light" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="dashboard-shell">
+    <section class="hero-banner">
+      <div>
+        <p class="eyebrow">Assessoramento pedagógico</p>
+        <h2 id="school-name">Escola parceira</h2>
+        <p id="welcome-copy" class="muted">Carregando informações da escola...</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#materials">Ver materiais</a>
+        <a class="btn btn-light" href="#announcements">Ver comunicados</a>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">Perfil</span>
+        <strong id="profile-role">—</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Materiais disponíveis</span>
+        <strong id="materials-count">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Comunicados ativos</span>
+        <strong id="announcements-count">0</strong>
+      </article>
+    </section>
+
+    <section id="admin-box" class="admin-box hidden">
+      <h3>Área do INTEGRO</h3>
+      <p>Você está com perfil administrativo. Use o Supabase para cadastrar novos parceiros, escolas e materiais. O passo a passo está no arquivo README do pacote.</p>
+    </section>
+
+    <div class="content-grid">
+      <section id="materials" class="content-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Biblioteca</p>
+            <h3>Materiais disponíveis</h3>
+          </div>
+        </div>
+        <div id="materials-list" class="cards-list"></div>
+      </section>
+
+      <section id="announcements" class="content-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Comunicação</p>
+            <h3>Comunicados</h3>
+          </div>
+        </div>
+        <div id="announcements-list" class="cards-list"></div>
+      </section>
+    </div>
+
+    <div id="dashboard-feedback" class="feedback"></div>
+  </main>
+
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
