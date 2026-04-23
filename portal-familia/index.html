@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal da Família | INTEGRO</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="auth-body family-theme">
+  <main class="auth-shell family-shell">
+    <section class="auth-card">
+      <div class="brand-row">
+        <img src="../logo-whatsapp.png" alt="Ícone do INTEGRO" class="brand-mark" />
+        <div>
+          <div class="eyebrow">Portal da Família</div>
+          <h1>INTEGRO</h1>
+          <p class="muted">Acompanhe o plano de estudos, materiais, evolução e comunicados do estudante.</p>
+        </div>
+      </div>
+
+      <div id="config-warning" class="warning hidden">
+        Falta configurar o arquivo <strong>portal/config.js</strong> do portal principal. Este portal reutiliza a mesma configuração do Supabase.
+      </div>
+
+      <form id="login-form" class="form-stack">
+        <label>
+          <span>E-mail do responsável</span>
+          <input id="email" name="email" type="email" placeholder="responsavel@familia.com" required />
+        </label>
+
+        <label>
+          <span>Senha</span>
+          <input id="password" name="password" type="password" placeholder="••••••••" required />
+        </label>
+
+        <button id="login-button" type="submit" class="btn btn-primary btn-block">Entrar</button>
+      </form>
+
+      <div class="auth-actions">
+        <button id="forgot-password" class="btn btn-light" type="button">Esqueci minha senha</button>
+      </div>
+
+      <p class="fine-print">O acesso é individual e restrito aos responsáveis e usuários autorizados.</p>
+      <div id="auth-feedback" class="feedback"></div>
+    </section>
+
+    <aside class="auth-panel">
+      <div class="panel-card">
+        <h2>O que a família encontra aqui</h2>
+        <ul class="feature-list">
+          <li>O que o estudante vai estudar na semana</li>
+          <li>Arquivos e materiais individualizados</li>
+          <li>Evolução e acompanhamento do aluno</li>
+          <li>Comunicados e recados com a equipe</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <script src="../portal/config.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
