@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal do Professor | INTEGRO</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../portal/config.js"></script>
+</head>
+<body data-page="login-professor">
+  <main class="page login-page">
+    <section class="login-card">
+      <div class="brand-row">
+        <img src="../logo-whatsapp.png" alt="INTEGRO" class="brand-logo" />
+        <div>
+          <div class="eyebrow">PORTAL DO PROFESSOR</div>
+          <h1>INTEGRO</h1>
+          <p>Área para lançar plano de estudo, materiais, evolução individual e comunicados dos alunos.</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="stack">
+        <label>
+          <span>E-mail</span>
+          <input type="email" id="email" placeholder="professor@integro.com" required />
+        </label>
+
+        <label>
+          <span>Senha</span>
+          <input type="password" id="password" placeholder="••••••••" required />
+        </label>
+
+        <button type="submit" class="btn btn-primary">Entrar no portal</button>
+        <button type="button" id="forgotPasswordBtn" class="btn btn-secondary">Esqueci minha senha</button>
+      </form>
+
+      <p id="authMessage" class="helper"></p>
+    </section>
+
+    <aside class="info-card">
+      <h2>O que o professor faz aqui</h2>
+      <ul>
+        <li>Seleciona o aluno e define o que ele vai estudar.</li>
+        <li>Faz upload de materiais individualizados.</li>
+        <li>Registra evolução e próximos passos.</li>
+        <li>Publica comunicados para a família.</li>
+        <li>Envia recados diretamente ao responsável.</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
