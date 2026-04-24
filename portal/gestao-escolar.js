@@ -18,10 +18,17 @@
     el.className = 'status';
     el.textContent = '';
   }
-  function safe(v) { return (v ?? '').toString(); }
+  function safe(v) {
+    return (v ?? '').toString()
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
   function optionList(items, labelKey, valueKey, placeholder) {
     return [`<option value="">${placeholder}</option>`].concat(
-      (items || []).map((item) => `<option value="${item[valueKey]}">${safe(item[labelKey])}</option>`)
+      (items || []).map((item) => `<option value="${safe(item[valueKey])}">${safe(item[labelKey])}</option>`)
     ).join('');
   }
 
@@ -49,27 +56,43 @@
 
   async function loadSession() {
     text('userBadge', 'Carregando...');
-    const { data, error } = await client.auth.getSession();
-    if (error) throw new Error('Erro ao carregar sessão: ' + error.message);
-    if (!data.session) {
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError) throw new Error('Erro ao carregar sessão: ' + sessionError.message);
+
+    if (!sessionData.session) {
       window.location.href = './index.html';
       return false;
     }
-    user = data.session.user;
+
+    // Confirma o usuário atual pelo token, evitando sessão antiga ou incompleta.
+    const { data: userData, error: userError } = await client.auth.getUser();
+    if (userError || !userData.user) {
+      await client.auth.signOut();
+      window.location.href = './index.html';
+      return false;
+    }
+
+    user = userData.user;
     return true;
   }
 
   async function loadProfile() {
+    if (!user || !user.id) throw new Error('Usuário autenticado sem ID. Faça login novamente.');
+
+    // Não usa .single() para evitar o erro "Cannot coerce the result to a single JSON object".
+    // Busca pelo UID do Auth e usa o primeiro resultado encontrado.
     const { data, error } = await client
       .from('profiles')
       .select('id, full_name, role, school_id')
       .eq('id', user.id)
-      .single();
+      .limit(1);
 
     if (error) throw new Error('Erro ao carregar profile: ' + error.message);
-    if (!data) throw new Error('Perfil não encontrado na tabela profiles.');
+    if (!data || data.length === 0) {
+      throw new Error('Perfil não encontrado em profiles para o usuário logado. Crie o perfil com o mesmo UID do Authentication.');
+    }
 
-    profile = data;
+    profile = data[0];
     text('userBadge', profile.full_name || user.email || 'Usuário');
 
     if (!['integro_admin', 'diretor', 'coordenacao'].includes(profile.role)) {
@@ -91,11 +114,12 @@
       .from('schools')
       .select('id, name, slug')
       .eq('id', profile.school_id)
-      .single();
+      .limit(1);
 
     if (error) throw new Error('Erro ao carregar escola: ' + error.message);
-    school = data;
+    if (!data || data.length === 0) throw new Error('Escola não encontrada para o school_id do perfil.');
 
+    school = data[0];
     const schoolName = school?.name || 'Escola sem nome';
     text('schoolName', schoolName);
     value('teacherSchool', schoolName);
@@ -202,6 +226,10 @@
       };
       if (!payload.full_name || !payload.email || !payload.password) {
         status('teacherStatus', 'warn', 'Preencha nome, e-mail e senha.');
+        return;
+      }
+      if (payload.password.length < 6) {
+        status('teacherStatus', 'warn', 'Use uma senha inicial com pelo menos 6 caracteres. Exemplo: Integro@2026');
         return;
       }
       await createTeacher(payload);
