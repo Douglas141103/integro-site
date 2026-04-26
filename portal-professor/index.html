@@ -4,38 +4,234 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portal do Professor | INTEGRO</title>
+
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../portal/config.js"></script>
+
+  <style>
+    .login-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) 420px;
+      gap: 32px;
+      align-items: center;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border: 1px solid #d9ebe3;
+      border-radius: 24px;
+      padding: 34px;
+      box-shadow: 0 18px 45px rgba(0, 60, 35, 0.08);
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand-row img {
+      width: 70px;
+      height: auto;
+    }
+
+    .eyebrow {
+      color: #00513b;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+    }
+
+    .brand-title {
+      color: #003f30;
+      font-size: 2.1rem;
+      line-height: 1;
+      margin: 0;
+      font-weight: 900;
+    }
+
+    .login-card p {
+      color: #53655f;
+      font-size: 1rem;
+      margin: 0 0 26px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #003f30;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1px solid #cfe2d9;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      outline: none;
+      background: #ffffff;
+    }
+
+    .form-group input:focus {
+      border-color: #0f7a58;
+      box-shadow: 0 0 0 3px rgba(15, 122, 88, 0.12);
+    }
+
+    .btn-main {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 15px 18px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #ffffff;
+      background: #117a5a;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .btn-main:hover {
+      background: #075f45;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #004434;
+      background: #e4f1ec;
+      cursor: pointer;
+      margin-top: 14px;
+    }
+
+    .login-message {
+      margin-top: 16px;
+      font-weight: 700;
+      color: #b42318;
+      min-height: 22px;
+    }
+
+    .login-message.success {
+      color: #0f7a58;
+    }
+
+    .info-card {
+      background: linear-gradient(160deg, #075f45, #1d7f5d);
+      color: #ffffff;
+      border-radius: 24px;
+      padding: 34px;
+      min-height: 360px;
+      box-shadow: 0 18px 45px rgba(0, 60, 35, 0.14);
+    }
+
+    .info-card h2 {
+      font-size: 1.55rem;
+      margin: 0 0 18px;
+    }
+
+    .info-card ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .login-shell {
+        grid-template-columns: 1fr;
+        padding: 22px 14px;
+      }
+
+      .login-card,
+      .info-card {
+        padding: 24px;
+        border-radius: 20px;
+      }
+
+      .brand-row {
+        align-items: flex-start;
+      }
+
+      .brand-row img {
+        width: 58px;
+      }
+
+      .brand-title {
+        font-size: 1.75rem;
+      }
+
+      .info-card {
+        min-height: auto;
+      }
+    }
+  </style>
 </head>
+
 <body data-page="login-professor">
-  <main class="page login-page">
+  <main class="login-shell">
     <section class="login-card">
       <div class="brand-row">
-        <img src="../logo-whatsapp.png" alt="INTEGRO" class="brand-logo" />
+        <img src="../logo-whatsapp.png" alt="Logo INTEGRO" />
         <div>
-          <div class="eyebrow">PORTAL DO PROFESSOR</div>
-          <h1>INTEGRO</h1>
-          <p>Área para lançar plano de estudo, materiais, evolução individual e comunicados dos alunos.</p>
+          <p class="eyebrow">Portal do Professor</p>
+          <h1 class="brand-title">INTEGRO</h1>
         </div>
       </div>
 
-      <form id="loginForm" class="stack">
-        <label>
-          <span>E-mail</span>
-          <input type="email" id="email" placeholder="professor@integro.com" required />
-        </label>
+      <p>
+        Área para lançar plano de estudo, materiais, evolução individual,
+        frequência e comunicados dos alunos.
+      </p>
 
-        <label>
-          <span>Senha</span>
-          <input type="password" id="password" placeholder="••••••••" required />
-        </label>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="professor@escola.com"
+            autocomplete="email"
+            required
+          />
+        </div>
 
-        <button type="submit" class="btn btn-primary">Entrar no portal</button>
-        <button type="button" id="forgotPasswordBtn" class="btn btn-secondary">Esqueci minha senha</button>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button class="btn-main" id="loginBtn" type="submit">
+          Entrar no portal
+        </button>
+
+        <button class="btn-secondary" id="resetPasswordBtn" type="button">
+          Esqueci minha senha
+        </button>
+
+        <div id="loginMessage" class="login-message"></div>
       </form>
-
-      <p id="authMessage" class="helper"></p>
     </section>
 
     <aside class="info-card">
@@ -44,12 +240,150 @@
         <li>Seleciona o aluno e define o que ele vai estudar.</li>
         <li>Faz upload de materiais individualizados.</li>
         <li>Registra evolução e próximos passos.</li>
+        <li>Lança a frequência do aluno.</li>
         <li>Publica comunicados para a família.</li>
         <li>Envia recados diretamente ao responsável.</li>
       </ul>
     </aside>
   </main>
 
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../portal/config.js"></script>
+
+  <script>
+    const config = window.INTEGRO_SUPABASE || null;
+    const messageBox = document.getElementById("loginMessage");
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+
+    function showMessage(text, type = "error") {
+      messageBox.textContent = text || "";
+      messageBox.className = type === "success"
+        ? "login-message success"
+        : "login-message";
+    }
+
+    function setLoading(isLoading) {
+      loginBtn.disabled = isLoading;
+      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar no portal";
+    }
+
+    if (!config || !config.url || !config.anonKey || !window.supabase) {
+      showMessage("Configuração do Supabase não encontrada. Verifique o config.js.");
+    }
+
+    const supabaseClient = window.supabase.createClient(
+      config.url,
+      config.anonKey
+    );
+
+    async function getProfile(userId) {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name, role, school_id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    }
+
+    async function validateProfessorAccess(userId) {
+      const profile = await getProfile(userId);
+
+      if (!profile) {
+        throw new Error("Usuário autenticado, mas sem perfil cadastrado.");
+      }
+
+      const allowedRoles = ["professor", "integro_admin", "diretor", "coordenacao"];
+
+      if (!allowedRoles.includes(profile.role)) {
+        await supabaseClient.auth.signOut();
+        throw new Error("Este usuário não tem acesso ao Portal do Professor.");
+      }
+
+      return profile;
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      showMessage("");
+      setLoading(true);
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (!data.user) {
+          throw new Error("Login não concluído. Tente novamente.");
+        }
+
+        await validateProfessorAccess(data.user.id);
+
+        showMessage("Login realizado com sucesso. Redirecionando...", "success");
+
+        setTimeout(() => {
+          window.location.href = "./dashboard.html";
+        }, 500);
+      } catch (error) {
+        showMessage(error.message || "Erro ao fazer login.");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    resetPasswordBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+
+      if (!email) {
+        showMessage("Digite o e-mail do professor para recuperar a senha.");
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: "https://www.institutointegro.com.br/portal-professor/index.html"
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        showMessage("E-mail de recuperação enviado, se o usuário existir.", "success");
+      } catch (error) {
+        showMessage(error.message || "Erro ao solicitar recuperação de senha.");
+      }
+    });
+
+    async function redirectIfAlreadyLoggedIn() {
+      try {
+        const { data } = await supabaseClient.auth.getSession();
+
+        if (!data.session || !data.session.user) {
+          return;
+        }
+
+        await validateProfessorAccess(data.session.user.id);
+        window.location.href = "./dashboard.html";
+      } catch (error) {
+        await supabaseClient.auth.signOut();
+      }
+    }
+
+    redirectIfAlreadyLoggedIn();
+  </script>
 </body>
 </html>
