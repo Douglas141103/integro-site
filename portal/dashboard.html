@@ -3,91 +3,581 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Área do Parceiro | INTEGRO</title>
-  <meta name="robots" content="noindex,nofollow" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+  <title>Portal do Parceiro | INTEGRO</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    :root {
+      --green-950: #09291f;
+      --green-900: #0f3d2e;
+      --green-800: #17563f;
+      --green-700: #1f6e50;
+      --green-100: #e8f5ee;
+      --green-050: #f4fbf7;
+      --blue-900: #0f253f;
+      --gold: #d8a94b;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --white: #ffffff;
+      --danger: #b42318;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      --radius: 22px;
+      --radius-sm: 14px;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f9fcfa 0%, #eef8f2 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .topbar {
+      background: var(--green-950);
+      color: var(--white);
+      padding: 10px 18px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .header {
+      background: rgba(255,255,255,0.94);
+      border-bottom: 1px solid rgba(15, 61, 46, 0.10);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .container {
+      width: min(92%, var(--max));
+      margin: 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 18px 0;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .brand strong {
+      font-size: 1.35rem;
+      letter-spacing: 0.5px;
+      color: var(--green-900);
+    }
+
+    .brand span {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .small-user {
+      color: var(--muted);
+      font-size: 0.92rem;
+      padding: 8px 12px;
+      background: var(--green-050);
+      border: 1px solid rgba(31, 110, 80, 0.12);
+      border-radius: 999px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: var(--green-800);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-primary:hover {
+      background: var(--green-900);
+      transform: translateY(-1px);
+    }
+
+    .btn-light {
+      background: var(--white);
+      color: var(--green-900);
+      border: 1px solid rgba(15,61,46,0.12);
+    }
+
+    .btn-light:hover {
+      background: var(--green-100);
+    }
+
+    .btn-danger {
+      background: #fff1f0;
+      color: var(--danger);
+      border: 1px solid rgba(180, 35, 24, 0.18);
+    }
+
+    .hero {
+      padding: 44px 0 26px;
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, var(--green-900), var(--green-700));
+      color: var(--white);
+      border-radius: 30px;
+      padding: 34px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      width: 240px;
+      height: 240px;
+      border-radius: 999px;
+      position: absolute;
+      right: -90px;
+      top: -70px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .hero h1 {
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: rgba(255,255,255,0.90);
+      font-size: 1.04rem;
+      max-width: 720px;
+    }
+
+    .status-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 22px;
+      padding: 20px;
+      z-index: 1;
+    }
+
+    .status-card span {
+      display: block;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.9rem;
+    }
+
+    .status-card strong {
+      display: block;
+      font-size: 1.25rem;
+      margin-top: 5px;
+    }
+
+    .main {
+      padding: 28px 0 60px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .section-head h2 {
+      color: var(--green-900);
+      font-size: clamp(1.45rem, 3vw, 2rem);
+    }
+
+    .section-head p {
+      color: var(--muted);
+      max-width: 720px;
+      margin-top: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .module-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(15,61,46,0.08);
+      min-height: 235px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .module-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: var(--green-900);
+      background: var(--green-100);
+      flex-shrink: 0;
+    }
+
+    .icon.finance {
+      color: var(--blue-900);
+      background: #e8f0fb;
+    }
+
+    .icon.warn {
+      color: #7a4a00;
+      background: #fff4d6;
+    }
+
+    .module-card h3 {
+      color: var(--green-900);
+      font-size: 1.16rem;
+      line-height: 1.2;
+    }
+
+    .module-card p {
+      color: var(--muted);
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .module-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .quick-area {
+      margin-top: 32px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(15,61,46,0.08);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .quick-link {
+      border: 1px solid rgba(15,61,46,0.10);
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--green-050);
+      font-weight: 700;
+      color: var(--green-900);
+      text-align: center;
+      transition: 0.2s ease;
+    }
+
+    .quick-link:hover {
+      background: var(--green-100);
+      transform: translateY(-1px);
+    }
+
+    .notice {
+      margin-top: 22px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: #fff8e6;
+      color: #624000;
+      border: 1px solid rgba(216, 169, 75, 0.32);
+      font-size: 0.95rem;
+    }
+
+    .loading {
+      opacity: 0.72;
+    }
+
+    @media (max-width: 980px) {
+      .hero-card,
+      .grid,
+      .quick-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-actions {
+        width: 100%;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .hero-card {
+        padding: 24px;
+      }
+    }
+  </style>
 </head>
-<body class="dashboard-body">
-  <header class="topbar">
-    <div class="topbar-left">
-      <img src="../logo-whatsapp.png" alt="Ícone do INTEGRO" class="brand-mark small" />
-      <div>
-        <div class="eyebrow">Portal do Parceiro</div>
-        <h1 class="topbar-title">INTEGRO</h1>
+<body>
+  <div class="topbar">Portal do Parceiro INTEGRO • gestão pedagógica, financeira e acompanhamento institucional</div>
+
+  <header class="header">
+    <div class="container nav">
+      <a class="brand" href="./dashboard.html">
+        <strong>INTEGRO</strong>
+        <span>Portal do Parceiro</span>
+      </a>
+
+      <div class="nav-actions">
+        <span class="small-user" id="userName">Carregando usuário...</span>
+        <a class="btn btn-light" href="../index.html">Site principal</a>
+        <button class="btn btn-danger" id="logoutBtn" type="button">Sair</button>
       </div>
-    </div>
-    <div class="topbar-right">
-      <div id="user-chip" class="user-chip">Carregando...</div>
-      <button id="logout-button" class="btn btn-light" type="button">Sair</button>
     </div>
   </header>
 
-  <main class="dashboard-shell">
-    <section class="hero-banner">
-      <div>
-        <p class="eyebrow">Assessoramento pedagógico</p>
-        <h2 id="school-name">Escola parceira</h2>
-        <p id="welcome-copy" class="muted">Carregando informações da escola...</p>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-card">
+        <div>
+          <h1>Painel do Parceiro</h1>
+          <p>
+            Acesse as áreas principais do assessoramento, gestão escolar, gestão financeira e acompanhamento dos atendimentos do INTEGRO.
+          </p>
+        </div>
+        <div class="status-card">
+          <span>Escola ativa</span>
+          <strong id="schoolName">Carregando...</strong>
+          <span style="margin-top:12px;">Perfil de acesso</span>
+          <strong id="userRole">Carregando...</strong>
+        </div>
       </div>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="./gestao-escolar.html">Gestão Escolar</a>
-        <a class="btn btn-light" href="#materials">Ver materiais</a>
-        <a class="btn btn-light" href="#announcements">Ver comunicados</a>
+    </div>
+  </section>
+
+  <main class="main">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2>Áreas de gestão</h2>
+          <p>Os cadastros e lançamentos ficam separados por módulos para não sobrecarregar a tela principal.</p>
+        </div>
       </div>
-    </section>
 
-    <section class="stats-grid">
-      <article class="stat-card">
-        <span class="stat-label">Perfil</span>
-        <strong id="profile-role">—</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Materiais disponíveis</span>
-        <strong id="materials-count">0</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Comunicados ativos</span>
-        <strong id="announcements-count">0</strong>
-      </article>
-    </section>
+      <div class="grid">
+        <article class="module-card">
+          <div class="module-top">
+            <div class="icon">GE</div>
+            <h3>Gestão Escolar</h3>
+          </div>
+          <p>
+            Cadastre e edite alunos, professores, responsáveis e vínculos entre professor e aluno.
+          </p>
+          <div class="module-actions">
+            <a class="btn btn-primary" href="./gestao-escolar.html">Abrir gestão</a>
+          </div>
+        </article>
 
-    <section id="admin-box" class="admin-box hidden">
-      <h3>Área administrativa do INTEGRO</h3>
-      <p>Você está com perfil administrativo. Use a Gestão Escolar para cadastrar professores, alunos e vínculos pedagógicos da escola.</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="./gestao-escolar.html">Abrir Gestão Escolar</a>
+        <article class="module-card">
+          <div class="module-top">
+            <div class="icon finance">R$</div>
+            <h3>Gestão Financeira</h3>
+          </div>
+          <p>
+            Lance entradas, mensalidades, saídas, pacotes, descontos, recibos e relatórios semanais, mensais e anuais.
+          </p>
+          <div class="module-actions">
+            <a class="btn btn-primary" href="./financeiro.html">Abrir financeiro</a>
+          </div>
+        </article>
+
+        <article class="module-card">
+          <div class="module-top">
+            <div class="icon warn">PA</div>
+            <h3>Portal de Acompanhamento</h3>
+          </div>
+          <p>
+            Acesse rapidamente os ambientes usados por professores e famílias para conferir se tudo está funcionando.
+          </p>
+          <div class="module-actions">
+            <a class="btn btn-light" href="../portal-professor/index.html">Portal do Professor</a>
+            <a class="btn btn-light" href="../portal-familia/index.html">Portal da Família</a>
+          </div>
+        </article>
       </div>
-    </section>
 
-    <div class="content-grid">
-      <section id="materials" class="content-card">
-        <div class="section-head">
+      <section class="quick-area">
+        <div class="section-head" style="margin-bottom:0;">
           <div>
-            <p class="eyebrow">Biblioteca</p>
-            <h3>Materiais disponíveis</h3>
+            <h2>Acessos rápidos</h2>
+            <p>Use estes atalhos para chegar nas telas de cadastro e operação sem concentrar tudo na tela inicial.</p>
           </div>
         </div>
-        <div id="materials-list" class="cards-list"></div>
-      </section>
 
-      <section id="announcements" class="content-card">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Comunicação</p>
-            <h3>Comunicados</h3>
-          </div>
+        <div class="quick-grid">
+          <a class="quick-link" href="./gestao-escolar.html#alunos">Cadastrar alunos</a>
+          <a class="quick-link" href="./gestao-escolar.html#professores">Cadastrar professores</a>
+          <a class="quick-link" href="./gestao-escolar.html#vinculos">Vincular professor e aluno</a>
+          <a class="quick-link" href="./financeiro.html#frente-caixa">Frente de caixa</a>
+          <a class="quick-link" href="./financeiro.html#entradas">Lançar entradas</a>
+          <a class="quick-link" href="./financeiro.html#saidas">Lançar saídas</a>
+          <a class="quick-link" href="./financeiro.html#pacotes">Pacotes e descontos</a>
+          <a class="quick-link" href="./financeiro.html#relatorios">Relatórios</a>
         </div>
-        <div id="announcements-list" class="cards-list"></div>
+
+        <div class="notice">
+          <strong>Observação:</strong> os botões de cadastro apontam para a Gestão Escolar e os botões financeiros apontam para a Gestão Financeira. O conteúdo permanece protegido pelo login do Supabase.
+        </div>
       </section>
     </div>
-
-    <div id="dashboard-feedback" class="feedback"></div>
   </main>
 
-  <script src="./config.js"></script>
-  <script type="module" src="./app.js"></script>
+  <script>
+    const cfg = window.INTEGRO_SUPABASE;
+    const supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+    const userNameEl = document.getElementById('userName');
+    const userRoleEl = document.getElementById('userRole');
+    const schoolNameEl = document.getElementById('schoolName');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function roleLabel(role) {
+      const labels = {
+        integro_admin: 'Administrador INTEGRO',
+        diretor: 'Direção',
+        coordenacao: 'Coordenação',
+        professor: 'Professor',
+        responsavel: 'Responsável'
+      };
+      return labels[role] || role || '--';
+    }
+
+    async function initDashboard() {
+      try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const session = sessionData?.session;
+
+        if (!session) {
+          window.location.href = './index.html';
+          return;
+        }
+
+        const userId = session.user.id;
+
+        const { data: profile, error: profileError } = await supabaseClient
+          .from('profiles')
+          .select('id, full_name, role, school_id')
+          .eq('id', userId)
+          .limit(1)
+          .maybeSingle();
+
+        if (profileError || !profile) {
+          userNameEl.textContent = 'Perfil não encontrado';
+          schoolNameEl.textContent = '--';
+          userRoleEl.textContent = '--';
+          return;
+        }
+
+        const allowed = ['integro_admin', 'diretor', 'coordenacao'];
+        if (!allowed.includes(profile.role)) {
+          alert('Este painel é exclusivo para administradores, direção e coordenação.');
+          await supabaseClient.auth.signOut();
+          window.location.href = './index.html';
+          return;
+        }
+
+        userNameEl.textContent = profile.full_name || session.user.email || 'Usuário';
+        userRoleEl.textContent = roleLabel(profile.role);
+
+        if (profile.school_id) {
+          const { data: school } = await supabaseClient
+            .from('schools')
+            .select('name')
+            .eq('id', profile.school_id)
+            .limit(1)
+            .maybeSingle();
+
+          schoolNameEl.textContent = school?.name || 'INSTITUTO INTEGRO';
+        } else {
+          schoolNameEl.textContent = 'INSTITUTO INTEGRO';
+        }
+      } catch (error) {
+        userNameEl.textContent = 'Erro ao carregar';
+        schoolNameEl.textContent = '--';
+        userRoleEl.textContent = '--';
+        console.error(error);
+      }
+    }
+
+    logoutBtn.addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = './index.html';
+    });
+
+    initDashboard();
+  </script>
 </body>
 </html>
