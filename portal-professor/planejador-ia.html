@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Planejador Pedagógico INTEGRO</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --verde-principal: #1d6b3a;
+      --verde-escuro: #123d25;
+      --verde-claro: #eaf6ed;
+      --verde-borda: #a8d5b5;
+      --cinza: #f5f7f6;
+      --texto: #1f2d24;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--cinza);
+      color: var(--texto);
+    }
+
+    .topo {
+      background: var(--verde-principal);
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .topo h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .topo a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      background: rgba(255,255,255,0.16);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--verde-borda);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      margin-bottom: 22px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: var(--verde-escuro);
+    }
+
+    .aviso {
+      background: var(--verde-claro);
+      border-left: 5px solid var(--verde-principal);
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #b9cfc0;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: white;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .aluno-box {
+      display: none;
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--verde-borda);
+      background: var(--verde-claro);
+    }
+
+    .linha-botoes {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: var(--verde-principal);
+      color: white;
+    }
+
+    button:hover {
+      background: #15542d;
+    }
+
+    button:disabled {
+      background: #8db99b;
+      cursor: not-allowed;
+    }
+
+    .btn-secundario {
+      background: #2f6044;
+    }
+
+    .btn-pdf {
+      background: #124b2a;
+    }
+
+    .resultado-box {
+      display: none;
+    }
+
+    #editorPlanejamento {
+      min-height: 520px;
+      line-height: 1.5;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .info-modelo {
+      font-size: 13px;
+      color: #496254;
+      margin-top: 8px;
+    }
+
+    #areaPDF {
+      display: none;
+      background: white;
+      color: black;
+      width: 794px;
+      padding: 36px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .pdf-cabecalho {
+      border: 2px solid #1d6b3a;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .pdf-cabecalho h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #1d6b3a;
+      letter-spacing: 0.5px;
+    }
+
+    .pdf-cabecalho h2 {
+      margin: 8px 0 0;
+      font-size: 17px;
+      color: #1f2d24;
+    }
+
+    .pdf-info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      font-size: 12px;
+    }
+
+    .pdf-info td {
+      border: 1px solid #999;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    .pdf-info strong {
+      color: #123d25;
+    }
+
+    .pdf-conteudo {
+      font-size: 12.5px;
+      line-height: 1.55;
+      white-space: normal;
+      text-align: justify;
+    }
+
+    .pdf-assinaturas {
+      margin-top: 50px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      page-break-inside: avoid;
+    }
+
+    .assinatura {
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .linha-assinatura {
+      border-top: 1px solid #000;
+      margin-bottom: 8px;
+      height: 1px;
+    }
+
+    .pdf-rodape {
+      margin-top: 30px;
+      padding-top: 8px;
+      border-top: 1px solid #aaa;
+      font-size: 10px;
+      text-align: center;
+      color: #444;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topo {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topo">
+    <div>
+      <h1>Planejador Pedagógico INTEGRO</h1>
+      <div>Portal do Professor</div>
+    </div>
+
+    <a href="dashboard.html">Voltar ao painel</a>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Gerar planejamento com IA</h2>
+
+      <div class="aviso">
+        Preencha os dados abaixo. A IA irá gerar um planejamento no padrão INTEGRO.
+        Após a geração, o professor poderá revisar e modificar o texto antes de salvar em PDF.
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Professor(a)</label>
+          <input id="professor" placeholder="Nome do professor logado" />
+        </div>
+
+        <div>
+          <label>Coordenador(a) pedagógico(a)</label>
+          <input id="coordenador" placeholder="Nome do coordenador pedagógico" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Tipo de planejamento</label>
+          <select id="modo" onchange="alternarTipoPlano()">
+            <option value="coletivo">Plano coletivo</option>
+            <option value="individualizado">Plano individualizado por aluno</option>
+            <option value="intervencao">Plano de intervenção</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Disciplina / Área</label>
+          <select id="disciplina">
+            <option value="">Selecione</option>
+            <option>Português</option>
+            <option>Matemática</option>
+            <option>Ciências</option>
+            <option>História</option>
+            <option>Geografia</option>
+            <option>Leitura e Escrita</option>
+            <option>Raciocínio Lógico</option>
+            <option>Coordenação Motora</option>
+            <option>Educação Infantil</option>
+            <option>Intervenção Pedagógica</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Série/Ano</label>
+          <input id="serie" placeholder="Ex.: 4º ano, 6º ano, Jardim II" />
+        </div>
+
+        <div>
+          <label>Tempo de aula</label>
+          <input id="tempo" placeholder="Ex.: 50 minutos, 1 hora, 2 horas" />
+        </div>
+      </div>
+
+      <label>Assunto da aula</label>
+      <input id="assunto" placeholder="Ex.: perímetro, pontuação, leitura silábica, frações..." />
+
+      <label>Objetivo principal</label>
+      <input id="objetivo" placeholder="Ex.: compreender o conceito de perímetro em situações práticas." />
+
+      <label>Perfil da turma</label>
+      <textarea id="perfilTurma" placeholder="Ex.: turma com dificuldade de leitura, alunos em nível inicial, turma agitada, alunos que precisam de apoio visual..."></textarea>
+
+      <div id="alunoBox" class="aluno-box">
+        <h3>Dados individualizados do aluno</h3>
+
+        <label>Nome do aluno</label>
+        <input id="nomeAluno" placeholder="Nome do aluno" />
+
+        <label>Dificuldade pedagógica observada</label>
+        <textarea id="dificuldadeAluno" placeholder="Ex.: dificuldade na leitura de sílabas, pouca atenção, dificuldade em adição, não reconhece algumas letras..."></textarea>
+
+        <label>Nível atual do aluno</label>
+        <textarea id="nivelAluno" placeholder="Ex.: lê sílabas simples, reconhece números até 20, precisa de apoio visual, realiza atividade com mediação..."></textarea>
+      </div>
+
+      <div class="linha-botoes">
+        <button id="btnGerar" onclick="gerarPlanejamento()">Gerar planejamento</button>
+      </div>
+
+      <div id="modeloUsado" class="info-modelo"></div>
+    </section>
+
+    <section id="resultadoBox" class="card resultado-box">
+      <h2>Planejamento gerado</h2>
+
+      <div class="aviso">
+        Revise o planejamento abaixo. Você pode modificar qualquer parte antes de gerar o PDF.
+      </div>
+
+      <label>Texto editável do planejamento</label>
+      <textarea id="editorPlanejamento"></textarea>
+
+      <div class="linha-botoes">
+        <button class="btn-secundario" onclick="copiarPlanejamento()">Copiar texto</button>
+        <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
+      </div>
+    </section>
+
+    <section id="areaPDF">
+      <div class="pdf-cabecalho">
+        <h1>INSTITUTO INTEGRO</h1>
+        <h2>Planejamento Pedagógico</h2>
+      </div>
+
+      <table class="pdf-info">
+        <tr>
+          <td><strong>Professor(a):</strong><br><span id="pdfProfessor"></span></td>
+          <td><strong>Coordenador(a) pedagógico(a):</strong><br><span id="pdfCoordenador"></span></td>
+        </tr>
+        <tr>
+          <td><strong>Disciplina / Área:</strong><br><span id="pdfDisciplina"></span></td>
+          <td><strong>Série/Ano:</strong><br><span id="pdfSerie"></span></td>
+        </tr>
+        <tr>
+          <td><strong>Assunto:</strong><br><span id="pdfAssunto"></span></td>
+          <td><strong>Tempo de aula:</strong><br><span id="pdfTempo"></span></td>
+        </tr>
+        <tr>
+          <td><strong>Tipo de planejamento:</strong><br><span id="pdfModo"></span></td>
+          <td><strong>Data:</strong><br><span id="pdfData"></span></td>
+        </tr>
+      </table>
+
+      <div id="pdfConteudo" class="pdf-conteudo"></div>
+
+      <div class="pdf-assinaturas">
+        <div class="assinatura">
+          <div class="linha-assinatura"></div>
+          <div>Assinatura do(a) Professor(a)</div>
+          <div id="assinaturaProfessor"></div>
+        </div>
+
+        <div class="assinatura">
+          <div class="linha-assinatura"></div>
+          <div>Assinatura da Coordenação Pedagógica</div>
+          <div id="assinaturaCoordenador"></div>
+        </div>
+      </div>
+
+      <div class="pdf-rodape">
+        Documento gerado pelo Planejador Pedagógico INTEGRO.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://kvdfnmwuxmpalsyuytwt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_GP076p73HPtaU7Q6EyK3Mg_5fYc7pAu";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await carregarProfessorLogado();
+      alternarTipoPlano();
+    });
+
+    async function carregarProfessorLogado() {
+      const campoProfessor = document.getElementById("professor");
+
+      try {
+        const possiveisNomes = [
+          localStorage.getItem("professorNome"),
+          localStorage.getItem("nomeProfessor"),
+          localStorage.getItem("usuario_nome"),
+          localStorage.getItem("nome_usuario"),
+          localStorage.getItem("nome")
+        ].filter(Boolean);
+
+        if (possiveisNomes.length > 0) {
+          campoProfessor.value = possiveisNomes[0];
+          return;
+        }
+
+        const { data: authData } = await supabaseClient.auth.getUser();
+        const user = authData?.user;
+
+        if (!user) {
+          campoProfessor.placeholder = "Digite o nome do professor";
+          return;
+        }
+
+        let nomeEncontrado = "";
+
+        try {
+          const { data: profPorId } = await supabaseClient
+            .from("professores")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (profPorId) {
+            nomeEncontrado =
+              profPorId.nome ||
+              profPorId.nome_completo ||
+              profPorId.name ||
+              "";
+          }
+        } catch (e) {}
+
+        if (!nomeEncontrado && user.email) {
+          try {
+            const { data: profPorEmail } = await supabaseClient
+              .from("professores")
+              .select("*")
+              .eq("email", user.email)
+              .maybeSingle();
+
+            if (profPorEmail) {
+              nomeEncontrado =
+                profPorEmail.nome ||
+                profPorEmail.nome_completo ||
+                profPorEmail.name ||
+                "";
+            }
+          } catch (e) {}
+        }
+
+        campoProfessor.value = nomeEncontrado || user.email || "";
+      } catch (error) {
+        campoProfessor.placeholder = "Digite o nome do professor";
+      }
+    }
+
+    function alternarTipoPlano() {
+      const modo = document.getElementById("modo").value;
+      const alunoBox = document.getElementById("alunoBox");
+
+      if (modo === "individualizado" || modo === "intervencao") {
+        alunoBox.style.display = "block";
+      } else {
+        alunoBox.style.display = "none";
+      }
+    }
+
+    async function gerarPlanejamento() {
+      const btn = document.getElementById("btnGerar");
+      const resultadoBox = document.getElementById("resultadoBox");
+      const editor = document.getElementById("editorPlanejamento");
+      const modeloUsado = document.getElementById("modeloUsado");
+
+      const dados = coletarDadosFormulario();
+
+      if (!dados.disciplina || !dados.serie || !dados.assunto || !dados.tempo) {
+        alert("Preencha disciplina, série/ano, assunto e tempo de aula.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Gerando planejamento...";
+      modeloUsado.textContent = "";
+      resultadoBox.style.display = "block";
+      editor.value = "Aguarde. O planejamento está sendo gerado...";
+
+      try {
+        const { data, error } = await supabaseClient.functions.invoke("gerar-planejamento", {
+          body: dados
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        editor.value = data.planejamento || "Não foi possível gerar o planejamento.";
+        modeloUsado.textContent = data.modelo_usado
+          ? "Modelo utilizado: " + data.modelo_usado
+          : "";
+
+        resultadoBox.scrollIntoView({ behavior: "smooth" });
+      } catch (err) {
+        editor.value = "Erro ao gerar planejamento: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Gerar planejamento";
+      }
+    }
+
+    function coletarDadosFormulario() {
+      return {
+        modo: document.getElementById("modo").value,
+        professor: document.getElementById("professor").value,
+        coordenador: document.getElementById("coordenador").value,
+        disciplina: document.getElementById("disciplina").value,
+        serie: document.getElementById("serie").value,
+        assunto: document.getElementById("assunto").value,
+        tempo: document.getElementById("tempo").value,
+        objetivo: document.getElementById("objetivo").value,
+        perfilTurma: document.getElementById("perfilTurma").value,
+        nomeAluno: document.getElementById("nomeAluno").value,
+        dificuldadeAluno: document.getElementById("dificuldadeAluno").value,
+        nivelAluno: document.getElementById("nivelAluno").value
+      };
+    }
+
+    function copiarPlanejamento() {
+      const texto = document.getElementById("editorPlanejamento").value;
+      navigator.clipboard.writeText(texto);
+      alert("Planejamento copiado.");
+    }
+
+    function gerarPDF() {
+      const dados = coletarDadosFormulario();
+      const texto = document.getElementById("editorPlanejamento").value;
+
+      if (!texto || texto.trim().length < 20) {
+        alert("Gere ou escreva o planejamento antes de criar o PDF.");
+        return;
+      }
+
+      document.getElementById("pdfProfessor").textContent = dados.professor || "Não informado";
+      document.getElementById("pdfCoordenador").textContent = dados.coordenador || "Coordenação Pedagógica";
+      document.getElementById("pdfDisciplina").textContent = dados.disciplina || "Não informado";
+      document.getElementById("pdfSerie").textContent = dados.serie || "Não informado";
+      document.getElementById("pdfAssunto").textContent = dados.assunto || "Não informado";
+      document.getElementById("pdfTempo").textContent = dados.tempo || "Não informado";
+      document.getElementById("pdfModo").textContent = nomeModo(dados.modo);
+      document.getElementById("pdfData").textContent = new Date().toLocaleDateString("pt-BR");
+
+      document.getElementById("assinaturaProfessor").textContent = dados.professor || "";
+      document.getElementById("assinaturaCoordenador").textContent = dados.coordenador || "";
+
+      document.getElementById("pdfConteudo").innerHTML = formatarTextoParaPDF(texto);
+
+      const areaPDF = document.getElementById("areaPDF");
+      areaPDF.style.display = "block";
+
+      const nomeArquivo = montarNomeArquivo(dados);
+
+      const opcoes = {
+        margin: [8, 8, 8, 8],
+        filename: nomeArquivo,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait"
+        },
+        pagebreak: {
+          mode: ["avoid-all", "css", "legacy"]
+        }
+      };
+
+      html2pdf()
+        .set(opcoes)
+        .from(areaPDF)
+        .save()
+        .then(() => {
+          areaPDF.style.display = "none";
+        });
+    }
+
+    function nomeModo(modo) {
+      if (modo === "individualizado") return "Plano individualizado por aluno";
+      if (modo === "intervencao") return "Plano de intervenção";
+      return "Plano coletivo";
+    }
+
+    function montarNomeArquivo(dados) {
+      const disciplina = limparNomeArquivo(dados.disciplina || "planejamento");
+      const serie = limparNomeArquivo(dados.serie || "serie");
+      const assunto = limparNomeArquivo(dados.assunto || "assunto");
+
+      return `Planejamento_INTEGRO_${disciplina}_${serie}_${assunto}.pdf`;
+    }
+
+    function limparNomeArquivo(texto) {
+      return texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .replace(/_+/g, "_")
+        .substring(0, 40);
+    }
+
+    function formatarTextoParaPDF(texto) {
+      const seguro = escaparHTML(texto);
+
+      return seguro
+        .split("\n")
+        .map(linha => {
+          const limpa = linha.trim();
+
+          if (!limpa) {
+            return "<br>";
+          }
+
+          if (/^\d+\./.test(limpa) || limpa.startsWith("#")) {
+            return `<p><strong>${limpa.replace(/^#+\s*/, "")}</strong></p>`;
+          }
+
+          return `<p>${limpa}</p>`;
+        })
+        .join("");
+    }
+
+    function escaparHTML(texto) {
+      return texto
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
