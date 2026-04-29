@@ -300,7 +300,7 @@
 
       <div class="linha-botoes">
         <button class="btn-secundario" onclick="copiarPlanejamento()">Copiar texto</button>
-        <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
+        <button class="btn-pdf" onclick="gerarPDF()">Abrir documento para PDF</button>
       </div>
     </section>
   </main>
@@ -485,27 +485,55 @@
   <style>
     @page {
       size: A4;
-      margin: 15mm 14mm 15mm 14mm;
+      margin: 14mm;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      color: #000;
+    html, body {
       margin: 0;
       padding: 0;
-      background: #fff;
+      background: #ffffff;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
       font-size: 12px;
       line-height: 1.45;
     }
 
-    .pagina {
-      width: 100%;
+    .barra-acoes {
+      background: #1d6b3a;
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .barra-acoes strong {
+      font-size: 15px;
+    }
+
+    .barra-acoes button {
+      background: white;
+      color: #1d6b3a;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .folha {
+      width: 180mm;
       max-width: 180mm;
-      margin: 0 auto;
+      margin: 12mm auto;
+      background: white;
     }
 
     .cabecalho {
@@ -540,10 +568,12 @@
     }
 
     table.info td {
+      width: 50%;
       border: 1px solid #999;
       padding: 7px;
       vertical-align: top;
       word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     table.info strong {
@@ -563,16 +593,19 @@
       line-height: 1.55;
       text-align: left;
       overflow-wrap: break-word;
+      word-break: normal;
     }
 
     .conteudo p {
       margin: 0 0 8px 0;
+      max-width: 100%;
+      overflow-wrap: break-word;
     }
 
     .conteudo h3 {
       font-size: 13px;
       color: #123d25;
-      margin: 16px 0 8px 0;
+      margin: 15px 0 8px 0;
       page-break-after: avoid;
       break-after: avoid;
     }
@@ -611,20 +644,39 @@
     }
 
     @media print {
+      .barra-acoes {
+        display: none !important;
+      }
+
       body {
+        background: white;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
 
-      .pagina {
-        page-break-after: auto;
+      .folha {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+      }
+
+      .cabecalho,
+      table.info,
+      .assinaturas {
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="pagina">
+  <div class="barra-acoes">
+    <strong>Planejamento Pedagógico INTEGRO</strong>
+    <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+  </div>
+
+  <main class="folha">
     <div class="cabecalho">
       <h1>INSTITUTO INTEGRO</h1>
       <h2>Planejamento Pedagógico</h2>
@@ -696,15 +748,7 @@
     <div class="rodape">
       Documento gerado pelo Planejador Pedagógico INTEGRO.
     </div>
-  </div>
-
-  <script>
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-      }, 500);
-    };
-  <\/script>
+  </main>
 </body>
 </html>
 `;
@@ -719,6 +763,7 @@
       janela.document.open();
       janela.document.write(htmlImpressao);
       janela.document.close();
+      janela.focus();
     }
 
     function nomeModo(modo) {
