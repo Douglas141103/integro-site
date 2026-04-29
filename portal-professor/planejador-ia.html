@@ -7,7 +7,6 @@
   <title>Planejador Pedagógico INTEGRO</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     :root {
@@ -44,6 +43,10 @@
     .topo h1 {
       margin: 0;
       font-size: 22px;
+    }
+
+    .topo div {
+      line-height: 1.4;
     }
 
     .topo a {
@@ -173,112 +176,6 @@
       margin-top: 8px;
     }
 
-    #areaPDF {
-      display: none;
-      background: white;
-      color: #000;
-      width: 190mm;
-      min-height: 277mm;
-      padding: 12mm;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11.5px;
-      line-height: 1.45;
-      box-sizing: border-box;
-    }
-
-    .pdf-cabecalho {
-      border: 2px solid #1d6b3a;
-      padding: 12px;
-      text-align: center;
-      margin-bottom: 14px;
-      page-break-inside: avoid;
-    }
-
-    .pdf-cabecalho h1 {
-      margin: 0;
-      font-size: 20px;
-      color: #1d6b3a;
-      letter-spacing: 0.5px;
-    }
-
-    .pdf-cabecalho h2 {
-      margin: 6px 0 0;
-      font-size: 14px;
-      color: #1f2d24;
-    }
-
-    .pdf-info {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 16px;
-      font-size: 10.5px;
-      table-layout: fixed;
-      page-break-inside: avoid;
-    }
-
-    .pdf-info td {
-      border: 1px solid #999;
-      padding: 6px;
-      vertical-align: top;
-      word-break: break-word;
-    }
-
-    .pdf-info strong {
-      color: #123d25;
-    }
-
-    .pdf-conteudo {
-      font-size: 11.5px;
-      line-height: 1.5;
-      text-align: left;
-      word-break: normal;
-      overflow-wrap: break-word;
-    }
-
-    .pdf-conteudo p {
-      margin: 0 0 7px 0;
-    }
-
-    .pdf-conteudo h3 {
-      font-size: 13px;
-      color: #123d25;
-      margin: 14px 0 7px 0;
-      page-break-after: avoid;
-    }
-
-    .pdf-conteudo strong {
-      color: #123d25;
-    }
-
-    .pdf-assinaturas {
-      margin-top: 38px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      page-break-inside: avoid;
-    }
-
-    .assinatura {
-      text-align: center;
-      font-size: 10.5px;
-    }
-
-    .linha-assinatura {
-      border-top: 1px solid #000;
-      margin-bottom: 7px;
-      height: 1px;
-    }
-
-    .pdf-rodape {
-      margin-top: 24px;
-      padding-top: 8px;
-      border-top: 1px solid #aaa;
-      font-size: 9px;
-      text-align: center;
-      color: #444;
-      page-break-inside: avoid;
-    }
-
     @media (max-width: 760px) {
       .grid {
         grid-template-columns: 1fr;
@@ -406,56 +303,10 @@
         <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
       </div>
     </section>
-
-    <section id="areaPDF">
-      <div class="pdf-cabecalho">
-        <h1>INSTITUTO INTEGRO</h1>
-        <h2>Planejamento Pedagógico</h2>
-      </div>
-
-      <table class="pdf-info">
-        <tr>
-          <td><strong>Professor(a):</strong><br><span id="pdfProfessor"></span></td>
-          <td><strong>Coordenador(a) pedagógico(a):</strong><br><span id="pdfCoordenador"></span></td>
-        </tr>
-        <tr>
-          <td><strong>Disciplina / Área:</strong><br><span id="pdfDisciplina"></span></td>
-          <td><strong>Série/Ano:</strong><br><span id="pdfSerie"></span></td>
-        </tr>
-        <tr>
-          <td><strong>Assunto:</strong><br><span id="pdfAssunto"></span></td>
-          <td><strong>Tempo de aula:</strong><br><span id="pdfTempo"></span></td>
-        </tr>
-        <tr>
-          <td><strong>Tipo de planejamento:</strong><br><span id="pdfModo"></span></td>
-          <td><strong>Data:</strong><br><span id="pdfData"></span></td>
-        </tr>
-      </table>
-
-      <div id="pdfConteudo" class="pdf-conteudo"></div>
-
-      <div class="pdf-assinaturas">
-        <div class="assinatura">
-          <div class="linha-assinatura"></div>
-          <div>Assinatura do(a) Professor(a)</div>
-          <div id="assinaturaProfessor"></div>
-        </div>
-
-        <div class="assinatura">
-          <div class="linha-assinatura"></div>
-          <div>Assinatura da Coordenação Pedagógica</div>
-          <div id="assinaturaCoordenador"></div>
-        </div>
-      </div>
-
-      <div class="pdf-rodape">
-        Documento gerado pelo Planejador Pedagógico INTEGRO.
-      </div>
-    </section>
   </main>
 
   <script>
-    const SUPABASE_URL = "https://kvdfnmwuxmpalsyuytwt.supabase.co";
+     const SUPABASE_URL = "https://kvdfnmwuxmpalsyuytwt.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_GP076p73HPtaU7Q6EyK3Mg_5fYc7pAu";
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -621,87 +472,259 @@
         return;
       }
 
-      document.getElementById("pdfProfessor").textContent = dados.professor || "Não informado";
-      document.getElementById("pdfCoordenador").textContent = dados.coordenador || "Coordenação Pedagógica";
-      document.getElementById("pdfDisciplina").textContent = dados.disciplina || "Não informado";
-      document.getElementById("pdfSerie").textContent = dados.serie || "Não informado";
-      document.getElementById("pdfAssunto").textContent = dados.assunto || "Não informado";
-      document.getElementById("pdfTempo").textContent = dados.tempo || "Não informado";
-      document.getElementById("pdfModo").textContent = nomeModo(dados.modo);
-      document.getElementById("pdfData").textContent = new Date().toLocaleDateString("pt-BR");
+      const dataAtual = new Date().toLocaleDateString("pt-BR");
+      const conteudoFormatado = formatarTextoParaPDF(texto);
 
-      document.getElementById("assinaturaProfessor").textContent = dados.professor || "";
-      document.getElementById("assinaturaCoordenador").textContent = dados.coordenador || "";
+      const htmlImpressao = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Planejamento Pedagógico INTEGRO</title>
 
-      document.getElementById("pdfConteudo").innerHTML = formatarTextoParaPDF(texto);
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 14mm 15mm 14mm;
+    }
 
-      const areaPDF = document.getElementById("areaPDF");
+    * {
+      box-sizing: border-box;
+    }
 
-      areaPDF.style.display = "block";
-      areaPDF.style.position = "fixed";
-      areaPDF.style.left = "-9999px";
-      areaPDF.style.top = "0";
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1.45;
+    }
 
-      const nomeArquivo = montarNomeArquivo(dados);
+    .pagina {
+      width: 100%;
+      max-width: 180mm;
+      margin: 0 auto;
+    }
 
-      const opcoes = {
-        margin: [10, 10, 10, 10],
-        filename: nomeArquivo,
-        image: {
-          type: "jpeg",
-          quality: 0.98
-        },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 900
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait"
-        },
-        pagebreak: {
-          mode: ["css", "legacy"],
-          avoid: [".pdf-cabecalho", ".pdf-info", ".pdf-assinaturas", ".assinatura"]
-        }
-      };
+    .cabecalho {
+      border: 2px solid #1d6b3a;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
 
-      html2pdf()
-        .set(opcoes)
-        .from(areaPDF)
-        .save()
-        .then(() => {
-          areaPDF.style.display = "none";
-          areaPDF.style.position = "";
-          areaPDF.style.left = "";
-          areaPDF.style.top = "";
-        });
+    .cabecalho h1 {
+      margin: 0;
+      color: #1d6b3a;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .cabecalho h2 {
+      margin: 6px 0 0 0;
+      color: #222;
+      font-size: 14px;
+    }
+
+    table.info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      table-layout: fixed;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    table.info td {
+      border: 1px solid #999;
+      padding: 7px;
+      vertical-align: top;
+      word-break: break-word;
+    }
+
+    table.info strong {
+      color: #123d25;
+    }
+
+    .titulo-documento {
+      font-size: 14px;
+      font-weight: bold;
+      color: #123d25;
+      margin: 18px 0 16px 0;
+      text-transform: uppercase;
+    }
+
+    .conteudo {
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: left;
+      overflow-wrap: break-word;
+    }
+
+    .conteudo p {
+      margin: 0 0 8px 0;
+    }
+
+    .conteudo h3 {
+      font-size: 13px;
+      color: #123d25;
+      margin: 16px 0 8px 0;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    .conteudo strong {
+      color: #123d25;
+    }
+
+    .assinaturas {
+      margin-top: 45px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .assinatura {
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .linha-assinatura {
+      border-top: 1px solid #000;
+      margin-bottom: 7px;
+      height: 1px;
+    }
+
+    .rodape {
+      margin-top: 30px;
+      padding-top: 8px;
+      border-top: 1px solid #999;
+      text-align: center;
+      font-size: 9px;
+      color: #444;
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .pagina {
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="pagina">
+    <div class="cabecalho">
+      <h1>INSTITUTO INTEGRO</h1>
+      <h2>Planejamento Pedagógico</h2>
+    </div>
+
+    <table class="info">
+      <tr>
+        <td>
+          <strong>Professor(a):</strong><br>
+          ${escaparHTML(dados.professor || "Não informado")}
+        </td>
+        <td>
+          <strong>Coordenador(a) pedagógico(a):</strong><br>
+          ${escaparHTML(dados.coordenador || "Coordenação Pedagógica")}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Disciplina / Área:</strong><br>
+          ${escaparHTML(dados.disciplina || "Não informado")}
+        </td>
+        <td>
+          <strong>Série/Ano:</strong><br>
+          ${escaparHTML(dados.serie || "Não informado")}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Assunto:</strong><br>
+          ${escaparHTML(dados.assunto || "Não informado")}
+        </td>
+        <td>
+          <strong>Tempo de aula:</strong><br>
+          ${escaparHTML(dados.tempo || "Não informado")}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Tipo de planejamento:</strong><br>
+          ${escaparHTML(nomeModo(dados.modo))}
+        </td>
+        <td>
+          <strong>Data:</strong><br>
+          ${dataAtual}
+        </td>
+      </tr>
+    </table>
+
+    <div class="titulo-documento">Planejamento Pedagógico INTEGRO</div>
+
+    <div class="conteudo">
+      ${conteudoFormatado}
+    </div>
+
+    <div class="assinaturas">
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura do(a) Professor(a)</div>
+        <div>${escaparHTML(dados.professor || "")}</div>
+      </div>
+
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura da Coordenação Pedagógica</div>
+        <div>${escaparHTML(dados.coordenador || "")}</div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Documento gerado pelo Planejador Pedagógico INTEGRO.
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 500);
+    };
+  <\/script>
+</body>
+</html>
+`;
+
+      const janela = window.open("", "_blank");
+
+      if (!janela) {
+        alert("O navegador bloqueou a abertura da janela. Permita pop-ups para gerar o PDF.");
+        return;
+      }
+
+      janela.document.open();
+      janela.document.write(htmlImpressao);
+      janela.document.close();
     }
 
     function nomeModo(modo) {
       if (modo === "individualizado") return "Plano individualizado por aluno";
       if (modo === "intervencao") return "Plano de intervenção";
       return "Plano coletivo";
-    }
-
-    function montarNomeArquivo(dados) {
-      const disciplina = limparNomeArquivo(dados.disciplina || "planejamento");
-      const serie = limparNomeArquivo(dados.serie || "serie");
-      const assunto = limparNomeArquivo(dados.assunto || "assunto");
-
-      return `Planejamento_INTEGRO_${disciplina}_${serie}_${assunto}.pdf`;
-    }
-
-    function limparNomeArquivo(texto) {
-      return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "_")
-        .replace(/_+/g, "_")
-        .substring(0, 40);
     }
 
     function formatarTextoParaPDF(texto) {
@@ -713,6 +736,10 @@
           let limpa = linha.trim();
 
           if (!limpa) {
+            return "<br>";
+          }
+
+          if (limpa === "---") {
             return "<br>";
           }
 
@@ -734,7 +761,7 @@
     }
 
     function escaparHTML(texto) {
-      return texto
+      return String(texto)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
