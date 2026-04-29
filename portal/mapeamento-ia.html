@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Mapeamento de Aprendizagem | INTEGRO</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --verde-principal: #1d6b3a;
+      --verde-escuro: #123d25;
+      --verde-claro: #eaf6ed;
+      --verde-borda: #a8d5b5;
+      --cinza: #f5f7f6;
+      --texto: #1f2d24;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--cinza);
+      color: var(--texto);
+    }
+
+    .topo {
+      background: var(--verde-principal);
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .topo h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .topo div {
+      line-height: 1.4;
+    }
+
+    .topo a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 28px auto;
+      padding: 0 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--verde-borda);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      margin-bottom: 22px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: var(--verde-escuro);
+    }
+
+    .aviso {
+      background: var(--verde-claro);
+      border-left: 5px solid var(--verde-principal);
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #b9cfc0;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: white;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .linha-botoes {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: var(--verde-principal);
+      color: white;
+    }
+
+    button:hover {
+      background: #15542d;
+    }
+
+    button:disabled {
+      background: #8db99b;
+      cursor: not-allowed;
+    }
+
+    .btn-secundario {
+      background: #2f6044;
+    }
+
+    .btn-pdf {
+      background: #124b2a;
+    }
+
+    .resultado-box {
+      display: none;
+    }
+
+    #editorMapeamento {
+      min-height: 620px;
+      line-height: 1.5;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .info-modelo {
+      font-size: 13px;
+      color: #496254;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topo {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topo">
+    <div>
+      <h1>Diagnóstico INTEGRO</h1>
+      <div>Mapeamento de Aprendizagem</div>
+    </div>
+
+    <a href="index.html">Voltar ao portal</a>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Gerar mapeamento de aprendizagem</h2>
+
+      <div class="aviso">
+        Preencha os dados abaixo. A IA irá gerar um instrumento de mapeamento profundo, mas fácil de aplicar.
+        O objetivo é investigar a cadeia da aprendizagem e identificar possíveis pontos de ruptura pedagógica.
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Nome do aluno</label>
+          <input id="aluno" placeholder="Nome do aluno" />
+        </div>
+
+        <div>
+          <label>Idade</label>
+          <input id="idade" placeholder="Ex.: 9 anos" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Série/Ano</label>
+          <input id="serie" placeholder="Ex.: 4º ano, 6º ano, Jardim II" />
+        </div>
+
+        <div>
+          <label>Escola parceira</label>
+          <input id="escola" placeholder="Nome da escola parceira" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Examinador(a)</label>
+          <input id="examinador" placeholder="Nome de quem aplicará o mapeamento" />
+        </div>
+
+        <div>
+          <label>Tempo disponível para avaliação</label>
+          <input id="tempo_avaliacao" placeholder="Ex.: 40 minutos, 1 hora, 2 atendimentos" />
+        </div>
+      </div>
+
+      <label>Área avaliada</label>
+      <select id="area">
+        <option value="">Selecione</option>
+        <option>Leitura</option>
+        <option>Escrita</option>
+        <option>Matemática</option>
+        <option>Raciocínio lógico</option>
+        <option>Atenção e organização</option>
+        <option>Coordenação motora</option>
+        <option>Educação infantil</option>
+        <option>Mapeamento geral</option>
+      </select>
+
+      <label>Dificuldade observada</label>
+      <textarea id="dificuldade_observada" placeholder="Descreva de forma simples o que foi observado. Ex.: o aluno erra adição com reserva e se confunde com valor posicional."></textarea>
+
+      <label>Observações iniciais</label>
+      <textarea id="observacoes_iniciais" placeholder="Ex.: necessita de apoio visual, perde a sequência da atividade, evita leitura, responde melhor com mediação..."></textarea>
+
+      <div class="linha-botoes">
+        <button id="btnGerar" onclick="gerarMapeamento()">Gerar mapeamento</button>
+      </div>
+
+      <div id="modeloUsado" class="info-modelo"></div>
+    </section>
+
+    <section id="resultadoBox" class="card resultado-box">
+      <h2>Mapeamento gerado</h2>
+
+      <div class="aviso">
+        Revise o mapeamento abaixo. Você pode modificar qualquer parte antes de abrir o documento para salvar em PDF.
+      </div>
+
+      <label>Texto editável do mapeamento</label>
+      <textarea id="editorMapeamento"></textarea>
+
+      <div class="linha-botoes">
+        <button class="btn-secundario" onclick="copiarMapeamento()">Copiar texto</button>
+        <button class="btn-pdf" onclick="abrirDocumentoPDF()">Abrir documento para PDF</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://kvdfnmwuxmpalsyuytwt.supabase.co";
+    const SUPABASE_ANON_KEY = "COLE_AQUI_SUA_SUPABASE_ANON_KEY";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function coletarDadosFormulario() {
+      return {
+        aluno: document.getElementById("aluno").value,
+        idade: document.getElementById("idade").value,
+        serie: document.getElementById("serie").value,
+        escola: document.getElementById("escola").value,
+        examinador: document.getElementById("examinador").value,
+        area: document.getElementById("area").value,
+        dificuldade_observada: document.getElementById("dificuldade_observada").value,
+        tempo_avaliacao: document.getElementById("tempo_avaliacao").value,
+        observacoes_iniciais: document.getElementById("observacoes_iniciais").value
+      };
+    }
+
+    async function gerarMapeamento() {
+      const btn = document.getElementById("btnGerar");
+      const resultadoBox = document.getElementById("resultadoBox");
+      const editor = document.getElementById("editorMapeamento");
+      const modeloUsado = document.getElementById("modeloUsado");
+
+      const dados = coletarDadosFormulario();
+
+      if (!dados.serie || !dados.area || !dados.dificuldade_observada || !dados.tempo_avaliacao) {
+        alert("Preencha série/ano, área avaliada, dificuldade observada e tempo de avaliação.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Gerando mapeamento...";
+      modeloUsado.textContent = "";
+      resultadoBox.style.display = "block";
+      editor.value = "Aguarde. O mapeamento está sendo gerado...";
+
+      try {
+        const { data, error } = await supabaseClient.functions.invoke("gerar-mapeamento", {
+          body: dados
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        editor.value = data.mapeamento || "Não foi possível gerar o mapeamento.";
+        modeloUsado.textContent = data.modelo_usado
+          ? "Modelo utilizado: " + data.modelo_usado
+          : "";
+
+        resultadoBox.scrollIntoView({ behavior: "smooth" });
+      } catch (err) {
+        editor.value = "Erro ao gerar mapeamento: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Gerar mapeamento";
+      }
+    }
+
+    function copiarMapeamento() {
+      const texto = document.getElementById("editorMapeamento").value;
+      navigator.clipboard.writeText(texto);
+      alert("Mapeamento copiado.");
+    }
+
+    function abrirDocumentoPDF() {
+      const dados = coletarDadosFormulario();
+      const texto = document.getElementById("editorMapeamento").value;
+
+      if (!texto || texto.trim().length < 20) {
+        alert("Gere ou escreva o mapeamento antes de criar o documento.");
+        return;
+      }
+
+      const dataAtual = new Date().toLocaleDateString("pt-BR");
+      const conteudoFormatado = formatarTextoParaPDF(texto);
+
+      const htmlImpressao = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapeamento de Aprendizagem INTEGRO</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .barra-acoes {
+      background: #1d6b3a;
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .barra-acoes button {
+      background: white;
+      color: #1d6b3a;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .folha {
+      width: 180mm;
+      max-width: 180mm;
+      margin: 12mm auto;
+      background: white;
+    }
+
+    .cabecalho {
+      border: 2px solid #1d6b3a;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .cabecalho h1 {
+      margin: 0;
+      color: #1d6b3a;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .cabecalho h2 {
+      margin: 6px 0 0 0;
+      color: #222;
+      font-size: 14px;
+    }
+
+    table.info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      table-layout: fixed;
+    }
+
+    table.info td {
+      width: 50%;
+      border: 1px solid #999;
+      padding: 7px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    table.info strong {
+      color: #123d25;
+    }
+
+    .titulo-documento {
+      font-size: 14px;
+      font-weight: bold;
+      color: #123d25;
+      margin: 18px 0 16px 0;
+      text-transform: uppercase;
+    }
+
+    .conteudo {
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: left;
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+
+    .conteudo p {
+      margin: 0 0 8px 0;
+    }
+
+    .conteudo h3 {
+      font-size: 13px;
+      color: #123d25;
+      margin: 15px 0 8px 0;
+      page-break-after: avoid;
+    }
+
+    .conteudo strong {
+      color: #123d25;
+    }
+
+    .assinaturas {
+      margin-top: 45px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      page-break-inside: avoid;
+    }
+
+    .assinatura {
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .linha-assinatura {
+      border-top: 1px solid #000;
+      margin-bottom: 7px;
+      height: 1px;
+    }
+
+    .rodape {
+      margin-top: 30px;
+      padding-top: 8px;
+      border-top: 1px solid #999;
+      text-align: center;
+      font-size: 9px;
+      color: #444;
+    }
+
+    @media print {
+      .barra-acoes {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .folha {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="barra-acoes">
+    <strong>Mapeamento de Aprendizagem INTEGRO</strong>
+    <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+  </div>
+
+  <main class="folha">
+    <div class="cabecalho">
+      <h1>INSTITUTO INTEGRO</h1>
+      <h2>Mapeamento de Aprendizagem</h2>
+    </div>
+
+    <table class="info">
+      <tr>
+        <td><strong>Aluno:</strong><br>${escaparHTML(dados.aluno || "Não informado")}</td>
+        <td><strong>Idade:</strong><br>${escaparHTML(dados.idade || "Não informada")}</td>
+      </tr>
+      <tr>
+        <td><strong>Série/Ano:</strong><br>${escaparHTML(dados.serie || "Não informado")}</td>
+        <td><strong>Escola parceira:</strong><br>${escaparHTML(dados.escola || "Não informada")}</td>
+      </tr>
+      <tr>
+        <td><strong>Examinador(a):</strong><br>${escaparHTML(dados.examinador || "Não informado")}</td>
+        <td><strong>Área avaliada:</strong><br>${escaparHTML(dados.area || "Não informada")}</td>
+      </tr>
+      <tr>
+        <td><strong>Tempo de avaliação:</strong><br>${escaparHTML(dados.tempo_avaliacao || "Não informado")}</td>
+        <td><strong>Data:</strong><br>${dataAtual}</td>
+      </tr>
+    </table>
+
+    <div class="titulo-documento">Instrumento de Mapeamento INTEGRO</div>
+
+    <div class="conteudo">
+      ${conteudoFormatado}
+    </div>
+
+    <div class="assinaturas">
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura do(a) Examinador(a)</div>
+        <div>${escaparHTML(dados.examinador || "")}</div>
+      </div>
+
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura da Coordenação / Responsável</div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Documento gerado pelo Diagnóstico INTEGRO — Mapeamento de Aprendizagem.
+    </div>
+  </main>
+</body>
+</html>
+`;
+
+      const janela = window.open("", "_blank");
+
+      if (!janela) {
+        alert("O navegador bloqueou a abertura da janela. Permita pop-ups para gerar o PDF.");
+        return;
+      }
+
+      janela.document.open();
+      janela.document.write(htmlImpressao);
+      janela.document.close();
+      janela.focus();
+    }
+
+    function formatarTextoParaPDF(texto) {
+      const seguro = escaparHTML(texto);
+
+      return seguro
+        .split("\n")
+        .map(linha => {
+          let limpa = linha.trim();
+
+          if (!limpa) {
+            return "<br>";
+          }
+
+          if (limpa === "---") {
+            return "<br>";
+          }
+
+          limpa = limpa
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/^[-•]\s*/, "");
+
+          if (/^\d+\./.test(limpa)) {
+            return `<h3>${limpa}</h3>`;
+          }
+
+          if (limpa.startsWith("#")) {
+            return `<h3>${limpa.replace(/^#+\s*/, "")}</h3>`;
+          }
+
+          return `<p>${limpa}</p>`;
+        })
+        .join("");
+    }
+
+    function escaparHTML(texto) {
+      return String(texto)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
