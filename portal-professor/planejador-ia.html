@@ -50,7 +50,7 @@
       color: white;
       text-decoration: none;
       font-weight: bold;
-      background: rgba(255,255,255,0.16);
+      background: rgba(255, 255, 255, 0.16);
       padding: 10px 14px;
       border-radius: 10px;
     }
@@ -176,43 +176,51 @@
     #areaPDF {
       display: none;
       background: white;
-      color: black;
-      width: 794px;
-      padding: 36px;
+      color: #000;
+      width: 190mm;
+      min-height: 277mm;
+      padding: 12mm;
       font-family: Arial, Helvetica, sans-serif;
+      font-size: 11.5px;
+      line-height: 1.45;
+      box-sizing: border-box;
     }
 
     .pdf-cabecalho {
       border: 2px solid #1d6b3a;
-      padding: 16px;
+      padding: 12px;
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
     }
 
     .pdf-cabecalho h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       color: #1d6b3a;
       letter-spacing: 0.5px;
     }
 
     .pdf-cabecalho h2 {
-      margin: 8px 0 0;
-      font-size: 17px;
+      margin: 6px 0 0;
+      font-size: 14px;
       color: #1f2d24;
     }
 
     .pdf-info {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 18px;
-      font-size: 12px;
+      margin-bottom: 16px;
+      font-size: 10.5px;
+      table-layout: fixed;
+      page-break-inside: avoid;
     }
 
     .pdf-info td {
       border: 1px solid #999;
-      padding: 8px;
+      padding: 6px;
       vertical-align: top;
+      word-break: break-word;
     }
 
     .pdf-info strong {
@@ -220,38 +228,55 @@
     }
 
     .pdf-conteudo {
-      font-size: 12.5px;
-      line-height: 1.55;
-      white-space: normal;
-      text-align: justify;
+      font-size: 11.5px;
+      line-height: 1.5;
+      text-align: left;
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+
+    .pdf-conteudo p {
+      margin: 0 0 7px 0;
+    }
+
+    .pdf-conteudo h3 {
+      font-size: 13px;
+      color: #123d25;
+      margin: 14px 0 7px 0;
+      page-break-after: avoid;
+    }
+
+    .pdf-conteudo strong {
+      color: #123d25;
     }
 
     .pdf-assinaturas {
-      margin-top: 50px;
+      margin-top: 38px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 40px;
+      gap: 32px;
       page-break-inside: avoid;
     }
 
     .assinatura {
       text-align: center;
-      font-size: 12px;
+      font-size: 10.5px;
     }
 
     .linha-assinatura {
       border-top: 1px solid #000;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
       height: 1px;
     }
 
     .pdf-rodape {
-      margin-top: 30px;
+      margin-top: 24px;
       padding-top: 8px;
       border-top: 1px solid #aaa;
-      font-size: 10px;
+      font-size: 9px;
       text-align: center;
       color: #444;
+      page-break-inside: avoid;
     }
 
     @media (max-width: 760px) {
@@ -611,17 +636,27 @@
       document.getElementById("pdfConteudo").innerHTML = formatarTextoParaPDF(texto);
 
       const areaPDF = document.getElementById("areaPDF");
+
       areaPDF.style.display = "block";
+      areaPDF.style.position = "fixed";
+      areaPDF.style.left = "-9999px";
+      areaPDF.style.top = "0";
 
       const nomeArquivo = montarNomeArquivo(dados);
 
       const opcoes = {
-        margin: [8, 8, 8, 8],
+        margin: [10, 10, 10, 10],
         filename: nomeArquivo,
-        image: { type: "jpeg", quality: 0.98 },
+        image: {
+          type: "jpeg",
+          quality: 0.98
+        },
         html2canvas: {
           scale: 2,
-          useCORS: true
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 900
         },
         jsPDF: {
           unit: "mm",
@@ -629,7 +664,8 @@
           orientation: "portrait"
         },
         pagebreak: {
-          mode: ["avoid-all", "css", "legacy"]
+          mode: ["css", "legacy"],
+          avoid: [".pdf-cabecalho", ".pdf-info", ".pdf-assinaturas", ".assinatura"]
         }
       };
 
@@ -639,6 +675,9 @@
         .save()
         .then(() => {
           areaPDF.style.display = "none";
+          areaPDF.style.position = "";
+          areaPDF.style.left = "";
+          areaPDF.style.top = "";
         });
     }
 
@@ -671,14 +710,22 @@
       return seguro
         .split("\n")
         .map(linha => {
-          const limpa = linha.trim();
+          let limpa = linha.trim();
 
           if (!limpa) {
             return "<br>";
           }
 
-          if (/^\d+\./.test(limpa) || limpa.startsWith("#")) {
-            return `<p><strong>${limpa.replace(/^#+\s*/, "")}</strong></p>`;
+          limpa = limpa
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/^[-•]\s*/, "");
+
+          if (/^\d+\./.test(limpa)) {
+            return `<h3>${limpa}</h3>`;
+          }
+
+          if (limpa.startsWith("#")) {
+            return `<h3>${limpa.replace(/^#+\s*/, "")}</h3>`;
           }
 
           return `<p>${limpa}</p>`;
