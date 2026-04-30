@@ -284,13 +284,54 @@ async function initDashboardPage() {
   setupActionNavigation();
   await populateDashboard();
 
-  document.getElementById('planForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); const form = new FormData(e.target);
-    const payload = { student_id: state.selectedStudentId, teacher_id: state.profile.id, title: form.get('title'), description: form.get('description'), week_reference: form.get('week_reference'), status: form.get('status') };
-    const { error } = await supabaseClient.from('student_plans').insert(payload);
-    setHelperMessage('planMessage', error ? error.message : 'Plano salvo com sucesso.', error ? 'error' : 'success');
-    if (!error) { e.target.reset(); await loadStudentSection(state.selectedStudentId); }
-  });
+ document.getElementById('planForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const form = new FormData(e.target);
+
+  const payload = {
+    student_id: state.selectedStudentId,
+    teacher_id: state.profile.id,
+    title: form.get('title'),
+    description: form.get('description'),
+    week_reference: form.get('week_reference'),
+    status: form.get('status')
+  };
+
+  let error = null;
+
+  if (state.editingPlanId) {
+    const res = await supabaseClient
+      .from('student_plans')
+      .update(payload)
+      .eq('id', state.editingPlanId)
+      .eq('student_id', state.selectedStudentId);
+
+    error = res.error;
+  } else {
+    const res = await supabaseClient
+      .from('student_plans')
+      .insert(payload);
+
+    error = res.error;
+  }
+
+  setHelperMessage(
+    'planMessage',
+    error
+      ? error.message
+      : state.editingPlanId
+        ? 'Plano atualizado com sucesso.'
+        : 'Plano salvo com sucesso.',
+    error ? 'error' : 'success'
+  );
+
+  if (!error) {
+    e.target.reset();
+    resetPlanEditingState(false);
+    await loadStudentSection(state.selectedStudentId);
+  }
+});
 
   document.getElementById('materialForm')?.addEventListener('submit', async (e) => {
     e.preventDefault(); const form = new FormData(e.target); const file = form.get('file');
