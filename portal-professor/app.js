@@ -179,7 +179,35 @@ async function loadStudentSection(studentId) {
   setText('attendanceCount', String(attendance.length));
   const latest = [plans[0]?.created_at, materials[0]?.created_at, progress[0]?.created_at, announcements[0]?.created_at, attendance[0]?.created_at].filter(Boolean).sort().pop();
   setText('summaryLastUpdate', formatDate(latest));
-  renderList('plansList', plans, item => `<div class="record-item"><h3>${item.title}</h3><p>${item.description || ''}</p><div class="record-meta">${item.week_reference || 'Sem período'} • ${item.status || 'ativo'} • ${formatDate(item.created_at)}</div></div>`);
+ renderList('plansList', plans, item => `
+  <div class="record-item plan-record">
+    <h3>${item.title || 'Plano de estudo'}</h3>
+
+    <p>${item.description || ''}</p>
+
+    <div class="record-meta">
+      ${item.week_reference || 'Sem período'} • ${item.status || 'ativo'} • ${formatDate(item.created_at)}
+    </div>
+
+    <div class="record-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;">
+      <button
+        type="button"
+        class="btn btn-secondary small-btn edit-plan-btn"
+        data-plan-id="${item.id}"
+      >
+        Editar plano
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-danger small-btn delete-plan-btn"
+        data-plan-id="${item.id}"
+      >
+        Excluir plano
+      </button>
+    </div>
+  </div>
+`);
   renderList('materialsList', materials, item => `<div class="record-item material-record"><h3>${item.title || 'Material'}</h3><p>${item.description || ''}</p><div class="record-meta">${item.category || 'Arquivo'} • ${item.file_path || ''}</div><div class="record-actions"><button type="button" class="btn btn-danger small-btn delete-material-btn" data-material-id="${item.id}" data-file-path="${encodeURIComponent(item.file_path || '')}">Excluir material</button></div></div>`);
   renderList('progressList', progress, item => `<div class="record-item"><h3>Registro de evolução</h3><p><strong>Resumo:</strong> ${item.summary || '—'}</p><p><strong>Pontos fortes:</strong> ${item.strengths || '—'}</p><p><strong>Dificuldades:</strong> ${item.difficulties || '—'}</p><p><strong>Próximos passos:</strong> ${item.next_steps || '—'}</p><div class="record-meta">${formatDate(item.created_at)}</div></div>`);
   renderList('announcementsList', announcements, item => `<div class="record-item"><h3>${item.title}</h3><p>${item.message}</p><div class="record-meta">${formatDate(item.created_at)}</div></div>`);
