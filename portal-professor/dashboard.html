@@ -97,6 +97,12 @@
             <small>Registrar nível, dificuldades, habilidades e mediações por área.</small>
           </button>
 
+          <button type="button" class="action-card action-trigger" data-section-target="aiWeeklyPlanSection">
+            <span class="action-icon">AI</span>
+            <strong>Plano semanal com IA</strong>
+            <small>Gerar plano individual usando perfil pedagógico e evolução do aluno.</small>
+          </button>
+
           <button type="button" class="action-card action-trigger" data-section-target="planSection">
             <span class="action-icon">1</span>
             <strong>Plano de estudo</strong>
@@ -258,6 +264,107 @@
 
         <p id="profileMessage" class="helper"></p>
       </form>
+    </section>
+
+    <section id="aiWeeklyPlanSection" class="panel-card action-section">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">PLANO INDIVIDUALIZADO COM IA</div>
+          <h2>Gerar plano semanal do aluno</h2>
+          <p class="helper">
+            A IA usará o perfil pedagógico salvo, as evoluções anteriores e o objetivo da semana para gerar um plano individualizado.
+          </p>
+        </div>
+
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
+      <form id="aiWeeklyPlanForm" class="stack">
+        <div class="grid two-cols">
+          <label>
+            <span>Área do plano</span>
+            <select id="aiPlanArea" name="area" required>
+              <option value="">Selecione uma área</option>
+              <option value="Matemática">Matemática</option>
+              <option value="Língua Portuguesa">Língua Portuguesa</option>
+              <option value="Linguagem">Linguagem</option>
+              <option value="Leitura e Escrita">Leitura e Escrita</option>
+              <option value="Coordenação Motora">Coordenação Motora</option>
+              <option value="Raciocínio Lógico">Raciocínio Lógico</option>
+              <option value="Interdisciplinaridade">Interdisciplinaridade</option>
+              <option value="INTEGRO Lab">INTEGRO Lab</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Semana / período</span>
+            <input id="aiPlanWeek" name="semana" type="text" placeholder="Ex.: 04 a 08 de maio" required />
+          </label>
+        </div>
+
+        <div class="grid two-cols">
+          <label>
+            <span>Tempo de atendimento</span>
+            <input id="aiPlanTime" name="tempo_atendimento" type="text" placeholder="Ex.: 2 aulas de 1 hora" required />
+          </label>
+
+          <label>
+            <span>Objetivo da semana</span>
+            <input id="aiPlanGoal" name="objetivo_semana" type="text" placeholder="Ex.: retomar cálculo com apoio visual." />
+          </label>
+        </div>
+
+        <label>
+          <span>Perfil pedagógico carregado</span>
+          <textarea
+            id="aiPlanProfile"
+            rows="8"
+            placeholder="Ao escolher a área, o perfil pedagógico salvo será carregado aqui."
+            required
+          ></textarea>
+        </label>
+
+        <div class="grid two-cols">
+          <button type="button" id="loadProfileForAiBtn" class="btn btn-secondary">Carregar perfil salvo</button>
+          <button type="button" id="copyProfileToAiBtn" class="btn btn-secondary">Usar perfil que está na tela</button>
+        </div>
+
+        <label>
+          <span>Evoluções anteriores</span>
+          <textarea
+            id="aiPlanEvolutions"
+            rows="5"
+            placeholder="Cole ou escreva aqui as evoluções anteriores do aluno. Ex.: Na semana anterior realizou as atividades com apoio visual, mas ainda precisou de mediação..."
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Observações do professor</span>
+          <textarea
+            id="aiPlanTeacherNotes"
+            rows="4"
+            placeholder="Escreva observações importantes para a IA considerar no plano desta semana."
+          ></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Gerar plano semanal com IA</button>
+        <p id="aiPlanMessage" class="helper"></p>
+      </form>
+
+      <div id="aiPlanResultBox" class="stack" style="display: none; margin-top: 24px;">
+        <label>
+          <span>Plano gerado pela IA — editável</span>
+          <textarea id="aiPlanEditor" rows="18"></textarea>
+        </label>
+
+        <div class="grid two-cols">
+          <button type="button" id="saveAiPlanToStudyBtn" class="btn btn-primary">Salvar no Plano de estudo</button>
+          <button type="button" id="printAiPlanBtn" class="btn btn-secondary">Imprimir plano</button>
+        </div>
+
+        <button type="button" id="copyAiPlanBtn" class="btn btn-secondary">Copiar plano</button>
+        <p id="aiPlanSaveMessage" class="helper"></p>
+      </div>
     </section>
 
     <section id="planSection" class="panel-card action-section">
@@ -1066,6 +1173,15 @@
         janela.focus();
       }
 
+      window.INTEGRO_PROFILE_HELPERS = {
+        isUuid,
+        getStudentInfo,
+        getSchoolName,
+        getTeacherName,
+        findExistingProfile,
+        formatTextForPrint
+      };
+
       profileForm.addEventListener("submit", savePedagogicalProfile);
 
       profileArea.addEventListener("change", () => {
@@ -1088,6 +1204,558 @@
       setTimeout(() => {
         loadProfileForSelectedArea();
       }, 1000);
+    })();
+
+    (function initAiWeeklyPlanModule() {
+      const cfg = window.INTEGRO_SUPABASE;
+
+      if (!cfg || !window.supabase) {
+        console.warn("Configuração do Supabase não encontrada para o plano semanal com IA.");
+        return;
+      }
+
+      const aiPlanClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+      const studentSelect = document.getElementById("studentSelect");
+      const studentMeta = document.getElementById("studentMeta");
+      const welcomeName = document.getElementById("welcomeName");
+
+      const form = document.getElementById("aiWeeklyPlanForm");
+      const areaInput = document.getElementById("aiPlanArea");
+      const weekInput = document.getElementById("aiPlanWeek");
+      const timeInput = document.getElementById("aiPlanTime");
+      const goalInput = document.getElementById("aiPlanGoal");
+      const profileInput = document.getElementById("aiPlanProfile");
+      const evolutionsInput = document.getElementById("aiPlanEvolutions");
+      const teacherNotesInput = document.getElementById("aiPlanTeacherNotes");
+      const messageEl = document.getElementById("aiPlanMessage");
+
+      const loadProfileBtn = document.getElementById("loadProfileForAiBtn");
+      const copyProfileBtn = document.getElementById("copyProfileToAiBtn");
+
+      const resultBox = document.getElementById("aiPlanResultBox");
+      const editor = document.getElementById("aiPlanEditor");
+      const saveToStudyBtn = document.getElementById("saveAiPlanToStudyBtn");
+      const printBtn = document.getElementById("printAiPlanBtn");
+      const copyBtn = document.getElementById("copyAiPlanBtn");
+      const saveMessageEl = document.getElementById("aiPlanSaveMessage");
+
+      if (!form || !areaInput) {
+        return;
+      }
+
+      function isUuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+      }
+
+      function setMessage(text, type) {
+        if (!messageEl) return;
+        messageEl.textContent = text || "";
+        messageEl.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      }
+
+      function setSaveMessage(text, type) {
+        if (!saveMessageEl) return;
+        saveMessageEl.textContent = text || "";
+        saveMessageEl.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      }
+
+      function getStudentInfo() {
+        const selectedOption = studentSelect?.options?.[studentSelect.selectedIndex];
+
+        return {
+          id: studentSelect?.value || "",
+          name: selectedOption?.textContent?.trim() || "Aluno não informado"
+        };
+      }
+
+      function getSchoolName() {
+        const raw = studentMeta?.textContent || "";
+        return raw ? raw.replace(/^Escola:\s*/i, "").trim() : "";
+      }
+
+      function getTeacherName() {
+        const raw = welcomeName?.textContent || "";
+
+        if (!raw || raw.toLowerCase().includes("carregando")) {
+          return "";
+        }
+
+        return raw.trim();
+      }
+
+      function formatForPromptProfile(record) {
+        if (!record) return "";
+
+        return [
+          `Área: ${record.area || "Não informada"}`,
+          `Objetivo prioritário: ${record.objetivo_prioritario || "Não informado"}`,
+          `Nível atual: ${record.nivel_atual || "Não informado"}`,
+          `Dificuldades principais: ${record.dificuldades || "Não informado"}`,
+          `Habilidades consolidadas: ${record.habilidades_consolidadas || "Não informado"}`,
+          `Habilidades em desenvolvimento: ${record.habilidades_em_desenvolvimento || "Não informado"}`,
+          `Habilidades ainda não consolidadas: ${record.habilidades_nao_consolidadas || "Não informado"}`,
+          `Mediação eficaz: ${record.mediacao_eficaz || "Não informado"}`,
+          `Observações importantes: ${record.observacoes || "Não informado"}`
+        ].join("\n");
+      }
+
+      async function findExistingProfile(studentId, studentName, area) {
+        let query = aiPlanClient
+          .from("student_area_profiles")
+          .select("*")
+          .eq("area", area)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (isUuid(studentId)) {
+          query = query.eq("student_id", studentId);
+        } else {
+          query = query.eq("student_name", studentName);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        return data || null;
+      }
+
+      async function loadProfileForAi() {
+        const area = areaInput.value;
+        const student = getStudentInfo();
+
+        if (!student.name || student.name === "Aluno não informado") {
+          alert("Selecione um aluno antes de carregar o perfil.");
+          return;
+        }
+
+        if (!area) {
+          alert("Selecione a área do plano.");
+          return;
+        }
+
+        try {
+          setMessage("Carregando perfil pedagógico salvo...", "");
+
+          const existing = await findExistingProfile(student.id, student.name, area);
+
+          if (!existing) {
+            profileInput.value = "";
+            setMessage("Nenhum perfil salvo para esta área. Preencha primeiro o Perfil Pedagógico do Aluno ou escreva manualmente.", "error");
+            return;
+          }
+
+          profileInput.value = formatForPromptProfile(existing);
+          setMessage("Perfil pedagógico carregado com sucesso.", "");
+        } catch (error) {
+          console.error(error);
+          setMessage("Erro ao carregar perfil pedagógico. Verifique se o perfil foi salvo nesta área.", "error");
+        }
+      }
+
+      function copyVisibleProfileToAi() {
+        const profileArea = document.getElementById("profileArea");
+        const profileForm = document.getElementById("profileForm");
+
+        if (!profileForm) {
+          return;
+        }
+
+        const area = profileArea?.value || areaInput.value || "Não informada";
+
+        const text = [
+          `Área: ${area}`,
+          `Objetivo prioritário: ${profileForm.elements["objetivo_prioritario"]?.value || "Não informado"}`,
+          `Nível atual: ${profileForm.elements["nivel_atual"]?.value || "Não informado"}`,
+          `Dificuldades principais: ${profileForm.elements["dificuldades"]?.value || "Não informado"}`,
+          `Habilidades consolidadas: ${profileForm.elements["habilidades_consolidadas"]?.value || "Não informado"}`,
+          `Habilidades em desenvolvimento: ${profileForm.elements["habilidades_em_desenvolvimento"]?.value || "Não informado"}`,
+          `Habilidades ainda não consolidadas: ${profileForm.elements["habilidades_nao_consolidadas"]?.value || "Não informado"}`,
+          `Mediação eficaz: ${profileForm.elements["mediacao_eficaz"]?.value || "Não informado"}`,
+          `Observações importantes: ${profileForm.elements["observacoes"]?.value || "Não informado"}`
+        ].join("\n");
+
+        profileInput.value = text;
+
+        if (area && area !== "Não informada") {
+          areaInput.value = area;
+        }
+
+        setMessage("Perfil que estava na tela foi copiado para a geração do plano.", "");
+      }
+
+      async function generateAiWeeklyPlan(event) {
+        event.preventDefault();
+
+        const student = getStudentInfo();
+
+        if (!student.name || student.name === "Aluno não informado") {
+          alert("Selecione um aluno antes de gerar o plano.");
+          return;
+        }
+
+        if (!areaInput.value || !weekInput.value || !timeInput.value || !profileInput.value.trim()) {
+          alert("Preencha área, semana, tempo de atendimento e carregue ou escreva o perfil pedagógico.");
+          return;
+        }
+
+        try {
+          setMessage("Gerando plano semanal com IA...", "");
+          resultBox.style.display = "block";
+          editor.value = "Aguarde. A IA está gerando o plano semanal individualizado...";
+
+          const payload = {
+            aluno: student.name,
+            serie: "Não informada",
+            escola: getSchoolName() || "INSTITUTO INTEGRO",
+            professor: getTeacherName() || "Não informado",
+            area: areaInput.value,
+            semana: weekInput.value,
+            tempo_atendimento: timeInput.value,
+            objetivo_semana: goalInput.value,
+            perfil_pedagogico: profileInput.value,
+            evolucoes_anteriores: evolutionsInput.value,
+            observacoes_professor: teacherNotesInput.value
+          };
+
+          const { data, error } = await aiPlanClient.functions.invoke("gerar-plano-aluno", {
+            body: payload
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          if (data?.error) {
+            throw new Error(data.error);
+          }
+
+          editor.value = data?.plano || "Não foi possível gerar o plano.";
+          setMessage(data?.modelo_usado ? `Plano gerado com sucesso. Modelo utilizado: ${data.modelo_usado}.` : "Plano gerado com sucesso.", "");
+        } catch (error) {
+          console.error(error);
+          editor.value = "Erro ao gerar plano semanal com IA: " + (error.message || String(error));
+          setMessage("Erro ao gerar plano semanal com IA.", "error");
+        }
+      }
+
+      function saveAiPlanToStudyPlan() {
+        const planText = editor.value.trim();
+
+        if (!planText) {
+          alert("Gere ou escreva o plano antes de salvar.");
+          return;
+        }
+
+        const planForm = document.getElementById("planForm");
+
+        if (!planForm) {
+          alert("Formulário de plano de estudo não encontrado.");
+          return;
+        }
+
+        const titleInput = planForm.elements["title"];
+        const descriptionInput = planForm.elements["description"];
+        const weekInputPlan = planForm.elements["week_reference"];
+        const statusInput = planForm.elements["status"];
+
+        if (titleInput) {
+          titleInput.value = `Plano semanal individualizado — ${areaInput.value || "Área não informada"}`;
+        }
+
+        if (descriptionInput) {
+          descriptionInput.value = planText;
+        }
+
+        if (weekInputPlan) {
+          weekInputPlan.value = weekInput.value || "Semana não informada";
+        }
+
+        if (statusInput) {
+          statusInput.value = "ativo";
+        }
+
+        setSaveMessage("Plano enviado para o formulário de Plano de estudo. Salvando...", "");
+
+        const event = new Event("submit", {
+          bubbles: true,
+          cancelable: true
+        });
+
+        planForm.dispatchEvent(event);
+
+        setTimeout(() => {
+          setSaveMessage("Se o Portal confirmou o salvamento acima, o plano já foi registrado e ficará visível para a família.", "");
+        }, 800);
+      }
+
+      function formatTextForPrint(text) {
+        return String(text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+          .replace(/\n/g, "<br>");
+      }
+
+      function printAiPlan() {
+        const student = getStudentInfo();
+        const dataAtual = new Date().toLocaleDateString("pt-BR");
+        const planText = editor.value.trim();
+
+        if (!planText) {
+          alert("Gere ou escreva o plano antes de imprimir.");
+          return;
+        }
+
+        const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Plano Semanal Individualizado - INTEGRO</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .barra-acoes {
+      background: #1d6b3a;
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .barra-acoes button {
+      background: white;
+      color: #1d6b3a;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .folha {
+      width: 180mm;
+      max-width: 180mm;
+      margin: 12mm auto;
+      background: white;
+    }
+
+    .cabecalho {
+      border: 2px solid #1d6b3a;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .cabecalho h1 {
+      margin: 0;
+      color: #1d6b3a;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .cabecalho h2 {
+      margin: 6px 0 0 0;
+      color: #222;
+      font-size: 14px;
+    }
+
+    table.info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      table-layout: fixed;
+    }
+
+    table.info td {
+      width: 50%;
+      border: 1px solid #999;
+      padding: 7px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    table.info strong {
+      color: #123d25;
+    }
+
+    .conteudo {
+      border: 1px solid #b9cfc0;
+      border-radius: 10px;
+      padding: 12px;
+      line-height: 1.55;
+    }
+
+    .assinaturas {
+      margin-top: 45px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      page-break-inside: avoid;
+    }
+
+    .assinatura {
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .linha-assinatura {
+      border-top: 1px solid #000;
+      margin-bottom: 7px;
+      height: 1px;
+    }
+
+    .rodape {
+      margin-top: 30px;
+      padding-top: 8px;
+      border-top: 1px solid #999;
+      text-align: center;
+      font-size: 9px;
+      color: #444;
+    }
+
+    @media print {
+      .barra-acoes {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .folha {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="barra-acoes">
+    <strong>Plano Semanal Individualizado - INTEGRO</strong>
+    <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+  </div>
+
+  <main class="folha">
+    <div class="cabecalho">
+      <h1>INSTITUTO INTEGRO</h1>
+      <h2>Plano Semanal Individualizado</h2>
+    </div>
+
+    <table class="info">
+      <tr>
+        <td><strong>Aluno:</strong><br>${formatTextForPrint(student.name)}</td>
+        <td><strong>Área:</strong><br>${formatTextForPrint(areaInput.value || "Não informada")}</td>
+      </tr>
+      <tr>
+        <td><strong>Professor(a):</strong><br>${formatTextForPrint(getTeacherName() || "Não informado")}</td>
+        <td><strong>Escola:</strong><br>${formatTextForPrint(getSchoolName() || "INSTITUTO INTEGRO")}</td>
+      </tr>
+      <tr>
+        <td><strong>Semana/período:</strong><br>${formatTextForPrint(weekInput.value || "Não informado")}</td>
+        <td><strong>Data de emissão:</strong><br>${dataAtual}</td>
+      </tr>
+    </table>
+
+    <div class="conteudo">
+      ${formatTextForPrint(planText)}
+    </div>
+
+    <div class="assinaturas">
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura do(a) Professor(a)</div>
+        <div>${formatTextForPrint(getTeacherName() || "")}</div>
+      </div>
+
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura da Coordenação / Responsável</div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Documento gerado pelo Portal do Professor INTEGRO.
+    </div>
+  </main>
+</body>
+</html>
+`;
+
+        const janela = window.open("", "_blank");
+
+        if (!janela) {
+          alert("O navegador bloqueou a abertura da janela. Permita pop-ups para imprimir o plano.");
+          return;
+        }
+
+        janela.document.open();
+        janela.document.write(html);
+        janela.document.close();
+        janela.focus();
+      }
+
+      form.addEventListener("submit", generateAiWeeklyPlan);
+
+      loadProfileBtn?.addEventListener("click", loadProfileForAi);
+
+      copyProfileBtn?.addEventListener("click", copyVisibleProfileToAi);
+
+      areaInput?.addEventListener("change", () => {
+        if (areaInput.value) {
+          loadProfileForAi();
+        }
+      });
+
+      saveToStudyBtn?.addEventListener("click", saveAiPlanToStudyPlan);
+
+      printBtn?.addEventListener("click", printAiPlan);
+
+      copyBtn?.addEventListener("click", () => {
+        const text = editor.value || "";
+
+        if (!text.trim()) {
+          alert("Não há plano para copiar.");
+          return;
+        }
+
+        navigator.clipboard.writeText(text);
+        setSaveMessage("Plano copiado.", "");
+      });
     })();
   </script>
 
