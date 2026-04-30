@@ -7,15 +7,17 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../portal/config.js"></script>
+
   <!-- PWA INTEGRO -->
-<link rel="manifest" href="/manifest.webmanifest" />
-<meta name="theme-color" content="#004d3a" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="INTEGRO" />
-<link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#004d3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="INTEGRO" />
+  <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
 </head>
+
 <body data-page="dashboard-professor">
   <header class="topbar">
     <div class="topbar-brand">
@@ -25,6 +27,7 @@
         <strong>INTEGRO</strong>
       </div>
     </div>
+
     <div class="topbar-actions">
       <span id="welcomeName" class="pill">Carregando...</span>
       <button id="logoutBtn" class="btn btn-secondary small-btn">Sair</button>
@@ -38,6 +41,7 @@
         <h1>Painel do professor</h1>
         <p>Selecione o aluno e escolha o que deseja fazer pelos botões abaixo.</p>
       </div>
+
       <div class="selector-card">
         <label for="studentSelect">Aluno</label>
         <select id="studentSelect"></select>
@@ -46,11 +50,30 @@
     </section>
 
     <section class="grid stats-grid">
-      <article class="stat-card"><span>Planos registrados</span><strong id="plansCount">0</strong></article>
-      <article class="stat-card"><span>Materiais do aluno</span><strong id="materialsCount">0</strong></article>
-      <article class="stat-card"><span>Evoluções lançadas</span><strong id="progressCount">0</strong></article>
-      <article class="stat-card"><span>Comunicados</span><strong id="announcementsCount">0</strong></article>
-      <article class="stat-card"><span>Frequências no mês</span><strong id="attendanceCount">0</strong></article>
+      <article class="stat-card">
+        <span>Planos registrados</span>
+        <strong id="plansCount">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Materiais do aluno</span>
+        <strong id="materialsCount">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Evoluções lançadas</span>
+        <strong id="progressCount">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Comunicados</span>
+        <strong id="announcementsCount">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Frequências no mês</span>
+        <strong id="attendanceCount">0</strong>
+      </article>
     </section>
 
     <section id="actionHome" class="panel-card action-section active">
@@ -60,115 +83,361 @@
           <h2>O que você deseja fazer?</h2>
           <p class="helper">Cada botão abre apenas a área necessária para o lançamento do aluno selecionado.</p>
         </div>
-     <div class="action-menu">
 
-  <a href="planejador-ia.html" class="action-card" style="text-decoration: none; color: inherit;">
-    <span class="action-icon">IA</span>
-    <strong>Planejador INTEGRO com IA</strong>
-    <small>Gerar plano coletivo, individualizado ou de intervenção em PDF.</small>
-  </a>
+        <div class="action-menu">
+          <a href="planejador-ia.html" class="action-card" style="text-decoration: none; color: inherit;">
+            <span class="action-icon">IA</span>
+            <strong>Planejador INTEGRO com IA</strong>
+            <small>Gerar plano coletivo, individualizado ou de intervenção em PDF.</small>
+          </a>
 
-  <button type="button" class="action-card action-trigger" data-section-target="planSection">
-    <span class="action-icon">1</span>
-    <strong>Plano de estudo</strong>
-    <small>Registrar o que o aluno vai estudar.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="profileSection">
+            <span class="action-icon">P</span>
+            <strong>Perfil pedagógico do aluno</strong>
+            <small>Registrar nível, dificuldades, habilidades e mediações por área.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="materialSection">
-    <span class="action-icon">2</span>
-    <strong>Material individual</strong>
-    <small>Enviar arquivo específico para o aluno.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="planSection">
+            <span class="action-icon">1</span>
+            <strong>Plano de estudo</strong>
+            <small>Registrar o que o aluno vai estudar.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="progressSection">
-    <span class="action-icon">3</span>
-    <strong>Evolução individual</strong>
-    <small>Registrar avanços, dificuldades e próximos passos.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="materialSection">
+            <span class="action-icon">2</span>
+            <strong>Material individual</strong>
+            <small>Enviar arquivo específico para o aluno.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="announcementSection">
-    <span class="action-icon">4</span>
-    <strong>Comunicado</strong>
-    <small>Publicar aviso para a família.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="progressSection">
+            <span class="action-icon">3</span>
+            <strong>Evolução individual</strong>
+            <small>Registrar avanços, dificuldades e próximos passos.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="messageSection">
-    <span class="action-icon">5</span>
-    <strong>Recado para família</strong>
-    <small>Enviar mensagem ao responsável.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="announcementSection">
+            <span class="action-icon">4</span>
+            <strong>Comunicado</strong>
+            <small>Publicar aviso para a família.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="attendanceSection">
-    <span class="action-icon">6</span>
-    <strong>Frequência do aluno</strong>
-    <small>Definir dias de atendimento e lançar presença no calendário.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="messageSection">
+            <span class="action-icon">5</span>
+            <strong>Recado para família</strong>
+            <small>Enviar mensagem ao responsável.</small>
+          </button>
 
-  <button type="button" class="action-card action-trigger" data-section-target="recordsSection">
-    <span class="action-icon">7</span>
-    <strong>Consultar registros</strong>
-    <small>Ver planos, materiais, frequência e evolução.</small>
-  </button>
+          <button type="button" class="action-card action-trigger" data-section-target="attendanceSection">
+            <span class="action-icon">6</span>
+            <strong>Frequência do aluno</strong>
+            <small>Definir dias de atendimento e lançar presença no calendário.</small>
+          </button>
 
-</div>
+          <button type="button" class="action-card action-trigger" data-section-target="recordsSection">
+            <span class="action-icon">7</span>
+            <strong>Consultar registros</strong>
+            <small>Ver planos, materiais, frequência e evolução.</small>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="profileSection" class="panel-card action-section">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">PERFIL PEDAGÓGICO</div>
+          <h2>Perfil pedagógico do aluno por área</h2>
+          <p class="helper">
+            Registre como o aluno está em cada área. Essas informações serão usadas depois para gerar planos individualizados com IA.
+          </p>
+        </div>
+
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
+      <form id="profileForm" class="stack">
+        <input type="hidden" id="profileRecordId" />
+
+        <div class="grid two-cols">
+          <label>
+            <span>Área pedagógica</span>
+            <select id="profileArea" name="area" required>
+              <option value="">Selecione uma área</option>
+              <option value="Matemática">Matemática</option>
+              <option value="Língua Portuguesa">Língua Portuguesa</option>
+              <option value="Linguagem">Linguagem</option>
+              <option value="Leitura e Escrita">Leitura e Escrita</option>
+              <option value="Coordenação Motora">Coordenação Motora</option>
+              <option value="Raciocínio Lógico">Raciocínio Lógico</option>
+              <option value="Interdisciplinaridade">Interdisciplinaridade</option>
+              <option value="INTEGRO Lab">INTEGRO Lab</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Objetivo prioritário</span>
+            <input
+              type="text"
+              name="objetivo_prioritario"
+              placeholder="Ex.: consolidar valor posicional antes de avançar para operações."
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>Nível atual do aluno</span>
+          <textarea
+            name="nivel_atual"
+            rows="3"
+            placeholder="Descreva como o aluno está atualmente nesta área. Ex.: reconhece números até 100, mas se confunde em dezena e unidade."
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Dificuldades principais</span>
+          <textarea
+            name="dificuldades"
+            rows="3"
+            placeholder="Registre as dificuldades observadas. Ex.: valor posicional, leitura de palavras, coordenação fina, atenção sustentada..."
+          ></textarea>
+        </label>
+
+        <div class="grid two-cols">
+          <label>
+            <span>Habilidades consolidadas</span>
+            <textarea
+              name="habilidades_consolidadas"
+              rows="3"
+              placeholder="O que o aluno já consegue fazer com segurança?"
+            ></textarea>
+          </label>
+
+          <label>
+            <span>Habilidades em desenvolvimento</span>
+            <textarea
+              name="habilidades_em_desenvolvimento"
+              rows="3"
+              placeholder="O que o aluno faz parcialmente ou com alguma mediação?"
+            ></textarea>
+          </label>
+        </div>
+
+        <label>
+          <span>Habilidades ainda não consolidadas</span>
+          <textarea
+            name="habilidades_nao_consolidadas"
+            rows="3"
+            placeholder="O que o aluno ainda não consegue realizar ou realiza com muita dificuldade?"
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Mediação eficaz</span>
+          <textarea
+            name="mediacao_eficaz"
+            rows="3"
+            placeholder="Ex.: material concreto, apoio visual, comandos curtos, repetição guiada, uso de cores, exemplos práticos..."
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Observações importantes</span>
+          <textarea
+            name="observacoes"
+            rows="3"
+            placeholder="Registre informações pedagógicas relevantes para o acompanhamento."
+          ></textarea>
+        </label>
+
+        <div class="grid two-cols">
+          <button type="submit" class="btn btn-primary">Salvar perfil pedagógico</button>
+          <button type="button" id="printProfileBtn" class="btn btn-secondary">Imprimir perfil</button>
+        </div>
+
+        <button type="button" id="clearProfileBtn" class="btn btn-secondary">Limpar campos</button>
+
+        <p id="profileMessage" class="helper"></p>
+      </form>
     </section>
 
     <section id="planSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">PLANEJAMENTO</div><h2>O que o aluno vai estudar</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">PLANEJAMENTO</div>
+          <h2>O que o aluno vai estudar</h2>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <form id="planForm" class="stack">
-        <label><span>Título</span><input type="text" name="title" placeholder="Trilha de estudos" required /></label>
-        <label><span>Descrição</span><textarea name="description" rows="4" placeholder="Descreva o foco do aluno nesta semana." required></textarea></label>
-        <label><span>Semana / período</span><input type="text" name="week_reference" placeholder="Ex.: 22 a 26 de abril" required /></label>
-        <label><span>Status</span><select name="status"><option value="ativo">Ativo</option><option value="concluido">Concluído</option></select></label>
-        <button type="submit" class="btn btn-primary">Salvar plano</button><p id="planMessage" class="helper"></p>
+        <label>
+          <span>Título</span>
+          <input type="text" name="title" placeholder="Trilha de estudos" required />
+        </label>
+
+        <label>
+          <span>Descrição</span>
+          <textarea name="description" rows="4" placeholder="Descreva o foco do aluno nesta semana." required></textarea>
+        </label>
+
+        <label>
+          <span>Semana / período</span>
+          <input type="text" name="week_reference" placeholder="Ex.: 22 a 26 de abril" required />
+        </label>
+
+        <label>
+          <span>Status</span>
+          <select name="status">
+            <option value="ativo">Ativo</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Salvar plano</button>
+        <p id="planMessage" class="helper"></p>
       </form>
     </section>
 
     <section id="materialSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">ARQUIVOS</div><h2>Material individual</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">ARQUIVOS</div>
+          <h2>Material individual</h2>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <form id="materialForm" class="stack">
-        <label><span>Título</span><input type="text" name="title" placeholder="Atividade de leitura" required /></label>
-        <label><span>Descrição</span><textarea name="description" rows="3" placeholder="Explique rapidamente o material."></textarea></label>
-        <label><span>Categoria</span><select name="category"><option value="PDF">PDF</option><option value="Atividade">Atividade</option><option value="Imagem">Imagem</option><option value="Vídeo">Vídeo</option><option value="Outro">Outro</option></select></label>
-        <label><span>Arquivo</span><input type="file" name="file" required /></label>
-        <button type="submit" class="btn btn-primary">Enviar material</button><p id="materialMessage" class="helper"></p>
+        <label>
+          <span>Título</span>
+          <input type="text" name="title" placeholder="Atividade de leitura" required />
+        </label>
+
+        <label>
+          <span>Descrição</span>
+          <textarea name="description" rows="3" placeholder="Explique rapidamente o material."></textarea>
+        </label>
+
+        <label>
+          <span>Categoria</span>
+          <select name="category">
+            <option value="PDF">PDF</option>
+            <option value="Atividade">Atividade</option>
+            <option value="Imagem">Imagem</option>
+            <option value="Vídeo">Vídeo</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Arquivo</span>
+          <input type="file" name="file" required />
+        </label>
+
+        <button type="submit" class="btn btn-primary">Enviar material</button>
+        <p id="materialMessage" class="helper"></p>
       </form>
     </section>
 
     <section id="progressSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">ACOMPANHAMENTO</div><h2>Evolução individual</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">ACOMPANHAMENTO</div>
+          <h2>Evolução individual</h2>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <form id="progressForm" class="stack">
-        <label><span>Resumo</span><textarea name="summary" rows="3" placeholder="Síntese da aula / semana." required></textarea></label>
-        <label><span>Pontos fortes</span><textarea name="strengths" rows="3" placeholder="O que o aluno demonstrou bem?"></textarea></label>
-        <label><span>Dificuldades</span><textarea name="difficulties" rows="3" placeholder="Quais dificuldades ainda persistem?"></textarea></label>
-        <label><span>Próximos passos</span><textarea name="next_steps" rows="3" placeholder="Que intervenção será feita a seguir?"></textarea></label>
-        <button type="submit" class="btn btn-primary">Salvar evolução</button><p id="progressMessage" class="helper"></p>
+        <label>
+          <span>Resumo</span>
+          <textarea name="summary" rows="3" placeholder="Síntese da aula / semana." required></textarea>
+        </label>
+
+        <label>
+          <span>Pontos fortes</span>
+          <textarea name="strengths" rows="3" placeholder="O que o aluno demonstrou bem?"></textarea>
+        </label>
+
+        <label>
+          <span>Dificuldades</span>
+          <textarea name="difficulties" rows="3" placeholder="Quais dificuldades ainda persistem?"></textarea>
+        </label>
+
+        <label>
+          <span>Próximos passos</span>
+          <textarea name="next_steps" rows="3" placeholder="Que intervenção será feita a seguir?"></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Salvar evolução</button>
+        <p id="progressMessage" class="helper"></p>
       </form>
     </section>
 
     <section id="announcementSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">COMUNICAÇÃO</div><h2>Comunicado para a família</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">COMUNICAÇÃO</div>
+          <h2>Comunicado para a família</h2>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <form id="announcementForm" class="stack">
-        <label><span>Título</span><input type="text" name="title" placeholder="Comunicado da semana" required /></label>
-        <label><span>Mensagem</span><textarea name="message" rows="5" placeholder="Escreva o comunicado para a família." required></textarea></label>
-        <button type="submit" class="btn btn-primary">Publicar comunicado</button><p id="announcementMessage" class="helper"></p>
+        <label>
+          <span>Título</span>
+          <input type="text" name="title" placeholder="Comunicado da semana" required />
+        </label>
+
+        <label>
+          <span>Mensagem</span>
+          <textarea name="message" rows="5" placeholder="Escreva o comunicado para a família." required></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Publicar comunicado</button>
+        <p id="announcementMessage" class="helper"></p>
       </form>
     </section>
 
     <section id="messageSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">RECADOS</div><h2>Recado para a família</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">RECADOS</div>
+          <h2>Recado para a família</h2>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <form id="messageForm" class="stack">
-        <label><span>Responsável</span><select id="guardianSelect"></select></label>
-        <label><span>Mensagem</span><textarea name="message" rows="4" placeholder="Escreva seu recado para a família." required></textarea></label>
-        <button type="submit" class="btn btn-primary">Enviar recado</button><p id="messagePortalStatus" class="helper"></p>
+        <label>
+          <span>Responsável</span>
+          <select id="guardianSelect"></select>
+        </label>
+
+        <label>
+          <span>Mensagem</span>
+          <textarea name="message" rows="4" placeholder="Escreva seu recado para a família." required></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Enviar recado</button>
+        <p id="messagePortalStatus" class="helper"></p>
       </form>
     </section>
 
     <section id="attendanceSection" class="panel-card action-section">
-      <div class="section-heading"><div><div class="eyebrow">FREQUÊNCIA</div><h2>Frequência do aluno</h2><p class="helper">Defina os dias em que o aluno vem e clique no calendário para lançar a frequência.</p></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">FREQUÊNCIA</div>
+          <h2>Frequência do aluno</h2>
+          <p class="helper">Defina os dias em que o aluno vem e clique no calendário para lançar a frequência.</p>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
       <div class="grid two-cols attendance-layout">
         <form id="attendanceScheduleForm" class="stack">
           <h3>Dias em que o aluno vem</h3>
+
           <div class="weekday-grid">
             <label><input type="checkbox" name="weekday" value="1" /> Segunda</label>
             <label><input type="checkbox" name="weekday" value="2" /> Terça</label>
@@ -178,16 +447,36 @@
             <label><input type="checkbox" name="weekday" value="6" /> Sábado</label>
             <label><input type="checkbox" name="weekday" value="0" /> Domingo</label>
           </div>
+
           <button type="submit" class="btn btn-primary">Salvar dias de atendimento</button>
           <p id="attendanceScheduleMessage" class="helper"></p>
         </form>
+
         <div class="stack">
           <h3>Lançamento no calendário</h3>
+
           <div class="attendance-controls">
-            <label><span>Mês</span><input type="month" id="attendanceMonth" /></label>
-            <label><span>Status ao clicar</span><select id="attendanceStatus"><option value="presente">Presente</option><option value="ausente">Ausente</option><option value="justificada">Falta justificada</option><option value="limpar">Limpar lançamento</option></select></label>
+            <label>
+              <span>Mês</span>
+              <input type="month" id="attendanceMonth" />
+            </label>
+
+            <label>
+              <span>Status ao clicar</span>
+              <select id="attendanceStatus">
+                <option value="presente">Presente</option>
+                <option value="ausente">Ausente</option>
+                <option value="justificada">Falta justificada</option>
+                <option value="limpar">Limpar lançamento</option>
+              </select>
+            </label>
           </div>
-          <label><span>Observação opcional</span><input type="text" id="attendanceNotes" placeholder="Ex.: chegou atrasado, saiu mais cedo, justificativa..." /></label>
+
+          <label>
+            <span>Observação opcional</span>
+            <input type="text" id="attendanceNotes" placeholder="Ex.: chegou atrasado, saiu mais cedo, justificativa..." />
+          </label>
+
           <div id="attendanceCalendar" class="attendance-calendar"></div>
           <p id="attendanceMessage" class="helper"></p>
         </div>
@@ -196,21 +485,614 @@
 
     <section id="recordsSection" class="action-section">
       <article class="panel-card">
-        <div class="section-heading"><div><div class="eyebrow">CONSULTA</div><h2>Resumo do aluno</h2></div><button type="button" class="btn btn-secondary small-btn action-back">Voltar</button></div>
-        <div class="mini-list"><div><strong>Aluno:</strong> <span id="summaryStudent">—</span></div><div><strong>Escola:</strong> <span id="summarySchool">—</span></div><div><strong>Responsáveis vinculados:</strong> <span id="summaryGuardians">0</span></div><div><strong>Última atualização:</strong> <span id="summaryLastUpdate">—</span></div></div>
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">CONSULTA</div>
+            <h2>Resumo do aluno</h2>
+          </div>
+          <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+        </div>
+
+        <div class="mini-list">
+          <div><strong>Aluno:</strong> <span id="summaryStudent">—</span></div>
+          <div><strong>Escola:</strong> <span id="summarySchool">—</span></div>
+          <div><strong>Responsáveis vinculados:</strong> <span id="summaryGuardians">0</span></div>
+          <div><strong>Última atualização:</strong> <span id="summaryLastUpdate">—</span></div>
+        </div>
       </article>
+
       <div class="grid two-cols records-grid">
-        <article class="panel-card"><h2>Planos já lançados</h2><div id="plansList" class="record-list"></div></article>
-        <article class="panel-card"><h2>Materiais do aluno</h2><div id="materialsList" class="record-list"></div></article>
-        <article class="panel-card"><h2>Evoluções registradas</h2><div id="progressList" class="record-list"></div></article>
-        <article class="panel-card"><h2>Comunicados publicados</h2><div id="announcementsList" class="record-list"></div></article>
-        <article class="panel-card"><h2>Frequência lançada</h2><div id="attendanceList" class="record-list"></div></article>
+        <article class="panel-card">
+          <h2>Planos já lançados</h2>
+          <div id="plansList" class="record-list"></div>
+        </article>
+
+        <article class="panel-card">
+          <h2>Materiais do aluno</h2>
+          <div id="materialsList" class="record-list"></div>
+        </article>
+
+        <article class="panel-card">
+          <h2>Evoluções registradas</h2>
+          <div id="progressList" class="record-list"></div>
+        </article>
+
+        <article class="panel-card">
+          <h2>Comunicados publicados</h2>
+          <div id="announcementsList" class="record-list"></div>
+        </article>
+
+        <article class="panel-card">
+          <h2>Frequência lançada</h2>
+          <div id="attendanceList" class="record-list"></div>
+        </article>
       </div>
     </section>
   </main>
+
   <script src="app.js?v=20260426frequencia"></script>
+
+  <script>
+    (function initPedagogicalProfileModule() {
+      const cfg = window.INTEGRO_SUPABASE;
+
+      if (!cfg || !window.supabase) {
+        console.warn("Configuração do Supabase não encontrada para o perfil pedagógico.");
+        return;
+      }
+
+      const pedagogicalProfileClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+      const studentSelect = document.getElementById("studentSelect");
+      const studentMeta = document.getElementById("studentMeta");
+      const welcomeName = document.getElementById("welcomeName");
+
+      const profileForm = document.getElementById("profileForm");
+      const profileArea = document.getElementById("profileArea");
+      const profileRecordId = document.getElementById("profileRecordId");
+      const profileMessage = document.getElementById("profileMessage");
+      const printProfileBtn = document.getElementById("printProfileBtn");
+      const clearProfileBtn = document.getElementById("clearProfileBtn");
+
+      if (!profileForm || !profileArea) {
+        return;
+      }
+
+      const fields = [
+        "objetivo_prioritario",
+        "nivel_atual",
+        "dificuldades",
+        "habilidades_consolidadas",
+        "habilidades_em_desenvolvimento",
+        "habilidades_nao_consolidadas",
+        "mediacao_eficaz",
+        "observacoes"
+      ];
+
+      function isUuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+      }
+
+      function setMessage(text, type) {
+        if (!profileMessage) return;
+
+        profileMessage.textContent = text || "";
+        profileMessage.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      }
+
+      function getStudentInfo() {
+        const selectedOption = studentSelect?.options?.[studentSelect.selectedIndex];
+
+        return {
+          id: studentSelect?.value || "",
+          name: selectedOption?.textContent?.trim() || "Aluno não informado"
+        };
+      }
+
+      function getSchoolName() {
+        const raw = studentMeta?.textContent || "";
+
+        if (!raw) {
+          return "";
+        }
+
+        return raw.replace(/^Escola:\s*/i, "").trim();
+      }
+
+      function getTeacherName() {
+        const raw = welcomeName?.textContent || "";
+
+        if (!raw || raw.toLowerCase().includes("carregando")) {
+          return "";
+        }
+
+        return raw.trim();
+      }
+
+      function clearProfileFields(keepArea) {
+        profileRecordId.value = "";
+
+        fields.forEach((field) => {
+          const input = profileForm.elements[field];
+
+          if (input) {
+            input.value = "";
+          }
+        });
+
+        if (!keepArea) {
+          profileArea.value = "";
+        }
+
+        setMessage("", "");
+      }
+
+      function fillProfileFields(record) {
+        profileRecordId.value = record?.id || "";
+
+        fields.forEach((field) => {
+          const input = profileForm.elements[field];
+
+          if (input) {
+            input.value = record?.[field] || "";
+          }
+        });
+      }
+
+      async function findExistingProfile(studentId, studentName, area) {
+        let query = pedagogicalProfileClient
+          .from("student_area_profiles")
+          .select("*")
+          .eq("area", area)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (isUuid(studentId)) {
+          query = query.eq("student_id", studentId);
+        } else {
+          query = query.eq("student_name", studentName);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        return data || null;
+      }
+
+      async function loadProfileForSelectedArea() {
+        const area = profileArea.value;
+        const student = getStudentInfo();
+
+        if (!area || !student.name || student.name === "Aluno não informado") {
+          clearProfileFields(true);
+          return;
+        }
+
+        try {
+          setMessage("Buscando perfil pedagógico salvo...", "");
+
+          const existing = await findExistingProfile(student.id, student.name, area);
+
+          if (existing) {
+            fillProfileFields(existing);
+            setMessage("Perfil pedagógico carregado. Você pode editar e salvar novamente.", "");
+          } else {
+            clearProfileFields(true);
+            setMessage("Nenhum perfil salvo para esta área. Preencha os campos e salve.", "");
+          }
+        } catch (error) {
+          console.error(error);
+          setMessage("Não foi possível carregar o perfil pedagógico. Verifique se a tabela student_area_profiles foi criada.", "error");
+        }
+      }
+
+      async function savePedagogicalProfile(event) {
+        event.preventDefault();
+
+        const area = profileArea.value;
+        const student = getStudentInfo();
+
+        if (!student.id && !student.name) {
+          alert("Selecione um aluno antes de salvar o perfil pedagógico.");
+          return;
+        }
+
+        if (!area) {
+          alert("Selecione a área pedagógica.");
+          return;
+        }
+
+        try {
+          setMessage("Salvando perfil pedagógico...", "");
+
+          const { data: sessionData } = await pedagogicalProfileClient.auth.getSession();
+          const session = sessionData?.session;
+          const teacherId = session?.user?.id || null;
+
+          const payload = {
+            student_id: isUuid(student.id) ? student.id : null,
+            teacher_id: isUuid(teacherId) ? teacherId : null,
+            school_id: null,
+
+            student_name: student.name,
+            teacher_name: getTeacherName(),
+            school_name: getSchoolName(),
+
+            area: area,
+
+            nivel_atual: profileForm.elements["nivel_atual"]?.value || "",
+            dificuldades: profileForm.elements["dificuldades"]?.value || "",
+            habilidades_consolidadas: profileForm.elements["habilidades_consolidadas"]?.value || "",
+            habilidades_em_desenvolvimento: profileForm.elements["habilidades_em_desenvolvimento"]?.value || "",
+            habilidades_nao_consolidadas: profileForm.elements["habilidades_nao_consolidadas"]?.value || "",
+            mediacao_eficaz: profileForm.elements["mediacao_eficaz"]?.value || "",
+            objetivo_prioritario: profileForm.elements["objetivo_prioritario"]?.value || "",
+            observacoes: profileForm.elements["observacoes"]?.value || "",
+            status: "ativo"
+          };
+
+          let id = profileRecordId.value;
+
+          if (!id) {
+            const existing = await findExistingProfile(student.id, student.name, area);
+            id = existing?.id || "";
+          }
+
+          if (id) {
+            const { data, error } = await pedagogicalProfileClient
+              .from("student_area_profiles")
+              .update(payload)
+              .eq("id", id)
+              .select()
+              .maybeSingle();
+
+            if (error) {
+              throw error;
+            }
+
+            profileRecordId.value = data?.id || id;
+            setMessage("Perfil pedagógico atualizado com sucesso.", "");
+          } else {
+            const { data, error } = await pedagogicalProfileClient
+              .from("student_area_profiles")
+              .insert(payload)
+              .select()
+              .maybeSingle();
+
+            if (error) {
+              throw error;
+            }
+
+            profileRecordId.value = data?.id || "";
+            setMessage("Perfil pedagógico salvo com sucesso.", "");
+          }
+        } catch (error) {
+          console.error(error);
+          setMessage("Erro ao salvar perfil pedagógico. Confirme se a tabela student_area_profiles existe no Supabase.", "error");
+        }
+      }
+
+      function formatTextForPrint(text) {
+        return String(text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+          .replace(/\n/g, "<br>");
+      }
+
+      function printPedagogicalProfile() {
+        const student = getStudentInfo();
+        const area = profileArea.value || "Não informada";
+        const dataAtual = new Date().toLocaleDateString("pt-BR");
+
+        const values = {
+          objetivo_prioritario: profileForm.elements["objetivo_prioritario"]?.value || "",
+          nivel_atual: profileForm.elements["nivel_atual"]?.value || "",
+          dificuldades: profileForm.elements["dificuldades"]?.value || "",
+          habilidades_consolidadas: profileForm.elements["habilidades_consolidadas"]?.value || "",
+          habilidades_em_desenvolvimento: profileForm.elements["habilidades_em_desenvolvimento"]?.value || "",
+          habilidades_nao_consolidadas: profileForm.elements["habilidades_nao_consolidadas"]?.value || "",
+          mediacao_eficaz: profileForm.elements["mediacao_eficaz"]?.value || "",
+          observacoes: profileForm.elements["observacoes"]?.value || ""
+        };
+
+        if (!area || area === "Não informada") {
+          alert("Selecione uma área pedagógica antes de imprimir.");
+          return;
+        }
+
+        const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil Pedagógico do Aluno - INTEGRO</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .barra-acoes {
+      background: #1d6b3a;
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .barra-acoes button {
+      background: white;
+      color: #1d6b3a;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .folha {
+      width: 180mm;
+      max-width: 180mm;
+      margin: 12mm auto;
+      background: white;
+    }
+
+    .cabecalho {
+      border: 2px solid #1d6b3a;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .cabecalho h1 {
+      margin: 0;
+      color: #1d6b3a;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .cabecalho h2 {
+      margin: 6px 0 0 0;
+      color: #222;
+      font-size: 14px;
+    }
+
+    table.info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      table-layout: fixed;
+    }
+
+    table.info td {
+      width: 50%;
+      border: 1px solid #999;
+      padding: 7px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    table.info strong {
+      color: #123d25;
+    }
+
+    .bloco {
+      border: 1px solid #b9cfc0;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+
+    .bloco h3 {
+      margin: 0 0 6px 0;
+      font-size: 13px;
+      color: #123d25;
+    }
+
+    .assinaturas {
+      margin-top: 45px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      page-break-inside: avoid;
+    }
+
+    .assinatura {
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .linha-assinatura {
+      border-top: 1px solid #000;
+      margin-bottom: 7px;
+      height: 1px;
+    }
+
+    .rodape {
+      margin-top: 30px;
+      padding-top: 8px;
+      border-top: 1px solid #999;
+      text-align: center;
+      font-size: 9px;
+      color: #444;
+    }
+
+    @media print {
+      .barra-acoes {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .folha {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="barra-acoes">
+    <strong>Perfil Pedagógico do Aluno - INTEGRO</strong>
+    <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+  </div>
+
+  <main class="folha">
+    <div class="cabecalho">
+      <h1>INSTITUTO INTEGRO</h1>
+      <h2>Perfil Pedagógico do Aluno</h2>
+    </div>
+
+    <table class="info">
+      <tr>
+        <td><strong>Aluno:</strong><br>${formatTextForPrint(student.name)}</td>
+        <td><strong>Área:</strong><br>${formatTextForPrint(area)}</td>
+      </tr>
+      <tr>
+        <td><strong>Professor(a):</strong><br>${formatTextForPrint(getTeacherName() || "Não informado")}</td>
+        <td><strong>Escola:</strong><br>${formatTextForPrint(getSchoolName() || "Não informada")}</td>
+      </tr>
+      <tr>
+        <td><strong>Data:</strong><br>${dataAtual}</td>
+        <td><strong>Status:</strong><br>Perfil pedagógico ativo</td>
+      </tr>
+    </table>
+
+    <div class="bloco">
+      <h3>Objetivo prioritário</h3>
+      <div>${formatTextForPrint(values.objetivo_prioritario || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Nível atual do aluno</h3>
+      <div>${formatTextForPrint(values.nivel_atual || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Dificuldades principais</h3>
+      <div>${formatTextForPrint(values.dificuldades || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Habilidades consolidadas</h3>
+      <div>${formatTextForPrint(values.habilidades_consolidadas || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Habilidades em desenvolvimento</h3>
+      <div>${formatTextForPrint(values.habilidades_em_desenvolvimento || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Habilidades ainda não consolidadas</h3>
+      <div>${formatTextForPrint(values.habilidades_nao_consolidadas || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Mediação eficaz</h3>
+      <div>${formatTextForPrint(values.mediacao_eficaz || "Não informado.")}</div>
+    </div>
+
+    <div class="bloco">
+      <h3>Observações importantes</h3>
+      <div>${formatTextForPrint(values.observacoes || "Não informado.")}</div>
+    </div>
+
+    <div class="assinaturas">
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura do(a) Professor(a)</div>
+        <div>${formatTextForPrint(getTeacherName() || "")}</div>
+      </div>
+
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura da Coordenação / Responsável</div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Documento gerado pelo Portal do Professor INTEGRO.
+    </div>
+  </main>
+</body>
+</html>
+`;
+
+        const janela = window.open("", "_blank");
+
+        if (!janela) {
+          alert("O navegador bloqueou a abertura da janela. Permita pop-ups para imprimir o perfil.");
+          return;
+        }
+
+        janela.document.open();
+        janela.document.write(html);
+        janela.document.close();
+        janela.focus();
+      }
+
+      profileForm.addEventListener("submit", savePedagogicalProfile);
+
+      profileArea.addEventListener("change", () => {
+        loadProfileForSelectedArea();
+      });
+
+      studentSelect?.addEventListener("change", () => {
+        setTimeout(() => {
+          loadProfileForSelectedArea();
+        }, 300);
+      });
+
+      printProfileBtn?.addEventListener("click", printPedagogicalProfile);
+
+      clearProfileBtn?.addEventListener("click", () => {
+        clearProfileFields(true);
+        setMessage("Campos limpos. Você pode preencher novamente antes de salvar.", "");
+      });
+
+      setTimeout(() => {
+        loadProfileForSelectedArea();
+      }, 1000);
+    })();
+  </script>
+
   <!-- PWA INTEGRO -->
-<script src="/pwa-install.js"></script>
+  <script src="/pwa-install.js"></script>
   <script src="/voltar-site.js"></script>
 </body>
 </html>
