@@ -353,16 +353,33 @@
 
       <div id="aiPlanResultBox" class="stack" style="display: none; margin-top: 24px;">
         <label>
-          <span>Plano gerado pela IA — editável</span>
-          <textarea id="aiPlanEditor" rows="18"></textarea>
+          <span>Plano interno — professor/INTEGRO</span>
+          <textarea
+            id="aiPlanInternalEditor"
+            rows="18"
+            placeholder="Aqui aparecerá a versão completa do plano, com linguagem pedagógica para uso interno do professor e do INTEGRO."
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Plano da família — versão que será salva no Portal da Família</span>
+          <textarea
+            id="aiPlanFamilyEditor"
+            rows="10"
+            placeholder="Aqui aparecerá a versão mais curta e simples, feita para a família acompanhar o que o aluno vai estudar na semana."
+          ></textarea>
         </label>
 
         <div class="grid two-cols">
-          <button type="button" id="saveAiPlanToStudyBtn" class="btn btn-primary">Salvar no Plano de estudo</button>
-          <button type="button" id="printAiPlanBtn" class="btn btn-secondary">Imprimir plano</button>
+          <button type="button" id="saveAiPlanToStudyBtn" class="btn btn-primary">Salvar versão da família no Plano de estudo</button>
+          <button type="button" id="printAiPlanBtn" class="btn btn-secondary">Imprimir plano interno</button>
         </div>
 
-        <button type="button" id="copyAiPlanBtn" class="btn btn-secondary">Copiar plano</button>
+        <div class="grid two-cols">
+          <button type="button" id="copyAiPlanInternalBtn" class="btn btn-secondary">Copiar plano interno</button>
+          <button type="button" id="copyAiPlanFamilyBtn" class="btn btn-secondary">Copiar versão da família</button>
+        </div>
+
         <p id="aiPlanSaveMessage" class="helper"></p>
       </div>
     </section>
@@ -1234,10 +1251,12 @@
       const copyProfileBtn = document.getElementById("copyProfileToAiBtn");
 
       const resultBox = document.getElementById("aiPlanResultBox");
-      const editor = document.getElementById("aiPlanEditor");
+      const internalEditor = document.getElementById("aiPlanInternalEditor");
+      const familyEditor = document.getElementById("aiPlanFamilyEditor");
       const saveToStudyBtn = document.getElementById("saveAiPlanToStudyBtn");
       const printBtn = document.getElementById("printAiPlanBtn");
-      const copyBtn = document.getElementById("copyAiPlanBtn");
+      const copyInternalBtn = document.getElementById("copyAiPlanInternalBtn");
+      const copyFamilyBtn = document.getElementById("copyAiPlanFamilyBtn");
       const saveMessageEl = document.getElementById("aiPlanSaveMessage");
 
       if (!form || !areaInput) {
@@ -1405,7 +1424,8 @@
         try {
           setMessage("Gerando plano semanal com IA...", "");
           resultBox.style.display = "block";
-          editor.value = "Aguarde. A IA está gerando o plano semanal individualizado...";
+          internalEditor.value = "Aguarde. A IA está gerando a versão interna do plano semanal individualizado...";
+          familyEditor.value = "Aguarde. A IA está gerando a versão resumida para a família...";
 
           const payload = {
             aluno: student.name,
@@ -1433,20 +1453,31 @@
             throw new Error(data.error);
           }
 
-          editor.value = data?.plano || "Não foi possível gerar o plano.";
-          setMessage(data?.modelo_usado ? `Plano gerado com sucesso. Modelo utilizado: ${data.modelo_usado}.` : "Plano gerado com sucesso.", "");
+          const planoInterno = data?.plano_interno || data?.plano || "Não foi possível gerar o plano interno.";
+          const planoFamilia = data?.plano_familia || data?.plano || "Não foi possível gerar a versão da família.";
+
+          internalEditor.value = planoInterno;
+          familyEditor.value = planoFamilia;
+
+          setMessage(
+            data?.modelo_usado
+              ? `Plano gerado com sucesso. Modelo utilizado: ${data.modelo_usado}. A versão da família foi separada para ficar mais simples no Portal da Família.`
+              : "Plano gerado com sucesso. A versão da família foi separada para ficar mais simples no Portal da Família.",
+            ""
+          );
         } catch (error) {
           console.error(error);
-          editor.value = "Erro ao gerar plano semanal com IA: " + (error.message || String(error));
+          internalEditor.value = "Erro ao gerar plano semanal com IA: " + (error.message || String(error));
+          familyEditor.value = "";
           setMessage("Erro ao gerar plano semanal com IA.", "error");
         }
       }
 
       function saveAiPlanToStudyPlan() {
-        const planText = editor.value.trim();
+        const planText = familyEditor.value.trim();
 
         if (!planText) {
-          alert("Gere ou escreva o plano antes de salvar.");
+          alert("Gere ou escreva a versão da família antes de salvar no Plano de estudo.");
           return;
         }
 
@@ -1463,7 +1494,7 @@
         const statusInput = planForm.elements["status"];
 
         if (titleInput) {
-          titleInput.value = `Plano semanal individualizado — ${areaInput.value || "Área não informada"}`;
+          titleInput.value = `Plano de estudo da semana — ${areaInput.value || "Área não informada"}`;
         }
 
         if (descriptionInput) {
@@ -1478,7 +1509,7 @@
           statusInput.value = "ativo";
         }
 
-        setSaveMessage("Plano enviado para o formulário de Plano de estudo. Salvando...", "");
+        setSaveMessage("Versão da família enviada para o formulário de Plano de estudo. Salvando...", "");
 
         const event = new Event("submit", {
           bubbles: true,
@@ -1488,7 +1519,7 @@
         planForm.dispatchEvent(event);
 
         setTimeout(() => {
-          setSaveMessage("Se o Portal confirmou o salvamento acima, o plano já foi registrado e ficará visível para a família.", "");
+          setSaveMessage("Se o Portal confirmou o salvamento acima, a versão resumida já foi registrada e ficará visível para a família.", "");
         }, 800);
       }
 
@@ -1505,10 +1536,10 @@
       function printAiPlan() {
         const student = getStudentInfo();
         const dataAtual = new Date().toLocaleDateString("pt-BR");
-        const planText = editor.value.trim();
+        const planText = internalEditor.value.trim();
 
         if (!planText) {
-          alert("Gere ou escreva o plano antes de imprimir.");
+          alert("Gere ou escreva o plano interno antes de imprimir.");
           return;
         }
 
@@ -1673,7 +1704,7 @@
   <main class="folha">
     <div class="cabecalho">
       <h1>INSTITUTO INTEGRO</h1>
-      <h2>Plano Semanal Individualizado</h2>
+      <h2>Plano Semanal Individualizado — Versão Interna</h2>
     </div>
 
     <table class="info">
@@ -1745,16 +1776,28 @@
 
       printBtn?.addEventListener("click", printAiPlan);
 
-      copyBtn?.addEventListener("click", () => {
-        const text = editor.value || "";
+      copyInternalBtn?.addEventListener("click", () => {
+        const text = internalEditor.value || "";
 
         if (!text.trim()) {
-          alert("Não há plano para copiar.");
+          alert("Não há plano interno para copiar.");
           return;
         }
 
         navigator.clipboard.writeText(text);
-        setSaveMessage("Plano copiado.", "");
+        setSaveMessage("Plano interno copiado.", "");
+      });
+
+      copyFamilyBtn?.addEventListener("click", () => {
+        const text = familyEditor.value || "";
+
+        if (!text.trim()) {
+          alert("Não há versão da família para copiar.");
+          return;
+        }
+
+        navigator.clipboard.writeText(text);
+        setSaveMessage("Versão da família copiada.", "");
       });
     })();
   </script>
