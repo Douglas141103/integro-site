@@ -215,7 +215,49 @@ async function loadStudentSection(studentId) {
   renderList('attendanceList', attendance, item => `<div class="record-item"><h3>${attendanceLabel(item.status)}</h3><p><strong>Data:</strong> ${formatDateBR(item.attendance_date)}</p><p>${item.notes || 'Sem observação.'}</p><div class="record-meta">${formatDate(item.created_at)}</div></div>`);
   await loadAttendanceForSelectedStudent();
 }
+function openActionSection(sectionId = 'actionHome') {
+  const sections = Array.from(document.querySelectorAll('.action-section'));
+  const triggers = Array.from(document.querySelectorAll('.action-trigger'));
 
+  sections.forEach(section => {
+    section.classList.toggle('active', section.id === sectionId);
+  });
+
+  triggers.forEach(trigger => {
+    trigger.classList.toggle('active', trigger.dataset.sectionTarget === sectionId);
+  });
+
+  history.replaceState(
+    null,
+    '',
+    sectionId === 'actionHome' ? window.location.pathname : `#${sectionId}`
+  );
+
+  document.getElementById(sectionId)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
+
+function setPlanSubmitMode() {
+  const submitBtn = document.querySelector('#planForm button[type="submit"]');
+
+  if (submitBtn) {
+    submitBtn.textContent = state.editingPlanId ? 'Atualizar plano' : 'Salvar plano';
+  }
+}
+
+function resetPlanEditingState(clearForm = false) {
+  state.editingPlanId = null;
+
+  const form = document.getElementById('planForm');
+
+  if (clearForm && form) {
+    form.reset();
+  }
+
+  setPlanSubmitMode();
+}
 function setupActionNavigation() {
   const sections = Array.from(document.querySelectorAll('.action-section'));
   const triggers = Array.from(document.querySelectorAll('.action-trigger'));
