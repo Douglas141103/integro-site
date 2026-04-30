@@ -12,7 +12,8 @@ const state = {
   guardians: [],
   attendanceMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   attendanceSchedule: [],
-  attendanceRecords: []
+  attendanceRecords: [],
+  editingPlanId: null
 };
 
 const isStaff = (role) => ['integro_admin', 'diretor', 'coordenacao', 'professor'].includes(role);
