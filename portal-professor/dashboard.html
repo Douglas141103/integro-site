@@ -16,6 +16,83 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="INTEGRO" />
   <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
+
+  <style>
+    .diagnostic-box {
+      border: 1px solid #d7e4dd;
+      border-radius: 18px;
+      background: #f8fcfa;
+      padding: 18px;
+    }
+
+    .diagnostic-box-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .diagnostic-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .diagnostic-item {
+      border: 1px solid #d7e4dd;
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .diagnostic-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .diagnostic-item h3 {
+      margin: 0 0 6px 0;
+      color: #0b5242;
+      font-size: 1rem;
+    }
+
+    .diagnostic-item p {
+      margin: 0;
+      color: #61746d;
+      line-height: 1.5;
+    }
+
+    .diagnostic-fields {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr);
+      gap: 12px;
+    }
+
+    .diagnostic-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: #e8f2ee;
+      color: #0b5242;
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 800px) {
+      .diagnostic-box-head,
+      .diagnostic-item-header,
+      .diagnostic-fields {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 
 <body data-page="dashboard-professor">
@@ -149,122 +226,150 @@
     </section>
 
     <section id="profileSection" class="panel-card action-section">
-      <div class="section-heading">
+  <div class="section-heading">
+    <div>
+      <div class="eyebrow">PERFIL PEDAGÓGICO</div>
+      <h2>Perfil pedagógico geral do aluno</h2>
+      <p class="helper">
+        Construa o perfil do aluno a partir da série, das áreas avaliadas e dos grandes requisitos de aprendizagem.
+        O professor marca o nível observado, registra observações curtas e o sistema organiza o perfil pedagógico para uso nos planos semanais.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+  </div>
+
+  <form id="profileForm" class="stack">
+    <input type="hidden" id="profileRecordId" />
+
+    <div class="grid two-cols">
+      <label>
+        <span>Série/Ano do aluno</span>
+        <select id="profileSerieAno" name="serie_ano" required>
+          <option value="">Selecione a série</option>
+
+          <optgroup label="Educação Infantil">
+            <option value="Maternal">Maternal</option>
+            <option value="Jardim I">Jardim I</option>
+            <option value="Jardim II">Jardim II</option>
+          </optgroup>
+
+          <optgroup label="Ensino Fundamental I">
+            <option value="1º ano">1º ano</option>
+            <option value="2º ano">2º ano</option>
+            <option value="3º ano">3º ano</option>
+            <option value="4º ano">4º ano</option>
+            <option value="5º ano">5º ano</option>
+          </optgroup>
+
+          <optgroup label="Ensino Fundamental II">
+            <option value="6º ano">6º ano</option>
+            <option value="7º ano">7º ano</option>
+            <option value="8º ano">8º ano</option>
+            <option value="9º ano">9º ano</option>
+          </optgroup>
+
+          <optgroup label="Ensino Médio">
+            <option value="1ª série EM">1ª série EM</option>
+            <option value="2ª série EM">2ª série EM</option>
+            <option value="3ª série EM">3ª série EM</option>
+          </optgroup>
+        </select>
+      </label>
+
+      <label>
+        <span>Área do perfil</span>
+        <select id="profileArea" name="area" required>
+          <option value="">Selecione primeiro a série</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="diagnostic-box">
+      <div class="diagnostic-box-head">
         <div>
-          <div class="eyebrow">PERFIL PEDAGÓGICO</div>
-          <h2>Perfil pedagógico do aluno por área</h2>
+          <strong>Requisitos de aprendizagem da série</strong>
           <p class="helper">
-            Registre como o aluno está em cada área. Essas informações serão usadas depois para gerar planos individualizados com IA.
+            O sistema carrega os grandes eixos esperados para a série e área selecionadas.
+            Marque o nível observado em cada eixo e escreva observações curtas quando necessário.
           </p>
         </div>
 
-        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+        <button type="button" id="loadDiagnosticMatrixBtn" class="btn btn-secondary small-btn">
+          Carregar requisitos
+        </button>
       </div>
 
-      <form id="profileForm" class="stack">
-        <input type="hidden" id="profileRecordId" />
-
-        <div class="grid two-cols">
-          <label>
-            <span>Área pedagógica</span>
-            <select id="profileArea" name="area" required>
-              <option value="">Selecione uma área</option>
-              <option value="Matemática">Matemática</option>
-              <option value="Língua Portuguesa">Língua Portuguesa</option>
-              <option value="Linguagem">Linguagem</option>
-              <option value="Leitura e Escrita">Leitura e Escrita</option>
-              <option value="Coordenação Motora">Coordenação Motora</option>
-              <option value="Raciocínio Lógico">Raciocínio Lógico</option>
-              <option value="Interdisciplinaridade">Interdisciplinaridade</option>
-              <option value="INTEGRO Lab">INTEGRO Lab</option>
-            </select>
-          </label>
-
-          <label>
-            <span>Objetivo prioritário</span>
-            <input
-              type="text"
-              name="objetivo_prioritario"
-              placeholder="Ex.: consolidar valor posicional antes de avançar para operações."
-            />
-          </label>
+      <div id="diagnosticMatrixList" class="diagnostic-list">
+        <div class="empty">
+          Selecione a série e a área para carregar os requisitos do perfil pedagógico.
         </div>
+      </div>
+    </div>
 
-        <label>
-          <span>Nível atual do aluno</span>
-          <textarea
-            name="nivel_atual"
-            rows="3"
-            placeholder="Descreva como o aluno está atualmente nesta área. Ex.: reconhece números até 100, mas se confunde em dezena e unidade."
-          ></textarea>
-        </label>
+    <label>
+      <span>Observação geral do professor</span>
+      <textarea
+        id="diagnosticGeneralObservation"
+        name="observacoes"
+        rows="4"
+        placeholder="Registre uma síntese curta. Ex.: apresenta melhor desempenho com apoio visual, atividades em etapas e retomadas frequentes."
+      ></textarea>
+    </label>
 
-        <label>
-          <span>Dificuldades principais</span>
-          <textarea
-            name="dificuldades"
-            rows="3"
-            placeholder="Registre as dificuldades observadas. Ex.: valor posicional, leitura de palavras, coordenação fina, atenção sustentada..."
-          ></textarea>
-        </label>
+    <label>
+      <span>Perfil pedagógico geral gerado / editável</span>
+      <textarea
+        id="generalProfileText"
+        name="perfil_geral"
+        rows="8"
+        placeholder="Clique em Gerar perfil pedagógico para criar uma síntese com base nos requisitos marcados. O professor poderá revisar e editar antes de salvar."
+      ></textarea>
+    </label>
 
-        <div class="grid two-cols">
-          <label>
-            <span>Habilidades consolidadas</span>
-            <textarea
-              name="habilidades_consolidadas"
-              rows="3"
-              placeholder="O que o aluno já consegue fazer com segurança?"
-            ></textarea>
-          </label>
+    <label>
+      <span>Prioridades pedagógicas</span>
+      <textarea
+        id="pedagogicalPrioritiesText"
+        name="prioridades_pedagogicas"
+        rows="5"
+        placeholder="Ex.: fortalecer leitura de enunciados, retomar operações básicas, ampliar autonomia nas atividades, consolidar pré-requisitos da série."
+      ></textarea>
+    </label>
 
-          <label>
-            <span>Habilidades em desenvolvimento</span>
-            <textarea
-              name="habilidades_em_desenvolvimento"
-              rows="3"
-              placeholder="O que o aluno faz parcialmente ou com alguma mediação?"
-            ></textarea>
-          </label>
-        </div>
+    <label>
+      <span>Recomendações gerais de intervenção</span>
+      <textarea
+        id="generalRecommendationsText"
+        name="recomendacoes_gerais"
+        rows="5"
+        placeholder="Ex.: utilizar atividades em camadas, comandos curtos, apoio visual, fichas graduadas, exemplos resolvidos e retomadas frequentes."
+      ></textarea>
+    </label>
 
-        <label>
-          <span>Habilidades ainda não consolidadas</span>
-          <textarea
-            name="habilidades_nao_consolidadas"
-            rows="3"
-            placeholder="O que o aluno ainda não consegue realizar ou realiza com muita dificuldade?"
-          ></textarea>
-        </label>
+    <div class="grid two-cols">
+      <button type="button" id="generateGeneralProfileBtn" class="btn btn-secondary">
+        Gerar perfil pedagógico
+      </button>
 
-        <label>
-          <span>Mediação eficaz</span>
-          <textarea
-            name="mediacao_eficaz"
-            rows="3"
-            placeholder="Ex.: material concreto, apoio visual, comandos curtos, repetição guiada, uso de cores, exemplos práticos..."
-          ></textarea>
-        </label>
+      <button type="submit" class="btn btn-primary">
+        Salvar perfil pedagógico
+      </button>
+    </div>
 
-        <label>
-          <span>Observações importantes</span>
-          <textarea
-            name="observacoes"
-            rows="3"
-            placeholder="Registre informações pedagógicas relevantes para o acompanhamento."
-          ></textarea>
-        </label>
+    <div class="grid two-cols">
+      <button type="button" id="printProfileBtn" class="btn btn-secondary">
+        Imprimir perfil pedagógico
+      </button>
 
-        <div class="grid two-cols">
-          <button type="submit" class="btn btn-primary">Salvar perfil pedagógico</button>
-          <button type="button" id="printProfileBtn" class="btn btn-secondary">Imprimir perfil</button>
-        </div>
+      <button type="button" id="clearProfileBtn" class="btn btn-secondary">
+        Limpar campos
+      </button>
+    </div>
 
-        <button type="button" id="clearProfileBtn" class="btn btn-secondary">Limpar campos</button>
-
-        <p id="profileMessage" class="helper"></p>
-      </form>
-    </section>
+    <p id="profileMessage" class="helper"></p>
+  </form>
+</section>
 
     <section id="aiWeeklyPlanSection" class="panel-card action-section">
       <div class="section-heading">
@@ -665,48 +770,70 @@
         return;
       }
 
-      const pedagogicalProfileClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+      const profileClient = window.supabase.createClient(cfg.url, cfg.anonKey);
 
       const studentSelect = document.getElementById("studentSelect");
       const studentMeta = document.getElementById("studentMeta");
       const welcomeName = document.getElementById("welcomeName");
 
       const profileForm = document.getElementById("profileForm");
-      const profileArea = document.getElementById("profileArea");
       const profileRecordId = document.getElementById("profileRecordId");
+      const profileSerieAno = document.getElementById("profileSerieAno");
+      const profileArea = document.getElementById("profileArea");
+      const diagnosticMatrixList = document.getElementById("diagnosticMatrixList");
+      const loadDiagnosticMatrixBtn = document.getElementById("loadDiagnosticMatrixBtn");
+      const diagnosticGeneralObservation = document.getElementById("diagnosticGeneralObservation");
+      const generalProfileText = document.getElementById("generalProfileText");
+      const pedagogicalPrioritiesText = document.getElementById("pedagogicalPrioritiesText");
+      const generalRecommendationsText = document.getElementById("generalRecommendationsText");
+      const generateGeneralProfileBtn = document.getElementById("generateGeneralProfileBtn");
       const profileMessage = document.getElementById("profileMessage");
       const printProfileBtn = document.getElementById("printProfileBtn");
       const clearProfileBtn = document.getElementById("clearProfileBtn");
 
-      if (!profileForm || !profileArea) {
+      if (!profileForm || !profileSerieAno || !profileArea) {
         return;
       }
 
-      const fields = [
-        "objetivo_prioritario",
-        "nivel_atual",
-        "dificuldades",
-        "habilidades_consolidadas",
-        "habilidades_em_desenvolvimento",
-        "habilidades_nao_consolidadas",
-        "mediacao_eficaz",
-        "observacoes"
+      const defaultAreas = [
+        "Língua Portuguesa",
+        "Matemática",
+        "Linguagem",
+        "Pré-leitura e Pré-escrita",
+        "Matemática Inicial",
+        "Coordenação Motora",
+        "Socioemocional e Autonomia",
+        "Raciocínio Lógico",
+        "Interdisciplinaridade",
+        "INTEGRO Lab",
+        "Redação",
+        "Química",
+        "Física",
+        "Biologia",
+        "Humanas"
       ];
 
       function isUuid(value) {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
       }
 
+      function escapeHtml(value = "") {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
       function setMessage(text, type) {
         if (!profileMessage) return;
-
         profileMessage.textContent = text || "";
         profileMessage.style.color = type === "error" ? "#b42318" : "#0f3d2e";
       }
 
       function getStudentInfo() {
         const selectedOption = studentSelect?.options?.[studentSelect.selectedIndex];
-
         return {
           id: studentSelect?.value || "",
           name: selectedOption?.textContent?.trim() || "Aluno não informado"
@@ -715,188 +842,437 @@
 
       function getSchoolName() {
         const raw = studentMeta?.textContent || "";
-
-        if (!raw) {
-          return "";
-        }
-
-        return raw.replace(/^Escola:\s*/i, "").trim();
+        return raw ? raw.replace(/^Escola:\s*/i, "").trim() : "";
       }
 
       function getTeacherName() {
         const raw = welcomeName?.textContent || "";
-
-        if (!raw || raw.toLowerCase().includes("carregando")) {
-          return "";
-        }
-
+        if (!raw || raw.toLowerCase().includes("carregando")) return "";
         return raw.trim();
       }
 
-      function clearProfileFields(keepArea) {
-        profileRecordId.value = "";
+      function getSelectedDiagnostics() {
+        const items = Array.from(diagnosticMatrixList.querySelectorAll(".diagnostic-item"));
 
-        fields.forEach((field) => {
-          const input = profileForm.elements[field];
-
-          if (input) {
-            input.value = "";
-          }
-        });
-
-        if (!keepArea) {
-          profileArea.value = "";
-        }
-
-        setMessage("", "");
+        return items.map((item) => ({
+          eixo_diagnostico: item.dataset.eixo || "",
+          descricao: item.dataset.descricao || "",
+          nivel_observado: item.querySelector(".diagnostic-level")?.value || "Não avaliado",
+          observacao: item.querySelector(".diagnostic-observation")?.value || ""
+        })).filter((item) => item.eixo_diagnostico);
       }
 
-      function fillProfileFields(record) {
-        profileRecordId.value = record?.id || "";
+      function renderAreaOptions(areas) {
+        const uniqueAreas = Array.from(new Set((areas && areas.length ? areas : defaultAreas).filter(Boolean))).sort();
 
-        fields.forEach((field) => {
-          const input = profileForm.elements[field];
-
-          if (input) {
-            input.value = record?.[field] || "";
-          }
-        });
+        profileArea.innerHTML = '<option value="">Selecione uma área</option>' + uniqueAreas
+          .map((area) => `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`)
+          .join("\n");
       }
 
-      async function findExistingProfile(studentId, studentName, area) {
-        let query = pedagogicalProfileClient
-          .from("student_area_profiles")
-          .select("*")
-          .eq("area", area)
-          .order("updated_at", { ascending: false })
-          .limit(1);
+      async function loadAreasForSerie() {
+        const serie = profileSerieAno.value;
 
-        if (isUuid(studentId)) {
-          query = query.eq("student_id", studentId);
-        } else {
-          query = query.eq("student_name", studentName);
-        }
+        renderAreaOptions([]);
+        clearDiagnosticList("Selecione a área para carregar os requisitos do perfil pedagógico.");
 
-        const { data, error } = await query.maybeSingle();
-
-        if (error) {
-          throw error;
-        }
-
-        return data || null;
-      }
-
-      async function loadProfileForSelectedArea() {
-        const area = profileArea.value;
-        const student = getStudentInfo();
-
-        if (!area || !student.name || student.name === "Aluno não informado") {
-          clearProfileFields(true);
+        if (!serie) {
+          profileArea.innerHTML = '<option value="">Selecione primeiro a série</option>';
           return;
         }
 
         try {
-          setMessage("Buscando perfil pedagógico salvo...", "");
+          setMessage("Carregando áreas disponíveis para a série...", "");
 
-          const existing = await findExistingProfile(student.id, student.name, area);
+          const { data, error } = await profileClient
+            .from("diagnostic_matrix")
+            .select("area")
+            .eq("serie_ano", serie)
+            .eq("ativo", true)
+            .order("area", { ascending: true });
 
-          if (existing) {
-            fillProfileFields(existing);
-            setMessage("Perfil pedagógico carregado. Você pode editar e salvar novamente.", "");
+          if (error) throw error;
+
+          const areas = Array.from(new Set((data || []).map((item) => item.area).filter(Boolean)));
+          renderAreaOptions(areas);
+          setMessage(areas.length ? "Áreas carregadas. Selecione uma área para continuar." : "Nenhuma área encontrada para esta série. Verifique a matriz diagnóstica no Supabase.", areas.length ? "" : "error");
+        } catch (error) {
+          console.error(error);
+          renderAreaOptions(defaultAreas);
+          setMessage("Não foi possível carregar as áreas da matriz. Usando lista padrão.", "error");
+        }
+      }
+
+      function clearDiagnosticList(message) {
+        diagnosticMatrixList.innerHTML = `<div class="empty">${escapeHtml(message || "Nenhum requisito carregado.")}</div>`;
+      }
+
+      function renderDiagnosticMatrix(items, savedResults = []) {
+        if (!items.length) {
+          clearDiagnosticList("Nenhum requisito encontrado para esta série e área.");
+          return;
+        }
+
+        const savedMap = new Map((savedResults || []).map((item) => [item.eixo_diagnostico, item]));
+
+        diagnosticMatrixList.innerHTML = items.map((item, index) => {
+          const saved = savedMap.get(item.eixo_diagnostico) || {};
+          const level = saved.nivel_observado || "Não avaliado";
+          const observation = saved.observacao || "";
+
+          return `
+            <article class="diagnostic-item" data-eixo="${escapeHtml(item.eixo_diagnostico)}" data-descricao="${escapeHtml(item.descricao || "")}">
+              <div class="diagnostic-item-header">
+                <div>
+                  <h3>${escapeHtml(item.eixo_diagnostico)}</h3>
+                  <p>${escapeHtml(item.descricao || "")}</p>
+                </div>
+                <span class="diagnostic-badge">Eixo ${index + 1}</span>
+              </div>
+
+              <div class="diagnostic-fields">
+                <label>
+                  <span>Nível observado</span>
+                  <select class="diagnostic-level">
+                    <option value="Não avaliado" ${level === "Não avaliado" ? "selected" : ""}>Não avaliado</option>
+                    <option value="Não domina" ${level === "Não domina" ? "selected" : ""}>Não domina</option>
+                    <option value="Domina parcialmente" ${level === "Domina parcialmente" ? "selected" : ""}>Domina parcialmente</option>
+                    <option value="Domina com apoio" ${level === "Domina com apoio" ? "selected" : ""}>Domina com apoio</option>
+                    <option value="Domina com autonomia" ${level === "Domina com autonomia" ? "selected" : ""}>Domina com autonomia</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Observação curta</span>
+                  <textarea class="diagnostic-observation" rows="2" placeholder="Ex.: realiza com apoio visual, precisa de retomada, demonstra avanço...">${escapeHtml(observation)}</textarea>
+                </label>
+              </div>
+            </article>
+          `;
+        }).join("\n");
+      }
+
+      async function fetchSavedDiagnosticResults(student, serie, area) {
+        let query = profileClient
+          .from("student_diagnostic_results")
+          .select("*")
+          .eq("serie_ano", serie)
+          .eq("area", area);
+
+        if (isUuid(student.id)) {
+          query = query.eq("student_id", student.id);
+        } else {
+          query = query.eq("student_name", student.name);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+      }
+
+      async function fetchSavedGeneralProfile(student, serie, area) {
+        let query = profileClient
+          .from("student_area_profiles")
+          .select("*")
+          .eq("serie_ano", serie)
+          .eq("area", area)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (isUuid(student.id)) {
+          query = query.eq("student_id", student.id);
+        } else {
+          query = query.eq("student_name", student.name);
+        }
+
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        return data || null;
+      }
+
+      async function loadDiagnosticMatrix() {
+        const student = getStudentInfo();
+        const serie = profileSerieAno.value;
+        const area = profileArea.value;
+
+        if (!student.name || student.name === "Aluno não informado") {
+          alert("Selecione um aluno antes de carregar o perfil pedagógico.");
+          return;
+        }
+
+        if (!serie || !area) {
+          alert("Selecione a série e a área do perfil.");
+          return;
+        }
+
+        try {
+          setMessage("Carregando requisitos e perfil salvo...", "");
+
+          const [matrixRes, savedResults, savedProfile] = await Promise.all([
+            profileClient
+              .from("diagnostic_matrix")
+              .select("*")
+              .eq("serie_ano", serie)
+              .eq("area", area)
+              .eq("ativo", true)
+              .order("ordem", { ascending: true }),
+            fetchSavedDiagnosticResults(student, serie, area),
+            fetchSavedGeneralProfile(student, serie, area)
+          ]);
+
+          if (matrixRes.error) throw matrixRes.error;
+
+          renderDiagnosticMatrix(matrixRes.data || [], savedResults);
+
+          if (savedProfile) {
+            profileRecordId.value = savedProfile.id || "";
+            diagnosticGeneralObservation.value = savedProfile.observacoes || "";
+            generalProfileText.value = savedProfile.perfil_geral || savedProfile.nivel_atual || "";
+            pedagogicalPrioritiesText.value = savedProfile.prioridades_pedagogicas || savedProfile.objetivo_prioritario || "";
+            generalRecommendationsText.value = savedProfile.recomendacoes_gerais || savedProfile.mediacao_eficaz || "";
+            setMessage("Perfil pedagógico carregado. Você pode revisar, atualizar e salvar novamente.", "");
           } else {
-            clearProfileFields(true);
-            setMessage("Nenhum perfil salvo para esta área. Preencha os campos e salve.", "");
+            profileRecordId.value = "";
+            diagnosticGeneralObservation.value = "";
+            generalProfileText.value = "";
+            pedagogicalPrioritiesText.value = "";
+            generalRecommendationsText.value = "";
+            setMessage("Requisitos carregados. Marque os níveis observados para construir o perfil.", "");
           }
         } catch (error) {
           console.error(error);
-          setMessage("Não foi possível carregar o perfil pedagógico. Verifique se a tabela student_area_profiles foi criada.", "error");
+          setMessage("Erro ao carregar requisitos. Verifique se a matriz diagnostic_matrix foi criada no Supabase.", "error");
         }
+      }
+
+      function generateGeneralProfile() {
+        const student = getStudentInfo();
+        const serie = profileSerieAno.value || "série não informada";
+        const area = profileArea.value || "área não informada";
+        const diagnostics = getSelectedDiagnostics();
+
+        if (!diagnostics.length) {
+          alert("Carregue os requisitos da série antes de gerar o perfil.");
+          return;
+        }
+
+        const avaliados = diagnostics.filter((item) => item.nivel_observado !== "Não avaliado");
+        const fragilidades = avaliados.filter((item) => ["Não domina", "Domina parcialmente"].includes(item.nivel_observado));
+        const apoio = avaliados.filter((item) => item.nivel_observado === "Domina com apoio");
+        const autonomia = avaliados.filter((item) => item.nivel_observado === "Domina com autonomia");
+
+        const linhasPerfil = [];
+        linhasPerfil.push(`O aluno ${student.name} encontra-se em acompanhamento no ${serie}, com análise pedagógica na área de ${area}.`);
+
+        if (avaliados.length) {
+          linhasPerfil.push(`Foram observados ${avaliados.length} eixo(s) de aprendizagem da série, considerando o nível de autonomia, os requisitos esperados e as observações do professor.`);
+        } else {
+          linhasPerfil.push("Até o momento, os requisitos foram carregados, mas ainda não houve marcação suficiente para uma conclusão pedagógica ampla.");
+        }
+
+        if (autonomia.length) {
+          linhasPerfil.push(`Apresenta maior segurança em: ${autonomia.map((item) => item.eixo_diagnostico).join(", ")}.`);
+        }
+
+        if (apoio.length) {
+          linhasPerfil.push(`Realiza com apoio em: ${apoio.map((item) => item.eixo_diagnostico).join(", ")}. Esses eixos podem ser fortalecidos com mediação planejada e atividades graduadas.`);
+        }
+
+        if (fragilidades.length) {
+          linhasPerfil.push(`Necessita de retomada e acompanhamento mais próximo em: ${fragilidades.map((item) => item.eixo_diagnostico).join(", ")}.`);
+        }
+
+        const obs = diagnosticGeneralObservation.value.trim();
+        if (obs) {
+          linhasPerfil.push(`Observação geral do professor: ${obs}`);
+        }
+
+        generalProfileText.value = linhasPerfil.join("\n\n");
+
+        const prioridades = [];
+        fragilidades.slice(0, 4).forEach((item) => prioridades.push(`- Fortalecer ${item.eixo_diagnostico}, com retomadas em etapas e verificação frequente da compreensão.`));
+        apoio.slice(0, 3).forEach((item) => prioridades.push(`- Ampliar autonomia em ${item.eixo_diagnostico}, reduzindo gradualmente a mediação.`));
+
+        if (!prioridades.length) {
+          prioridades.push("- Manter acompanhamento dos requisitos da série e propor atividades de aprofundamento conforme a resposta do aluno.");
+        }
+
+        pedagogicalPrioritiesText.value = prioridades.join("\n");
+
+        const recomendacoes = [
+          "- Organizar as atividades em camadas, começando pelos pré-requisitos e avançando gradualmente.",
+          "- Utilizar comandos curtos, exemplos resolvidos e verificação oral da compreensão antes do registro escrito.",
+          "- Registrar semanalmente os avanços, dificuldades persistentes e nível de autonomia do aluno.",
+          "- Retomar os eixos com maior fragilidade antes de avançar para atividades mais complexas."
+        ];
+
+        generalRecommendationsText.value = recomendacoes.join("\n");
+        setMessage("Perfil pedagógico gerado. Revise o texto antes de salvar.", "");
       }
 
       async function savePedagogicalProfile(event) {
         event.preventDefault();
 
-        const area = profileArea.value;
         const student = getStudentInfo();
+        const serie = profileSerieAno.value;
+        const area = profileArea.value;
+        const diagnostics = getSelectedDiagnostics();
 
-        if (!student.id && !student.name) {
+        if (!student.name || student.name === "Aluno não informado") {
           alert("Selecione um aluno antes de salvar o perfil pedagógico.");
           return;
         }
 
-        if (!area) {
-          alert("Selecione a área pedagógica.");
+        if (!serie || !area) {
+          alert("Selecione a série e a área do perfil.");
+          return;
+        }
+
+        if (!diagnostics.length) {
+          alert("Carregue os requisitos da série antes de salvar.");
           return;
         }
 
         try {
           setMessage("Salvando perfil pedagógico...", "");
 
-          const { data: sessionData } = await pedagogicalProfileClient.auth.getSession();
+          const { data: sessionData } = await profileClient.auth.getSession();
           const session = sessionData?.session;
           const teacherId = session?.user?.id || null;
 
-          const payload = {
+          const baseInfo = {
             student_id: isUuid(student.id) ? student.id : null,
             teacher_id: isUuid(teacherId) ? teacherId : null,
             school_id: null,
-
             student_name: student.name,
             teacher_name: getTeacherName(),
             school_name: getSchoolName(),
+            serie_ano: serie,
+            area: area
+          };
 
-            area: area,
+          const resultRows = diagnostics.map((item) => ({
+            ...baseInfo,
+            eixo_diagnostico: item.eixo_diagnostico,
+            nivel_observado: item.nivel_observado,
+            observacao: item.observacao
+          }));
 
-            nivel_atual: profileForm.elements["nivel_atual"]?.value || "",
-            dificuldades: profileForm.elements["dificuldades"]?.value || "",
-            habilidades_consolidadas: profileForm.elements["habilidades_consolidadas"]?.value || "",
-            habilidades_em_desenvolvimento: profileForm.elements["habilidades_em_desenvolvimento"]?.value || "",
-            habilidades_nao_consolidadas: profileForm.elements["habilidades_nao_consolidadas"]?.value || "",
-            mediacao_eficaz: profileForm.elements["mediacao_eficaz"]?.value || "",
-            objetivo_prioritario: profileForm.elements["objetivo_prioritario"]?.value || "",
-            observacoes: profileForm.elements["observacoes"]?.value || "",
+          if (resultRows.length) {
+            const { error: resultsError } = await profileClient
+              .from("student_diagnostic_results")
+              .upsert(resultRows, { onConflict: "student_id,serie_ano,area,eixo_diagnostico" });
+
+            if (resultsError) throw resultsError;
+          }
+
+          const fragilidades = diagnostics
+            .filter((item) => ["Não domina", "Domina parcialmente"].includes(item.nivel_observado))
+            .map((item) => item.eixo_diagnostico);
+
+          const emDesenvolvimento = diagnostics
+            .filter((item) => item.nivel_observado === "Domina com apoio")
+            .map((item) => item.eixo_diagnostico);
+
+          const consolidadas = diagnostics
+            .filter((item) => item.nivel_observado === "Domina com autonomia")
+            .map((item) => item.eixo_diagnostico);
+
+          const profilePayload = {
+            ...baseInfo,
+            tipo_perfil: "geral_por_serie",
+            diagnostico_json: diagnostics,
+            perfil_geral: generalProfileText.value || "",
+            prioridades_pedagogicas: pedagogicalPrioritiesText.value || "",
+            recomendacoes_gerais: generalRecommendationsText.value || "",
+            data_diagnostico: new Date().toISOString().slice(0, 10),
+            nivel_atual: generalProfileText.value || "",
+            dificuldades: fragilidades.join("; "),
+            habilidades_consolidadas: consolidadas.join("; "),
+            habilidades_em_desenvolvimento: emDesenvolvimento.join("; "),
+            habilidades_nao_consolidadas: fragilidades.join("; "),
+            mediacao_eficaz: generalRecommendationsText.value || "",
+            objetivo_prioritario: pedagogicalPrioritiesText.value || "",
+            observacoes: diagnosticGeneralObservation.value || "",
             status: "ativo"
           };
 
           let id = profileRecordId.value;
 
-          if (!id) {
-            const existing = await findExistingProfile(student.id, student.name, area);
-            id = existing?.id || "";
-          }
-
           if (id) {
-            const { data, error } = await pedagogicalProfileClient
+            const { data, error } = await profileClient
               .from("student_area_profiles")
-              .update(payload)
+              .update(profilePayload)
               .eq("id", id)
               .select()
               .maybeSingle();
 
-            if (error) {
-              throw error;
-            }
-
+            if (error) throw error;
             profileRecordId.value = data?.id || id;
-            setMessage("Perfil pedagógico atualizado com sucesso.", "");
           } else {
-            const { data, error } = await pedagogicalProfileClient
-              .from("student_area_profiles")
-              .insert(payload)
-              .select()
-              .maybeSingle();
+            const existing = await fetchSavedGeneralProfile(student, serie, area);
 
-            if (error) {
-              throw error;
+            if (existing?.id) {
+              const { data, error } = await profileClient
+                .from("student_area_profiles")
+                .update(profilePayload)
+                .eq("id", existing.id)
+                .select()
+                .maybeSingle();
+
+              if (error) throw error;
+              profileRecordId.value = data?.id || existing.id;
+            } else {
+              const { data, error } = await profileClient
+                .from("student_area_profiles")
+                .insert(profilePayload)
+                .select()
+                .maybeSingle();
+
+              if (error) throw error;
+              profileRecordId.value = data?.id || "";
             }
-
-            profileRecordId.value = data?.id || "";
-            setMessage("Perfil pedagógico salvo com sucesso.", "");
           }
+
+          const generalPayload = {
+            student_id: baseInfo.student_id,
+            teacher_id: baseInfo.teacher_id,
+            school_id: baseInfo.school_id,
+            student_name: baseInfo.student_name,
+            teacher_name: baseInfo.teacher_name,
+            school_name: baseInfo.school_name,
+            serie_ano: serie,
+            perfil_geral: generalProfileText.value || "",
+            prioridades_pedagogicas: pedagogicalPrioritiesText.value || "",
+            recomendacoes_gerais: generalRecommendationsText.value || "",
+            diagnostico_resumo: {
+              area,
+              diagnostico: diagnostics
+            },
+            status: "ativo"
+          };
+
+          await profileClient
+            .from("student_general_profiles")
+            .upsert(generalPayload, { onConflict: "student_id,serie_ano" });
+
+          setMessage("Perfil pedagógico salvo com sucesso.", "");
         } catch (error) {
           console.error(error);
-          setMessage("Erro ao salvar perfil pedagógico. Confirme se a tabela student_area_profiles existe no Supabase.", "error");
+          setMessage("Erro ao salvar perfil pedagógico. Verifique se as tabelas foram criadas no Supabase.", "error");
         }
+      }
+
+      function clearProfileFields() {
+        profileRecordId.value = "";
+        profileSerieAno.value = "";
+        profileArea.innerHTML = '<option value="">Selecione primeiro a série</option>';
+        diagnosticGeneralObservation.value = "";
+        generalProfileText.value = "";
+        pedagogicalPrioritiesText.value = "";
+        generalRecommendationsText.value = "";
+        clearDiagnosticList("Selecione a série e a área para carregar os requisitos do perfil pedagógico.");
+        setMessage("Campos limpos.", "");
       }
 
       function formatTextForPrint(text) {
@@ -911,24 +1287,20 @@
 
       function printPedagogicalProfile() {
         const student = getStudentInfo();
+        const serie = profileSerieAno.value || "Não informada";
         const area = profileArea.value || "Não informada";
         const dataAtual = new Date().toLocaleDateString("pt-BR");
+        const diagnostics = getSelectedDiagnostics();
 
-        const values = {
-          objetivo_prioritario: profileForm.elements["objetivo_prioritario"]?.value || "",
-          nivel_atual: profileForm.elements["nivel_atual"]?.value || "",
-          dificuldades: profileForm.elements["dificuldades"]?.value || "",
-          habilidades_consolidadas: profileForm.elements["habilidades_consolidadas"]?.value || "",
-          habilidades_em_desenvolvimento: profileForm.elements["habilidades_em_desenvolvimento"]?.value || "",
-          habilidades_nao_consolidadas: profileForm.elements["habilidades_nao_consolidadas"]?.value || "",
-          mediacao_eficaz: profileForm.elements["mediacao_eficaz"]?.value || "",
-          observacoes: profileForm.elements["observacoes"]?.value || ""
-        };
-
-        if (!area || area === "Não informada") {
-          alert("Selecione uma área pedagógica antes de imprimir.");
-          return;
-        }
+        const diagnosticsHtml = diagnostics.length
+          ? diagnostics.map((item) => `
+              <tr>
+                <td>${formatTextForPrint(item.eixo_diagnostico)}</td>
+                <td>${formatTextForPrint(item.nivel_observado)}</td>
+                <td>${formatTextForPrint(item.observacao || "—")}</td>
+              </tr>
+            `).join("\n")
+          : `<tr><td colspan="3">Nenhum requisito registrado.</td></tr>`;
 
         const html = `
 <!DOCTYPE html>
@@ -936,159 +1308,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Perfil Pedagógico do Aluno - INTEGRO</title>
-
   <style>
-    @page {
-      size: A4;
-      margin: 14mm;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #ffffff;
-      color: #000000;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .barra-acoes {
-      background: #1d6b3a;
-      color: white;
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 999;
-    }
-
-    .barra-acoes button {
-      background: white;
-      color: #1d6b3a;
-      border: none;
-      border-radius: 8px;
-      padding: 9px 14px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .folha {
-      width: 180mm;
-      max-width: 180mm;
-      margin: 12mm auto;
-      background: white;
-    }
-
-    .cabecalho {
-      border: 2px solid #1d6b3a;
-      padding: 12px;
-      text-align: center;
-      margin-bottom: 14px;
-    }
-
-    .cabecalho h1 {
-      margin: 0;
-      color: #1d6b3a;
-      font-size: 20px;
-      letter-spacing: 0.5px;
-    }
-
-    .cabecalho h2 {
-      margin: 6px 0 0 0;
-      color: #222;
-      font-size: 14px;
-    }
-
-    table.info {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 18px;
-      table-layout: fixed;
-    }
-
-    table.info td {
-      width: 50%;
-      border: 1px solid #999;
-      padding: 7px;
-      vertical-align: top;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-
-    table.info strong {
-      color: #123d25;
-    }
-
-    .bloco {
-      border: 1px solid #b9cfc0;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 10px;
-      page-break-inside: avoid;
-    }
-
-    .bloco h3 {
-      margin: 0 0 6px 0;
-      font-size: 13px;
-      color: #123d25;
-    }
-
-    .assinaturas {
-      margin-top: 45px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 36px;
-      page-break-inside: avoid;
-    }
-
-    .assinatura {
-      text-align: center;
-      font-size: 11px;
-    }
-
-    .linha-assinatura {
-      border-top: 1px solid #000;
-      margin-bottom: 7px;
-      height: 1px;
-    }
-
-    .rodape {
-      margin-top: 30px;
-      padding-top: 8px;
-      border-top: 1px solid #999;
-      text-align: center;
-      font-size: 9px;
-      color: #444;
-    }
-
-    @media print {
-      .barra-acoes {
-        display: none !important;
-      }
-
-      body {
-        background: white;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      .folha {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-      }
-    }
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.45; }
+    .barra-acoes { background: #1d6b3a; color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 999; }
+    .barra-acoes button { background: white; color: #1d6b3a; border: none; border-radius: 8px; padding: 9px 14px; font-weight: bold; cursor: pointer; }
+    .folha { width: 180mm; max-width: 180mm; margin: 12mm auto; background: white; }
+    .cabecalho { border: 2px solid #1d6b3a; padding: 12px; text-align: center; margin-bottom: 14px; }
+    .cabecalho h1 { margin: 0; color: #1d6b3a; font-size: 20px; letter-spacing: 0.5px; }
+    .cabecalho h2 { margin: 6px 0 0 0; color: #222; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; table-layout: fixed; }
+    td, th { border: 1px solid #999; padding: 7px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere; }
+    th { background: #eef8f2; color: #123d25; text-align: left; }
+    .bloco { border: 1px solid #b9cfc0; border-radius: 10px; padding: 10px; margin-bottom: 10px; page-break-inside: avoid; }
+    .bloco h3 { margin: 0 0 6px 0; font-size: 13px; color: #123d25; }
+    .assinaturas { margin-top: 45px; display: grid; grid-template-columns: 1fr 1fr; gap: 36px; page-break-inside: avoid; }
+    .assinatura { text-align: center; font-size: 11px; }
+    .linha-assinatura { border-top: 1px solid #000; margin-bottom: 7px; height: 1px; }
+    .rodape { margin-top: 30px; padding-top: 8px; border-top: 1px solid #999; text-align: center; font-size: 9px; color: #444; }
+    @media print { .barra-acoes { display: none !important; } .folha { width: 100%; max-width: 100%; margin: 0; } }
   </style>
 </head>
-
 <body>
   <div class="barra-acoes">
     <strong>Perfil Pedagógico do Aluno - INTEGRO</strong>
@@ -1098,84 +1339,35 @@
   <main class="folha">
     <div class="cabecalho">
       <h1>INSTITUTO INTEGRO</h1>
-      <h2>Perfil Pedagógico do Aluno</h2>
+      <h2>Perfil Pedagógico Geral do Aluno</h2>
     </div>
 
-    <table class="info">
-      <tr>
-        <td><strong>Aluno:</strong><br>${formatTextForPrint(student.name)}</td>
-        <td><strong>Área:</strong><br>${formatTextForPrint(area)}</td>
-      </tr>
-      <tr>
-        <td><strong>Professor(a):</strong><br>${formatTextForPrint(getTeacherName() || "Não informado")}</td>
-        <td><strong>Escola:</strong><br>${formatTextForPrint(getSchoolName() || "Não informada")}</td>
-      </tr>
-      <tr>
-        <td><strong>Data:</strong><br>${dataAtual}</td>
-        <td><strong>Status:</strong><br>Perfil pedagógico ativo</td>
-      </tr>
+    <table>
+      <tr><td><strong>Aluno:</strong><br>${formatTextForPrint(student.name)}</td><td><strong>Série/Ano:</strong><br>${formatTextForPrint(serie)}</td></tr>
+      <tr><td><strong>Área:</strong><br>${formatTextForPrint(area)}</td><td><strong>Data:</strong><br>${dataAtual}</td></tr>
+      <tr><td><strong>Professor(a):</strong><br>${formatTextForPrint(getTeacherName() || "Não informado")}</td><td><strong>Escola:</strong><br>${formatTextForPrint(getSchoolName() || "Não informada")}</td></tr>
     </table>
 
-    <div class="bloco">
-      <h3>Objetivo prioritário</h3>
-      <div>${formatTextForPrint(values.objetivo_prioritario || "Não informado.")}</div>
-    </div>
+    <div class="bloco"><h3>Observação geral do professor</h3><div>${formatTextForPrint(diagnosticGeneralObservation.value || "Não informado.")}</div></div>
+    <div class="bloco"><h3>Perfil pedagógico geral</h3><div>${formatTextForPrint(generalProfileText.value || "Não informado.")}</div></div>
+    <div class="bloco"><h3>Prioridades pedagógicas</h3><div>${formatTextForPrint(pedagogicalPrioritiesText.value || "Não informado.")}</div></div>
+    <div class="bloco"><h3>Recomendações gerais de intervenção</h3><div>${formatTextForPrint(generalRecommendationsText.value || "Não informado.")}</div></div>
 
-    <div class="bloco">
-      <h3>Nível atual do aluno</h3>
-      <div>${formatTextForPrint(values.nivel_atual || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Dificuldades principais</h3>
-      <div>${formatTextForPrint(values.dificuldades || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Habilidades consolidadas</h3>
-      <div>${formatTextForPrint(values.habilidades_consolidadas || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Habilidades em desenvolvimento</h3>
-      <div>${formatTextForPrint(values.habilidades_em_desenvolvimento || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Habilidades ainda não consolidadas</h3>
-      <div>${formatTextForPrint(values.habilidades_nao_consolidadas || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Mediação eficaz</h3>
-      <div>${formatTextForPrint(values.mediacao_eficaz || "Não informado.")}</div>
-    </div>
-
-    <div class="bloco">
-      <h3>Observações importantes</h3>
-      <div>${formatTextForPrint(values.observacoes || "Não informado.")}</div>
-    </div>
+    <h3>Requisitos avaliados</h3>
+    <table>
+      <thead><tr><th>Eixo</th><th>Nível observado</th><th>Observação</th></tr></thead>
+      <tbody>${diagnosticsHtml}</tbody>
+    </table>
 
     <div class="assinaturas">
-      <div class="assinatura">
-        <div class="linha-assinatura"></div>
-        <div>Assinatura do(a) Professor(a)</div>
-        <div>${formatTextForPrint(getTeacherName() || "")}</div>
-      </div>
-
-      <div class="assinatura">
-        <div class="linha-assinatura"></div>
-        <div>Assinatura da Coordenação / Responsável</div>
-      </div>
+      <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura do(a) Professor(a)</div><div>${formatTextForPrint(getTeacherName() || "")}</div></div>
+      <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura da Coordenação / Responsável</div></div>
     </div>
 
-    <div class="rodape">
-      Documento gerado pelo Portal do Professor INTEGRO.
-    </div>
+    <div class="rodape">Documento gerado pelo Portal do Professor INTEGRO.</div>
   </main>
 </body>
-</html>
-`;
+</html>`;
 
         const janela = window.open("", "_blank");
 
@@ -1195,32 +1387,32 @@
         getStudentInfo,
         getSchoolName,
         getTeacherName,
-        findExistingProfile,
         formatTextForPrint
       };
 
-      profileForm.addEventListener("submit", savePedagogicalProfile);
+      profileSerieAno.addEventListener("change", () => {
+        loadAreasForSerie();
+      });
 
       profileArea.addEventListener("change", () => {
-        loadProfileForSelectedArea();
+        if (profileSerieAno.value && profileArea.value) {
+          loadDiagnosticMatrix();
+        }
       });
+
+      loadDiagnosticMatrixBtn?.addEventListener("click", loadDiagnosticMatrix);
+      generateGeneralProfileBtn?.addEventListener("click", generateGeneralProfile);
+      profileForm.addEventListener("submit", savePedagogicalProfile);
+      printProfileBtn?.addEventListener("click", printPedagogicalProfile);
+      clearProfileBtn?.addEventListener("click", clearProfileFields);
 
       studentSelect?.addEventListener("change", () => {
         setTimeout(() => {
-          loadProfileForSelectedArea();
+          if (profileSerieAno.value) {
+            loadAreasForSerie();
+          }
         }, 300);
       });
-
-      printProfileBtn?.addEventListener("click", printPedagogicalProfile);
-
-      clearProfileBtn?.addEventListener("click", () => {
-        clearProfileFields(true);
-        setMessage("Campos limpos. Você pode preencher novamente antes de salvar.", "");
-      });
-
-      setTimeout(() => {
-        loadProfileForSelectedArea();
-      }, 1000);
     })();
 
     (function initAiWeeklyPlanModule() {
@@ -1305,6 +1497,17 @@
 
       function formatForPromptProfile(record) {
         if (!record) return "";
+
+        if (record.tipo_perfil === "geral_por_serie" || record.perfil_geral || record.prioridades_pedagogicas) {
+          return [
+            `Série/Ano: ${record.serie_ano || "Não informada"}`,
+            `Área: ${record.area || "Não informada"}`,
+            `Perfil pedagógico geral: ${record.perfil_geral || record.nivel_atual || "Não informado"}`,
+            `Prioridades pedagógicas: ${record.prioridades_pedagogicas || record.objetivo_prioritario || "Não informado"}`,
+            `Recomendações gerais: ${record.recomendacoes_gerais || record.mediacao_eficaz || "Não informado"}`,
+            `Observações: ${record.observacoes || "Não informado"}`
+          ].join("\n");
+        }
 
         return [
           `Área: ${record.area || "Não informada"}`,
