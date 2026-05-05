@@ -1045,69 +1045,93 @@
         }
       }
 
-      function generateGeneralProfile() {
+      async function generateGeneralProfile() {
         const student = getStudentInfo();
-        const serie = profileSerieAno.value || "série não informada";
-        const area = profileArea.value || "área não informada";
+        const serie = profileSerieAno.value;
+        const area = profileArea.value;
         const diagnostics = getSelectedDiagnostics();
+
+        if (!student.name || student.name === "Aluno não informado") {
+          alert("Selecione um aluno antes de gerar o perfil.");
+          return;
+        }
+
+        if (!serie || !area) {
+          alert("Selecione a série e a área antes de gerar o perfil.");
+          return;
+        }
 
         if (!diagnostics.length) {
           alert("Carregue os requisitos da série antes de gerar o perfil.");
           return;
         }
 
-        const avaliados = diagnostics.filter((item) => item.nivel_observado !== "Não avaliado");
-        const fragilidades = avaliados.filter((item) => ["Não domina", "Domina parcialmente"].includes(item.nivel_observado));
-        const apoio = avaliados.filter((item) => item.nivel_observado === "Domina com apoio");
-        const autonomia = avaliados.filter((item) => item.nivel_observado === "Domina com autonomia");
+        try {
+          setMessage("Gerando perfil pedagógico com IA. Aguarde...", "");
 
-        const linhasPerfil = [];
-        linhasPerfil.push(`O aluno ${student.name} encontra-se em acompanhamento no ${serie}, com análise pedagógica na área de ${area}.`);
+          if (generateGeneralProfileBtn) {
+            generateGeneralProfileBtn.disabled = true;
+            generateGeneralProfileBtn.textContent = "Gerando perfil com IA...";
+          }
 
-        if (avaliados.length) {
-          linhasPerfil.push(`Foram observados ${avaliados.length} eixo(s) de aprendizagem da série, considerando o nível de autonomia, os requisitos esperados e as observações do professor.`);
-        } else {
-          linhasPerfil.push("Até o momento, os requisitos foram carregados, mas ainda não houve marcação suficiente para uma conclusão pedagógica ampla.");
+          generalProfileText.value = "Aguarde. A IA está organizando o perfil pedagógico geral do aluno...";
+          pedagogicalPrioritiesText.value = "";
+          generalRecommendationsText.value = "";
+
+          const payload = {
+            aluno: student.name,
+            serie_ano: serie,
+            area: area,
+            escola: getSchoolName() || "INSTITUTO INTEGRO",
+            professor: getTeacherName() || "Não informado",
+            observacao_geral: diagnosticGeneralObservation.value || "",
+            requisitos: diagnostics.map((item) => ({
+              eixo_diagnostico: item.eixo_diagnostico,
+              descricao: item.descricao,
+              nivel_observado: item.nivel_observado,
+              observacao: item.observacao
+            }))
+          };
+
+          const { data, error } = await profileClient.functions.invoke("gerar-perfil-aluno", {
+            body: payload
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          if (data?.error) {
+            throw new Error(data.error);
+          }
+
+          generalProfileText.value = data?.perfil_geral || "";
+          pedagogicalPrioritiesText.value = data?.prioridades_pedagogicas || "";
+          generalRecommendationsText.value = data?.recomendacoes_gerais || "";
+
+          setMessage(
+            data?.modelo_usado
+              ? `Perfil pedagógico gerado com IA. Modelo utilizado: ${data.modelo_usado}. Revise o texto antes de salvar.`
+              : "Perfil pedagógico gerado com IA. Revise o texto antes de salvar.",
+            ""
+          );
+        } catch (error) {
+          console.error(error);
+
+          generalProfileText.value = "";
+          pedagogicalPrioritiesText.value = "";
+          generalRecommendationsText.value = "";
+
+          setMessage(
+            error.message || "Erro ao gerar perfil pedagógico com IA.",
+            "error"
+          );
+        } finally {
+          if (generateGeneralProfileBtn) {
+            generateGeneralProfileBtn.disabled = false;
+            generateGeneralProfileBtn.textContent = "Gerar perfil pedagógico com IA";
+          }
         }
-
-        if (autonomia.length) {
-          linhasPerfil.push(`Apresenta maior segurança em: ${autonomia.map((item) => item.eixo_diagnostico).join(", ")}.`);
-        }
-
-        if (apoio.length) {
-          linhasPerfil.push(`Realiza com apoio em: ${apoio.map((item) => item.eixo_diagnostico).join(", ")}. Esses eixos podem ser fortalecidos com mediação planejada e atividades graduadas.`);
-        }
-
-        if (fragilidades.length) {
-          linhasPerfil.push(`Necessita de retomada e acompanhamento mais próximo em: ${fragilidades.map((item) => item.eixo_diagnostico).join(", ")}.`);
-        }
-
-        const obs = diagnosticGeneralObservation.value.trim();
-        if (obs) {
-          linhasPerfil.push(`Observação geral do professor: ${obs}`);
-        }
-
-        generalProfileText.value = linhasPerfil.join("\n\n");
-
-        const prioridades = [];
-        fragilidades.slice(0, 4).forEach((item) => prioridades.push(`- Fortalecer ${item.eixo_diagnostico}, com retomadas em etapas e verificação frequente da compreensão.`));
-        apoio.slice(0, 3).forEach((item) => prioridades.push(`- Ampliar autonomia em ${item.eixo_diagnostico}, reduzindo gradualmente a mediação.`));
-
-        if (!prioridades.length) {
-          prioridades.push("- Manter acompanhamento dos requisitos da série e propor atividades de aprofundamento conforme a resposta do aluno.");
-        }
-
-        pedagogicalPrioritiesText.value = prioridades.join("\n");
-
-        const recomendacoes = [
-          "- Organizar as atividades em camadas, começando pelos pré-requisitos e avançando gradualmente.",
-          "- Utilizar comandos curtos, exemplos resolvidos e verificação oral da compreensão antes do registro escrito.",
-          "- Registrar semanalmente os avanços, dificuldades persistentes e nível de autonomia do aluno.",
-          "- Retomar os eixos com maior fragilidade antes de avançar para atividades mais complexas."
-        ];
-
-        generalRecommendationsText.value = recomendacoes.join("\n");
-        setMessage("Perfil pedagógico gerado. Revise o texto antes de salvar.", "");
       }
 
       async function savePedagogicalProfile(event) {
