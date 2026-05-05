@@ -650,3 +650,112 @@ textarea { resize: vertical; }
   line-height: 1.55;
   color: #23352c;
 }
+
+/* =========================================================
+   MENU POR SEÇÕES — PORTAL DA FAMÍLIA
+   ========================================================= */
+
+.family-menu-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.family-section-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.family-nav-button {
+  width: 100%;
+  min-height: 132px;
+  border: 1px solid #d8e3dc;
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--green-900);
+  cursor: pointer;
+  padding: 18px;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  text-align: left;
+  transition: 0.2s ease;
+}
+
+.family-nav-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--green-800);
+  box-shadow: 0 12px 28px rgba(17, 74, 59, 0.12);
+}
+
+.family-nav-button.active {
+  border-color: var(--green-800);
+  background: linear-gradient(135deg, #e8f4ee 0%, #ffffff 100%);
+  box-shadow: 0 10px 24px rgba(17, 74, 59, 0.12);
+}
+
+.family-nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: var(--green-100);
+  color: var(--green-900);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.family-nav-button strong {
+  font-size: 1.05rem;
+}
+
+.family-nav-button small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.family-single-view {
+  grid-template-columns: 1fr !important;
+}
+
+.family-section-panel {
+  display: none;
+}
+
+.family-section-panel.active {
+  display: block;
+}
+
+.family-tab-button.active {
+  background: var(--green-800);
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .family-section-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .family-nav-button {
+    min-height: 120px;
+  }
+}
+
+@media (max-width: 560px) {
+  .family-section-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .family-menu-card {
+    padding: 18px;
+  }
+
+  .family-nav-button {
+    min-height: auto;
+  }
+}
