@@ -2092,7 +2092,7 @@
             next_steps: progressNextSteps.value || "",
             area,
             week_reference: week,
-            plan_id: contextState.latestPlan?.id || null,
+            plan_id: isUuid(contextState.latestPlan?.id) ? contextState.latestPlan.id : null,
             plan_title: progressPlanTitle.value || contextState.latestPlan?.title || "",
             plan_snapshot: contextState.planText || progressWorkedContent.value || "",
             habilidade_foco: progressFocus.value || "",
