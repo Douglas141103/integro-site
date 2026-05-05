@@ -84,6 +84,78 @@
       white-space: nowrap;
     }
 
+
+    .quick-panel {
+      border: 1px solid #d7e4dd;
+      border-radius: 18px;
+      background: #f8fcfa;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .quick-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .quick-panel-head strong {
+      color: #063f32;
+      font-size: 1.02rem;
+    }
+
+    .quick-two-blocks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .quick-label {
+      display: block;
+      font-weight: 800;
+      color: #063f32;
+      margin-bottom: 10px;
+    }
+
+    .quick-check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 9px;
+    }
+
+    .quick-check-grid label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #d7e4dd;
+      border-radius: 999px;
+      background: #ffffff;
+      padding: 10px 12px;
+      color: #24423a;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .quick-check-grid input {
+      width: auto;
+      min-height: auto;
+      accent-color: #0b6b53;
+    }
+
+    .progress-analysis-box {
+      margin-top: 6px;
+      background: #ffffff;
+    }
+
+    @media (max-width: 800px) {
+      .quick-panel-head,
+      .quick-two-blocks {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+      }
+    }
     @media (max-width: 800px) {
       .diagnostic-box-head,
       .diagnostic-item-header,
@@ -439,13 +511,9 @@
           <textarea
             id="aiPlanEvolutions"
             rows="5"
-            placeholder="As evoluções anteriores podem ser carregadas automaticamente. Elas ajudam a IA a decidir se deve avançar, retomar, manter ou aprofundar."
+            placeholder="Cole ou escreva aqui as evoluções anteriores do aluno. Ex.: Na semana anterior realizou as atividades com apoio visual, mas ainda precisou de mediação..."
           ></textarea>
         </label>
-
-        <button type="button" id="loadAiPlanEvolutionsBtn" class="btn btn-secondary">
-          Carregar evoluções anteriores automaticamente
-        </button>
 
         <label>
           <span>Observações do professor</span>
@@ -575,101 +643,172 @@
     <section id="progressSection" class="panel-card action-section">
       <div class="section-heading">
         <div>
-          <div class="eyebrow">ACOMPANHAMENTO INTELIGENTE</div>
-          <h2>Evolução semanal do aluno</h2>
+          <div class="eyebrow">ACOMPANHAMENTO</div>
+          <h2>Evolução semanal com IA</h2>
           <p class="helper">
-            Registre evidências simples da semana. A IA analisará o perfil pedagógico, o plano aplicado e o histórico para indicar o próximo passo.
+            Marque evidências rápidas da semana. A IA cruza perfil pedagógico, plano aplicado e histórico para gerar a evolução e orientar o próximo plano.
           </p>
         </div>
         <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
       </div>
 
-      <form id="smartProgressForm" class="stack">
-        <div class="grid two-cols">
-          <label>
-            <span>Área trabalhada</span>
-            <select id="progressArea" name="area" required>
-              <option value="">Selecione uma área</option>
-              <option value="Matemática">Matemática</option>
-              <option value="Língua Portuguesa">Língua Portuguesa</option>
-              <option value="Linguagem">Linguagem</option>
-              <option value="Leitura e Escrita">Leitura e Escrita</option>
-              <option value="Coordenação Motora">Coordenação Motora</option>
-              <option value="Raciocínio Lógico">Raciocínio Lógico</option>
-              <option value="Interdisciplinaridade">Interdisciplinaridade</option>
-              <option value="INTEGRO Lab">INTEGRO Lab</option>
-              <option value="Química">Química</option>
-              <option value="Física">Física</option>
-              <option value="Biologia">Biologia</option>
-              <option value="Redação">Redação</option>
-              <option value="Humanas">Humanas</option>
-            </select>
-          </label>
+      <form id="progressForm" class="stack">
+        <div class="quick-panel">
+          <div class="quick-panel-head">
+            <div>
+              <strong>1. Dados rápidos</strong>
+              <p class="helper">Escolha a área e a semana. O botão de contexto busca automaticamente o perfil, o último plano e evoluções anteriores.</p>
+            </div>
+            <button type="button" id="loadStudentContextBtn" class="btn btn-secondary small-btn">Carregar contexto do aluno</button>
+          </div>
+
+          <div class="grid two-cols">
+            <label>
+              <span>Área trabalhada</span>
+              <select id="progressArea" name="area" required>
+                <option value="">Selecione</option>
+                <option value="Matemática">Matemática</option>
+                <option value="Língua Portuguesa">Língua Portuguesa</option>
+                <option value="Linguagem">Linguagem</option>
+                <option value="Leitura e Escrita">Leitura e Escrita</option>
+                <option value="Coordenação Motora">Coordenação Motora</option>
+                <option value="Raciocínio Lógico">Raciocínio Lógico</option>
+                <option value="Interdisciplinaridade">Interdisciplinaridade</option>
+                <option value="INTEGRO Lab">INTEGRO Lab</option>
+                <option value="Ciências">Ciências</option>
+                <option value="História">História</option>
+                <option value="Geografia">Geografia</option>
+                <option value="Química">Química</option>
+                <option value="Física">Física</option>
+                <option value="Biologia">Biologia</option>
+                <option value="Redação">Redação</option>
+                <option value="Humanas">Humanas</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Semana / período</span>
+              <input id="progressWeek" name="week_reference" type="text" placeholder="Ex.: 05 a 09 de maio" required />
+            </label>
+          </div>
+        </div>
+
+        <div class="quick-panel">
+          <div class="quick-panel-head">
+            <div>
+              <strong>2. Resultado observado</strong>
+              <p class="helper">O professor marca o resultado geral. A IA transforma isso em texto pedagógico completo.</p>
+            </div>
+          </div>
+
+          <div class="grid two-cols">
+            <label>
+              <span>Resultado da semana</span>
+              <select id="progressResult" name="resultado_semana" required>
+                <option value="">Selecione</option>
+                <option value="Avançou bem">Avançou bem</option>
+                <option value="Avançou parcialmente">Avançou parcialmente</option>
+                <option value="Manteve com apoio">Manteve com apoio</option>
+                <option value="Teve dificuldade persistente">Teve dificuldade persistente</option>
+                <option value="Precisa retomar a base">Precisa retomar a base</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Nível de autonomia observado</span>
+              <select id="progressAutonomy" name="nivel_autonomia" required>
+                <option value="">Selecione</option>
+                <option value="Fez sozinho">Fez sozinho</option>
+                <option value="Fez com pouca ajuda">Fez com pouca ajuda</option>
+                <option value="Fez com muita ajuda">Fez com muita ajuda</option>
+                <option value="Não conseguiu realizar">Não conseguiu realizar</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid two-cols">
+            <label>
+              <span>Foco da semana</span>
+              <input id="progressFocus" name="habilidade_foco" type="text" placeholder="Ex.: comparação de frações simples" />
+            </label>
+
+            <label>
+              <span>Plano aplicado</span>
+              <input id="progressPlanTitle" type="text" placeholder="Será carregado automaticamente, se houver plano salvo." readonly />
+            </label>
+          </div>
 
           <label>
-            <span>Semana / período</span>
-            <input id="progressWeek" name="week_reference" type="text" placeholder="Ex.: 04 a 08 de maio" required />
+            <span>O que foi trabalhado</span>
+            <textarea
+              id="progressWorkedContent"
+              name="o_que_foi_trabalhado"
+              rows="3"
+              placeholder="Será carregado automaticamente a partir do plano da semana. Edite apenas se necessário."
+            ></textarea>
+          </label>
+        </div>
+
+        <div class="quick-panel">
+          <div class="quick-panel-head">
+            <div>
+              <strong>3. Marcação rápida</strong>
+              <p class="helper">Marque o que apareceu na aula. Não precisa escrever tudo.</p>
+            </div>
+          </div>
+
+          <div class="quick-two-blocks">
+            <div>
+              <span class="quick-label">Mediações utilizadas</span>
+              <div class="quick-check-grid" id="progressMediations">
+                <label><input type="checkbox" value="Apoio visual" /> Apoio visual</label>
+                <label><input type="checkbox" value="Exemplo resolvido" /> Exemplo resolvido</label>
+                <label><input type="checkbox" value="Atividade em etapas" /> Atividade em etapas</label>
+                <label><input type="checkbox" value="Material concreto" /> Material concreto</label>
+                <label><input type="checkbox" value="Leitura guiada" /> Leitura guiada</label>
+                <label><input type="checkbox" value="Repetição orientada" /> Repetição orientada</label>
+                <label><input type="checkbox" value="Comando curto" /> Comando curto</label>
+                <label><input type="checkbox" value="Ficha adaptada" /> Ficha adaptada</label>
+                <label><input type="checkbox" value="Esquema visual" /> Esquema visual</label>
+                <label><input type="checkbox" value="Retomada oral" /> Retomada oral</label>
+              </div>
+            </div>
+
+            <div>
+              <span class="quick-label">Dificuldades observadas</span>
+              <div class="quick-check-grid" id="progressDifficultiesChecks">
+                <label><input type="checkbox" value="Interpretação do comando" /> Interpretação do comando</label>
+                <label><input type="checkbox" value="Organização do raciocínio" /> Organização do raciocínio</label>
+                <label><input type="checkbox" value="Cálculo" /> Cálculo</label>
+                <label><input type="checkbox" value="Leitura" /> Leitura</label>
+                <label><input type="checkbox" value="Escrita" /> Escrita</label>
+                <label><input type="checkbox" value="Atenção" /> Atenção</label>
+                <label><input type="checkbox" value="Autonomia" /> Autonomia</label>
+                <label><input type="checkbox" value="Memorização" /> Memorização</label>
+                <label><input type="checkbox" value="Aplicação sem apoio visual" /> Aplicação sem apoio visual</label>
+                <label><input type="checkbox" value="Sequência de etapas" /> Sequência de etapas</label>
+              </div>
+            </div>
+          </div>
+
+          <label>
+            <span>Observação curta do professor</span>
+            <textarea
+              id="progressTeacherObservation"
+              name="observacao_professor"
+              rows="3"
+              placeholder="Opcional. Ex.: quando usou desenho, conseguiu responder melhor."
+            ></textarea>
           </label>
         </div>
 
         <div class="grid two-cols">
-          <label>
-            <span>Habilidade ou foco da semana</span>
-            <input id="progressFocus" name="habilidade_foco" type="text" placeholder="Ex.: comparação de frações simples" />
-          </label>
-
-          <label>
-            <span>Nível de autonomia observado</span>
-            <select id="progressAutonomy" name="nivel_autonomia">
-              <option value="">Selecione</option>
-              <option value="Realizou com autonomia">Realizou com autonomia</option>
-              <option value="Realizou com pouca ajuda">Realizou com pouca ajuda</option>
-              <option value="Realizou com muita ajuda">Realizou com muita ajuda</option>
-              <option value="Realizou parcialmente">Realizou parcialmente</option>
-              <option value="Ainda não realizou">Ainda não realizou</option>
-            </select>
-          </label>
+          <button type="button" id="generateProgressAiBtn" class="btn btn-primary">Gerar evolução com IA</button>
+          <button type="button" id="clearProgressBtn" class="btn btn-secondary">Limpar campos</button>
         </div>
 
-        <label>
-          <span>O que foi trabalhado</span>
-          <textarea id="progressWorked" name="o_que_foi_trabalhado" rows="3" placeholder="Ex.: representações de frações por desenhos, identificação de numerador e denominador." required></textarea>
-        </label>
-
-        <label>
-          <span>Como o aluno respondeu</span>
-          <textarea id="progressResponse" name="resposta_aluno" rows="3" placeholder="Ex.: participou bem, conseguiu realizar com apoio visual, mas ainda precisou de mediação." required></textarea>
-        </label>
-
-        <div class="grid two-cols">
-          <label>
-            <span>Dificuldade observada</span>
-            <textarea id="progressObservedDifficulty" name="dificuldade_observada" rows="3" placeholder="Ex.: dificuldade quando a fração aparece apenas em forma numérica."></textarea>
-          </label>
-
-          <label>
-            <span>Mediação utilizada</span>
-            <textarea id="progressMediation" name="mediacao_utilizada" rows="3" placeholder="Ex.: apoio visual, exemplo resolvido, atividade em etapas."></textarea>
-          </label>
-        </div>
-
-        <label>
-          <span>Observação adicional do professor</span>
-          <textarea id="progressTeacherObservation" name="observacao_professor" rows="3" placeholder="Registre algo importante percebido durante a aula ou semana."></textarea>
-        </label>
-
-        <div class="grid two-cols">
-          <button type="button" id="generateProgressAiBtn" class="btn btn-secondary">
-            Gerar evolução com IA
-          </button>
-
-          <button type="button" id="loadProgressContextBtn" class="btn btn-secondary">
-            Carregar contexto do aluno
-          </button>
-        </div>
-
-        <div class="diagnostic-box">
-          <div class="diagnostic-box-head">
+        <div id="progressAnalysisBox" class="quick-panel progress-analysis-box">
+          <div class="quick-panel-head">
             <div>
               <strong>Análise da evolução — editável</strong>
               <p class="helper">Revise os campos gerados antes de salvar. Esses dados alimentarão o próximo plano semanal.</p>
@@ -678,62 +817,56 @@
 
           <label>
             <span>Resumo da evolução</span>
-            <textarea id="progressSummary" name="summary" rows="4" placeholder="A IA preencherá o resumo da evolução."></textarea>
+            <textarea id="progressSummary" name="summary" rows="4"></textarea>
           </label>
 
           <div class="grid two-cols">
             <label>
               <span>Pontos fortes</span>
-              <textarea id="progressStrengths" name="strengths" rows="4" placeholder="O que o aluno demonstrou bem?"></textarea>
+              <textarea id="progressStrengths" name="strengths" rows="4"></textarea>
             </label>
 
             <label>
               <span>Dificuldades</span>
-              <textarea id="progressDifficulties" name="difficulties" rows="4" placeholder="Quais dificuldades persistem?"></textarea>
+              <textarea id="progressDifficultiesText" name="difficulties" rows="4"></textarea>
             </label>
           </div>
 
           <label>
             <span>Próximos passos</span>
-            <textarea id="progressNextSteps" name="next_steps" rows="4" placeholder="Que intervenção será feita a seguir?"></textarea>
+            <textarea id="progressNextSteps" name="next_steps" rows="4"></textarea>
           </label>
 
           <div class="grid two-cols">
             <label>
               <span>Resultado da semana</span>
-              <input id="progressWeekResult" name="resultado_semana" type="text" placeholder="Ex.: houve avanço parcial." />
+              <input id="progressWeekResultText" type="text" />
             </label>
 
             <label>
               <span>Decisão pedagógica</span>
-              <select id="progressDecision" name="decisao_pedagogica">
-                <option value="">Selecione</option>
-                <option value="Avançar">Avançar</option>
-                <option value="Manter">Manter</option>
-                <option value="Retomar">Retomar</option>
-                <option value="Aprofundar">Aprofundar</option>
-                <option value="Intervir na base">Intervir na base</option>
-              </select>
+              <input id="progressDecision" type="text" />
             </label>
           </div>
 
           <label>
             <span>Impacto no próximo plano</span>
-            <textarea id="progressNextPlanImpact" name="impacto_proximo_plano" rows="4" placeholder="Como essa evolução deve influenciar o próximo plano semanal?"></textarea>
+            <textarea id="progressImpactNextPlan" rows="3"></textarea>
           </label>
 
           <label>
             <span>Recomendação para a próxima semana</span>
-            <textarea id="progressNextWeekRecommendation" name="recomendacao_proxima_semana" rows="4" placeholder="O que o próximo plano deve priorizar?"></textarea>
+            <textarea id="progressRecommendationNextWeek" rows="3"></textarea>
           </label>
 
           <label>
             <span>Resumo para a família</span>
-            <textarea id="progressFamilySummary" name="resumo_familia" rows="4" placeholder="Versão curta e acolhedora para acompanhamento familiar."></textarea>
+            <textarea id="progressFamilySummary" rows="3"></textarea>
           </label>
+
+          <button type="button" id="saveProgressBtn" class="btn btn-primary">Salvar evolução analisada</button>
         </div>
 
-        <button type="submit" class="btn btn-primary">Salvar evolução analisada</button>
         <p id="progressMessage" class="helper"></p>
       </form>
     </section>
@@ -1575,11 +1708,11 @@
     })();
 
 
-    (function initSmartProgressModule() {
+    (function initStudentProgressAiModule() {
       const cfg = window.INTEGRO_SUPABASE;
 
       if (!cfg || !window.supabase) {
-        console.warn("Configuração do Supabase não encontrada para a evolução inteligente.");
+        console.warn("Configuração do Supabase não encontrada para evolução com IA.");
         return;
       }
 
@@ -1589,55 +1722,56 @@
       const studentMeta = document.getElementById("studentMeta");
       const welcomeName = document.getElementById("welcomeName");
 
-      const form = document.getElementById("smartProgressForm");
-      const areaInput = document.getElementById("progressArea");
-      const weekInput = document.getElementById("progressWeek");
-      const focusInput = document.getElementById("progressFocus");
-      const autonomyInput = document.getElementById("progressAutonomy");
-      const workedInput = document.getElementById("progressWorked");
-      const responseInput = document.getElementById("progressResponse");
-      const difficultyInput = document.getElementById("progressObservedDifficulty");
-      const mediationInput = document.getElementById("progressMediation");
-      const observationInput = document.getElementById("progressTeacherObservation");
+      const progressForm = document.getElementById("progressForm");
+      const progressArea = document.getElementById("progressArea");
+      const progressWeek = document.getElementById("progressWeek");
+      const progressResult = document.getElementById("progressResult");
+      const progressAutonomy = document.getElementById("progressAutonomy");
+      const progressFocus = document.getElementById("progressFocus");
+      const progressPlanTitle = document.getElementById("progressPlanTitle");
+      const progressWorkedContent = document.getElementById("progressWorkedContent");
+      const progressTeacherObservation = document.getElementById("progressTeacherObservation");
 
-      const summaryInput = document.getElementById("progressSummary");
-      const strengthsInput = document.getElementById("progressStrengths");
-      const difficultiesInput = document.getElementById("progressDifficulties");
-      const nextStepsInput = document.getElementById("progressNextSteps");
-      const resultInput = document.getElementById("progressWeekResult");
-      const decisionInput = document.getElementById("progressDecision");
-      const nextPlanImpactInput = document.getElementById("progressNextPlanImpact");
-      const nextWeekRecommendationInput = document.getElementById("progressNextWeekRecommendation");
-      const familySummaryInput = document.getElementById("progressFamilySummary");
+      const progressSummary = document.getElementById("progressSummary");
+      const progressStrengths = document.getElementById("progressStrengths");
+      const progressDifficultiesText = document.getElementById("progressDifficultiesText");
+      const progressNextSteps = document.getElementById("progressNextSteps");
+      const progressWeekResultText = document.getElementById("progressWeekResultText");
+      const progressDecision = document.getElementById("progressDecision");
+      const progressImpactNextPlan = document.getElementById("progressImpactNextPlan");
+      const progressRecommendationNextWeek = document.getElementById("progressRecommendationNextWeek");
+      const progressFamilySummary = document.getElementById("progressFamilySummary");
 
-      const generateBtn = document.getElementById("generateProgressAiBtn");
-      const loadContextBtn = document.getElementById("loadProgressContextBtn");
-      const messageEl = document.getElementById("progressMessage");
+      const loadStudentContextBtn = document.getElementById("loadStudentContextBtn");
+      const generateProgressAiBtn = document.getElementById("generateProgressAiBtn");
+      const saveProgressBtn = document.getElementById("saveProgressBtn");
+      const clearProgressBtn = document.getElementById("clearProgressBtn");
+      const progressMessage = document.getElementById("progressMessage");
 
-      if (!form || !areaInput || !weekInput) {
+      if (!progressForm || !progressArea) {
         return;
       }
 
-      let lastAiAnalysis = null;
-      let loadedContext = {
-        perfil: "",
-        plano: "",
-        historico: ""
+      const contextState = {
+        profileText: "",
+        planText: "",
+        historyText: "",
+        latestPlan: null,
+        lastAiResult: null
       };
 
       function isUuid(value) {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
       }
 
-      function setMessage(text, type) {
-        if (!messageEl) return;
-        messageEl.textContent = text || "";
-        messageEl.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      function setProgressMessage(text, type) {
+        if (!progressMessage) return;
+        progressMessage.textContent = text || "";
+        progressMessage.style.color = type === "error" ? "#b42318" : "#0f3d2e";
       }
 
       function getStudentInfo() {
         const selectedOption = studentSelect?.options?.[studentSelect.selectedIndex];
-
         return {
           id: studentSelect?.value || "",
           name: selectedOption?.textContent?.trim() || "Aluno não informado"
@@ -1651,22 +1785,18 @@
 
       function getTeacherName() {
         const raw = welcomeName?.textContent || "";
-
-        if (!raw || raw.toLowerCase().includes("carregando")) {
-          return "";
-        }
-
+        if (!raw || raw.toLowerCase().includes("carregando")) return "";
         return raw.trim();
       }
 
-      function getCurrentSerieAnoFromProfileText(profileText = "") {
-        const match = String(profileText || "").match(/Série\/Ano:\s*([^\n]+)/i);
-        return match ? match[1].trim() : "Não informada";
+      function getCheckedValues(containerId) {
+        return Array.from(document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`))
+          .map(input => input.value)
+          .filter(Boolean);
       }
 
       function formatProfileForContext(record) {
         if (!record) return "";
-
         return [
           `Série/Ano: ${record.serie_ano || "Não informada"}`,
           `Área: ${record.area || "Não informada"}`,
@@ -1677,34 +1807,30 @@
         ].join("\n");
       }
 
-      function formatPlanForContext(record) {
-        if (!record) return "";
-
+      function formatPlanForContext(plan) {
+        if (!plan) return "";
         return [
-          `Título: ${record.title || "Plano de estudo"}`,
-          `Semana/período: ${record.week_reference || "Não informado"}`,
-          `Status: ${record.status || "ativo"}`,
-          `Descrição do plano aplicado: ${record.description || "Não informado"}`
+          `Título: ${plan.title || "Plano de estudo"}`,
+          `Semana/período: ${plan.week_reference || "Não informado"}`,
+          `Status: ${plan.status || "ativo"}`,
+          `Descrição do plano: ${plan.description || "Não informado"}`
         ].join("\n");
       }
 
-      function formatProgressHistory(items = []) {
+      function formatEvolutionHistory(items = []) {
         if (!items.length) return "";
 
-        return items.map((item, index) => {
-          return [
-            `EVOLUÇÃO ANTERIOR ${index + 1}`,
-            `Semana: ${item.week_reference || "Não informada"}`,
-            `Área: ${item.area || "Não informada"}`,
-            `Resumo: ${item.summary || "Não informado"}`,
-            `Pontos fortes: ${item.strengths || "Não informado"}`,
-            `Dificuldades: ${item.difficulties || "Não informado"}`,
-            `Próximos passos: ${item.next_steps || "Não informado"}`,
-            `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
-            `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
-            `Recomendação para a próxima semana: ${item.recomendacao_proxima_semana || "Não informada"}`
-          ].join("\n");
-        }).join("\n\n");
+        return items.map((item, index) => [
+          `Evolução ${index + 1}`,
+          `Semana: ${item.week_reference || "Não informada"}`,
+          `Área: ${item.area || "Não informada"}`,
+          `Resumo: ${item.summary || "Não informado"}`,
+          `Pontos fortes: ${item.strengths || "Não informado"}`,
+          `Dificuldades: ${item.difficulties || "Não informado"}`,
+          `Próximos passos: ${item.next_steps || "Não informado"}`,
+          `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
+          `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`
+        ].join("\n")).join("\n\n");
       }
 
       async function findLatestProfile(student, area) {
@@ -1722,131 +1848,181 @@
         }
 
         const { data, error } = await query.maybeSingle();
-
         if (error) throw error;
         return data || null;
       }
 
-      async function findLatestPlan(student) {
+      async function findLatestPlan(student, area) {
         let query = progressClient
           .from("student_plans")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(1);
+          .limit(8);
 
         if (isUuid(student.id)) {
           query = query.eq("student_id", student.id);
+        } else {
+          return null;
         }
 
-        const { data, error } = await query.maybeSingle();
-
+        const { data, error } = await query;
         if (error) throw error;
-        return data || null;
+
+        const plans = data || [];
+        const areaLower = String(area || "").toLowerCase();
+
+        return plans.find(plan =>
+          String(plan.title || "").toLowerCase().includes(areaLower) ||
+          String(plan.description || "").toLowerCase().includes(areaLower)
+        ) || plans[0] || null;
       }
 
-      async function findProgressHistory(student, area) {
+      async function findRecentEvolutions(student, area) {
         let query = progressClient
           .from("student_progress")
           .select("*")
-          .eq("area", area)
           .order("created_at", { ascending: false })
           .limit(5);
 
         if (isUuid(student.id)) {
           query = query.eq("student_id", student.id);
+        } else {
+          return [];
+        }
+
+        if (area) {
+          query = query.eq("area", area);
         }
 
         const { data, error } = await query;
-
         if (error) throw error;
         return data || [];
       }
 
-      async function loadProgressContext(showMessage = true) {
+      async function loadStudentContext() {
         const student = getStudentInfo();
-        const area = areaInput.value;
+        const area = progressArea.value;
 
         if (!student.name || student.name === "Aluno não informado") {
           alert("Selecione um aluno antes de carregar o contexto.");
-          return null;
+          return false;
         }
 
         if (!area) {
           alert("Selecione a área trabalhada antes de carregar o contexto.");
-          return null;
+          return false;
         }
 
         try {
-          if (showMessage) setMessage("Carregando perfil, plano e histórico do aluno...", "");
+          setProgressMessage("Carregando perfil, plano e histórico do aluno...", "");
 
-          const [profile, latestPlan, history] = await Promise.all([
+          const [profile, latestPlan, recentEvolutions] = await Promise.all([
             findLatestProfile(student, area),
-            findLatestPlan(student),
-            findProgressHistory(student, area)
+            findLatestPlan(student, area),
+            findRecentEvolutions(student, area)
           ]);
 
-          loadedContext = {
-            perfil: formatProfileForContext(profile),
-            plano: formatPlanForContext(latestPlan),
-            historico: formatProgressHistory(history),
-            profile,
-            latestPlan,
-            history
-          };
+          contextState.profileText = formatProfileForContext(profile);
+          contextState.latestPlan = latestPlan;
+          contextState.planText = formatPlanForContext(latestPlan);
+          contextState.historyText = formatEvolutionHistory(recentEvolutions);
 
-          if (showMessage) {
-            const parts = [];
-            parts.push(profile ? "perfil pedagógico encontrado" : "sem perfil salvo nesta área");
-            parts.push(latestPlan ? "plano anterior encontrado" : "sem plano anterior");
-            parts.push(history.length ? `${history.length} evolução(ões) encontrada(s)` : "sem histórico de evolução");
-            setMessage(`Contexto carregado: ${parts.join("; ")}.`, profile ? "" : "error");
+          if (latestPlan) {
+            progressPlanTitle.value = latestPlan.title || "Plano de estudo";
+
+            if (!progressWeek.value && latestPlan.week_reference) {
+              progressWeek.value = latestPlan.week_reference;
+            }
+
+            if (!progressWorkedContent.value && latestPlan.description) {
+              progressWorkedContent.value = latestPlan.description;
+            }
+          } else {
+            progressPlanTitle.value = "Nenhum plano encontrado";
           }
 
-          return loadedContext;
+          const encontrados = [
+            profile ? "perfil pedagógico" : "sem perfil salvo",
+            latestPlan ? "plano da semana" : "sem plano salvo",
+            recentEvolutions.length ? `${recentEvolutions.length} evolução(ões)` : "sem histórico"
+          ].join(" • ");
+
+          setProgressMessage(`Contexto carregado: ${encontrados}.`, profile ? "" : "error");
+          return true;
         } catch (error) {
           console.error(error);
-          setMessage(error.message || "Erro ao carregar contexto do aluno.", "error");
-          return null;
+          setProgressMessage("Erro ao carregar contexto do aluno. Verifique se os registros existem no Supabase.", "error");
+          return false;
         }
+      }
+
+      function buildStudentResponseText() {
+        const difficulties = getCheckedValues("progressDifficultiesChecks");
+        const mediations = getCheckedValues("progressMediations");
+        const parts = [];
+
+        if (progressResult.value) parts.push(`Resultado observado: ${progressResult.value}.`);
+        if (progressAutonomy.value) parts.push(`Nível de autonomia: ${progressAutonomy.value}.`);
+        if (mediations.length) parts.push(`Mediações utilizadas: ${mediations.join(", ")}.`);
+        if (difficulties.length) parts.push(`Dificuldades observadas: ${difficulties.join(", ")}.`);
+        if (progressTeacherObservation.value.trim()) parts.push(`Observação do professor: ${progressTeacherObservation.value.trim()}`);
+
+        return parts.join("\n");
       }
 
       async function generateProgressWithAi() {
         const student = getStudentInfo();
+        const area = progressArea.value;
+        const week = progressWeek.value;
+        const responseText = buildStudentResponseText();
+        const workedContent = progressWorkedContent.value.trim() || contextState.planText || "Conteúdo previsto no plano semanal do aluno.";
 
         if (!student.name || student.name === "Aluno não informado") {
           alert("Selecione um aluno antes de gerar a evolução.");
           return;
         }
 
-        if (!areaInput.value || !weekInput.value || !workedInput.value.trim() || !responseInput.value.trim()) {
-          alert("Preencha área, semana, o que foi trabalhado e como o aluno respondeu.");
+        if (!area || !week || !progressResult.value || !progressAutonomy.value) {
+          alert("Preencha área, semana, resultado da semana e nível de autonomia.");
           return;
         }
 
-        try {
-          setMessage("Analisando evolução semanal com IA...", "");
-          generateBtn.disabled = true;
-          generateBtn.textContent = "Analisando com IA...";
+        if (!contextState.profileText && !contextState.planText) {
+          await loadStudentContext();
+        }
 
-          const context = await loadProgressContext(false) || loadedContext;
+        try {
+          setProgressMessage("Gerando análise da evolução com IA...", "");
+          generateProgressAiBtn.disabled = true;
+          generateProgressAiBtn.textContent = "Gerando evolução...";
+
+          progressSummary.value = "Aguarde. A IA está analisando a evolução da semana...";
+          progressStrengths.value = "";
+          progressDifficultiesText.value = "";
+          progressNextSteps.value = "";
+          progressWeekResultText.value = "";
+          progressDecision.value = "";
+          progressImpactNextPlan.value = "";
+          progressRecommendationNextWeek.value = "";
+          progressFamilySummary.value = "";
 
           const payload = {
             aluno: student.name,
-            serie_ano: getCurrentSerieAnoFromProfileText(context.perfil) || "Não informada",
-            area: areaInput.value,
-            semana: weekInput.value,
+            serie_ano: "Não informada",
+            area,
+            semana: week,
             professor: getTeacherName() || "Não informado",
             escola: getSchoolName() || "INSTITUTO INTEGRO",
-            perfil_pedagogico: context.perfil || "Perfil pedagógico não encontrado para esta área.",
-            plano_semana: context.plano || "Plano semanal aplicado não encontrado.",
-            historico_evolucoes: context.historico || "Ainda não há histórico anterior registrado.",
-            habilidade_foco: focusInput.value || "",
-            o_que_foi_trabalhado: workedInput.value,
-            resposta_aluno: responseInput.value,
-            nivel_autonomia: autonomyInput.value || "",
-            dificuldade_observada: difficultyInput.value || "",
-            mediacao_utilizada: mediationInput.value || "",
-            observacao_professor: observationInput.value || ""
+            perfil_pedagogico: contextState.profileText || "Perfil pedagógico não carregado.",
+            plano_semana: contextState.planText || workedContent,
+            historico_evolucoes: contextState.historyText || "Ainda não há histórico anterior informado.",
+            habilidade_foco: progressFocus.value || area,
+            o_que_foi_trabalhado: workedContent,
+            resposta_aluno: responseText,
+            nivel_autonomia: progressAutonomy.value,
+            dificuldade_observada: getCheckedValues("progressDifficultiesChecks").join(", ") || "Não informada.",
+            mediacao_utilizada: getCheckedValues("progressMediations").join(", ") || "Não informada.",
+            observacao_professor: progressTeacherObservation.value || "Não informada."
           };
 
           const { data, error } = await progressClient.functions.invoke("analisar-evolucao-aluno", {
@@ -1856,85 +2032,81 @@
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
 
-          lastAiAnalysis = data?.ai_analysis_json || data || null;
+          contextState.lastAiResult = data;
 
-          summaryInput.value = data?.summary || "";
-          strengthsInput.value = data?.strengths || "";
-          difficultiesInput.value = data?.difficulties || "";
-          nextStepsInput.value = data?.next_steps || "";
-          resultInput.value = data?.resultado_semana || "";
-          decisionInput.value = data?.decisao_pedagogica || "";
-          nextPlanImpactInput.value = data?.impacto_proximo_plano || "";
-          nextWeekRecommendationInput.value = data?.recomendacao_proxima_semana || "";
-          familySummaryInput.value = data?.resumo_familia || "";
+          progressSummary.value = data?.summary || "";
+          progressStrengths.value = data?.strengths || "";
+          progressDifficultiesText.value = data?.difficulties || "";
+          progressNextSteps.value = data?.next_steps || "";
+          progressWeekResultText.value = data?.resultado_semana || "";
+          progressDecision.value = data?.decisao_pedagogica || "";
+          progressImpactNextPlan.value = data?.impacto_proximo_plano || "";
+          progressRecommendationNextWeek.value = data?.recomendacao_proxima_semana || "";
+          progressFamilySummary.value = data?.resumo_familia || "";
 
-          setMessage(
+          setProgressMessage(
             data?.modelo_usado
-              ? `Evolução analisada com IA. Modelo utilizado: ${data.modelo_usado}. Revise e salve.`
-              : "Evolução analisada com IA. Revise e salve.",
+              ? `Evolução gerada com IA. Modelo utilizado: ${data.modelo_usado}. Revise e salve.`
+              : "Evolução gerada com IA. Revise e salve.",
             ""
           );
         } catch (error) {
           console.error(error);
-          setMessage(error.message || "Erro ao analisar evolução com IA.", "error");
+          progressSummary.value = "";
+          setProgressMessage(error.message || "Erro ao gerar evolução com IA.", "error");
         } finally {
-          generateBtn.disabled = false;
-          generateBtn.textContent = "Gerar evolução com IA";
+          generateProgressAiBtn.disabled = false;
+          generateProgressAiBtn.textContent = "Gerar evolução com IA";
         }
       }
 
-      async function saveSmartProgress(event) {
-        event.preventDefault();
-
+      async function saveAnalyzedProgress() {
         const student = getStudentInfo();
+        const area = progressArea.value;
+        const week = progressWeek.value;
 
         if (!student.name || student.name === "Aluno não informado") {
-          alert("Selecione um aluno antes de salvar a evolução.");
+          alert("Selecione um aluno antes de salvar.");
           return;
         }
 
-        if (!areaInput.value || !weekInput.value) {
-          alert("Preencha área e semana/período.");
+        if (!area || !week || !progressSummary.value.trim()) {
+          alert("Preencha área, semana e gere ou escreva o resumo da evolução antes de salvar.");
           return;
         }
 
         try {
-          setMessage("Salvando evolução analisada...", "");
+          setProgressMessage("Salvando evolução analisada...", "");
+          saveProgressBtn.disabled = true;
+          saveProgressBtn.textContent = "Salvando...";
 
           const { data: sessionData } = await progressClient.auth.getSession();
-          const session = sessionData?.session;
-          const teacherId = session?.user?.id || null;
-
-          const context = loadedContext || {};
-          const latestPlan = context.latestPlan || null;
+          const teacherId = sessionData?.session?.user?.id || null;
 
           const payload = {
             student_id: isUuid(student.id) ? student.id : null,
             teacher_id: isUuid(teacherId) ? teacherId : null,
-            area: areaInput.value,
-            week_reference: weekInput.value,
-            plan_id: latestPlan?.id || null,
-            plan_title: latestPlan?.title || null,
-            plan_snapshot: context.plano || null,
-            habilidade_foco: focusInput.value || null,
-            nivel_autonomia: autonomyInput.value || null,
-            resposta_aluno: responseInput.value || null,
-            dificuldade_observada: difficultyInput.value || null,
-            mediacao_utilizada: mediationInput.value || null,
-            resultado_semana: resultInput.value || null,
-            decisao_pedagogica: decisionInput.value || null,
-            impacto_proximo_plano: nextPlanImpactInput.value || null,
-            recomendacao_proxima_semana: nextWeekRecommendationInput.value || null,
-            resumo_familia: familySummaryInput.value || null,
-            ai_analysis_json: lastAiAnalysis || {
-              preenchimento_manual: true,
-              salvo_em: new Date().toISOString()
-            },
-            gerado_por_ia: Boolean(lastAiAnalysis),
-            summary: summaryInput.value || responseInput.value || "Evolução registrada pelo professor.",
-            strengths: strengthsInput.value || "Não informado.",
-            difficulties: difficultiesInput.value || difficultyInput.value || "Não informado.",
-            next_steps: nextStepsInput.value || nextWeekRecommendationInput.value || "Não informado."
+            summary: progressSummary.value || "",
+            strengths: progressStrengths.value || "",
+            difficulties: progressDifficultiesText.value || "",
+            next_steps: progressNextSteps.value || "",
+            area,
+            week_reference: week,
+            plan_id: contextState.latestPlan?.id || null,
+            plan_title: progressPlanTitle.value || contextState.latestPlan?.title || "",
+            plan_snapshot: contextState.planText || progressWorkedContent.value || "",
+            habilidade_foco: progressFocus.value || "",
+            nivel_autonomia: progressAutonomy.value || "",
+            resposta_aluno: buildStudentResponseText(),
+            dificuldade_observada: getCheckedValues("progressDifficultiesChecks").join(", "),
+            mediacao_utilizada: getCheckedValues("progressMediations").join(", "),
+            resultado_semana: progressWeekResultText.value || progressResult.value || "",
+            decisao_pedagogica: progressDecision.value || "",
+            impacto_proximo_plano: progressImpactNextPlan.value || "",
+            recomendacao_proxima_semana: progressRecommendationNextWeek.value || "",
+            resumo_familia: progressFamilySummary.value || "",
+            ai_analysis_json: contextState.lastAiResult?.ai_analysis_json || contextState.lastAiResult || null,
+            gerado_por_ia: Boolean(contextState.lastAiResult)
           };
 
           const { error } = await progressClient
@@ -1943,35 +2115,68 @@
 
           if (error) throw error;
 
-          const progressCount = document.getElementById("progressCount");
-          if (progressCount) {
-            const current = Number(progressCount.textContent || "0");
-            progressCount.textContent = String(current + 1);
-          }
+          setProgressMessage("Evolução analisada salva com sucesso. Ela já poderá alimentar o próximo plano semanal.", "");
 
-          setMessage("Evolução salva com sucesso. Ela será considerada nos próximos planos semanais.", "");
+          if (window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent("integro:progress-saved", { detail: { student, area } }));
+          }
         } catch (error) {
           console.error(error);
-          setMessage(error.message || "Erro ao salvar evolução analisada.", "error");
+          setProgressMessage(error.message || "Erro ao salvar evolução analisada.", "error");
+        } finally {
+          saveProgressBtn.disabled = false;
+          saveProgressBtn.textContent = "Salvar evolução analisada";
         }
       }
 
-      function clearProgressForm() {
-        lastAiAnalysis = null;
-        loadedContext = { perfil: "", plano: "", historico: "" };
-        form.reset();
-        setMessage("", "");
+      function clearProgressFields() {
+        progressResult.value = "";
+        progressAutonomy.value = "";
+        progressFocus.value = "";
+        progressPlanTitle.value = "";
+        progressWorkedContent.value = "";
+        progressTeacherObservation.value = "";
+
+        document.querySelectorAll("#progressMediations input, #progressDifficultiesChecks input").forEach(input => {
+          input.checked = false;
+        });
+
+        progressSummary.value = "";
+        progressStrengths.value = "";
+        progressDifficultiesText.value = "";
+        progressNextSteps.value = "";
+        progressWeekResultText.value = "";
+        progressDecision.value = "";
+        progressImpactNextPlan.value = "";
+        progressRecommendationNextWeek.value = "";
+        progressFamilySummary.value = "";
+
+        contextState.profileText = "";
+        contextState.planText = "";
+        contextState.historyText = "";
+        contextState.latestPlan = null;
+        contextState.lastAiResult = null;
+
+        setProgressMessage("Campos limpos. Selecione a área e carregue o contexto novamente.", "");
       }
 
-      generateBtn?.addEventListener("click", generateProgressWithAi);
-      loadContextBtn?.addEventListener("click", () => loadProgressContext(true));
-      form.addEventListener("submit", saveSmartProgress);
+      progressArea?.addEventListener("change", () => {
+        if (progressArea.value) {
+          loadStudentContext();
+        }
+      });
+
+      loadStudentContextBtn?.addEventListener("click", loadStudentContext);
+      generateProgressAiBtn?.addEventListener("click", generateProgressWithAi);
+      saveProgressBtn?.addEventListener("click", saveAnalyzedProgress);
+      clearProgressBtn?.addEventListener("click", clearProgressFields);
 
       studentSelect?.addEventListener("change", () => {
-        clearProgressForm();
+        clearProgressFields();
+        progressWeek.value = "";
+        progressArea.value = "";
       });
     })();
-
     (function initAiWeeklyPlanModule() {
       const cfg = window.INTEGRO_SUPABASE;
 
@@ -1998,7 +2203,6 @@
 
       const loadProfileBtn = document.getElementById("loadProfileForAiBtn");
       const copyProfileBtn = document.getElementById("copyProfileToAiBtn");
-      const loadEvolutionsBtn = document.getElementById("loadAiPlanEvolutionsBtn");
 
       const resultBox = document.getElementById("aiPlanResultBox");
       const internalEditor = document.getElementById("aiPlanInternalEditor");
@@ -2103,79 +2307,6 @@
         return data || null;
       }
 
-
-      function formatEvolutionForPlan(items = []) {
-        if (!items.length) return "";
-
-        return items.map((item, index) => {
-          return [
-            `EVOLUÇÃO ${index + 1}`,
-            `Semana/período: ${item.week_reference || "Não informado"}`,
-            `Área: ${item.area || "Não informada"}`,
-            `Resumo: ${item.summary || "Não informado"}`,
-            `Pontos fortes: ${item.strengths || "Não informado"}`,
-            `Dificuldades: ${item.difficulties || "Não informado"}`,
-            `Próximos passos: ${item.next_steps || "Não informado"}`,
-            `Resultado da semana: ${item.resultado_semana || "Não informado"}`,
-            `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
-            `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
-            `Recomendação para a próxima semana: ${item.recomendacao_proxima_semana || "Não informada"}`
-          ].join("\n");
-        }).join("\n\n");
-      }
-
-      async function loadRecentEvolutionsForPlan(showMessage = true) {
-        const area = areaInput.value;
-        const student = getStudentInfo();
-
-        if (!student.name || student.name === "Aluno não informado") {
-          if (showMessage) alert("Selecione um aluno antes de carregar as evoluções.");
-          return "";
-        }
-
-        if (!area) {
-          if (showMessage) alert("Selecione a área do plano antes de carregar as evoluções.");
-          return "";
-        }
-
-        try {
-          if (showMessage) setMessage("Carregando evoluções anteriores do aluno...", "");
-
-          let query = aiPlanClient
-            .from("student_progress")
-            .select("*")
-            .eq("area", area)
-            .order("created_at", { ascending: false })
-            .limit(6);
-
-          if (isUuid(student.id)) {
-            query = query.eq("student_id", student.id);
-          }
-
-          const { data, error } = await query;
-
-          if (error) throw error;
-
-          const text = formatEvolutionForPlan(data || []);
-
-          if (showMessage) {
-            if (text) {
-              evolutionsInput.value = text;
-              setMessage("Evoluções anteriores carregadas. Elas serão consideradas na geração do próximo plano.", "");
-            } else {
-              evolutionsInput.value = "";
-              setMessage("Ainda não há evoluções anteriores registradas para este aluno nesta área.", "error");
-            }
-          }
-
-          return text;
-        } catch (error) {
-          console.error(error);
-          if (showMessage) setMessage(error.message || "Erro ao carregar evoluções anteriores.", "error");
-          return "";
-        }
-      }
-
       async function loadProfileForAi() {
         const area = areaInput.value;
         const student = getStudentInfo();
@@ -2209,23 +2340,80 @@
         }
       }
 
+
+      async function loadRecentEvolutionsForAi() {
+        const student = getStudentInfo();
+        const area = areaInput.value;
+
+        if (!student.name || student.name === "Aluno não informado" || !area || !evolutionsInput) {
+          return;
+        }
+
+        if (!isUuid(student.id)) {
+          return;
+        }
+
+        try {
+          const { data, error } = await aiPlanClient
+            .from("student_progress")
+            .select("area, week_reference, summary, strengths, difficulties, next_steps, resultado_semana, decisao_pedagogica, impacto_proximo_plano, recomendacao_proxima_semana, created_at")
+            .eq("student_id", student.id)
+            .eq("area", area)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
+          if (error) {
+            throw error;
+          }
+
+          const items = data || [];
+
+          if (!items.length) {
+            if (!evolutionsInput.value.trim()) {
+              evolutionsInput.value = "Ainda não há evoluções anteriores salvas para esta área.";
+            }
+            return;
+          }
+
+          evolutionsInput.value = items.map((item, index) => [
+            `Evolução ${index + 1}`,
+            `Semana: ${item.week_reference || "Não informada"}`,
+            `Resultado da semana: ${item.resultado_semana || "Não informado"}`,
+            `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
+            `Resumo: ${item.summary || "Não informado"}`,
+            `Pontos fortes: ${item.strengths || "Não informado"}`,
+            `Dificuldades: ${item.difficulties || "Não informado"}`,
+            `Próximos passos: ${item.next_steps || "Não informado"}`,
+            `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
+            `Recomendação próxima semana: ${item.recomendacao_proxima_semana || "Não informado"}`
+          ].join("\n")).join("\n\n");
+
+          setMessage("Perfil e evoluções anteriores carregados para orientar o plano semanal.", "");
+        } catch (error) {
+          console.error(error);
+          setMessage("Não foi possível carregar automaticamente as evoluções anteriores.", "error");
+        }
+      }
       function copyVisibleProfileToAi() {
-        const profileSerieAno = document.getElementById("profileSerieAno");
         const profileArea = document.getElementById("profileArea");
-        const generalProfileText = document.getElementById("generalProfileText");
-        const pedagogicalPrioritiesText = document.getElementById("pedagogicalPrioritiesText");
-        const generalRecommendationsText = document.getElementById("generalRecommendationsText");
-        const diagnosticGeneralObservation = document.getElementById("diagnosticGeneralObservation");
+        const profileForm = document.getElementById("profileForm");
+
+        if (!profileForm) {
+          return;
+        }
 
         const area = profileArea?.value || areaInput.value || "Não informada";
 
         const text = [
-          `Série/Ano: ${profileSerieAno?.value || "Não informada"}`,
           `Área: ${area}`,
-          `Perfil pedagógico geral: ${generalProfileText?.value || "Não informado"}`,
-          `Prioridades pedagógicas: ${pedagogicalPrioritiesText?.value || "Não informado"}`,
-          `Recomendações gerais: ${generalRecommendationsText?.value || "Não informado"}`,
-          `Observações: ${diagnosticGeneralObservation?.value || "Não informado"}`
+          `Objetivo prioritário: ${profileForm.elements["objetivo_prioritario"]?.value || "Não informado"}`,
+          `Nível atual: ${profileForm.elements["nivel_atual"]?.value || "Não informado"}`,
+          `Dificuldades principais: ${profileForm.elements["dificuldades"]?.value || "Não informado"}`,
+          `Habilidades consolidadas: ${profileForm.elements["habilidades_consolidadas"]?.value || "Não informado"}`,
+          `Habilidades em desenvolvimento: ${profileForm.elements["habilidades_em_desenvolvimento"]?.value || "Não informado"}`,
+          `Habilidades ainda não consolidadas: ${profileForm.elements["habilidades_nao_consolidadas"]?.value || "Não informado"}`,
+          `Mediação eficaz: ${profileForm.elements["mediacao_eficaz"]?.value || "Não informado"}`,
+          `Observações importantes: ${profileForm.elements["observacoes"]?.value || "Não informado"}`
         ].join("\n");
 
         profileInput.value = text;
@@ -2234,7 +2422,7 @@
           areaInput.value = area;
         }
 
-        setMessage("Perfil pedagógico que está na tela foi copiado para a geração do plano.", "");
+        setMessage("Perfil que estava na tela foi copiado para a geração do plano.", "");
       }
 
       async function generateAiWeeklyPlan(event) {
@@ -2253,27 +2441,18 @@
         }
 
         try {
+          if (!evolutionsInput.value.trim() || evolutionsInput.value.includes("Ainda não há evoluções anteriores")) {
+            await loadRecentEvolutionsForAi();
+          }
+
           setMessage("Gerando plano semanal com IA...", "");
           resultBox.style.display = "block";
           internalEditor.value = "Aguarde. A IA está gerando a versão interna do plano semanal individualizado...";
           familyEditor.value = "Aguarde. A IA está gerando a versão resumida para a família...";
 
-          let evolucoesParaIa = evolutionsInput.value.trim();
-
-          if (!evolucoesParaIa) {
-            evolucoesParaIa = await loadRecentEvolutionsForPlan(false);
-
-            if (evolucoesParaIa) {
-              evolutionsInput.value = evolucoesParaIa;
-            }
-          }
-
-          const serieMatch = String(profileInput.value || "").match(/Série\/Ano:\s*([^\n]+)/i);
-          const serieParaIa = serieMatch ? serieMatch[1].trim() : "Não informada";
-
           const payload = {
             aluno: student.name,
-            serie: serieParaIa,
+            serie: "Não informada",
             escola: getSchoolName() || "INSTITUTO INTEGRO",
             professor: getTeacherName() || "Não informado",
             area: areaInput.value,
@@ -2281,7 +2460,7 @@
             tempo_atendimento: timeInput.value,
             objetivo_semana: goalInput.value,
             perfil_pedagogico: profileInput.value,
-            evolucoes_anteriores: evolucoesParaIa,
+            evolucoes_anteriores: evolutionsInput.value,
             observacoes_professor: teacherNotesInput.value
           };
 
@@ -2610,18 +2789,10 @@
 
       copyProfileBtn?.addEventListener("click", copyVisibleProfileToAi);
 
-      loadEvolutionsBtn?.addEventListener("click", () => {
-        loadRecentEvolutionsForPlan(true);
-      });
-
       areaInput?.addEventListener("change", () => {
         if (areaInput.value) {
           loadProfileForAi();
-          loadRecentEvolutionsForPlan(false).then((text) => {
-            if (text && !evolutionsInput.value.trim()) {
-              evolutionsInput.value = text;
-            }
-          });
+          loadRecentEvolutionsForAi();
         }
       });
 
