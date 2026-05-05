@@ -1,5 +1,9 @@
 const config = window.INTEGRO_SUPABASE || null;
-if (!config || !config.url || !config.anonKey) console.error('Configuração do Supabase não encontrada.');
+
+if (!config || !config.url || !config.anonKey) {
+  console.error('Configuração do Supabase não encontrada.');
+}
+
 const supabaseClient = window.supabase.createClient(config.url, config.anonKey);
 const page = document.body.dataset.page;
 
@@ -17,7 +21,11 @@ const state = {
 };
 
 const isStaff = (role) => ['integro_admin', 'diretor', 'coordenacao', 'professor'].includes(role);
-const weekdayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const weekdayNames = ['Domingo', 'Segunda', 'Terça', 'Quinta', 'Quarta', 'Sexta', 'Sábado'];
+
+// Corrige a ordem dos dias da semana caso algum navegador use índice normal do Date.
+weekdayNames[3] = 'Quarta';
+weekdayNames[4] = 'Quinta';
 
 function slugify(text = '') {
   return text
@@ -34,7 +42,12 @@ function pad2(value) {
 
 function formatDate(value) {
   if (!value) return '—';
-  return new Date(value).toLocaleString('pt-BR');
+
+  try {
+    return new Date(value).toLocaleString('pt-BR');
+  } catch {
+    return '—';
+  }
 }
 
 function formatDateOnly(date) {
@@ -43,7 +56,11 @@ function formatDateOnly(date) {
 
 function parseDateOnly(value) {
   if (!value) return null;
-  const [y, m, d] = value.split('-').map(Number);
+
+  const [y, m, d] = String(value).split('-').map(Number);
+
+  if (!y || !m || !d) return null;
+
   return new Date(y, m - 1, d);
 }
 
@@ -59,6 +76,7 @@ function monthValue(date) {
 function monthBounds(date) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1);
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
   return {
     start: formatDateOnly(start),
     end: formatDateOnly(end)
@@ -77,19 +95,24 @@ function attendanceLabel(status) {
 
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) el.textContent = value;
+
+  if (el) {
+    el.textContent = value;
+  }
 }
 
 function setHelperMessage(id, message, type = 'success') {
   const el = document.getElementById(id);
+
   if (!el) return;
 
-  el.textContent = message;
+  el.textContent = message || '';
   el.className = type === 'error' ? 'helper error' : 'helper success';
 }
 
 function renderList(containerId, items, mapper) {
   const container = document.getElementById(containerId);
+
   if (!container) return;
 
   container.innerHTML = items?.length
@@ -107,7 +130,7 @@ function escapeHtml(value = '') {
 }
 
 function formatMultiline(value = '') {
-  return escapeHtml(value).replace(/\n/g, '<br>');
+  return escapeHtml(value || '').replace(/\n/g, '<br>');
 }
 
 function openActionSection(sectionId = 'actionHome') {
@@ -162,6 +185,7 @@ async function getCurrentProfile(userId) {
     .single();
 
   if (error) throw error;
+
   return data;
 }
 
@@ -184,6 +208,7 @@ async function fetchStudents() {
     .order('full_name', { ascending: true });
 
   if (error) throw error;
+
   state.students = data || [];
 }
 
@@ -279,10 +304,13 @@ async function fetchAttendanceSchedule(studentId) {
 
 function renderGuardiansSelect() {
   const select = document.getElementById('guardianSelect');
+
   if (!select) return;
 
   select.innerHTML = state.guardians.length
-    ? state.guardians.map(g => `<option value="${g.id}">${escapeHtml(g.full_name || g.id)}</option>`).join('')
+    ? state.guardians
+        .map(g => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.full_name || g.id)}</option>`)
+        .join('')
     : '<option value="">Nenhum responsável vinculado</option>';
 }
 
@@ -296,6 +324,7 @@ function renderAttendanceSchedule() {
 
 function renderAttendanceCalendar(records = []) {
   const container = document.getElementById('attendanceCalendar');
+
   if (!container) return;
 
   const scheduledWeekdays = new Set(state.attendanceSchedule.map(item => Number(item.weekday)));
@@ -330,7 +359,7 @@ function renderAttendanceCalendar(records = []) {
         data-date="${iso}"
       >
         <strong>${day}</strong>
-        <span>${label}</span>
+        <span>${escapeHtml(label)}</span>
       </button>
     `);
   }
@@ -363,6 +392,7 @@ async function loadAttendanceForSelectedStudent() {
   if (error) throw error;
 
   state.attendanceRecords = data || [];
+
   setText('attendanceCount', String(state.attendanceRecords.length));
   renderAttendanceCalendar(state.attendanceRecords);
 
@@ -428,7 +458,7 @@ async function populateDashboard() {
   }
 
   select.innerHTML = state.students
-    .map(student => `<option value="${student.id}">${escapeHtml(student.full_name)}</option>`)
+    .map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.full_name)}</option>`)
     .join('');
 
   state.selectedStudentId = select.value;
@@ -488,7 +518,7 @@ async function loadStudentSection(studentId) {
         <button
           type="button"
           class="btn btn-secondary small-btn edit-plan-btn"
-          data-plan-id="${item.id}"
+          data-plan-id="${escapeHtml(item.id)}"
         >
           Editar plano
         </button>
@@ -496,7 +526,7 @@ async function loadStudentSection(studentId) {
         <button
           type="button"
           class="btn btn-danger small-btn delete-plan-btn"
-          data-plan-id="${item.id}"
+          data-plan-id="${escapeHtml(item.id)}"
         >
           Excluir plano
         </button>
@@ -509,11 +539,11 @@ async function loadStudentSection(studentId) {
       <h3>${escapeHtml(item.title || 'Material')}</h3>
       <p>${formatMultiline(item.description || '')}</p>
       <div class="record-meta">${escapeHtml(item.category || 'Arquivo')} • ${escapeHtml(item.file_path || '')}</div>
-      <div class="record-actions">
+      <div class="record-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;">
         <button
           type="button"
           class="btn btn-danger small-btn delete-material-btn"
-          data-material-id="${item.id}"
+          data-material-id="${escapeHtml(item.id)}"
           data-file-path="${encodeURIComponent(item.file_path || '')}"
         >
           Excluir material
@@ -523,20 +553,39 @@ async function loadStudentSection(studentId) {
   `);
 
   renderList('progressList', progress, item => `
-    <div class="record-item">
+    <div class="record-item progress-record">
       <h3>Registro de evolução</h3>
+
       <p><strong>Resumo:</strong> ${formatMultiline(item.summary || '—')}</p>
       <p><strong>Pontos fortes:</strong> ${formatMultiline(item.strengths || '—')}</p>
       <p><strong>Dificuldades:</strong> ${formatMultiline(item.difficulties || '—')}</p>
       <p><strong>Próximos passos:</strong> ${formatMultiline(item.next_steps || '—')}</p>
-      <div class="record-meta">${formatDate(item.created_at)}</div>
+
+      ${item.resultado_semana ? `<p><strong>Resultado da semana:</strong> ${formatMultiline(item.resultado_semana)}</p>` : ''}
+      ${item.decisao_pedagogica ? `<p><strong>Decisão pedagógica:</strong> ${formatMultiline(item.decisao_pedagogica)}</p>` : ''}
+      ${item.impacto_proximo_plano ? `<p><strong>Impacto no próximo plano:</strong> ${formatMultiline(item.impacto_proximo_plano)}</p>` : ''}
+      ${item.recomendacao_proxima_semana ? `<p><strong>Recomendação para a próxima semana:</strong> ${formatMultiline(item.recomendacao_proxima_semana)}</p>` : ''}
+
+      <div class="record-meta">
+        ${escapeHtml(item.week_reference || 'Sem período informado')} • ${escapeHtml(item.area || 'Área não informada')} • ${formatDate(item.created_at)}
+      </div>
+
+      <div class="record-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;">
+        <button
+          type="button"
+          class="btn btn-danger small-btn delete-progress-btn"
+          data-progress-id="${escapeHtml(item.id)}"
+        >
+          Excluir evolução
+        </button>
+      </div>
     </div>
   `);
 
   renderList('announcementsList', announcements, item => `
     <div class="record-item">
-      <h3>${escapeHtml(item.title)}</h3>
-      <p>${formatMultiline(item.message)}</p>
+      <h3>${escapeHtml(item.title || 'Comunicado')}</h3>
+      <p>${formatMultiline(item.message || '')}</p>
       <div class="record-meta">${formatDate(item.created_at)}</div>
     </div>
   `);
@@ -574,7 +623,9 @@ function setupActionNavigation() {
 }
 
 async function initDashboardPage() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
 
   if (!session?.user) {
     window.location.href = './index.html';
@@ -647,15 +698,11 @@ async function initDashboardPage() {
   document.addEventListener('click', async (event) => {
     const editButton = event.target.closest('.edit-plan-btn');
 
-    if (!editButton) {
-      return;
-    }
+    if (!editButton) return;
 
     const planId = editButton.dataset.planId;
 
-    if (!planId) {
-      return;
-    }
+    if (!planId) return;
 
     try {
       const { data, error } = await supabaseClient
@@ -665,9 +712,7 @@ async function initDashboardPage() {
         .eq('student_id', state.selectedStudentId)
         .maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data) {
         throw new Error('Plano não encontrado.');
@@ -706,22 +751,20 @@ async function initDashboardPage() {
   document.addEventListener('click', async (event) => {
     const deleteButton = event.target.closest('.delete-plan-btn');
 
-    if (!deleteButton) {
-      return;
-    }
+    if (!deleteButton) return;
 
     const planId = deleteButton.dataset.planId;
 
-    if (!planId) {
-      return;
-    }
+    if (!planId) return;
 
     if (!confirm('Tem certeza que deseja excluir este plano? Ele deixará de aparecer para a família.')) {
       return;
     }
 
     deleteButton.disabled = true;
+
     const originalText = deleteButton.textContent;
+
     deleteButton.textContent = 'Excluindo...';
 
     try {
@@ -731,9 +774,7 @@ async function initDashboardPage() {
         .eq('id', planId)
         .eq('student_id', state.selectedStudentId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (state.editingPlanId === planId) {
         resetPlanEditingState(true);
@@ -758,6 +799,11 @@ async function initDashboardPage() {
 
     const form = new FormData(e.target);
     const file = form.get('file');
+
+    if (!file || !file.name) {
+      setHelperMessage('materialMessage', 'Selecione um arquivo antes de enviar.', 'error');
+      return;
+    }
 
     const fileName = `${Date.now()}-${file.name}`;
     const folder = `alunos/${slugify(state.selectedStudent?.full_name || 'aluno')}`;
@@ -800,9 +846,7 @@ async function initDashboardPage() {
   document.addEventListener('click', async (event) => {
     const button = event.target.closest('.delete-material-btn');
 
-    if (!button) {
-      return;
-    }
+    if (!button) return;
 
     if (!confirm('Tem certeza que deseja excluir este material do aluno?')) {
       return;
@@ -812,7 +856,9 @@ async function initDashboardPage() {
     const filePath = decodeURIComponent(button.dataset.filePath || '');
 
     button.disabled = true;
+
     const originalText = button.textContent;
+
     button.textContent = 'Excluindo...';
 
     try {
@@ -821,9 +867,7 @@ async function initDashboardPage() {
           .from(config.bucket)
           .remove([filePath]);
 
-        if (storageRes.error) {
-          throw storageRes.error;
-        }
+        if (storageRes.error) throw storageRes.error;
       }
 
       const { error } = await supabaseClient
@@ -831,9 +875,7 @@ async function initDashboardPage() {
         .delete()
         .eq('id', materialId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setHelperMessage('materialMessage', 'Material excluído com sucesso.');
       await loadStudentSection(state.selectedStudentId);
@@ -879,6 +921,49 @@ async function initDashboardPage() {
     }
   });
 
+  document.addEventListener('click', async (event) => {
+    const deleteButton = event.target.closest('.delete-progress-btn');
+
+    if (!deleteButton) return;
+
+    const progressId = deleteButton.dataset.progressId;
+
+    if (!progressId) return;
+
+    if (!confirm('Tem certeza que deseja excluir esta evolução? Ela deixará de influenciar os próximos planos semanais.')) {
+      return;
+    }
+
+    deleteButton.disabled = true;
+
+    const originalText = deleteButton.textContent;
+
+    deleteButton.textContent = 'Excluindo...';
+
+    try {
+      const { error } = await supabaseClient
+        .from('student_progress')
+        .delete()
+        .eq('id', progressId)
+        .eq('student_id', state.selectedStudentId);
+
+      if (error) throw error;
+
+      setHelperMessage('progressMessage', 'Evolução excluída com sucesso.');
+
+      await loadStudentSection(state.selectedStudentId);
+    } catch (error) {
+      setHelperMessage(
+        'progressMessage',
+        error.message || 'Erro ao excluir evolução.',
+        'error'
+      );
+
+      deleteButton.disabled = false;
+      deleteButton.textContent = originalText;
+    }
+  });
+
   document.getElementById('announcementForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -911,7 +996,7 @@ async function initDashboardPage() {
     e.preventDefault();
 
     const form = new FormData(e.target);
-    const recipientId = document.getElementById('guardianSelect').value;
+    const recipientId = document.getElementById('guardianSelect')?.value;
 
     if (!recipientId) {
       setHelperMessage('messagePortalStatus', 'Nenhum responsável vinculado a este aluno.', 'error');
@@ -952,9 +1037,7 @@ async function initDashboardPage() {
         .delete()
         .eq('student_id', state.selectedStudentId);
 
-      if (deleteError) {
-        throw deleteError;
-      }
+      if (deleteError) throw deleteError;
 
       if (weekdays.length) {
         const rows = weekdays.map(weekday => ({
@@ -968,9 +1051,7 @@ async function initDashboardPage() {
           .from('student_attendance_schedule')
           .insert(rows);
 
-        if (insertError) {
-          throw insertError;
-        }
+        if (insertError) throw insertError;
       }
 
       setHelperMessage('attendanceScheduleMessage', 'Dias de atendimento salvos com sucesso.');
@@ -997,9 +1078,7 @@ async function initDashboardPage() {
   document.getElementById('attendanceCalendar')?.addEventListener('click', async (event) => {
     const dayButton = event.target.closest('.calendar-day[data-date]');
 
-    if (!dayButton) {
-      return;
-    }
+    if (!dayButton) return;
 
     try {
       await saveAttendanceForDate(dayButton.dataset.date);
