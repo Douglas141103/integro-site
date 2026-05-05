@@ -253,7 +253,7 @@
     const token = sessionData?.session?.access_token;
     if (!token) throw new Error('Sessão inválida. Saia e entre novamente.');
 
-    const resp = await fetch(`${cfg.url}/functions/v1/create-family-user`, {
+   const resp = await fetch(`${cfg.url}/functions/v1/dynamic-responder`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
