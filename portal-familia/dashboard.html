@@ -3,28 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Área da Família | INTEGRO</title>
   <meta name="robots" content="noindex,nofollow" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
   <link rel="stylesheet" href="./styles.css" />
+
   <!-- PWA INTEGRO -->
-<link rel="manifest" href="/manifest.webmanifest" />
-<meta name="theme-color" content="#004d3a" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="INTEGRO" />
-<link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#004d3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="INTEGRO" />
+  <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
 </head>
+
 <body class="dashboard-body family-theme">
   <header class="topbar">
     <div class="topbar-left">
       <img src="../logo-whatsapp.png" alt="Ícone do INTEGRO" class="brand-mark small" />
-      <div><div class="eyebrow">Portal da Família</div><h1 class="topbar-title">INTEGRO</h1></div>
+      <div>
+        <div class="eyebrow">Portal da Família</div>
+        <h1 class="topbar-title">INTEGRO</h1>
+      </div>
     </div>
-    <div class="topbar-right"><div id="user-chip" class="user-chip">Carregando...</div><button id="logout-button" class="btn btn-light" type="button">Sair</button></div>
+
+    <div class="topbar-right">
+      <div id="user-chip" class="user-chip">Carregando...</div>
+      <button id="logout-button" class="btn btn-light" type="button">Sair</button>
+    </div>
   </header>
 
   <main class="dashboard-shell family-dashboard">
@@ -34,41 +49,265 @@
         <h2 id="student-name">Estudante</h2>
         <p id="welcome-copy" class="muted">Carregando informações do estudante...</p>
       </div>
-      <div class="hero-actions"><a class="btn btn-primary" href="#study-plan">O que vai estudar</a><a class="btn btn-light" href="#attendance">Frequência</a><a class="btn btn-light" href="#messages">Enviar recado</a></div>
+
+      <div class="hero-actions">
+        <button class="btn btn-primary family-tab-button" type="button" data-family-tab="study-plan">
+          O que vai estudar
+        </button>
+
+        <button class="btn btn-light family-tab-button" type="button" data-family-tab="attendance">
+          Frequência
+        </button>
+
+        <button class="btn btn-light family-tab-button" type="button" data-family-tab="messages">
+          Enviar recado
+        </button>
+      </div>
     </section>
 
     <section class="toolbar-card">
-      <div class="toolbar-group"><label for="student-selector" class="toolbar-label">Aluno</label><select id="student-selector" class="toolbar-select"></select></div>
-      <div class="toolbar-group"><span class="toolbar-label">Perfil</span><strong id="profile-role">—</strong></div>
-      <div class="toolbar-group"><span class="toolbar-label">Materiais</span><strong id="materials-count">0</strong></div>
-      <div class="toolbar-group"><span class="toolbar-label">Comunicados</span><strong id="announcements-count">0</strong></div>
-      <div class="toolbar-group"><span class="toolbar-label">Frequência no mês</span><strong id="attendance-count">0</strong></div>
+      <div class="toolbar-group">
+        <label for="student-selector" class="toolbar-label">Aluno</label>
+        <select id="student-selector" class="toolbar-select"></select>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Perfil</span>
+        <strong id="profile-role">—</strong>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Materiais</span>
+        <strong id="materials-count">0</strong>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Comunicados</span>
+        <strong id="announcements-count">0</strong>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Frequência no mês</span>
+        <strong id="attendance-count">0</strong>
+      </div>
     </section>
 
-    <div class="content-grid family-grid">
-      <section id="study-plan" class="content-card"><div class="section-head"><div><p class="eyebrow">Planejamento</p><h3>O que vai estudar</h3></div></div><div id="plans-list" class="cards-list"></div></section>
-      <section id="materials" class="content-card"><div class="section-head"><div><p class="eyebrow">Biblioteca</p><h3>Materiais individualizados</h3></div></div><div id="materials-list" class="cards-list"></div></section>
-      <section id="progress" class="content-card"><div class="section-head"><div><p class="eyebrow">Acompanhamento</p><h3>Evolução individual</h3></div></div><div id="progress-list" class="cards-list"></div></section>
-      <section id="attendance" class="content-card full-width">
-        <div class="section-head"><div><p class="eyebrow">Frequência</p><h3>Frequência do aluno</h3><p class="muted">Acompanhe os dias previstos de atendimento e os lançamentos feitos pela professora.</p></div><label class="month-filter"><span>Mês</span><input type="month" id="family-attendance-month" /></label></div>
+    <section class="family-menu-card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Menu da família</p>
+          <h3>O que deseja acompanhar?</h3>
+          <p class="muted">
+            Escolha uma área abaixo para visualizar as informações do aluno de forma organizada.
+          </p>
+        </div>
+      </div>
+
+      <div class="family-section-buttons">
+        <button class="family-nav-button active" type="button" data-family-tab="study-plan">
+          <span class="family-nav-icon">1</span>
+          <strong>Plano de estudo</strong>
+          <small>Veja o que o aluno vai estudar.</small>
+        </button>
+
+        <button class="family-nav-button" type="button" data-family-tab="materials">
+          <span class="family-nav-icon">2</span>
+          <strong>Materiais</strong>
+          <small>Acesse fichas, arquivos e materiais enviados.</small>
+        </button>
+
+        <button class="family-nav-button" type="button" data-family-tab="progress">
+          <span class="family-nav-icon">3</span>
+          <strong>Evolução</strong>
+          <small>Acompanhe avanços, dificuldades e próximos passos.</small>
+        </button>
+
+        <button class="family-nav-button" type="button" data-family-tab="attendance">
+          <span class="family-nav-icon">4</span>
+          <strong>Frequência</strong>
+          <small>Confira os atendimentos e presenças.</small>
+        </button>
+
+        <button class="family-nav-button" type="button" data-family-tab="announcements">
+          <span class="family-nav-icon">5</span>
+          <strong>Comunicados</strong>
+          <small>Veja avisos publicados pelo INTEGRO.</small>
+        </button>
+
+        <button class="family-nav-button" type="button" data-family-tab="messages">
+          <span class="family-nav-icon">6</span>
+          <strong>Recados</strong>
+          <small>Envie mensagens para a professora.</small>
+        </button>
+      </div>
+    </section>
+
+    <div class="content-grid family-grid family-single-view">
+      <section id="study-plan" class="content-card family-section-panel active">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Planejamento</p>
+            <h3>O que vai estudar</h3>
+            <p class="muted">Acompanhe, de forma simples, o foco de estudo do aluno.</p>
+          </div>
+        </div>
+
+        <div id="plans-list" class="cards-list"></div>
+      </section>
+
+      <section id="materials" class="content-card family-section-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Biblioteca</p>
+            <h3>Materiais individualizados</h3>
+            <p class="muted">Acesse os materiais enviados para apoiar o desenvolvimento do aluno.</p>
+          </div>
+        </div>
+
+        <div id="materials-list" class="cards-list"></div>
+      </section>
+
+      <section id="progress" class="content-card family-section-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Acompanhamento</p>
+            <h3>Evolução individual</h3>
+            <p class="muted">Veja os registros de evolução lançados pela equipe pedagógica.</p>
+          </div>
+        </div>
+
+        <div id="progress-list" class="cards-list"></div>
+      </section>
+
+      <section id="attendance" class="content-card family-section-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Frequência</p>
+            <h3>Frequência do aluno</h3>
+            <p class="muted">
+              Acompanhe os dias previstos de atendimento e os lançamentos feitos pela professora.
+            </p>
+          </div>
+
+          <label class="month-filter">
+            <span>Mês</span>
+            <input type="month" id="family-attendance-month" />
+          </label>
+        </div>
+
         <div id="attendance-schedule" class="schedule-list"></div>
         <div id="attendance-calendar" class="family-attendance-calendar"></div>
         <div id="attendance-list" class="cards-list"></div>
       </section>
-      <section id="announcements" class="content-card"><div class="section-head"><div><p class="eyebrow">Comunicação</p><h3>Comunicados</h3></div></div><div id="announcements-list" class="cards-list"></div></section>
+
+      <section id="announcements" class="content-card family-section-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Comunicação</p>
+            <h3>Comunicados</h3>
+            <p class="muted">Confira avisos e informações importantes publicados pelo INTEGRO.</p>
+          </div>
+        </div>
+
+        <div id="announcements-list" class="cards-list"></div>
+      </section>
+
+      <section id="messages" class="content-card family-section-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Recados</p>
+            <h3>Mensagens para a professora</h3>
+            <p class="muted">Envie dúvidas, informações ou observações importantes sobre o aluno.</p>
+          </div>
+        </div>
+
+        <form id="message-form" class="message-form">
+          <textarea
+            id="message-text"
+            placeholder="Escreva aqui o recado da família..."
+            rows="4"
+            required
+          ></textarea>
+
+          <div class="message-actions">
+            <button type="submit" class="btn btn-primary">Enviar recado</button>
+          </div>
+        </form>
+
+        <div id="messages-list" class="cards-list"></div>
+      </section>
     </div>
 
-    <section id="messages" class="content-card full-width">
-      <div class="section-head"><div><p class="eyebrow">Recados</p><h3>Mensagens para a professora</h3></div></div>
-      <form id="message-form" class="message-form"><textarea id="message-text" placeholder="Escreva aqui o recado da família..." rows="4" required></textarea><div class="message-actions"><button type="submit" class="btn btn-primary">Enviar recado</button></div></form>
-      <div id="messages-list" class="cards-list"></div>
-    </section>
     <div id="dashboard-feedback" class="feedback"></div>
   </main>
+
   <script src="../portal/config.js"></script>
-  <script type="module" src="./app.js?v=20260426frequencia"></script>
+  <script type="module" src="./app.js?v=20260505menu-familia"></script>
+
+  <script>
+    (function () {
+      function showFamilySection(sectionId) {
+        const panels = document.querySelectorAll(".family-section-panel");
+        const buttons = document.querySelectorAll("[data-family-tab]");
+
+        panels.forEach((panel) => {
+          panel.classList.toggle("active", panel.id === sectionId);
+        });
+
+        buttons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.familyTab === sectionId);
+        });
+
+        const target = document.getElementById(sectionId);
+
+        if (target) {
+          const top = target.getBoundingClientRect().top + window.scrollY - 120;
+          window.scrollTo({
+            top,
+            behavior: "smooth",
+          });
+        }
+
+        if (history.replaceState) {
+          history.replaceState(null, "", "#" + sectionId);
+        }
+      }
+
+      document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-family-tab]");
+
+        if (!button) return;
+
+        const sectionId = button.dataset.familyTab;
+
+        if (!sectionId) return;
+
+        showFamilySection(sectionId);
+      });
+
+      window.addEventListener("DOMContentLoaded", function () {
+        const hash = (window.location.hash || "").replace("#", "");
+
+        const allowed = [
+          "study-plan",
+          "materials",
+          "progress",
+          "attendance",
+          "announcements",
+          "messages"
+        ];
+
+        if (allowed.includes(hash)) {
+          setTimeout(() => showFamilySection(hash), 300);
+        } else {
+          setTimeout(() => showFamilySection("study-plan"), 300);
+        }
+      });
+    })();
+  </script>
+
   <!-- PWA INTEGRO -->
-<script src="/pwa-install.js"></script>
+  <script src="/pwa-install.js"></script>
   <script src="/voltar-site.js"></script>
 </body>
 </html>
