@@ -2,22 +2,39 @@
   const cfg = window.INTEGRO_SUPABASE;
   const supabaseGlobal = window.supabase;
 
-  function $(id) { return document.getElementById(id); }
-  function text(id, value) { const el = $(id); if (el) el.textContent = value; }
-  function value(id, value) { const el = $(id); if (el) el.value = value ?? ''; }
-  function html(id, value) { const el = $(id); if (el) el.innerHTML = value; }
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function text(id, value) {
+    const el = $(id);
+    if (el) el.textContent = value;
+  }
+
+  function value(id, value) {
+    const el = $(id);
+    if (el) el.value = value ?? '';
+  }
+
+  function html(id, value) {
+    const el = $(id);
+    if (el) el.innerHTML = value;
+  }
+
   function status(id, type, message) {
     const el = $(id);
     if (!el) return;
     el.className = 'status show ' + type;
     el.textContent = message;
   }
+
   function clearStatus(id) {
     const el = $(id);
     if (!el) return;
     el.className = 'status';
     el.textContent = '';
   }
+
   function safe(v) {
     return (v ?? '').toString()
       .replaceAll('&', '&amp;')
@@ -26,20 +43,24 @@
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
   }
+
   function onlyDigits(v) {
     return (v || '').toString().replace(/\D/g, '');
   }
+
   function formatDateBR(v) {
     if (!v) return '';
     const parts = v.split('-');
     if (parts.length !== 3) return v;
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
+
   function optionList(items, labelKey, valueKey, placeholder) {
     return [`<option value="">${placeholder}</option>`].concat(
       (items || []).map((item) => `<option value="${safe(item[valueKey])}">${safe(item[labelKey])}</option>`)
     ).join('');
   }
+
   function showModal(id) {
     const el = $(id);
     if (el) {
@@ -47,6 +68,7 @@
       el.setAttribute('aria-hidden', 'false');
     }
   }
+
   function hideModal(id) {
     const el = $(id);
     if (el) {
@@ -79,8 +101,12 @@
 
   async function loadSession() {
     text('userBadge', 'Carregando...');
+
     const { data: sessionData, error: sessionError } = await client.auth.getSession();
-    if (sessionError) throw new Error('Erro ao carregar sessão: ' + sessionError.message);
+
+    if (sessionError) {
+      throw new Error('Erro ao carregar sessão: ' + sessionError.message);
+    }
 
     if (!sessionData.session) {
       window.location.href = './index.html';
@@ -88,6 +114,7 @@
     }
 
     const { data: userData, error: userError } = await client.auth.getUser();
+
     if (userError || !userData.user) {
       await client.auth.signOut();
       window.location.href = './index.html';
@@ -99,7 +126,9 @@
   }
 
   async function loadProfile() {
-    if (!user || !user.id) throw new Error('Usuário autenticado sem ID. Faça login novamente.');
+    if (!user || !user.id) {
+      throw new Error('Usuário autenticado sem ID. Faça login novamente.');
+    }
 
     const { data, error } = await client
       .from('profiles')
@@ -107,7 +136,10 @@
       .eq('id', user.id)
       .limit(1);
 
-    if (error) throw new Error('Erro ao carregar profile: ' + error.message);
+    if (error) {
+      throw new Error('Erro ao carregar profile: ' + error.message);
+    }
+
     if (!data || data.length === 0) {
       throw new Error('Perfil não encontrado em profiles para o usuário logado. Crie o perfil com o mesmo UID do Authentication.');
     }
@@ -120,6 +152,7 @@
       window.location.href = './dashboard.html';
       return false;
     }
+
     return true;
   }
 
@@ -136,11 +169,18 @@
       .eq('id', profile.school_id)
       .limit(1);
 
-    if (error) throw new Error('Erro ao carregar escola: ' + error.message);
-    if (!data || data.length === 0) throw new Error('Escola não encontrada para o school_id do perfil.');
+    if (error) {
+      throw new Error('Erro ao carregar escola: ' + error.message);
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error('Escola não encontrada para o school_id do perfil.');
+    }
 
     school = data[0];
+
     const schoolName = school?.name || 'Escola sem nome';
+
     text('schoolName', schoolName);
     value('teacherSchool', schoolName);
   }
@@ -153,23 +193,47 @@
       .eq('role', 'professor')
       .order('full_name', { ascending: true });
 
-    if (error) throw new Error('Erro ao carregar professores: ' + error.message);
+    if (error) {
+      throw new Error('Erro ao carregar professores: ' + error.message);
+    }
+
     teachers = data || [];
     text('teachersCount', String(teachers.length));
 
     html('teachersTable', teachers.length
       ? teachers.map((t) => `
         <tr>
-          <td><strong>${safe(t.full_name)}</strong><br><span class="small">${safe(t.contact_phone || '')}</span></td>
+          <td>
+            <strong>${safe(t.full_name)}</strong><br>
+            <span class="small">${safe(t.contact_phone || '')}</span>
+          </td>
           <td>${safe(t.contact_email || 'E-mail de login não exibido')}</td>
           <td>${t.active === false ? 'Inativo' : 'Ativo'}</td>
-          <td><button class="btn-small" type="button" data-edit-teacher="${safe(t.id)}">Editar</button></td>
-        </tr>`).join('')
+          <td>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-small" type="button" data-edit-teacher="${safe(t.id)}">
+                Editar
+              </button>
+              <button class="btn-small" type="button" data-delete-teacher="${safe(t.id)}" style="background:#fee2e2;color:#991b1b;">
+                Excluir
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('')
       : '<tr><td colspan="4" class="empty">Nenhum professor cadastrado.</td></tr>'
     );
 
     const teacherSelect = $('linkTeacher');
-    if (teacherSelect) teacherSelect.innerHTML = optionList(teachers.filter(t => t.active !== false), 'full_name', 'id', 'Selecione um professor');
+
+    if (teacherSelect) {
+      teacherSelect.innerHTML = optionList(
+        teachers.filter(t => t.active !== false),
+        'full_name',
+        'id',
+        'Selecione um professor'
+      );
+    }
   }
 
   async function loadStudents() {
@@ -179,25 +243,56 @@
       .eq('school_id', profile.school_id)
       .order('full_name', { ascending: true });
 
-    if (error) throw new Error('Erro ao carregar alunos: ' + error.message);
+    if (error) {
+      throw new Error('Erro ao carregar alunos: ' + error.message);
+    }
+
     students = data || [];
     text('studentsCount', String(students.length));
 
     html('studentsTable', students.length
       ? students.map((s) => `
         <tr>
-          <td><strong>${safe(s.full_name)}</strong><br><span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span></td>
+          <td>
+            <strong>${safe(s.full_name)}</strong><br>
+            <span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span>
+          </td>
           <td>${safe(formatDateBR(s.birth_date) || '-')}</td>
-          <td>${safe(s.guardian_1_name || '-')}<br><span class="small">${safe(s.guardian_1_email || '')}</span><br><span class="small">${safe(s.guardian_2_name ? 'Outro resp.: ' + s.guardian_2_name : '')}</span></td>
-          <td>${safe(s.guardian_1_phone || '-')}<br><span class="small">${safe(s.guardian_2_phone || '')}</span></td>
+          <td>
+            ${safe(s.guardian_1_name || '-')}<br>
+            <span class="small">${safe(s.guardian_1_email || '')}</span><br>
+            <span class="small">${safe(s.guardian_2_name ? 'Outro resp.: ' + s.guardian_2_name : '')}</span>
+          </td>
+          <td>
+            ${safe(s.guardian_1_phone || '-')}<br>
+            <span class="small">${safe(s.guardian_2_phone || '')}</span>
+          </td>
           <td>${s.active ? 'Ativo' : 'Inativo'}</td>
-          <td><button class="btn-small" type="button" data-edit-student="${safe(s.id)}">Editar</button></td>
-        </tr>`).join('')
+          <td>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">
+                Editar
+              </button>
+              <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">
+                Excluir
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('')
       : '<tr><td colspan="6" class="empty">Nenhum aluno cadastrado.</td></tr>'
     );
 
     const studentSelect = $('linkStudent');
-    if (studentSelect) studentSelect.innerHTML = optionList(students.filter(s => s.active !== false), 'full_name', 'id', 'Selecione um aluno');
+
+    if (studentSelect) {
+      studentSelect.innerHTML = optionList(
+        students.filter(s => s.active !== false),
+        'full_name',
+        'id',
+        'Selecione um aluno'
+      );
+    }
   }
 
   async function loadLinks() {
@@ -214,10 +309,19 @@
 
     const teacherNames = new Map(teachers.map((t) => [t.id, t.full_name]));
     const studentNames = new Map(students.map((s) => [s.id, s.full_name]));
-    const rows = (data || []).filter((v) => teacherNames.has(v.teacher_profile_id) && studentNames.has(v.student_id));
+
+    const rows = (data || []).filter((v) =>
+      teacherNames.has(v.teacher_profile_id) &&
+      studentNames.has(v.student_id)
+    );
 
     html('linksTable', rows.length
-      ? rows.map((v) => `<tr><td>${safe(teacherNames.get(v.teacher_profile_id))}</td><td>${safe(studentNames.get(v.student_id))}</td></tr>`).join('')
+      ? rows.map((v) => `
+        <tr>
+          <td>${safe(teacherNames.get(v.teacher_profile_id))}</td>
+          <td>${safe(studentNames.get(v.student_id))}</td>
+        </tr>
+      `).join('')
       : '<tr><td colspan="2" class="empty">Nenhum vínculo criado.</td></tr>'
     );
   }
@@ -228,10 +332,19 @@
     await loadLinks();
   }
 
-  async function createTeacher(payload) {
+  async function getAccessToken() {
     const { data: sessionData } = await client.auth.getSession();
     const token = sessionData?.session?.access_token;
-    if (!token) throw new Error('Sessão inválida. Saia e entre novamente.');
+
+    if (!token) {
+      throw new Error('Sessão inválida. Saia e entre novamente.');
+    }
+
+    return token;
+  }
+
+  async function createTeacher(payload) {
+    const token = await getAccessToken();
 
     const resp = await fetch(`${cfg.url}/functions/v1/create-teacher-user`, {
       method: 'POST',
@@ -244,16 +357,25 @@
     });
 
     const json = await resp.json().catch(() => ({}));
-    if (!resp.ok) throw new Error(json.error || 'Erro ao cadastrar professor.');
+
+    if (!resp.ok) {
+      throw new Error(json.error || 'Erro ao cadastrar professor.');
+    }
+
     return json;
   }
 
   async function createFamilyUser(payload) {
-    const { data: sessionData } = await client.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    if (!token) throw new Error('Sessão inválida. Saia e entre novamente.');
+    const token = await getAccessToken();
 
-   const resp = await fetch(`${cfg.url}/functions/v1/dynamic-responder`, {
+    /*
+      ATENÇÃO:
+      No seu Supabase, a função da família está publicada como dynamic-responder.
+      Por isso mantive esse endpoint, que foi o que funcionou no seu teste.
+      Se depois você criar uma Edge Function com slug create-family-user,
+      basta trocar dynamic-responder por create-family-user.
+    */
+    const resp = await fetch(`${cfg.url}/functions/v1/dynamic-responder`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -264,13 +386,43 @@
     });
 
     const json = await resp.json().catch(() => ({}));
-    if (!resp.ok) throw new Error(json.error || 'Erro ao criar login do responsável.');
+
+    if (!resp.ok) {
+      throw new Error(json.error || 'Erro ao criar login do responsável.');
+    }
+
+    return json;
+  }
+
+  async function deletePortalUser(tipo, id) {
+    const token = await getAccessToken();
+
+    const resp = await fetch(`${cfg.url}/functions/v1/excluir-usuario-portal`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        apikey: cfg.anonKey,
+      },
+      body: JSON.stringify({
+        tipo,
+        id,
+      }),
+    });
+
+    const json = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      throw new Error(json.error || 'Erro ao excluir registro.');
+    }
+
     return json;
   }
 
   async function handleTeacher(e) {
     e.preventDefault();
     clearStatus('teacherStatus');
+
     try {
       const payload = {
         full_name: $('teacherName').value.trim(),
@@ -278,23 +430,33 @@
         password: $('teacherPassword').value.trim(),
         school_id: profile.school_id,
       };
+
       if (!payload.full_name || !payload.email || !payload.password) {
         status('teacherStatus', 'warn', 'Preencha nome, e-mail e senha.');
         return;
       }
+
       if (payload.password.length < 6) {
         status('teacherStatus', 'warn', 'Use uma senha inicial com pelo menos 6 caracteres. Exemplo: Integro@2026');
         return;
       }
+
       const result = await createTeacher(payload);
+
       if (result?.user_id) {
-        await client.from('profiles')
-          .update({ contact_email: payload.email, active: true })
+        await client
+          .from('profiles')
+          .update({
+            contact_email: payload.email,
+            active: true,
+          })
           .eq('id', result.user_id);
       }
+
       status('teacherStatus', 'ok', 'Professor cadastrado com sucesso.');
       $('teacherForm').reset();
       value('teacherSchool', school?.name || '');
+
       await refreshAll();
     } catch (err) {
       console.error(err);
@@ -305,9 +467,11 @@
   async function handleStudent(e) {
     e.preventDefault();
     clearStatus('studentStatus');
+
     try {
       const guardianEmail = $('guardianPrimaryEmail').value.trim().toLowerCase();
       const guardianPassword = $('guardianPassword').value.trim();
+
       const payload = {
         full_name: $('studentName').value.trim(),
         birth_date: $('studentBirthDate').value || null,
@@ -321,14 +485,25 @@
         notes: $('studentNotes').value.trim() || null,
         school_id: profile.school_id,
       };
-      if (!payload.full_name || !payload.birth_date || !payload.guardian_1_name || !payload.guardian_1_cpf || !payload.guardian_1_email || !payload.guardian_1_phone || !guardianPassword) {
+
+      if (
+        !payload.full_name ||
+        !payload.birth_date ||
+        !payload.guardian_1_name ||
+        !payload.guardian_1_cpf ||
+        !payload.guardian_1_email ||
+        !payload.guardian_1_phone ||
+        !guardianPassword
+      ) {
         status('studentStatus', 'warn', 'Preencha aluno, nascimento, responsável, CPF, e-mail, telefone e senha do Portal da Família.');
         return;
       }
+
       if (onlyDigits(payload.guardian_1_cpf).length !== 11) {
         status('studentStatus', 'warn', 'Informe um CPF válido com 11 dígitos para o responsável.');
         return;
       }
+
       if (guardianPassword.length < 6) {
         status('studentStatus', 'warn', 'Use uma senha inicial com pelo menos 6 caracteres. Exemplo: Familia@2026');
         return;
@@ -339,10 +514,16 @@
         .insert(payload)
         .select('id')
         .limit(1);
-      if (error) throw error;
+
+      if (error) {
+        throw error;
+      }
 
       const createdStudent = inserted && inserted[0];
-      if (!createdStudent?.id) throw new Error('Aluno foi salvo, mas o ID não retornou. Atualize a página e confira a lista.');
+
+      if (!createdStudent?.id) {
+        throw new Error('Aluno foi salvo, mas o ID não retornou. Atualize a página e confira a lista.');
+      }
 
       await createFamilyUser({
         full_name: payload.guardian_1_name,
@@ -357,27 +538,42 @@
 
       status('studentStatus', 'ok', 'Aluno cadastrado, login do responsável criado e Portal da Família vinculado com sucesso.');
       $('studentForm').reset();
+
       await refreshAll();
     } catch (err) {
       console.error(err);
       status('studentStatus', 'error', err.message || 'Erro ao cadastrar aluno e responsável.');
+      await refreshAll();
     }
   }
 
   async function handleLink(e) {
     e.preventDefault();
     clearStatus('linkStatus');
+
     try {
       const teacher_profile_id = $('linkTeacher').value;
       const student_id = $('linkStudent').value;
+
       if (!teacher_profile_id || !student_id) {
         status('linkStatus', 'warn', 'Selecione um professor e um aluno.');
         return;
       }
-      const { error } = await client.from('student_teachers').insert({ teacher_profile_id, student_id });
-      if (error) throw error;
+
+      const { error } = await client
+        .from('student_teachers')
+        .insert({
+          teacher_profile_id,
+          student_id,
+        });
+
+      if (error) {
+        throw error;
+      }
+
       status('linkStatus', 'ok', 'Vínculo criado com sucesso.');
       $('linkForm').reset();
+
       await loadLinks();
     } catch (err) {
       console.error(err);
@@ -387,8 +583,11 @@
 
   function openStudentEdit(studentId) {
     const s = students.find((item) => item.id === studentId);
+
     if (!s) return;
+
     clearStatus('studentEditStatus');
+
     value('editStudentId', s.id);
     value('editStudentName', s.full_name);
     value('editStudentBirthDate', s.birth_date);
@@ -400,14 +599,17 @@
     value('editGuardianSecondaryPhone', s.guardian_2_phone);
     value('editStudentActive', String(s.active !== false));
     value('editStudentNotes', s.notes);
+
     showModal('studentEditModal');
   }
 
   async function handleStudentEdit(e) {
     e.preventDefault();
     clearStatus('studentEditStatus');
+
     try {
       const id = $('editStudentId').value;
+
       const payload = {
         full_name: $('editStudentName').value.trim(),
         birth_date: $('editStudentBirthDate').value || null,
@@ -420,22 +622,39 @@
         active: $('editStudentActive').value === 'true',
         notes: $('editStudentNotes').value.trim() || null,
       };
-      if (!id || !payload.full_name || !payload.birth_date || !payload.guardian_1_name || !payload.guardian_1_cpf || !payload.guardian_1_email || !payload.guardian_1_phone) {
+
+      if (
+        !id ||
+        !payload.full_name ||
+        !payload.birth_date ||
+        !payload.guardian_1_name ||
+        !payload.guardian_1_cpf ||
+        !payload.guardian_1_email ||
+        !payload.guardian_1_phone
+      ) {
         status('studentEditStatus', 'warn', 'Preencha os campos obrigatórios.');
         return;
       }
+
       if (onlyDigits(payload.guardian_1_cpf).length !== 11) {
         status('studentEditStatus', 'warn', 'Informe um CPF válido com 11 dígitos para o responsável.');
         return;
       }
+
       const { error } = await client
         .from('students')
         .update(payload)
         .eq('id', id)
         .eq('school_id', profile.school_id);
-      if (error) throw error;
+
+      if (error) {
+        throw error;
+      }
+
       status('studentEditStatus', 'ok', 'Aluno atualizado com sucesso.');
+
       await refreshAll();
+
       setTimeout(() => hideModal('studentEditModal'), 500);
     } catch (err) {
       console.error(err);
@@ -445,44 +664,121 @@
 
   function openTeacherEdit(teacherId) {
     const t = teachers.find((item) => item.id === teacherId);
+
     if (!t) return;
+
     clearStatus('teacherEditStatus');
+
     value('editTeacherId', t.id);
     value('editTeacherName', t.full_name);
     value('editTeacherEmail', t.contact_email);
     value('editTeacherPhone', t.contact_phone);
     value('editTeacherActive', String(t.active !== false));
+
     showModal('teacherEditModal');
   }
 
   async function handleTeacherEdit(e) {
     e.preventDefault();
     clearStatus('teacherEditStatus');
+
     try {
       const id = $('editTeacherId').value;
+
       const payload = {
         full_name: $('editTeacherName').value.trim(),
         contact_email: $('editTeacherEmail').value.trim() || null,
         contact_phone: $('editTeacherPhone').value.trim() || null,
         active: $('editTeacherActive').value === 'true',
       };
+
       if (!id || !payload.full_name) {
         status('teacherEditStatus', 'warn', 'Informe o nome do professor.');
         return;
       }
+
       const { error } = await client
         .from('profiles')
         .update(payload)
         .eq('id', id)
         .eq('school_id', profile.school_id)
         .eq('role', 'professor');
-      if (error) throw error;
+
+      if (error) {
+        throw error;
+      }
+
       status('teacherEditStatus', 'ok', 'Professor atualizado com sucesso.');
+
       await refreshAll();
+
       setTimeout(() => hideModal('teacherEditModal'), 500);
     } catch (err) {
       console.error(err);
       status('teacherEditStatus', 'error', err.message || 'Erro ao atualizar professor.');
+    }
+  }
+
+  async function handleDeleteTeacher(teacherId) {
+    const teacher = teachers.find((item) => item.id === teacherId);
+
+    if (!teacher) {
+      alert('Professor não encontrado na lista atual.');
+      return;
+    }
+
+    const confirmMessage =
+      `Tem certeza que deseja excluir o professor "${teacher.full_name}"?\n\n` +
+      `Essa ação removerá o login do professor, o profile e os vínculos com alunos.\n\n` +
+      `Esta ação não poderá ser desfeita.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      status('teacherStatus', 'warn', 'Excluindo professor. Aguarde...');
+
+      await deletePortalUser('professor', teacherId);
+
+      status('teacherStatus', 'ok', 'Professor excluído com sucesso.');
+
+      await refreshAll();
+    } catch (err) {
+      console.error(err);
+      status('teacherStatus', 'error', err.message || 'Erro ao excluir professor.');
+    }
+  }
+
+  async function handleDeleteStudent(studentId) {
+    const student = students.find((item) => item.id === studentId);
+
+    if (!student) {
+      alert('Aluno não encontrado na lista atual.');
+      return;
+    }
+
+    const confirmMessage =
+      `Tem certeza que deseja excluir o aluno "${student.full_name}"?\n\n` +
+      `Essa ação poderá remover planos, materiais, evoluções, frequência, vínculos com professores e vínculo da família.\n\n` +
+      `Se o responsável não tiver outro aluno vinculado, o login da família também poderá ser removido.\n\n` +
+      `Esta ação não poderá ser desfeita.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      status('studentStatus', 'warn', 'Excluindo aluno. Aguarde...');
+
+      await deletePortalUser('aluno', studentId);
+
+      status('studentStatus', 'ok', 'Aluno excluído com sucesso.');
+
+      await refreshAll();
+    } catch (err) {
+      console.error(err);
+      status('studentStatus', 'error', err.message || 'Erro ao excluir aluno.');
     }
   }
 
@@ -494,9 +790,13 @@
   async function init() {
     try {
       const ok = await loadSession();
+
       if (!ok) return;
+
       const okProfile = await loadProfile();
+
       if (!okProfile) return;
+
       await loadSchool();
       await refreshAll();
     } catch (err) {
@@ -525,6 +825,7 @@
       const el = $(id);
       if (el) el.addEventListener('click', () => hideModal('studentEditModal'));
     });
+
     ['closeTeacherEdit', 'cancelTeacherEdit'].forEach((id) => {
       const el = $(id);
       if (el) el.addEventListener('click', () => hideModal('teacherEditModal'));
@@ -533,8 +834,25 @@
     document.addEventListener('click', function (ev) {
       const studentBtn = ev.target.closest('[data-edit-student]');
       const teacherBtn = ev.target.closest('[data-edit-teacher]');
-      if (studentBtn) openStudentEdit(studentBtn.getAttribute('data-edit-student'));
-      if (teacherBtn) openTeacherEdit(teacherBtn.getAttribute('data-edit-teacher'));
+      const deleteStudentBtn = ev.target.closest('[data-delete-student]');
+      const deleteTeacherBtn = ev.target.closest('[data-delete-teacher]');
+
+      if (studentBtn) {
+        openStudentEdit(studentBtn.getAttribute('data-edit-student'));
+      }
+
+      if (teacherBtn) {
+        openTeacherEdit(teacherBtn.getAttribute('data-edit-teacher'));
+      }
+
+      if (deleteStudentBtn) {
+        handleDeleteStudent(deleteStudentBtn.getAttribute('data-delete-student'));
+      }
+
+      if (deleteTeacherBtn) {
+        handleDeleteTeacher(deleteTeacherBtn.getAttribute('data-delete-teacher'));
+      }
+
       if (ev.target.classList && ev.target.classList.contains('modal-backdrop')) {
         hideModal(ev.target.id);
       }
