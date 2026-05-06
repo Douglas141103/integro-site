@@ -730,7 +730,45 @@
       return;
     }
 
-    const schoolName = school?.name || 'INSTITUTO INTEGRO';
+    const company =
+      window.INTEGRO_COMPANY_SETTINGS?.getCurrentSettings?.() || null;
+
+    const companyName =
+      company?.trade_name ||
+      company?.legal_name ||
+      school?.name ||
+      'INSTITUTO INTEGRO';
+
+    const companyDocumentType = company?.document_type || 'CNPJ';
+    const companyDocumentNumber = company?.document_number || '';
+
+    const companyAddressParts = [
+      company?.address_street && company?.address_number
+        ? `${company.address_street}, ${company.address_number}`
+        : company?.address_street || '',
+      company?.address_complement || '',
+      company?.address_neighborhood || '',
+      company?.address_city && company?.address_state
+        ? `${company.address_city}/${company.address_state}`
+        : company?.address_city || company?.address_state || '',
+      company?.address_zip_code ? `CEP ${company.address_zip_code}` : ''
+    ].filter(Boolean);
+
+    const companyAddress = companyAddressParts.join(' - ');
+
+    const companyContactParts = [
+      company?.phone ? `Telefone: ${company.phone}` : '',
+      company?.whatsapp ? `WhatsApp: ${company.whatsapp}` : '',
+      company?.email ? `E-mail: ${company.email}` : '',
+      company?.website ? `Site: ${company.website}` : ''
+    ].filter(Boolean);
+
+    const companyContact = companyContactParts.join(' | ');
+
+    const documentObservations =
+      company?.document_observations ||
+      'Ficha cadastral emitida pelo sistema de gestão do INTEGRO.';
+
     const today = new Date().toLocaleDateString('pt-BR');
 
     const fichaHtml = `
@@ -739,6 +777,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Ficha do Aluno - ${safe(student.full_name)}</title>
+
   <style>
     @page {
       size: A4;
@@ -778,12 +817,20 @@
       font-size: 20px;
       color: #003f2d;
       letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
 
     .header h2 {
       margin: 6px 0 0;
       font-size: 16px;
       color: #114a3b;
+    }
+
+    .company-data {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #415b51;
+      line-height: 1.45;
     }
 
     .section {
@@ -834,6 +881,16 @@
       white-space: pre-wrap;
     }
 
+    .footer-note {
+      margin-top: 16px;
+      border: 1px dashed #cfe5d8;
+      background: #f8fcfa;
+      border-radius: 10px;
+      padding: 10px;
+      color: #415b51;
+      font-size: 11px;
+    }
+
     .footer {
       margin-top: 36px;
       display: grid;
@@ -871,12 +928,23 @@
 <body>
   <div class="page">
     <div class="header">
-      <h1>${safe(schoolName)}</h1>
+      <h1>${safe(companyName)}</h1>
       <h2>FICHA CADASTRAL DO ALUNO</h2>
+
+      <div class="company-data">
+        ${
+          companyDocumentNumber
+            ? `${safe(companyDocumentType)}: ${safe(companyDocumentNumber)}<br>`
+            : ''
+        }
+        ${companyAddress ? `${safe(companyAddress)}<br>` : ''}
+        ${companyContact ? `${safe(companyContact)}` : ''}
+      </div>
     </div>
 
     <div class="section">
       <div class="section-title">Dados do aluno</div>
+
       <div class="grid">
         <div class="field full">
           <span class="label">Nome completo</span>
@@ -897,6 +965,7 @@
 
     <div class="section">
       <div class="section-title">Responsável principal</div>
+
       <div class="grid">
         <div class="field full">
           <span class="label">Nome do responsável</span>
@@ -922,6 +991,7 @@
 
     <div class="section">
       <div class="section-title">Outro responsável</div>
+
       <div class="grid">
         <div class="field">
           <span class="label">Nome</span>
@@ -937,11 +1007,16 @@
 
     <div class="section">
       <div class="section-title">Observações</div>
+
       <div class="grid">
         <div class="field full">
           <span class="value">${safe(student.notes || 'Sem observações registradas.')}</span>
         </div>
       </div>
+    </div>
+
+    <div class="footer-note">
+      ${safe(documentObservations)}
     </div>
 
     <div class="print-date">
