@@ -273,6 +273,9 @@
               <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">
                 Editar
               </button>
+              <button class="btn-small" type="button" data-print-student="${safe(s.id)}" style="background:#e8f4ee;color:#114a3b;">
+                Imprimir ficha
+              </button>
               <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">
                 Excluir
               </button>
@@ -368,13 +371,6 @@
   async function createFamilyUser(payload) {
     const token = await getAccessToken();
 
-    /*
-      ATENÇÃO:
-      No seu Supabase, a função da família está publicada como dynamic-responder.
-      Por isso mantive esse endpoint, que foi o que funcionou no seu teste.
-      Se depois você criar uma Edge Function com slug create-family-user,
-      basta trocar dynamic-responder por create-family-user.
-    */
     const resp = await fetch(`${cfg.url}/functions/v1/dynamic-responder`, {
       method: 'POST',
       headers: {
@@ -413,7 +409,14 @@
     const json = await resp.json().catch(() => ({}));
 
     if (!resp.ok) {
-      throw new Error(json.error || 'Erro ao excluir registro.');
+      const detalhes = [
+        json.error,
+        json.detalhe,
+        json.dica,
+        json.tipo_do_erro
+      ].filter(Boolean).join(' | ');
+
+      throw new Error(detalhes || 'Erro ao excluir registro.');
     }
 
     return json;
@@ -719,6 +722,260 @@
     }
   }
 
+  function printStudentRecord(studentId) {
+    const student = students.find((item) => item.id === studentId);
+
+    if (!student) {
+      alert('Aluno não encontrado na lista atual.');
+      return;
+    }
+
+    const schoolName = school?.name || 'INSTITUTO INTEGRO';
+    const today = new Date().toLocaleDateString('pt-BR');
+
+    const fichaHtml = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ficha do Aluno - ${safe(student.full_name)}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #12322a;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      border: 2px solid #114a3b;
+      padding: 18px;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #114a3b;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #003f2d;
+      letter-spacing: 0.03em;
+    }
+
+    .header h2 {
+      margin: 6px 0 0;
+      font-size: 16px;
+      color: #114a3b;
+    }
+
+    .section {
+      margin-bottom: 14px;
+      border: 1px solid #cfe5d8;
+      border-radius: 10px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .section-title {
+      background: #e8f4ee;
+      color: #003f2d;
+      font-weight: bold;
+      padding: 8px 10px;
+      border-bottom: 1px solid #cfe5d8;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .field {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e4eee8;
+      min-height: 42px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .label {
+      display: block;
+      font-size: 10px;
+      color: #5f6b76;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      font-weight: bold;
+    }
+
+    .value {
+      font-size: 13px;
+      color: #12322a;
+      white-space: pre-wrap;
+    }
+
+    .footer {
+      margin-top: 36px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      align-items: end;
+      page-break-inside: avoid;
+    }
+
+    .signature {
+      border-top: 1px solid #12322a;
+      text-align: center;
+      padding-top: 7px;
+      font-size: 12px;
+    }
+
+    .print-date {
+      font-size: 11px;
+      color: #5f6b76;
+      margin-top: 14px;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+      }
+
+      .page {
+        border: 1.5px solid #114a3b;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>${safe(schoolName)}</h1>
+      <h2>FICHA CADASTRAL DO ALUNO</h2>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Dados do aluno</div>
+      <div class="grid">
+        <div class="field full">
+          <span class="label">Nome completo</span>
+          <span class="value">${safe(student.full_name || '-')}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">Data de nascimento</span>
+          <span class="value">${safe(formatDateBR(student.birth_date) || '-')}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">Situação</span>
+          <span class="value">${student.active === false ? 'Inativo' : 'Ativo'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Responsável principal</div>
+      <div class="grid">
+        <div class="field full">
+          <span class="label">Nome do responsável</span>
+          <span class="value">${safe(student.guardian_1_name || '-')}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">CPF do responsável</span>
+          <span class="value">${safe(student.guardian_1_cpf || '-')}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">Telefone</span>
+          <span class="value">${safe(student.guardian_1_phone || '-')}</span>
+        </div>
+
+        <div class="field full">
+          <span class="label">E-mail de login da família</span>
+          <span class="value">${safe(student.guardian_1_email || '-')}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Outro responsável</div>
+      <div class="grid">
+        <div class="field">
+          <span class="label">Nome</span>
+          <span class="value">${safe(student.guardian_2_name || '-')}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">Telefone</span>
+          <span class="value">${safe(student.guardian_2_phone || '-')}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Observações</div>
+      <div class="grid">
+        <div class="field full">
+          <span class="value">${safe(student.notes || 'Sem observações registradas.')}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="print-date">
+      Ficha impressa em ${today}.
+    </div>
+
+    <div class="footer">
+      <div class="signature">Assinatura do responsável</div>
+      <div class="signature">Assinatura do INTEGRO</div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function () {
+      window.focus();
+      window.print();
+    };
+  </script>
+</body>
+</html>
+`;
+
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+      alert('O navegador bloqueou a janela de impressão. Permita pop-ups para imprimir a ficha.');
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(fichaHtml);
+    printWindow.document.close();
+  }
+
   async function handleDeleteTeacher(teacherId) {
     const teacher = teachers.find((item) => item.id === teacherId);
 
@@ -834,6 +1091,7 @@
     document.addEventListener('click', function (ev) {
       const studentBtn = ev.target.closest('[data-edit-student]');
       const teacherBtn = ev.target.closest('[data-edit-teacher]');
+      const printStudentBtn = ev.target.closest('[data-print-student]');
       const deleteStudentBtn = ev.target.closest('[data-delete-student]');
       const deleteTeacherBtn = ev.target.closest('[data-delete-teacher]');
 
@@ -843,6 +1101,10 @@
 
       if (teacherBtn) {
         openTeacherEdit(teacherBtn.getAttribute('data-edit-teacher'));
+      }
+
+      if (printStudentBtn) {
+        printStudentRecord(printStudentBtn.getAttribute('data-print-student'));
       }
 
       if (deleteStudentBtn) {
