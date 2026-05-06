@@ -3,221 +3,542 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Gestão Escolar | INTEGRO</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script defer src="./gestao-escolar.js"></script>
+  <script defer src="./gestao-escolar.js?v=20260505-gestao-menu"></script>
+
   <style>
-    :root{
-      --bg:#f2f8f5;
-      --card:#ffffff;
-      --green-900:#0d5c46;
-      --green-800:#166a50;
-      --green-700:#1c7a5b;
-      --green-100:#e6f3ec;
-      --border:#dbe9e1;
-      --text:#18332b;
-      --muted:#587066;
-      --danger:#b3261e;
-      --warning:#8c6b00;
-      --radius:20px;
-      --shadow:0 12px 30px rgba(13,92,70,.08);
+    :root {
+      --bg: #f2f8f5;
+      --card: #ffffff;
+      --green-950: #003f2d;
+      --green-900: #0d5c46;
+      --green-800: #166a50;
+      --green-700: #1c7a5b;
+      --green-100: #e6f3ec;
+      --green-50: #f4fbf7;
+      --border: #dbe9e1;
+      --text: #18332b;
+      --muted: #587066;
+      --danger: #b3261e;
+      --warning: #8c6b00;
+      --radius: 20px;
+      --shadow: 0 12px 30px rgba(13, 92, 70, .08);
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      color:var(--text);
-      background:linear-gradient(180deg,#f8fcfa 0%, var(--bg) 100%);
+      color: var(--text);
+      background: linear-gradient(180deg, #f8fcfa 0%, var(--bg) 100%);
     }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:20px 28px;
-      border-bottom:1px solid var(--border);
-      background:#fff;
-      position:sticky;
-      top:0;
-      z-index:10;
-    }
-    .brand{display:flex; align-items:center; gap:14px}
-    .brand img{width:46px; height:46px; object-fit:contain}
-    .brand small{display:block; color:var(--green-800); font-weight:700; letter-spacing:.6px}
-    .brand strong{display:block; font-size:1.8rem; color:var(--green-900)}
-    .actions{display:flex; gap:12px; align-items:center}
-    .pill, button, .btn{
-      border:none;
-      border-radius:999px;
-      padding:12px 18px;
-      font-weight:700;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .pill{background:#eef6f2; color:var(--green-900)}
-    .btn-primary{background:var(--green-700); color:#fff}
-    .btn-secondary{background:#eef6f2; color:var(--green-900)}
-    .wrap{max-width:1250px; margin:0 auto; padding:28px}
-    .hero{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:28px;
-      padding:28px;
-      box-shadow:var(--shadow);
-      margin-bottom:24px;
-    }
-    .hero h1{margin:0 0 8px; font-size:2rem; color:var(--green-900)}
-    .hero p{margin:0; color:var(--muted); font-size:1.05rem}
-    .grid{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:24px;
-      align-items:start;
-    }
-    .stack{display:grid; gap:24px}
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow);
-    }
-    .card h2{
-      margin:0 0 18px;
-      font-size:1.25rem;
-      color:var(--green-900);
-    }
-    .card h3{
-      margin:0 0 14px;
-      font-size:1.05rem;
-      color:var(--green-900);
-    }
-    .sub{
-      margin:-6px 0 18px;
-      color:var(--muted);
-      font-size:.95rem;
-    }
-    .form-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-    .form-grid.one{grid-template-columns:1fr}
-    label{
-      display:block;
-      margin-bottom:6px;
-      font-weight:700;
-      color:var(--green-900);
-      font-size:.95rem;
-    }
-    input, textarea, select{
-      width:100%;
-      padding:13px 14px;
-      border-radius:14px;
-      border:1px solid #cfded6;
-      background:#fff;
-      font-size:1rem;
-      outline:none;
-    }
-    textarea{min-height:110px; resize:vertical}
-    input:focus, textarea:focus, select:focus{border-color:var(--green-700)}
-    .toolbar{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
-      margin-bottom:16px;
-      flex-wrap:wrap;
-    }
-    .status{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:14px;
-      display:none;
-      font-size:.95rem;
-      line-height:1.4;
-    }
-    .status.show{display:block}
-    .status.ok{background:#ebf7ef; color:#176a34}
-    .status.error{background:#fdeceb; color:var(--danger)}
-    .status.warn{background:#fff8e1; color:var(--warning)}
-    .mini{
-      background:#f7fbf9;
-      border:1px dashed var(--border);
-      padding:14px;
-      border-radius:16px;
-      color:var(--muted);
-      font-size:.95rem;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:.95rem;
-    }
-    th,td{
-      text-align:left;
-      padding:12px 10px;
-      border-bottom:1px solid #edf3ef;
-      vertical-align:top;
-    }
-    th{color:var(--green-900); font-size:.92rem}
-    .empty{color:var(--muted); font-style:italic}
-    .small{font-size:.9rem; color:var(--muted)}
-    .school-box{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-      margin-top:18px;
-    }
-    .metric{
-      background:#f8fcfa;
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-    }
-    .metric strong{display:block; font-size:1.55rem; color:var(--green-900)}
-    .metric span{color:var(--muted); font-size:.94rem}
 
-    .btn-small{
-      border:none;
-      border-radius:999px;
-      padding:9px 12px;
-      font-weight:700;
-      cursor:pointer;
-      background:var(--green-100);
-      color:var(--green-900);
-      font-size:.88rem;
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    .btn-small:hover{background:#d7ecdf}
-    .btn-danger{background:#fdeceb;color:var(--danger)}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
-    .modal-backdrop.show{display:flex}
-    .modal{background:#fff;border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.2);width:min(920px,100%);max-height:92vh;overflow:auto;border:1px solid var(--border)}
-    .modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 24px 14px;border-bottom:1px solid var(--border)}
-    .modal-header h2{margin:0;color:var(--green-900)}
-    .modal-body{padding:22px 24px 24px}
-    .modal-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
 
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      .school-box{grid-template-columns:1fr}
-      .form-grid{grid-template-columns:1fr}
-      .topbar{padding:18px}
-      .wrap{padding:18px}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand img {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--green-800);
+      font-weight: 700;
+      letter-spacing: .6px;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 1.8rem;
+      color: var(--green-900);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill,
+    button,
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pill {
+      background: #eef6f2;
+      color: var(--green-900);
+    }
+
+    .btn-primary {
+      background: var(--green-700);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #eef6f2;
+      color: var(--green-900);
+    }
+
+    .btn-secondary:hover {
+      background: #dbeee5;
+    }
+
+    .wrap {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      color: var(--green-900);
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .school-box {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      background: #f8fcfa;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.55rem;
+      color: var(--green-900);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: .94rem;
+    }
+
+    .gestao-menu-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .section-title-block {
+      margin-bottom: 18px;
+    }
+
+    .section-title-block small {
+      color: var(--green-800);
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .section-title-block h2 {
+      margin: 4px 0 6px;
+      color: var(--green-900);
+      font-size: 1.35rem;
+    }
+
+    .section-title-block p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .gestao-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .gestao-nav-button {
+      width: 100%;
+      min-height: 128px;
+      background: #ffffff;
+      border: 1px solid #d8e3dc;
+      color: var(--green-900);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: left;
+      display: grid;
+      align-content: start;
+      justify-items: start;
+      gap: 8px;
+      transition: .2s ease;
+      box-shadow: none;
+    }
+
+    .gestao-nav-button:hover {
+      transform: translateY(-2px);
+      border-color: var(--green-800);
+      box-shadow: 0 12px 28px rgba(17, 74, 59, 0.12);
+    }
+
+    .gestao-nav-button.active {
+      border-color: var(--green-800);
+      background: linear-gradient(135deg, #e8f4ee 0%, #ffffff 100%);
+      box-shadow: 0 10px 24px rgba(17, 74, 59, 0.12);
+    }
+
+    .gestao-nav-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--green-100);
+      color: var(--green-900);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+
+    .gestao-nav-button strong {
+      font-size: 1.04rem;
+    }
+
+    .gestao-nav-button small {
+      color: var(--muted);
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .gestao-panel {
+      display: none;
+    }
+
+    .gestao-panel.active {
+      display: block;
+    }
+
+    .gestao-panel-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      font-size: 1.25rem;
+      color: var(--green-900);
+    }
+
+    .card h3 {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+      color: var(--green-900);
+    }
+
+    .sub {
+      margin: -6px 0 18px;
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.45;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid.one {
+      grid-template-columns: 1fr;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 700;
+      color: var(--green-900);
+      font-size: .95rem;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid #cfded6;
+      background: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--green-700);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      display: none;
+      font-size: .95rem;
+      line-height: 1.4;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.ok {
+      background: #ebf7ef;
+      color: #176a34;
+    }
+
+    .status.error {
+      background: #fdeceb;
+      color: var(--danger);
+    }
+
+    .status.warn {
+      background: #fff8e1;
+      color: var(--warning);
+    }
+
+    .mini {
+      background: #f7fbf9;
+      border: 1px dashed var(--border);
+      padding: 14px;
+      border-radius: 16px;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .95rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #edf3ef;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--green-900);
+      font-size: .92rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .small {
+      font-size: .9rem;
+      color: var(--muted);
+    }
+
+    .btn-small {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--green-100);
+      color: var(--green-900);
+      font-size: .88rem;
+    }
+
+    .btn-small:hover {
+      background: #d7ecdf;
+    }
+
+    .btn-danger {
+      background: #fdeceb;
+      color: var(--danger);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 18px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .2);
+      width: min(920px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      border: 1px solid var(--border);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 24px 24px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: var(--green-900);
+    }
+
+    .modal-body {
+      padding: 22px 24px 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 980px) {
+      .school-box {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .gestao-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .topbar {
+        padding: 18px;
+        align-items: flex-start;
+        gap: 14px;
+        flex-direction: column;
+      }
+
+      .wrap {
+        padding: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .gestao-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .gestao-nav-button {
+        min-height: auto;
+      }
+
+      .brand strong {
+        font-size: 1.45rem;
+      }
+
+      .hero h1 {
+        font-size: 1.55rem;
+      }
     }
   </style>
+
   <!-- PWA INTEGRO -->
-<link rel="manifest" href="/manifest.webmanifest" />
-<meta name="theme-color" content="#004d3a" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="INTEGRO" />
-<link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#004d3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="INTEGRO" />
+  <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
 </head>
+
 <body>
   <header class="topbar">
     <div class="brand">
@@ -227,26 +548,32 @@
         <strong>Gestão Escolar</strong>
       </div>
     </div>
+
     <div class="actions">
       <span id="userBadge" class="pill">Carregando...</span>
       <a class="pill" href="./dashboard.html">Voltar ao portal</a>
-      <button id="logoutBtn" class="btn-secondary">Sair</button>
+      <button id="logoutBtn" class="btn-secondary" type="button">Sair</button>
     </div>
   </header>
 
   <main class="wrap">
     <section class="hero">
       <h1>Cadastro de professores e alunos</h1>
-      <p>Use esta área para organizar a equipe da escola, cadastrar alunos e criar os vínculos pedagógicos necessários para o acompanhamento individual.</p>
+      <p>
+        Use esta área para organizar a equipe da escola, cadastrar alunos e criar os vínculos pedagógicos necessários para o acompanhamento individual.
+      </p>
+
       <div class="school-box">
         <div class="metric">
           <strong id="schoolName">--</strong>
           <span>Escola ativa</span>
         </div>
+
         <div class="metric">
           <strong id="teachersCount">0</strong>
           <span>Professores cadastrados</span>
         </div>
+
         <div class="metric">
           <strong id="studentsCount">0</strong>
           <span>Alunos cadastrados</span>
@@ -254,192 +581,337 @@
       </div>
     </section>
 
-    <section class="grid">
-      <div class="stack">
-        <article class="card">
-          <div class="toolbar">
+    <section class="gestao-menu-card">
+      <div class="section-title-block">
+        <small>Acesso rápido</small>
+        <h2>O que deseja fazer?</h2>
+        <p>
+          Escolha uma área para abrir somente o que você precisa usar no momento. Isso deixa a gestão mais limpa e organizada.
+        </p>
+      </div>
+
+      <div class="gestao-buttons">
+        <button class="gestao-nav-button active" type="button" data-gestao-tab="painel-professor">
+          <span class="gestao-nav-icon">1</span>
+          <strong>Cadastrar professor</strong>
+          <small>Criar login e perfil do professor.</small>
+        </button>
+
+        <button class="gestao-nav-button" type="button" data-gestao-tab="painel-aluno">
+          <span class="gestao-nav-icon">2</span>
+          <strong>Cadastrar aluno</strong>
+          <small>Criar aluno, responsável e acesso da família.</small>
+        </button>
+
+        <button class="gestao-nav-button" type="button" data-gestao-tab="painel-vinculo">
+          <span class="gestao-nav-icon">3</span>
+          <strong>Vincular professor</strong>
+          <small>Associar professor ao aluno.</small>
+        </button>
+
+        <button class="gestao-nav-button" type="button" data-gestao-tab="painel-professores">
+          <span class="gestao-nav-icon">4</span>
+          <strong>Professores</strong>
+          <small>Editar, conferir ou excluir professores.</small>
+        </button>
+
+        <button class="gestao-nav-button" type="button" data-gestao-tab="painel-alunos">
+          <span class="gestao-nav-icon">5</span>
+          <strong>Alunos</strong>
+          <small>Editar, imprimir ficha ou excluir alunos.</small>
+        </button>
+
+        <button class="gestao-nav-button" type="button" data-gestao-tab="painel-vinculos">
+          <span class="gestao-nav-icon">6</span>
+          <strong>Vínculos ativos</strong>
+          <small>Conferir professor associado a cada aluno.</small>
+        </button>
+      </div>
+    </section>
+
+    <section class="gestao-panel-grid">
+      <article id="painel-professor" class="card gestao-panel active">
+        <div class="toolbar">
+          <div>
+            <h2>Cadastrar professor</h2>
+            <p class="sub">Cria o login do professor e o perfil dele no sistema.</p>
+          </div>
+        </div>
+
+        <form id="teacherForm">
+          <div class="form-grid">
             <div>
-              <h2>Cadastrar professor</h2>
-              <p class="sub">Cria o login do professor e o perfil dele no sistema.</p>
+              <label for="teacherName">Nome completo</label>
+              <input id="teacherName" required placeholder="Nome do professor" />
+            </div>
+
+            <div>
+              <label for="teacherEmail">E-mail</label>
+              <input id="teacherEmail" type="email" required placeholder="professor@escola.com" />
+            </div>
+
+            <div>
+              <label for="teacherPassword">Senha inicial</label>
+              <input id="teacherPassword" required placeholder="Senha inicial do professor" />
+            </div>
+
+            <div>
+              <label for="teacherSchool">Escola</label>
+              <input id="teacherSchool" disabled />
             </div>
           </div>
 
-          <form id="teacherForm">
-            <div class="form-grid">
-              <div>
-                <label for="teacherName">Nome completo</label>
-                <input id="teacherName" required placeholder="Nome do professor" />
-              </div>
-              <div>
-                <label for="teacherEmail">E-mail</label>
-                <input id="teacherEmail" type="email" required placeholder="professor@escola.com" />
-              </div>
-              <div>
-                <label for="teacherPassword">Senha inicial</label>
-                <input id="teacherPassword" required placeholder="Senha inicial do professor" />
-              </div>
-              <div>
-                <label for="teacherSchool">Escola</label>
-                <input id="teacherSchool" disabled />
-              </div>
-            </div>
-            <div class="status" id="teacherStatus"></div>
-            <div style="margin-top:16px">
-              <button class="btn btn-primary" type="submit">Cadastrar professor</button>
-            </div>
-          </form>
-        </article>
+          <div class="status" id="teacherStatus"></div>
 
-        <article class="card">
-          <h2>Cadastrar aluno</h2>
-          <p class="sub">Cria o aluno, cadastra o login do responsável e vincula a família ao Portal da Família.</p>
-          <form id="studentForm">
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" type="submit">Cadastrar professor</button>
+          </div>
+        </form>
+      </article>
+
+      <article id="painel-aluno" class="card gestao-panel">
+        <h2>Cadastrar aluno</h2>
+        <p class="sub">
+          Cria o aluno, cadastra o login do responsável e vincula a família ao Portal da Família.
+        </p>
+
+        <form id="studentForm">
+          <div class="form-grid">
+            <div>
+              <label for="studentName">Nome completo do aluno</label>
+              <input id="studentName" required placeholder="Nome completo do aluno" />
+            </div>
+
+            <div>
+              <label for="studentBirthDate">Data de nascimento</label>
+              <input id="studentBirthDate" type="date" required />
+            </div>
+
+            <div>
+              <label for="guardianPrimaryName">Responsável principal</label>
+              <input id="guardianPrimaryName" required placeholder="Nome completo do responsável" />
+            </div>
+
+            <div>
+              <label for="guardianPrimaryCpf">CPF do responsável</label>
+              <input id="guardianPrimaryCpf" required placeholder="000.000.000-00" />
+            </div>
+
+            <div>
+              <label for="guardianPrimaryEmail">E-mail do responsável para login</label>
+              <input id="guardianPrimaryEmail" type="email" required placeholder="responsavel@email.com" />
+            </div>
+
+            <div>
+              <label for="guardianPassword">Senha inicial do Portal da Família</label>
+              <input id="guardianPassword" required placeholder="Ex.: Familia@2026" />
+            </div>
+
+            <div>
+              <label for="guardianPrimaryPhone">Telefone principal</label>
+              <input id="guardianPrimaryPhone" required placeholder="(92) 99999-9999" />
+            </div>
+
+            <div>
+              <label for="guardianSecondaryPhone">Telefone alternativo</label>
+              <input id="guardianSecondaryPhone" placeholder="Outro telefone para contato" />
+            </div>
+
+            <div>
+              <label for="guardianSecondaryName">Outro responsável</label>
+              <input id="guardianSecondaryName" placeholder="Nome completo, se houver" />
+            </div>
+
+            <div>
+              <label for="studentActive">Situação</label>
+              <select id="studentActive">
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid one" style="margin-top:14px">
+            <div>
+              <label for="studentNotes">Observações</label>
+              <textarea id="studentNotes" placeholder="Observações iniciais sobre o aluno"></textarea>
+            </div>
+          </div>
+
+          <div class="status" id="studentStatus"></div>
+
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" type="submit">Cadastrar aluno</button>
+          </div>
+        </form>
+      </article>
+
+      <article id="painel-vinculo" class="card gestao-panel">
+        <h2>Vincular professor ao aluno</h2>
+        <p class="sub">Define qual professor atende qual aluno.</p>
+
+        <form id="linkForm">
+          <div class="form-grid">
+            <div>
+              <label for="linkTeacher">Professor</label>
+              <select id="linkTeacher" required></select>
+            </div>
+
+            <div>
+              <label for="linkStudent">Aluno</label>
+              <select id="linkStudent" required></select>
+            </div>
+          </div>
+
+          <div class="status" id="linkStatus"></div>
+
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" type="submit">Criar vínculo</button>
+          </div>
+        </form>
+      </article>
+
+      <article id="painel-professores" class="card gestao-panel">
+        <h2>Professores da escola</h2>
+        <div class="mini">Os professores listados aqui pertencem à escola ativa do seu perfil.</div>
+
+        <div style="margin-top:14px; overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail/contato</th>
+                <th>Situação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody id="teachersTable"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article id="painel-alunos" class="card gestao-panel">
+        <h2>Alunos cadastrados</h2>
+        <div class="mini">
+          Esta lista permite conferir os alunos já incluídos no atendimento individual.
+        </div>
+
+        <div style="margin-top:14px; overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Nascimento</th>
+                <th>Responsável</th>
+                <th>Telefone</th>
+                <th>Situação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody id="studentsTable"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article id="painel-vinculos" class="card gestao-panel">
+        <h2>Vínculos ativos</h2>
+        <div class="mini">Cada vínculo mostra qual professor está associado a cada aluno.</div>
+
+        <div style="margin-top:14px; overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Professor</th>
+                <th>Aluno</th>
+              </tr>
+            </thead>
+
+            <tbody id="linksTable"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <div id="studentEditModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentEditTitle">
+        <div class="modal-header">
+          <div>
+            <h2 id="studentEditTitle">Editar aluno</h2>
+            <p class="sub">Atualize os dados cadastrais do aluno e dos responsáveis.</p>
+          </div>
+
+          <button type="button" class="btn-small" id="closeStudentEdit">Fechar</button>
+        </div>
+
+        <div class="modal-body">
+          <form id="studentEditForm">
+            <input type="hidden" id="editStudentId" />
+
             <div class="form-grid">
               <div>
-                <label for="studentName">Nome completo do aluno</label>
-                <input id="studentName" required placeholder="Nome completo do aluno" />
+                <label for="editStudentName">Nome completo do aluno</label>
+                <input id="editStudentName" required />
               </div>
+
               <div>
-                <label for="studentBirthDate">Data de nascimento</label>
-                <input id="studentBirthDate" type="date" required />
+                <label for="editStudentBirthDate">Data de nascimento</label>
+                <input id="editStudentBirthDate" type="date" required />
               </div>
+
               <div>
-                <label for="guardianPrimaryName">Responsável principal</label>
-                <input id="guardianPrimaryName" required placeholder="Nome completo do responsável" />
+                <label for="editGuardianPrimaryName">Responsável principal</label>
+                <input id="editGuardianPrimaryName" required />
               </div>
+
               <div>
-                <label for="guardianPrimaryCpf">CPF do responsável</label>
-                <input id="guardianPrimaryCpf" required placeholder="000.000.000-00" />
+                <label for="editGuardianPrimaryCpf">CPF do responsável</label>
+                <input id="editGuardianPrimaryCpf" required />
               </div>
+
               <div>
-                <label for="guardianPrimaryEmail">E-mail do responsável para login</label>
-                <input id="guardianPrimaryEmail" type="email" required placeholder="responsavel@email.com" />
+                <label for="editGuardianPrimaryEmail">E-mail do responsável</label>
+                <input id="editGuardianPrimaryEmail" type="email" required />
               </div>
+
               <div>
-                <label for="guardianPassword">Senha inicial do Portal da Família</label>
-                <input id="guardianPassword" required placeholder="Ex.: Familia@2026" />
+                <label for="editGuardianPrimaryPhone">Telefone principal</label>
+                <input id="editGuardianPrimaryPhone" required />
               </div>
+
               <div>
-                <label for="guardianPrimaryPhone">Telefone principal</label>
-                <input id="guardianPrimaryPhone" required placeholder="(92) 99999-9999" />
+                <label for="editGuardianSecondaryPhone">Telefone alternativo</label>
+                <input id="editGuardianSecondaryPhone" />
               </div>
+
               <div>
-                <label for="guardianSecondaryPhone">Telefone alternativo</label>
-                <input id="guardianSecondaryPhone" placeholder="Outro telefone para contato" />
+                <label for="editGuardianSecondaryName">Outro responsável</label>
+                <input id="editGuardianSecondaryName" />
               </div>
+
               <div>
-                <label for="guardianSecondaryName">Outro responsável</label>
-                <input id="guardianSecondaryName" placeholder="Nome completo, se houver" />
-              </div>
-              <div>
-                <label for="studentActive">Situação</label>
-                <select id="studentActive">
+                <label for="editStudentActive">Situação</label>
+                <select id="editStudentActive">
                   <option value="true">Ativo</option>
                   <option value="false">Inativo</option>
                 </select>
               </div>
             </div>
+
             <div class="form-grid one" style="margin-top:14px">
               <div>
-                <label for="studentNotes">Observações</label>
-                <textarea id="studentNotes" placeholder="Observações iniciais sobre o aluno"></textarea>
+                <label for="editStudentNotes">Observações</label>
+                <textarea id="editStudentNotes"></textarea>
               </div>
             </div>
-            <div class="status" id="studentStatus"></div>
-            <div style="margin-top:16px">
-              <button class="btn btn-primary" type="submit">Cadastrar aluno</button>
-            </div>
-          </form>
-        </article>
 
-        <article class="card">
-          <h2>Vincular professor ao aluno</h2>
-          <p class="sub">Define qual professor atende qual aluno.</p>
-          <form id="linkForm">
-            <div class="form-grid">
-              <div>
-                <label for="linkTeacher">Professor</label>
-                <select id="linkTeacher" required></select>
-              </div>
-              <div>
-                <label for="linkStudent">Aluno</label>
-                <select id="linkStudent" required></select>
-              </div>
-            </div>
-            <div class="status" id="linkStatus"></div>
-            <div style="margin-top:16px">
-              <button class="btn btn-primary" type="submit">Criar vínculo</button>
-            </div>
-          </form>
-        </article>
-      </div>
-
-      <div class="stack">
-        <article class="card">
-          <h2>Professores da escola</h2>
-          <div class="mini">Os professores listados aqui pertencem à escola ativa do seu perfil.</div>
-          <div style="margin-top:14px; overflow:auto">
-            <table>
-              <thead>
-                <tr><th>Nome</th><th>E-mail/contato</th><th>Situação</th><th>Ações</th></tr>
-              </thead>
-              <tbody id="teachersTable"></tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="card">
-          <h2>Alunos cadastrados</h2>
-          <div class="mini">Esta lista permite conferir os alunos já incluídos no atendimento individual.</div>
-          <div style="margin-top:14px; overflow:auto">
-            <table>
-              <thead>
-                <tr><th>Aluno</th><th>Nascimento</th><th>Responsável</th><th>Telefone</th><th>Situação</th><th>Ações</th></tr>
-              </thead>
-              <tbody id="studentsTable"></tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="card">
-          <h2>Vínculos ativos</h2>
-          <div class="mini">Cada vínculo mostra qual professor está associado a cada aluno.</div>
-          <div style="margin-top:14px; overflow:auto">
-            <table>
-              <thead>
-                <tr><th>Professor</th><th>Aluno</th></tr>
-              </thead>
-              <tbody id="linksTable"></tbody>
-            </table>
-          </div>
-        </article>
-      </div>
-    </section>
-
-
-    <div id="studentEditModal" class="modal-backdrop" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentEditTitle">
-        <div class="modal-header">
-          <div><h2 id="studentEditTitle">Editar aluno</h2><p class="sub">Atualize os dados cadastrais do aluno e dos responsáveis.</p></div>
-          <button type="button" class="btn-small" id="closeStudentEdit">Fechar</button>
-        </div>
-        <div class="modal-body">
-          <form id="studentEditForm">
-            <input type="hidden" id="editStudentId" />
-            <div class="form-grid">
-              <div><label for="editStudentName">Nome completo do aluno</label><input id="editStudentName" required /></div>
-              <div><label for="editStudentBirthDate">Data de nascimento</label><input id="editStudentBirthDate" type="date" required /></div>
-              <div><label for="editGuardianPrimaryName">Responsável principal</label><input id="editGuardianPrimaryName" required /></div>
-              <div><label for="editGuardianPrimaryCpf">CPF do responsável</label><input id="editGuardianPrimaryCpf" required /></div>
-              <div><label for="editGuardianPrimaryEmail">E-mail do responsável</label><input id="editGuardianPrimaryEmail" type="email" required /></div>
-              <div><label for="editGuardianPrimaryPhone">Telefone principal</label><input id="editGuardianPrimaryPhone" required /></div>
-              <div><label for="editGuardianSecondaryPhone">Telefone alternativo</label><input id="editGuardianSecondaryPhone" /></div>
-              <div><label for="editGuardianSecondaryName">Outro responsável</label><input id="editGuardianSecondaryName" /></div>
-              <div><label for="editStudentActive">Situação</label><select id="editStudentActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
-            </div>
-            <div class="form-grid one" style="margin-top:14px"><div><label for="editStudentNotes">Observações</label><textarea id="editStudentNotes"></textarea></div></div>
             <div class="status" id="studentEditStatus"></div>
-            <div class="modal-actions"><button class="btn btn-primary" type="submit">Salvar alterações</button><button class="btn-secondary" type="button" id="cancelStudentEdit">Cancelar</button></div>
+
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="submit">Salvar alterações</button>
+              <button class="btn-secondary" type="button" id="cancelStudentEdit">Cancelar</button>
+            </div>
           </form>
         </div>
       </div>
@@ -448,28 +920,126 @@
     <div id="teacherEditModal" class="modal-backdrop" aria-hidden="true">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="teacherEditTitle">
         <div class="modal-header">
-          <div><h2 id="teacherEditTitle">Editar professor</h2><p class="sub">Atualize os dados de identificação do professor no portal.</p></div>
+          <div>
+            <h2 id="teacherEditTitle">Editar professor</h2>
+            <p class="sub">Atualize os dados de identificação do professor no portal.</p>
+          </div>
+
           <button type="button" class="btn-small" id="closeTeacherEdit">Fechar</button>
         </div>
+
         <div class="modal-body">
           <form id="teacherEditForm">
             <input type="hidden" id="editTeacherId" />
+
             <div class="form-grid">
-              <div><label for="editTeacherName">Nome completo</label><input id="editTeacherName" required /></div>
-              <div><label for="editTeacherEmail">E-mail de contato</label><input id="editTeacherEmail" type="email" placeholder="E-mail para contato" /></div>
-              <div><label for="editTeacherPhone">Telefone</label><input id="editTeacherPhone" placeholder="Telefone para contato" /></div>
-              <div><label for="editTeacherActive">Situação</label><select id="editTeacherActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
+              <div>
+                <label for="editTeacherName">Nome completo</label>
+                <input id="editTeacherName" required />
+              </div>
+
+              <div>
+                <label for="editTeacherEmail">E-mail de contato</label>
+                <input id="editTeacherEmail" type="email" placeholder="E-mail para contato" />
+              </div>
+
+              <div>
+                <label for="editTeacherPhone">Telefone</label>
+                <input id="editTeacherPhone" placeholder="Telefone para contato" />
+              </div>
+
+              <div>
+                <label for="editTeacherActive">Situação</label>
+                <select id="editTeacherActive">
+                  <option value="true">Ativo</option>
+                  <option value="false">Inativo</option>
+                </select>
+              </div>
             </div>
-            <div class="mini" style="margin-top:14px">Observação: nesta etapa, o e-mail acima é de contato. O e-mail de login no Authentication não é alterado por esta tela.</div>
+
+            <div class="mini" style="margin-top:14px">
+              Observação: nesta etapa, o e-mail acima é de contato. O e-mail de login no Authentication não é alterado por esta tela.
+            </div>
+
             <div class="status" id="teacherEditStatus"></div>
-            <div class="modal-actions"><button class="btn btn-primary" type="submit">Salvar alterações</button><button class="btn-secondary" type="button" id="cancelTeacherEdit">Cancelar</button></div>
+
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="submit">Salvar alterações</button>
+              <button class="btn-secondary" type="button" id="cancelTeacherEdit">Cancelar</button>
+            </div>
           </form>
         </div>
       </div>
     </div>
-
   </main>
+
+  <script>
+    (function () {
+      function showGestaoPanel(panelId) {
+        const panels = document.querySelectorAll(".gestao-panel");
+        const buttons = document.querySelectorAll("[data-gestao-tab]");
+
+        panels.forEach(function (panel) {
+          panel.classList.toggle("active", panel.id === panelId);
+        });
+
+        buttons.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.gestaoTab === panelId);
+        });
+
+        if (history.replaceState) {
+          history.replaceState(null, "", "#" + panelId);
+        }
+
+        const target = document.getElementById(panelId);
+
+        if (target) {
+          const top = target.getBoundingClientRect().top + window.scrollY - 110;
+
+          window.scrollTo({
+            top: top,
+            behavior: "smooth"
+          });
+        }
+      }
+
+      document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-gestao-tab]");
+
+        if (!button) return;
+
+        const panelId = button.dataset.gestaoTab;
+
+        if (!panelId) return;
+
+        showGestaoPanel(panelId);
+      });
+
+      window.addEventListener("DOMContentLoaded", function () {
+        const hash = (window.location.hash || "").replace("#", "");
+        const allowed = [
+          "painel-professor",
+          "painel-aluno",
+          "painel-vinculo",
+          "painel-professores",
+          "painel-alunos",
+          "painel-vinculos"
+        ];
+
+        if (allowed.includes(hash)) {
+          setTimeout(function () {
+            showGestaoPanel(hash);
+          }, 250);
+        } else {
+          setTimeout(function () {
+            showGestaoPanel("painel-professor");
+          }, 250);
+        }
+      });
+    })();
+  </script>
+
   <!-- PWA INTEGRO -->
-<script src="/pwa-install.js"></script>
+  <script src="/pwa-install.js"></script>
 </body>
 </html>
