@@ -8,7 +8,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script defer src="./gestao-escolar.js?v=20260506-pacote-vencimento"></script>
+  <script defer src="./gestao-escolar.js?v=20260507-vencimento-ficha-fix"></script>
   <script defer src="./gestao-empresa.js?v=20260505"></script>
 
   <style>
@@ -26,7 +26,6 @@
       --muted: #587066;
       --danger: #b3261e;
       --warning: #8c6b00;
-      --radius: 20px;
       --shadow: 0 12px 30px rgba(13, 92, 70, .08);
     }
 
@@ -443,11 +442,6 @@
       background: #d7ecdf;
     }
 
-    .btn-danger {
-      background: #fdeceb;
-      color: var(--danger);
-    }
-
     .company-preview {
       background: var(--green-50);
       border: 1px solid #d8eadf;
@@ -527,10 +521,7 @@
     }
 
     @media (max-width: 980px) {
-      .school-box {
-        grid-template-columns: 1fr;
-      }
-
+      .school-box,
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -570,7 +561,6 @@
     }
   </style>
 
-  <!-- PWA INTEGRO -->
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#004d3a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -626,9 +616,7 @@
       <div class="section-title-block">
         <small>Acesso rápido</small>
         <h2>O que deseja fazer?</h2>
-        <p>
-          Escolha uma área para abrir somente o que você precisa usar no momento. Isso deixa a gestão mais limpa e organizada.
-        </p>
+        <p>Escolha uma área para abrir somente o que você precisa usar no momento.</p>
       </div>
 
       <div class="gestao-buttons">
@@ -718,9 +706,7 @@
 
       <article id="painel-aluno" class="card gestao-panel">
         <h2>Cadastrar aluno</h2>
-        <p class="sub">
-          Cria o aluno, cadastra o login do responsável, define pacote, vencimento e vincula a família ao Portal da Família.
-        </p>
+        <p class="sub">Cria o aluno, cadastra o login do responsável, define pacote, vencimento e vincula a família.</p>
 
         <form id="studentForm">
           <div class="form-grid">
@@ -885,9 +871,7 @@
 
       <article id="painel-alunos" class="card gestao-panel">
         <h2>Alunos cadastrados</h2>
-        <div class="mini">
-          Esta lista permite conferir os alunos já incluídos no atendimento individual, incluindo pacote e vencimento da mensalidade.
-        </div>
+        <div class="mini">Esta lista permite conferir alunos, pacote e vencimento da mensalidade.</div>
 
         <div style="margin-top:14px; overflow:auto">
           <table>
@@ -1287,24 +1271,14 @@
 
         if (target) {
           const top = target.getBoundingClientRect().top + window.scrollY - 110;
-
-          window.scrollTo({
-            top: top,
-            behavior: "smooth"
-          });
+          window.scrollTo({ top: top, behavior: "smooth" });
         }
       }
 
       document.addEventListener("click", function (event) {
         const button = event.target.closest("[data-gestao-tab]");
-
         if (!button) return;
-
-        const panelId = button.dataset.gestaoTab;
-
-        if (!panelId) return;
-
-        showGestaoPanel(panelId);
+        showGestaoPanel(button.dataset.gestaoTab);
       });
 
       window.addEventListener("DOMContentLoaded", function () {
@@ -1319,20 +1293,13 @@
           "painel-empresa"
         ];
 
-        if (allowed.includes(hash)) {
-          setTimeout(function () {
-            showGestaoPanel(hash);
-          }, 250);
-        } else {
-          setTimeout(function () {
-            showGestaoPanel("painel-professor");
-          }, 250);
-        }
+        setTimeout(function () {
+          showGestaoPanel(allowed.includes(hash) ? hash : "painel-professor");
+        }, 250);
       });
     })();
   </script>
 
-  <!-- PWA INTEGRO -->
   <script src="/pwa-install.js"></script>
 </body>
 </html>
