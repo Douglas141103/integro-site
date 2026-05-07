@@ -8,7 +8,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script defer src="./gestao-escolar.js?v=20260505-ficha"></script>
+  <script defer src="./gestao-escolar.js?v=20260506-pacote-vencimento"></script>
   <script defer src="./gestao-empresa.js?v=20260505"></script>
 
   <style>
@@ -719,7 +719,7 @@
       <article id="painel-aluno" class="card gestao-panel">
         <h2>Cadastrar aluno</h2>
         <p class="sub">
-          Cria o aluno, cadastra o login do responsável e vincula a família ao Portal da Família.
+          Cria o aluno, cadastra o login do responsável, define pacote, vencimento e vincula a família ao Portal da Família.
         </p>
 
         <form id="studentForm">
@@ -774,6 +774,51 @@
               <select id="studentActive">
                 <option value="true">Ativo</option>
                 <option value="false">Inativo</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="studentMonthlyDueDay">Dia de vencimento da mensalidade</label>
+              <select id="studentMonthlyDueDay">
+                <option value="">Selecione o dia</option>
+                <option value="1">Dia 1</option>
+                <option value="2">Dia 2</option>
+                <option value="3">Dia 3</option>
+                <option value="4">Dia 4</option>
+                <option value="5">Dia 5</option>
+                <option value="6">Dia 6</option>
+                <option value="7">Dia 7</option>
+                <option value="8">Dia 8</option>
+                <option value="9">Dia 9</option>
+                <option value="10">Dia 10</option>
+                <option value="11">Dia 11</option>
+                <option value="12">Dia 12</option>
+                <option value="13">Dia 13</option>
+                <option value="14">Dia 14</option>
+                <option value="15">Dia 15</option>
+                <option value="16">Dia 16</option>
+                <option value="17">Dia 17</option>
+                <option value="18">Dia 18</option>
+                <option value="19">Dia 19</option>
+                <option value="20">Dia 20</option>
+                <option value="21">Dia 21</option>
+                <option value="22">Dia 22</option>
+                <option value="23">Dia 23</option>
+                <option value="24">Dia 24</option>
+                <option value="25">Dia 25</option>
+                <option value="26">Dia 26</option>
+                <option value="27">Dia 27</option>
+                <option value="28">Dia 28</option>
+                <option value="29">Dia 29</option>
+                <option value="30">Dia 30</option>
+                <option value="31">Dia 31</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="studentPackageId">Pacote do aluno</label>
+              <select id="studentPackageId">
+                <option value="">Selecione um pacote</option>
               </select>
             </div>
           </div>
@@ -841,7 +886,7 @@
       <article id="painel-alunos" class="card gestao-panel">
         <h2>Alunos cadastrados</h2>
         <div class="mini">
-          Esta lista permite conferir os alunos já incluídos no atendimento individual.
+          Esta lista permite conferir os alunos já incluídos no atendimento individual, incluindo pacote e vencimento da mensalidade.
         </div>
 
         <div style="margin-top:14px; overflow:auto">
@@ -1041,7 +1086,7 @@
         <div class="modal-header">
           <div>
             <h2 id="studentEditTitle">Editar aluno</h2>
-            <p class="sub">Atualize os dados cadastrais do aluno e dos responsáveis.</p>
+            <p class="sub">Atualize os dados cadastrais do aluno, responsáveis, pacote e vencimento.</p>
           </div>
 
           <button type="button" class="btn-small" id="closeStudentEdit">Fechar</button>
@@ -1097,6 +1142,51 @@
                 <select id="editStudentActive">
                   <option value="true">Ativo</option>
                   <option value="false">Inativo</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="editStudentMonthlyDueDay">Dia de vencimento da mensalidade</label>
+                <select id="editStudentMonthlyDueDay">
+                  <option value="">Selecione o dia</option>
+                  <option value="1">Dia 1</option>
+                  <option value="2">Dia 2</option>
+                  <option value="3">Dia 3</option>
+                  <option value="4">Dia 4</option>
+                  <option value="5">Dia 5</option>
+                  <option value="6">Dia 6</option>
+                  <option value="7">Dia 7</option>
+                  <option value="8">Dia 8</option>
+                  <option value="9">Dia 9</option>
+                  <option value="10">Dia 10</option>
+                  <option value="11">Dia 11</option>
+                  <option value="12">Dia 12</option>
+                  <option value="13">Dia 13</option>
+                  <option value="14">Dia 14</option>
+                  <option value="15">Dia 15</option>
+                  <option value="16">Dia 16</option>
+                  <option value="17">Dia 17</option>
+                  <option value="18">Dia 18</option>
+                  <option value="19">Dia 19</option>
+                  <option value="20">Dia 20</option>
+                  <option value="21">Dia 21</option>
+                  <option value="22">Dia 22</option>
+                  <option value="23">Dia 23</option>
+                  <option value="24">Dia 24</option>
+                  <option value="25">Dia 25</option>
+                  <option value="26">Dia 26</option>
+                  <option value="27">Dia 27</option>
+                  <option value="28">Dia 28</option>
+                  <option value="29">Dia 29</option>
+                  <option value="30">Dia 30</option>
+                  <option value="31">Dia 31</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="editStudentPackageId">Pacote do aluno</label>
+                <select id="editStudentPackageId">
+                  <option value="">Selecione um pacote</option>
                 </select>
               </div>
             </div>
