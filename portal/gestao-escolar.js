@@ -11,14 +11,14 @@
     if (el) el.textContent = value;
   }
 
-  function value(id, value) {
+  function value(id, valueToSet) {
     const el = $(id);
-    if (el) el.value = value ?? '';
+    if (el) el.value = valueToSet ?? '';
   }
 
-  function html(id, value) {
+  function html(id, valueToSet) {
     const el = $(id);
-    if (el) el.innerHTML = value;
+    if (el) el.innerHTML = valueToSet;
   }
 
   function status(id, type, message) {
@@ -55,8 +55,8 @@
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
-  function moneyBR(value) {
-    return Number(value || 0).toLocaleString('pt-BR', {
+  function moneyBR(v) {
+    return Number(v || 0).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     });
@@ -194,6 +194,11 @@
   }
 
   async function loadFinancePackages() {
+    if (!profile?.school_id) {
+      financePackages = [];
+      return;
+    }
+
     const { data, error } = await client
       .from('finance_packages')
       .select('id, name, default_amount, active')
@@ -214,15 +219,12 @@
         `<option value="${safe(p.id)}">${safe(p.name)} — ${moneyBR(p.default_amount)}</option>`
       ).join('');
 
-    const studentPackage = $('studentPackageId');
-    const editStudentPackage = $('editStudentPackageId');
-
-    if (studentPackage) {
-      studentPackage.innerHTML = options;
+    if ($('studentPackageId')) {
+      $('studentPackageId').innerHTML = options;
     }
 
-    if (editStudentPackage) {
-      editStudentPackage.innerHTML = options;
+    if ($('editStudentPackageId')) {
+      $('editStudentPackageId').innerHTML = options;
     }
   }
 
@@ -262,12 +264,8 @@
           <td>${t.active === false ? 'Inativo' : 'Ativo'}</td>
           <td>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn-small" type="button" data-edit-teacher="${safe(t.id)}">
-                Editar
-              </button>
-              <button class="btn-small" type="button" data-delete-teacher="${safe(t.id)}" style="background:#fee2e2;color:#991b1b;">
-                Excluir
-              </button>
+              <button class="btn-small" type="button" data-edit-teacher="${safe(t.id)}">Editar</button>
+              <button class="btn-small" type="button" data-delete-teacher="${safe(t.id)}" style="background:#fee2e2;color:#991b1b;">Excluir</button>
             </div>
           </td>
         </tr>
@@ -323,15 +321,9 @@
           <td>${s.active ? 'Ativo' : 'Inativo'}</td>
           <td>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">
-                Editar
-              </button>
-              <button class="btn-small" type="button" data-print-student="${safe(s.id)}" style="background:#e8f4ee;color:#114a3b;">
-                Imprimir ficha
-              </button>
-              <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">
-                Excluir
-              </button>
+              <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">Editar</button>
+              <button class="btn-small" type="button" data-print-student="${safe(s.id)}" style="background:#e8f4ee;color:#114a3b;">Imprimir ficha</button>
+              <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">Excluir</button>
             </div>
           </td>
         </tr>
@@ -454,10 +446,7 @@
         Authorization: `Bearer ${token}`,
         apikey: cfg.anonKey,
       },
-      body: JSON.stringify({
-        tipo,
-        id,
-      }),
+      body: JSON.stringify({ tipo, id }),
     });
 
     const json = await resp.json().catch(() => ({}));
@@ -529,6 +518,9 @@
       const guardianEmail = $('guardianPrimaryEmail').value.trim().toLowerCase();
       const guardianPassword = $('guardianPassword').value.trim();
 
+      const dueDayValue = $('studentMonthlyDueDay')?.value || '';
+      const packageValue = $('studentPackageId')?.value || '';
+
       const payload = {
         full_name: $('studentName').value.trim(),
         birth_date: $('studentBirthDate').value || null,
@@ -539,8 +531,8 @@
         guardian_2_name: $('guardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('guardianSecondaryPhone').value.trim() || null,
         active: $('studentActive').value === 'true',
-        monthly_due_day: $('studentMonthlyDueDay')?.value ? Number($('studentMonthlyDueDay').value) : null,
-        package_id: $('studentPackageId')?.value || null,
+        monthly_due_day: dueDayValue ? Number(dueDayValue) : null,
+        package_id: packageValue || null,
         notes: $('studentNotes').value.trim() || null,
         school_id: profile.school_id,
       };
@@ -560,6 +552,11 @@
 
       if (onlyDigits(payload.guardian_1_cpf).length !== 11) {
         status('studentStatus', 'warn', 'Informe um CPF válido com 11 dígitos para o responsável.');
+        return;
+      }
+
+      if (payload.monthly_due_day && (payload.monthly_due_day < 1 || payload.monthly_due_day > 31)) {
+        status('studentStatus', 'warn', 'O dia de vencimento precisa estar entre 1 e 31.');
         return;
       }
 
@@ -621,10 +618,7 @@
 
       const { error } = await client
         .from('student_teachers')
-        .insert({
-          teacher_profile_id,
-          student_id,
-        });
+        .insert({ teacher_profile_id, student_id });
 
       if (error) {
         throw error;
@@ -671,6 +665,14 @@
     try {
       const id = $('editStudentId').value;
 
+      if (!id) {
+        status('studentEditStatus', 'error', 'ID do aluno não encontrado. Feche a edição e abra novamente.');
+        return;
+      }
+
+      const dueDayValue = $('editStudentMonthlyDueDay')?.value || '';
+      const packageValue = $('editStudentPackageId')?.value || '';
+
       const payload = {
         full_name: $('editStudentName').value.trim(),
         birth_date: $('editStudentBirthDate').value || null,
@@ -681,13 +683,12 @@
         guardian_2_name: $('editGuardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('editGuardianSecondaryPhone').value.trim() || null,
         active: $('editStudentActive').value === 'true',
-        monthly_due_day: $('editStudentMonthlyDueDay')?.value ? Number($('editStudentMonthlyDueDay').value) : null,
-        package_id: $('editStudentPackageId')?.value || null,
+        monthly_due_day: dueDayValue ? Number(dueDayValue) : null,
+        package_id: packageValue || null,
         notes: $('editStudentNotes').value.trim() || null,
       };
 
       if (
-        !id ||
         !payload.full_name ||
         !payload.birth_date ||
         !payload.guardian_1_name ||
@@ -704,21 +705,36 @@
         return;
       }
 
-      const { error } = await client
+      if (payload.monthly_due_day && (payload.monthly_due_day < 1 || payload.monthly_due_day > 31)) {
+        status('studentEditStatus', 'warn', 'O dia de vencimento precisa estar entre 1 e 31.');
+        return;
+      }
+
+      const { data: updatedStudent, error } = await client
         .from('students')
         .update(payload)
         .eq('id', id)
-        .eq('school_id', profile.school_id);
+        .eq('school_id', profile.school_id)
+        .select('id, full_name, monthly_due_day, package_id')
+        .maybeSingle();
 
       if (error) {
         throw error;
       }
 
-      status('studentEditStatus', 'ok', 'Aluno atualizado com sucesso.');
+      if (!updatedStudent) {
+        throw new Error('Nenhum aluno foi atualizado. Verifique se o aluno pertence à escola ativa.');
+      }
+
+      status(
+        'studentEditStatus',
+        'ok',
+        `Aluno atualizado com sucesso. Vencimento salvo: ${updatedStudent.monthly_due_day ? 'dia ' + updatedStudent.monthly_due_day : 'não informado'}.`
+      );
 
       await refreshAll();
 
-      setTimeout(() => hideModal('studentEditModal'), 500);
+      setTimeout(() => hideModal('studentEditModal'), 700);
     } catch (err) {
       console.error(err);
       status('studentEditStatus', 'error', err.message || 'Erro ao atualizar aluno.');
@@ -782,59 +798,73 @@
     }
   }
 
-  function printStudentRecord(studentId) {
-    const student = students.find((item) => item.id === studentId);
+  async function printStudentRecord(studentId) {
+    try {
+      await loadFinancePackages();
 
-    if (!student) {
-      alert('Aluno não encontrado na lista atual.');
-      return;
-    }
+      const { data: freshStudent, error: studentError } = await client
+        .from('students')
+        .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, notes, school_id, monthly_due_day, package_id')
+        .eq('id', studentId)
+        .eq('school_id', profile.school_id)
+        .maybeSingle();
 
-    const company =
-      window.INTEGRO_COMPANY_SETTINGS?.getCurrentSettings?.() || null;
+      if (studentError) {
+        throw studentError;
+      }
 
-    const companyName =
-      company?.trade_name ||
-      company?.legal_name ||
-      school?.name ||
-      'INSTITUTO INTEGRO';
+      const student = freshStudent || students.find((item) => item.id === studentId);
 
-    const companyDocumentType = company?.document_type || 'CNPJ';
-    const companyDocumentNumber = company?.document_number || '';
+      if (!student) {
+        alert('Aluno não encontrado na lista atual.');
+        return;
+      }
 
-    const companyAddressParts = [
-      company?.address_street && company?.address_number
-        ? `${company.address_street}, ${company.address_number}`
-        : company?.address_street || '',
-      company?.address_complement || '',
-      company?.address_neighborhood || '',
-      company?.address_city && company?.address_state
-        ? `${company.address_city}/${company.address_state}`
-        : company?.address_city || company?.address_state || '',
-      company?.address_zip_code ? `CEP ${company.address_zip_code}` : ''
-    ].filter(Boolean);
+      const company =
+        window.INTEGRO_COMPANY_SETTINGS?.getCurrentSettings?.() || null;
 
-    const companyAddress = companyAddressParts.join(' - ');
+      const companyName =
+        company?.trade_name ||
+        company?.legal_name ||
+        school?.name ||
+        'INSTITUTO INTEGRO';
 
-    const companyContactParts = [
-      company?.phone ? `Telefone: ${company.phone}` : '',
-      company?.whatsapp ? `WhatsApp: ${company.whatsapp}` : '',
-      company?.email ? `E-mail: ${company.email}` : '',
-      company?.website ? `Site: ${company.website}` : ''
-    ].filter(Boolean);
+      const companyDocumentType = company?.document_type || 'CNPJ';
+      const companyDocumentNumber = company?.document_number || '';
 
-    const companyContact = companyContactParts.join(' | ');
+      const companyAddressParts = [
+        company?.address_street && company?.address_number
+          ? `${company.address_street}, ${company.address_number}`
+          : company?.address_street || '',
+        company?.address_complement || '',
+        company?.address_neighborhood || '',
+        company?.address_city && company?.address_state
+          ? `${company.address_city}/${company.address_state}`
+          : company?.address_city || company?.address_state || '',
+        company?.address_zip_code ? `CEP ${company.address_zip_code}` : ''
+      ].filter(Boolean);
 
-    const documentObservations =
-      company?.document_observations ||
-      'Ficha cadastral emitida pelo sistema de gestão do INTEGRO.';
+      const companyAddress = companyAddressParts.join(' - ');
 
-    const studentPackageName = getPackageName(student.package_id);
-    const monthlyDueDay = student.monthly_due_day ? `Dia ${student.monthly_due_day}` : '-';
+      const companyContactParts = [
+        company?.phone ? `Telefone: ${company.phone}` : '',
+        company?.whatsapp ? `WhatsApp: ${company.whatsapp}` : '',
+        company?.email ? `E-mail: ${company.email}` : '',
+        company?.website ? `Site: ${company.website}` : ''
+      ].filter(Boolean);
 
-    const today = new Date().toLocaleDateString('pt-BR');
+      const companyContact = companyContactParts.join(' | ');
 
-    const fichaHtml = `
+      const documentObservations =
+        company?.document_observations ||
+        'Ficha cadastral emitida pelo sistema de gestão do INTEGRO.';
+
+      const studentPackageName = getPackageName(student.package_id);
+      const monthlyDueDay = student.monthly_due_day ? `Dia ${student.monthly_due_day}` : 'Não informado';
+
+      const today = new Date().toLocaleDateString('pt-BR');
+
+      const fichaHtml = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1118,16 +1148,20 @@
 </html>
 `;
 
-    const printWindow = window.open('', '_blank');
+      const printWindow = window.open('', '_blank');
 
-    if (!printWindow) {
-      alert('O navegador bloqueou a janela de impressão. Permita pop-ups para imprimir a ficha.');
-      return;
+      if (!printWindow) {
+        alert('O navegador bloqueou a janela de impressão. Permita pop-ups para imprimir a ficha.');
+        return;
+      }
+
+      printWindow.document.open();
+      printWindow.document.write(fichaHtml);
+      printWindow.document.close();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Erro ao gerar ficha do aluno.');
     }
-
-    printWindow.document.open();
-    printWindow.document.write(fichaHtml);
-    printWindow.document.close();
   }
 
   async function handleDeleteTeacher(teacherId) {
