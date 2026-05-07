@@ -55,6 +55,13 @@
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
+  function moneyBR(value) {
+    return Number(value || 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  }
+
   function optionList(items, labelKey, valueKey, placeholder) {
     return [`<option value="">${placeholder}</option>`].concat(
       (items || []).map((item) => `<option value="${safe(item[valueKey])}">${safe(item[labelKey])}</option>`)
@@ -98,6 +105,7 @@
   let school = null;
   let teachers = [];
   let students = [];
+  let financePackages = [];
 
   async function loadSession() {
     text('userBadge', 'Carregando...');
@@ -185,6 +193,49 @@
     value('teacherSchool', schoolName);
   }
 
+  async function loadFinancePackages() {
+    const { data, error } = await client
+      .from('finance_packages')
+      .select('id, name, default_amount, active')
+      .eq('school_id', profile.school_id)
+      .eq('active', true)
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.warn('Erro ao carregar pacotes financeiros:', error.message);
+      financePackages = [];
+      return;
+    }
+
+    financePackages = data || [];
+
+    const options = '<option value="">Selecione um pacote</option>' +
+      financePackages.map((p) =>
+        `<option value="${safe(p.id)}">${safe(p.name)} — ${moneyBR(p.default_amount)}</option>`
+      ).join('');
+
+    const studentPackage = $('studentPackageId');
+    const editStudentPackage = $('editStudentPackageId');
+
+    if (studentPackage) {
+      studentPackage.innerHTML = options;
+    }
+
+    if (editStudentPackage) {
+      editStudentPackage.innerHTML = options;
+    }
+  }
+
+  function getPackageName(packageId) {
+    const p = financePackages.find((item) => item.id === packageId);
+
+    if (!p) {
+      return '-';
+    }
+
+    return `${p.name} — ${moneyBR(p.default_amount)}`;
+  }
+
   async function loadTeachers() {
     const { data, error } = await client
       .from('profiles')
@@ -239,7 +290,7 @@
   async function loadStudents() {
     const { data, error } = await client
       .from('students')
-      .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, notes, school_id')
+      .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, notes, school_id, monthly_due_day, package_id')
       .eq('school_id', profile.school_id)
       .order('full_name', { ascending: true });
 
@@ -255,7 +306,9 @@
         <tr>
           <td>
             <strong>${safe(s.full_name)}</strong><br>
-            <span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span>
+            <span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span><br>
+            <span class="small">Vencimento: ${s.monthly_due_day ? 'dia ' + safe(s.monthly_due_day) : '-'}</span><br>
+            <span class="small">Pacote: ${safe(getPackageName(s.package_id))}</span>
           </td>
           <td>${safe(formatDateBR(s.birth_date) || '-')}</td>
           <td>
@@ -330,6 +383,7 @@
   }
 
   async function refreshAll() {
+    await loadFinancePackages();
     await loadTeachers();
     await loadStudents();
     await loadLinks();
@@ -485,6 +539,8 @@
         guardian_2_name: $('guardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('guardianSecondaryPhone').value.trim() || null,
         active: $('studentActive').value === 'true',
+        monthly_due_day: $('studentMonthlyDueDay')?.value ? Number($('studentMonthlyDueDay').value) : null,
+        package_id: $('studentPackageId')?.value || null,
         notes: $('studentNotes').value.trim() || null,
         school_id: profile.school_id,
       };
@@ -601,6 +657,8 @@
     value('editGuardianSecondaryName', s.guardian_2_name);
     value('editGuardianSecondaryPhone', s.guardian_2_phone);
     value('editStudentActive', String(s.active !== false));
+    value('editStudentMonthlyDueDay', s.monthly_due_day || '');
+    value('editStudentPackageId', s.package_id || '');
     value('editStudentNotes', s.notes);
 
     showModal('studentEditModal');
@@ -623,6 +681,8 @@
         guardian_2_name: $('editGuardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('editGuardianSecondaryPhone').value.trim() || null,
         active: $('editStudentActive').value === 'true',
+        monthly_due_day: $('editStudentMonthlyDueDay')?.value ? Number($('editStudentMonthlyDueDay').value) : null,
+        package_id: $('editStudentPackageId')?.value || null,
         notes: $('editStudentNotes').value.trim() || null,
       };
 
@@ -768,6 +828,9 @@
     const documentObservations =
       company?.document_observations ||
       'Ficha cadastral emitida pelo sistema de gestão do INTEGRO.';
+
+    const studentPackageName = getPackageName(student.package_id);
+    const monthlyDueDay = student.monthly_due_day ? `Dia ${student.monthly_due_day}` : '-';
 
     const today = new Date().toLocaleDateString('pt-BR');
 
@@ -964,6 +1027,22 @@
     </div>
 
     <div class="section">
+      <div class="section-title">Dados financeiros do aluno</div>
+
+      <div class="grid">
+        <div class="field">
+          <span class="label">Dia de vencimento da mensalidade</span>
+          <span class="value">${safe(monthlyDueDay)}</span>
+        </div>
+
+        <div class="field">
+          <span class="label">Pacote contratado</span>
+          <span class="value">${safe(studentPackageName)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-title">Responsável principal</div>
 
       <div class="grid">
@@ -1034,7 +1113,7 @@
       window.focus();
       window.print();
     };
-  </script>
+  <\/script>
 </body>
 </html>
 `;
