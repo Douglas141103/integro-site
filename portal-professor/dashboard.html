@@ -2213,6 +2213,9 @@
       const copyFamilyBtn = document.getElementById("copyAiPlanFamilyBtn");
       const saveMessageEl = document.getElementById("aiPlanSaveMessage");
 
+      let aiPlanLoadToken = 0;
+      let aiPlanAreaTimer = null;
+
       if (!form || !areaInput) {
         return;
       }
@@ -2284,11 +2287,76 @@
         ].join("\n");
       }
 
+      function getEquivalentAreas(area) {
+        const normalizedArea = String(area || "").trim();
+
+        const map = {
+          "Matemática": ["Matemática", "Matematica", "Raciocínio Lógico", "Raciocinio Logico"],
+          "Língua Portuguesa": [
+            "Língua Portuguesa",
+            "Lingua Portuguesa",
+            "Português",
+            "Portugues",
+            "Linguagem",
+            "Leitura e Escrita"
+          ],
+          "Linguagem": [
+            "Linguagem",
+            "Língua Portuguesa",
+            "Lingua Portuguesa",
+            "Português",
+            "Portugues",
+            "Leitura e Escrita"
+          ],
+          "Leitura e Escrita": [
+            "Leitura e Escrita",
+            "Língua Portuguesa",
+            "Lingua Portuguesa",
+            "Português",
+            "Portugues",
+            "Linguagem"
+          ],
+          "Coordenação Motora": ["Coordenação Motora", "Coordenacao Motora", "Psicomotricidade"],
+          "Raciocínio Lógico": ["Raciocínio Lógico", "Raciocinio Logico", "Matemática", "Matematica"],
+          "Interdisciplinaridade": ["Interdisciplinaridade", "Interdisciplinar"],
+          "INTEGRO Lab": ["INTEGRO Lab", "Integro Lab", "Laboratório", "Laboratorio"]
+        };
+
+        return Array.from(new Set([normalizedArea, ...(map[normalizedArea] || [])].filter(Boolean)));
+      }
+
+      function clearAiPlanContext(message = "") {
+        if (profileInput) {
+          profileInput.value = "";
+        }
+
+        if (evolutionsInput) {
+          evolutionsInput.value = "";
+        }
+
+        if (internalEditor) {
+          internalEditor.value = "";
+        }
+
+        if (familyEditor) {
+          familyEditor.value = "";
+        }
+
+        if (resultBox) {
+          resultBox.style.display = "none";
+        }
+
+        setMessage(message, "");
+        setSaveMessage("", "");
+      }
+
       async function findExistingProfile(studentId, studentName, area) {
+        const areas = getEquivalentAreas(area);
+
         let query = aiPlanClient
           .from("student_area_profiles")
           .select("*")
-          .eq("area", area)
+          .in("area", areas)
           .order("updated_at", { ascending: false })
           .limit(1);
 
@@ -2307,76 +2375,117 @@
         return data || null;
       }
 
-      async function loadProfileForAi() {
+      async function loadProfileForAi(options = {}) {
+        const { showAlert = true, loadEvolutions = true } = options;
+        const token = ++aiPlanLoadToken;
         const area = areaInput.value;
         const student = getStudentInfo();
 
+        clearAiPlanContext();
+
         if (!student.name || student.name === "Aluno não informado") {
-          alert("Selecione um aluno antes de carregar o perfil.");
-          return;
+          if (showAlert) {
+            alert("Selecione um aluno antes de carregar o perfil.");
+          }
+          setMessage("Selecione um aluno antes de carregar o perfil.", "error");
+          return false;
         }
 
         if (!area) {
-          alert("Selecione a área do plano.");
-          return;
+          if (showAlert) {
+            alert("Selecione a área do plano.");
+          }
+          setMessage("Selecione a área do plano para carregar o perfil.", "error");
+          return false;
         }
 
         try {
-          setMessage("Carregando perfil pedagógico salvo...", "");
+          setMessage(`Carregando perfil pedagógico de ${area}...`, "");
+          profileInput.value = "Carregando perfil pedagógico salvo...";
 
           const existing = await findExistingProfile(student.id, student.name, area);
 
+          if (token !== aiPlanLoadToken) {
+            return false;
+          }
+
           if (!existing) {
             profileInput.value = "";
-            setMessage("Nenhum perfil salvo para esta área. Preencha primeiro o Perfil Pedagógico do Aluno ou escreva manualmente.", "error");
-            return;
+            setMessage(
+              `Nenhum perfil salvo para ${area}. Preencha primeiro o Perfil Pedagógico do Aluno ou escreva manualmente.`,
+              "error"
+            );
+            return false;
           }
 
           profileInput.value = formatForPromptProfile(existing);
-          setMessage("Perfil pedagógico carregado com sucesso.", "");
+          setMessage(`Perfil pedagógico de ${existing.area || area} carregado com sucesso.`, "");
+
+          if (loadEvolutions) {
+            await loadRecentEvolutionsForAi(token);
+          }
+
+          return true;
         } catch (error) {
           console.error(error);
-          setMessage("Erro ao carregar perfil pedagógico. Verifique se o perfil foi salvo nesta área.", "error");
+
+          if (token === aiPlanLoadToken) {
+            profileInput.value = "";
+            setMessage("Erro ao carregar perfil pedagógico. Verifique se o perfil foi salvo nesta área.", "error");
+          }
+
+          return false;
         }
       }
 
-
-      async function loadRecentEvolutionsForAi() {
+      async function loadRecentEvolutionsForAi(token = aiPlanLoadToken) {
         const student = getStudentInfo();
         const area = areaInput.value;
 
         if (!student.name || student.name === "Aluno não informado" || !area || !evolutionsInput) {
-          return;
-        }
-
-        if (!isUuid(student.id)) {
-          return;
+          return [];
         }
 
         try {
-          const { data, error } = await aiPlanClient
+          const areas = getEquivalentAreas(area);
+
+          if (token === aiPlanLoadToken) {
+            evolutionsInput.value = "Carregando evoluções anteriores...";
+          }
+
+          let query = aiPlanClient
             .from("student_progress")
             .select("area, week_reference, summary, strengths, difficulties, next_steps, resultado_semana, decisao_pedagogica, impacto_proximo_plano, recomendacao_proxima_semana, created_at")
-            .eq("student_id", student.id)
-            .eq("area", area)
+            .in("area", areas)
             .order("created_at", { ascending: false })
             .limit(5);
+
+          if (isUuid(student.id)) {
+            query = query.eq("student_id", student.id);
+          } else {
+            query = query.eq("student_name", student.name);
+          }
+
+          const { data, error } = await query;
 
           if (error) {
             throw error;
           }
 
+          if (token !== aiPlanLoadToken) {
+            return [];
+          }
+
           const items = data || [];
 
           if (!items.length) {
-            if (!evolutionsInput.value.trim()) {
-              evolutionsInput.value = "Ainda não há evoluções anteriores salvas para esta área.";
-            }
-            return;
+            evolutionsInput.value = "Ainda não há evoluções anteriores salvas para esta área.";
+            return [];
           }
 
           evolutionsInput.value = items.map((item, index) => [
             `Evolução ${index + 1}`,
+            `Área: ${item.area || "Não informada"}`,
             `Semana: ${item.week_reference || "Não informada"}`,
             `Resultado da semana: ${item.resultado_semana || "Não informado"}`,
             `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
@@ -2386,12 +2495,22 @@
             `Próximos passos: ${item.next_steps || "Não informado"}`,
             `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
             `Recomendação próxima semana: ${item.recomendacao_proxima_semana || "Não informado"}`
-          ].join("\n")).join("\n\n");
+          ].join("
+")).join("
+
+");
 
           setMessage("Perfil e evoluções anteriores carregados para orientar o plano semanal.", "");
+          return items;
         } catch (error) {
           console.error(error);
-          setMessage("Não foi possível carregar automaticamente as evoluções anteriores.", "error");
+
+          if (token === aiPlanLoadToken) {
+            evolutionsInput.value = "";
+            setMessage("Não foi possível carregar automaticamente as evoluções anteriores.", "error");
+          }
+
+          return [];
         }
       }
       function copyVisibleProfileToAi() {
@@ -2785,14 +2904,37 @@
 
       form.addEventListener("submit", generateAiWeeklyPlan);
 
-      loadProfileBtn?.addEventListener("click", loadProfileForAi);
+      loadProfileBtn?.addEventListener("click", (event) => {
+        event.preventDefault();
+        loadProfileForAi({ showAlert: true, loadEvolutions: true });
+      });
 
       copyProfileBtn?.addEventListener("click", copyVisibleProfileToAi);
 
       areaInput?.addEventListener("change", () => {
+        clearTimeout(aiPlanAreaTimer);
+        ++aiPlanLoadToken;
+        clearAiPlanContext("Atualizando perfil da disciplina selecionada...");
+
+        if (!areaInput.value) {
+          setMessage("Selecione uma área para carregar o perfil pedagógico.", "error");
+          return;
+        }
+
+        aiPlanAreaTimer = setTimeout(() => {
+          loadProfileForAi({ showAlert: false, loadEvolutions: true });
+        }, 250);
+      });
+
+      studentSelect?.addEventListener("change", () => {
+        ++aiPlanLoadToken;
+        clearAiPlanContext("Aluno alterado. Selecione ou confirme a disciplina para carregar o perfil correto.");
+
         if (areaInput.value) {
-          loadProfileForAi();
-          loadRecentEvolutionsForAi();
+          clearTimeout(aiPlanAreaTimer);
+          aiPlanAreaTimer = setTimeout(() => {
+            loadProfileForAi({ showAlert: false, loadEvolutions: true });
+          }, 300);
         }
       });
 
