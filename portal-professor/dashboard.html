@@ -149,6 +149,210 @@
       background: #ffffff;
     }
 
+
+    /* ============================================================
+       INTEGRO — ÁREA DE PLANOS SALVOS DO ALUNO
+       ============================================================ */
+    .saved-plans-filter-card {
+      border: 1px solid #d7e4dd;
+      border-radius: 18px;
+      background: #f8fcfa;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .saved-plans-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .saved-plans-toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .saved-plans-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .saved-plan-kpi {
+      border: 1px solid #d7e4dd;
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 14px;
+    }
+
+    .saved-plan-kpi span {
+      display: block;
+      color: #61746d;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .saved-plan-kpi strong {
+      color: #063f32;
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .saved-plans-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .saved-plan-card {
+      border: 1px solid #d7e4dd;
+      border-radius: 18px;
+      background: #ffffff;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 10px 24px rgba(9, 65, 49, 0.06);
+    }
+
+    .saved-plan-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .saved-plan-title-wrap {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .saved-plan-title-wrap h3 {
+      margin: 0;
+      color: #063f32;
+      font-size: 1.02rem;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .saved-plan-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: #61746d;
+      font-size: 0.84rem;
+    }
+
+    .saved-plan-pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #e8f2ee;
+      color: #0b5242;
+      font-weight: 800;
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .saved-plan-pill.secondary {
+      background: #f2f6f4;
+      color: #45665b;
+    }
+
+    .saved-plan-preview {
+      margin: 0;
+      color: #24423a;
+      line-height: 1.55;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    .saved-plan-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .saved-plan-detail {
+      border: 1px solid #d7e4dd;
+      border-radius: 18px;
+      background: #ffffff;
+      padding: 18px;
+      margin-top: 18px;
+      display: none;
+      gap: 12px;
+    }
+
+    .saved-plan-detail.active {
+      display: grid;
+    }
+
+    .saved-plan-detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .saved-plan-detail-head h3 {
+      margin: 0;
+      color: #063f32;
+    }
+
+    .saved-plan-detail textarea {
+      min-height: 220px;
+      resize: vertical;
+    }
+
+    .saved-plans-empty {
+      border: 1px dashed #b9cfc0;
+      border-radius: 18px;
+      background: #ffffff;
+      color: #61746d;
+      padding: 22px;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .saved-plans-toolbar,
+      .saved-plan-card-header,
+      .saved-plan-detail-head {
+        flex-direction: column;
+      }
+
+      .saved-plans-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .saved-plans-kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .saved-plan-actions,
+      .saved-plans-toolbar-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .saved-plan-actions .btn,
+      .saved-plans-toolbar-actions .btn {
+        width: 100%;
+      }
+    }
+
     @media (max-width: 800px) {
       .quick-panel-head,
       .quick-two-blocks {
@@ -286,6 +490,13 @@
             <span class="action-icon">6</span>
             <strong>Frequência do aluno</strong>
             <small>Definir dias de atendimento e lançar presença no calendário.</small>
+          </button>
+
+
+          <button type="button" class="action-card action-trigger" data-section-target="savedPlansSection">
+            <span class="action-icon">8</span>
+            <strong>Planos salvos do aluno</strong>
+            <small>Consultar planos por data, área e status, com opção de imprimir, copiar e reutilizar.</small>
           </button>
 
           <button type="button" class="action-card action-trigger" data-section-target="recordsSection">
@@ -976,6 +1187,148 @@
 
           <div id="attendanceCalendar" class="attendance-calendar"></div>
           <p id="attendanceMessage" class="helper"></p>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section id="savedPlansSection" class="panel-card action-section">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">BANCO DE PLANOS</div>
+          <h2>Planos salvos do aluno</h2>
+          <p class="helper">
+            Consulte os planos já registrados para o aluno selecionado. Use os filtros para localizar por data, área, status ou palavra-chave.
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary small-btn action-back">Voltar</button>
+      </div>
+
+      <div class="saved-plans-filter-card">
+        <div class="saved-plans-toolbar">
+          <div>
+            <strong style="color:#063f32;">Filtros de consulta</strong>
+            <p class="helper" style="margin:6px 0 0 0;">A data considera o dia em que o plano foi salvo no sistema.</p>
+          </div>
+
+          <div class="saved-plans-toolbar-actions">
+            <button type="button" id="savedPlansThisMonthBtn" class="btn btn-secondary small-btn">Este mês</button>
+            <button type="button" id="savedPlansClearBtn" class="btn btn-secondary small-btn">Limpar filtros</button>
+          </div>
+        </div>
+
+        <div class="grid two-cols">
+          <label>
+            <span>Data inicial</span>
+            <input type="date" id="savedPlansStartDate" />
+          </label>
+
+          <label>
+            <span>Data final</span>
+            <input type="date" id="savedPlansEndDate" />
+          </label>
+        </div>
+
+        <div class="grid two-cols">
+          <label>
+            <span>Área/disciplina</span>
+            <select id="savedPlansAreaFilter">
+              <option value="">Todas as áreas</option>
+              <option value="Matemática">Matemática</option>
+              <option value="Língua Portuguesa">Língua Portuguesa</option>
+              <option value="Linguagem">Linguagem</option>
+              <option value="Leitura e Escrita">Leitura e Escrita</option>
+              <option value="Coordenação Motora">Coordenação Motora</option>
+              <option value="Raciocínio Lógico">Raciocínio Lógico</option>
+              <option value="Interdisciplinaridade">Interdisciplinaridade</option>
+              <option value="INTEGRO Lab">INTEGRO Lab</option>
+              <option value="Ciências">Ciências</option>
+              <option value="História">História</option>
+              <option value="Geografia">Geografia</option>
+              <option value="Química">Química</option>
+              <option value="Física">Física</option>
+              <option value="Biologia">Biologia</option>
+              <option value="Redação">Redação</option>
+              <option value="Humanas">Humanas</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Status</span>
+            <select id="savedPlansStatusFilter">
+              <option value="">Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>Buscar no título ou descrição</span>
+          <input type="search" id="savedPlansSearchInput" placeholder="Ex.: fração, leitura, produção textual, tabuada..." />
+        </label>
+
+        <div class="grid two-cols">
+          <button type="button" id="savedPlansSearchBtn" class="btn btn-primary">Buscar planos salvos</button>
+          <button type="button" id="savedPlansPrintListBtn" class="btn btn-secondary">Imprimir lista filtrada</button>
+        </div>
+
+        <p id="savedPlansMessage" class="helper"></p>
+      </div>
+
+      <div class="saved-plans-kpis">
+        <div class="saved-plan-kpi">
+          <span>Total encontrado</span>
+          <strong id="savedPlansTotalKpi">0</strong>
+        </div>
+
+        <div class="saved-plan-kpi">
+          <span>Ativos</span>
+          <strong id="savedPlansActiveKpi">0</strong>
+        </div>
+
+        <div class="saved-plan-kpi">
+          <span>Concluídos</span>
+          <strong id="savedPlansDoneKpi">0</strong>
+        </div>
+
+        <div class="saved-plan-kpi">
+          <span>Último plano</span>
+          <strong id="savedPlansLastKpi" style="font-size:1rem;">—</strong>
+        </div>
+      </div>
+
+      <div id="savedPlansList" class="saved-plans-list">
+        <div class="saved-plans-empty">
+          Selecione um aluno e clique em <strong>Buscar planos salvos</strong> para visualizar o histórico.
+        </div>
+      </div>
+
+      <div id="savedPlanDetailBox" class="saved-plan-detail">
+        <div class="saved-plan-detail-head">
+          <div>
+            <div class="eyebrow">VISUALIZAÇÃO DO PLANO</div>
+            <h3 id="savedPlanDetailTitle">Plano selecionado</h3>
+            <p id="savedPlanDetailMeta" class="helper"></p>
+          </div>
+
+          <button type="button" id="savedPlanCloseDetailBtn" class="btn btn-secondary small-btn">Fechar</button>
+        </div>
+
+        <label>
+          <span>Descrição completa do plano</span>
+          <textarea id="savedPlanDetailText" readonly></textarea>
+        </label>
+
+        <div class="grid two-cols">
+          <button type="button" id="savedPlanUseAsBaseBtn" class="btn btn-primary">Usar como base em novo plano</button>
+          <button type="button" id="savedPlanPrintDetailBtn" class="btn btn-secondary">Imprimir plano selecionado</button>
+        </div>
+
+        <div class="grid two-cols">
+          <button type="button" id="savedPlanCopyDetailBtn" class="btn btn-secondary">Copiar descrição</button>
+          <button type="button" id="savedPlanOpenPlanFormBtn" class="btn btn-secondary">Abrir formulário de Plano de estudo</button>
         </div>
       </div>
     </section>
@@ -2213,9 +2566,6 @@
       const copyFamilyBtn = document.getElementById("copyAiPlanFamilyBtn");
       const saveMessageEl = document.getElementById("aiPlanSaveMessage");
 
-      let aiPlanLoadToken = 0;
-      let aiPlanAreaTimer = null;
-
       if (!form || !areaInput) {
         return;
       }
@@ -2287,76 +2637,11 @@
         ].join("\n");
       }
 
-      function getEquivalentAreas(area) {
-        const normalizedArea = String(area || "").trim();
-
-        const map = {
-          "Matemática": ["Matemática", "Matematica", "Raciocínio Lógico", "Raciocinio Logico"],
-          "Língua Portuguesa": [
-            "Língua Portuguesa",
-            "Lingua Portuguesa",
-            "Português",
-            "Portugues",
-            "Linguagem",
-            "Leitura e Escrita"
-          ],
-          "Linguagem": [
-            "Linguagem",
-            "Língua Portuguesa",
-            "Lingua Portuguesa",
-            "Português",
-            "Portugues",
-            "Leitura e Escrita"
-          ],
-          "Leitura e Escrita": [
-            "Leitura e Escrita",
-            "Língua Portuguesa",
-            "Lingua Portuguesa",
-            "Português",
-            "Portugues",
-            "Linguagem"
-          ],
-          "Coordenação Motora": ["Coordenação Motora", "Coordenacao Motora", "Psicomotricidade"],
-          "Raciocínio Lógico": ["Raciocínio Lógico", "Raciocinio Logico", "Matemática", "Matematica"],
-          "Interdisciplinaridade": ["Interdisciplinaridade", "Interdisciplinar"],
-          "INTEGRO Lab": ["INTEGRO Lab", "Integro Lab", "Laboratório", "Laboratorio"]
-        };
-
-        return Array.from(new Set([normalizedArea, ...(map[normalizedArea] || [])].filter(Boolean)));
-      }
-
-      function clearAiPlanContext(message = "") {
-        if (profileInput) {
-          profileInput.value = "";
-        }
-
-        if (evolutionsInput) {
-          evolutionsInput.value = "";
-        }
-
-        if (internalEditor) {
-          internalEditor.value = "";
-        }
-
-        if (familyEditor) {
-          familyEditor.value = "";
-        }
-
-        if (resultBox) {
-          resultBox.style.display = "none";
-        }
-
-        setMessage(message, "");
-        setSaveMessage("", "");
-      }
-
       async function findExistingProfile(studentId, studentName, area) {
-        const areas = getEquivalentAreas(area);
-
         let query = aiPlanClient
           .from("student_area_profiles")
           .select("*")
-          .in("area", areas)
+          .eq("area", area)
           .order("updated_at", { ascending: false })
           .limit(1);
 
@@ -2375,117 +2660,76 @@
         return data || null;
       }
 
-      async function loadProfileForAi(options = {}) {
-        const { showAlert = true, loadEvolutions = true } = options;
-        const token = ++aiPlanLoadToken;
+      async function loadProfileForAi() {
         const area = areaInput.value;
         const student = getStudentInfo();
 
-        clearAiPlanContext();
-
         if (!student.name || student.name === "Aluno não informado") {
-          if (showAlert) {
-            alert("Selecione um aluno antes de carregar o perfil.");
-          }
-          setMessage("Selecione um aluno antes de carregar o perfil.", "error");
-          return false;
+          alert("Selecione um aluno antes de carregar o perfil.");
+          return;
         }
 
         if (!area) {
-          if (showAlert) {
-            alert("Selecione a área do plano.");
-          }
-          setMessage("Selecione a área do plano para carregar o perfil.", "error");
-          return false;
+          alert("Selecione a área do plano.");
+          return;
         }
 
         try {
-          setMessage(`Carregando perfil pedagógico de ${area}...`, "");
-          profileInput.value = "Carregando perfil pedagógico salvo...";
+          setMessage("Carregando perfil pedagógico salvo...", "");
 
           const existing = await findExistingProfile(student.id, student.name, area);
 
-          if (token !== aiPlanLoadToken) {
-            return false;
-          }
-
           if (!existing) {
             profileInput.value = "";
-            setMessage(
-              `Nenhum perfil salvo para ${area}. Preencha primeiro o Perfil Pedagógico do Aluno ou escreva manualmente.`,
-              "error"
-            );
-            return false;
+            setMessage("Nenhum perfil salvo para esta área. Preencha primeiro o Perfil Pedagógico do Aluno ou escreva manualmente.", "error");
+            return;
           }
 
           profileInput.value = formatForPromptProfile(existing);
-          setMessage(`Perfil pedagógico de ${existing.area || area} carregado com sucesso.`, "");
-
-          if (loadEvolutions) {
-            await loadRecentEvolutionsForAi(token);
-          }
-
-          return true;
+          setMessage("Perfil pedagógico carregado com sucesso.", "");
         } catch (error) {
           console.error(error);
-
-          if (token === aiPlanLoadToken) {
-            profileInput.value = "";
-            setMessage("Erro ao carregar perfil pedagógico. Verifique se o perfil foi salvo nesta área.", "error");
-          }
-
-          return false;
+          setMessage("Erro ao carregar perfil pedagógico. Verifique se o perfil foi salvo nesta área.", "error");
         }
       }
 
-      async function loadRecentEvolutionsForAi(token = aiPlanLoadToken) {
+
+      async function loadRecentEvolutionsForAi() {
         const student = getStudentInfo();
         const area = areaInput.value;
 
         if (!student.name || student.name === "Aluno não informado" || !area || !evolutionsInput) {
-          return [];
+          return;
+        }
+
+        if (!isUuid(student.id)) {
+          return;
         }
 
         try {
-          const areas = getEquivalentAreas(area);
-
-          if (token === aiPlanLoadToken) {
-            evolutionsInput.value = "Carregando evoluções anteriores...";
-          }
-
-          let query = aiPlanClient
+          const { data, error } = await aiPlanClient
             .from("student_progress")
             .select("area, week_reference, summary, strengths, difficulties, next_steps, resultado_semana, decisao_pedagogica, impacto_proximo_plano, recomendacao_proxima_semana, created_at")
-            .in("area", areas)
+            .eq("student_id", student.id)
+            .eq("area", area)
             .order("created_at", { ascending: false })
             .limit(5);
-
-          if (isUuid(student.id)) {
-            query = query.eq("student_id", student.id);
-          } else {
-            query = query.eq("student_name", student.name);
-          }
-
-          const { data, error } = await query;
 
           if (error) {
             throw error;
           }
 
-          if (token !== aiPlanLoadToken) {
-            return [];
-          }
-
           const items = data || [];
 
           if (!items.length) {
-            evolutionsInput.value = "Ainda não há evoluções anteriores salvas para esta área.";
-            return [];
+            if (!evolutionsInput.value.trim()) {
+              evolutionsInput.value = "Ainda não há evoluções anteriores salvas para esta área.";
+            }
+            return;
           }
 
           evolutionsInput.value = items.map((item, index) => [
             `Evolução ${index + 1}`,
-            `Área: ${item.area || "Não informada"}`,
             `Semana: ${item.week_reference || "Não informada"}`,
             `Resultado da semana: ${item.resultado_semana || "Não informado"}`,
             `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
@@ -2495,22 +2739,12 @@
             `Próximos passos: ${item.next_steps || "Não informado"}`,
             `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
             `Recomendação próxima semana: ${item.recomendacao_proxima_semana || "Não informado"}`
-          ].join("
-")).join("
-
-");
+          ].join("\n")).join("\n\n");
 
           setMessage("Perfil e evoluções anteriores carregados para orientar o plano semanal.", "");
-          return items;
         } catch (error) {
           console.error(error);
-
-          if (token === aiPlanLoadToken) {
-            evolutionsInput.value = "";
-            setMessage("Não foi possível carregar automaticamente as evoluções anteriores.", "error");
-          }
-
-          return [];
+          setMessage("Não foi possível carregar automaticamente as evoluções anteriores.", "error");
         }
       }
       function copyVisibleProfileToAi() {
@@ -2904,37 +3138,14 @@
 
       form.addEventListener("submit", generateAiWeeklyPlan);
 
-      loadProfileBtn?.addEventListener("click", (event) => {
-        event.preventDefault();
-        loadProfileForAi({ showAlert: true, loadEvolutions: true });
-      });
+      loadProfileBtn?.addEventListener("click", loadProfileForAi);
 
       copyProfileBtn?.addEventListener("click", copyVisibleProfileToAi);
 
       areaInput?.addEventListener("change", () => {
-        clearTimeout(aiPlanAreaTimer);
-        ++aiPlanLoadToken;
-        clearAiPlanContext("Atualizando perfil da disciplina selecionada...");
-
-        if (!areaInput.value) {
-          setMessage("Selecione uma área para carregar o perfil pedagógico.", "error");
-          return;
-        }
-
-        aiPlanAreaTimer = setTimeout(() => {
-          loadProfileForAi({ showAlert: false, loadEvolutions: true });
-        }, 250);
-      });
-
-      studentSelect?.addEventListener("change", () => {
-        ++aiPlanLoadToken;
-        clearAiPlanContext("Aluno alterado. Selecione ou confirme a disciplina para carregar o perfil correto.");
-
         if (areaInput.value) {
-          clearTimeout(aiPlanAreaTimer);
-          aiPlanAreaTimer = setTimeout(() => {
-            loadProfileForAi({ showAlert: false, loadEvolutions: true });
-          }, 300);
+          loadProfileForAi();
+          loadRecentEvolutionsForAi();
         }
       });
 
@@ -2966,6 +3177,773 @@
         setSaveMessage("Versão da família copiada.", "");
       });
     })();
+
+    (function corrigirPlanoSemanalPorDisciplinaIntegro() {
+      const config = window.INTEGRO_SUPABASE;
+
+      if (!config || !window.supabase) {
+        console.warn("INTEGRO: configuração do Supabase não encontrada para correção do plano semanal.");
+        return;
+      }
+
+      const supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+      const studentSelect = document.getElementById("studentSelect");
+      const areaInput = document.getElementById("aiPlanArea");
+      const profileInput = document.getElementById("aiPlanProfile");
+      const evolutionsInput = document.getElementById("aiPlanEvolutions");
+      const messageEl = document.getElementById("aiPlanMessage");
+      const loadProfileBtn = document.getElementById("loadProfileForAiBtn");
+
+      if (!studentSelect || !areaInput || !profileInput) {
+        return;
+      }
+
+      let controleBusca = 0;
+      let timerBusca = null;
+
+      function isUuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+      }
+
+      function setMessage(text, type) {
+        if (!messageEl) return;
+        messageEl.textContent = text || "";
+        messageEl.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      }
+
+      function getStudentInfo() {
+        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+        return {
+          id: studentSelect.value || "",
+          name: selectedOption?.textContent?.trim() || "Aluno não informado"
+        };
+      }
+
+      function clearAiPlanContext(message) {
+        profileInput.value = "";
+        if (evolutionsInput) evolutionsInput.value = "";
+        setMessage(message || "", "");
+      }
+
+      function getEquivalentAreas(area) {
+        const map = {
+          "Matemática": ["Matemática", "Matematica", "Raciocínio Lógico", "Raciocinio Logico"],
+          "Língua Portuguesa": ["Língua Portuguesa", "Lingua Portuguesa", "Português", "Portugues", "Linguagem", "Leitura e Escrita"],
+          "Linguagem": ["Linguagem", "Língua Portuguesa", "Lingua Portuguesa", "Português", "Portugues", "Leitura e Escrita"],
+          "Leitura e Escrita": ["Leitura e Escrita", "Língua Portuguesa", "Lingua Portuguesa", "Linguagem", "Português", "Portugues"],
+          "Coordenação Motora": ["Coordenação Motora", "Coordenacao Motora", "Psicomotricidade"],
+          "Raciocínio Lógico": ["Raciocínio Lógico", "Raciocinio Logico", "Matemática", "Matematica"],
+          "Interdisciplinaridade": ["Interdisciplinaridade", "Interdisciplinar"],
+          "INTEGRO Lab": ["INTEGRO Lab", "Integro Lab", "Laboratório", "Laboratorio"]
+        };
+
+        return map[area] || [area];
+      }
+
+      function formatProfileForAi(record) {
+        if (!record) return "";
+
+        if (record.tipo_perfil === "geral_por_serie" || record.perfil_geral || record.prioridades_pedagogicas) {
+          return [
+            `Série/Ano: ${record.serie_ano || "Não informada"}`,
+            `Área: ${record.area || "Não informada"}`,
+            `Perfil pedagógico geral: ${record.perfil_geral || record.nivel_atual || "Não informado"}`,
+            `Prioridades pedagógicas: ${record.prioridades_pedagogicas || record.objetivo_prioritario || "Não informado"}`,
+            `Recomendações gerais: ${record.recomendacoes_gerais || record.mediacao_eficaz || "Não informado"}`,
+            `Observações: ${record.observacoes || "Não informado"}`
+          ].join("\n");
+        }
+
+        return [
+          `Área: ${record.area || "Não informada"}`,
+          `Objetivo prioritário: ${record.objetivo_prioritario || "Não informado"}`,
+          `Nível atual: ${record.nivel_atual || "Não informado"}`,
+          `Dificuldades principais: ${record.dificuldades || "Não informado"}`,
+          `Habilidades consolidadas: ${record.habilidades_consolidadas || "Não informado"}`,
+          `Habilidades em desenvolvimento: ${record.habilidades_em_desenvolvimento || "Não informado"}`,
+          `Habilidades ainda não consolidadas: ${record.habilidades_nao_consolidadas || "Não informado"}`,
+          `Mediação eficaz: ${record.mediacao_eficaz || "Não informado"}`,
+          `Observações importantes: ${record.observacoes || "Não informado"}`
+        ].join("\n");
+      }
+
+      function formatEvolutionsForAi(items) {
+        if (!items || !items.length) return "";
+
+        return items.map((item, index) => [
+          `Evolução ${index + 1}`,
+          `Área: ${item.area || "Não informada"}`,
+          `Semana: ${item.week_reference || "Não informada"}`,
+          `Resultado da semana: ${item.resultado_semana || "Não informado"}`,
+          `Decisão pedagógica: ${item.decisao_pedagogica || "Não informada"}`,
+          `Resumo: ${item.summary || "Não informado"}`,
+          `Pontos fortes: ${item.strengths || "Não informado"}`,
+          `Dificuldades: ${item.difficulties || "Não informado"}`,
+          `Próximos passos: ${item.next_steps || "Não informado"}`,
+          `Impacto no próximo plano: ${item.impacto_proximo_plano || "Não informado"}`,
+          `Recomendação próxima semana: ${item.recomendacao_proxima_semana || "Não informado"}`
+        ].join("\n")).join("\n\n");
+      }
+
+      async function findProfile(student, area) {
+        const areas = getEquivalentAreas(area);
+        let query = supabaseClient
+          .from("student_area_profiles")
+          .select("*")
+          .in("area", areas)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (isUuid(student.id)) {
+          query = query.eq("student_id", student.id);
+        } else {
+          query = query.eq("student_name", student.name);
+        }
+
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        return data || null;
+      }
+
+      async function findEvolutions(student, area) {
+        if (!evolutionsInput || !isUuid(student.id)) return [];
+
+        const areas = getEquivalentAreas(area);
+        const { data, error } = await supabaseClient
+          .from("student_progress")
+          .select("area, week_reference, summary, strengths, difficulties, next_steps, resultado_semana, decisao_pedagogica, impacto_proximo_plano, recomendacao_proxima_semana, created_at")
+          .eq("student_id", student.id)
+          .in("area", areas)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        return data || [];
+      }
+
+      async function loadCorrectProfile() {
+        const token = ++controleBusca;
+        const student = getStudentInfo();
+        const area = areaInput.value;
+
+        clearAiPlanContext("");
+
+        if (!student.name || student.name === "Aluno não informado") {
+          setMessage("Selecione um aluno antes de carregar o perfil.", "error");
+          return;
+        }
+
+        if (!area) {
+          setMessage("Selecione a área do plano para carregar o perfil.", "error");
+          return;
+        }
+
+        try {
+          profileInput.value = "Carregando perfil pedagógico salvo...";
+          setMessage(`Carregando perfil de ${area}...`, "");
+
+          const profile = await findProfile(student, area);
+          if (token !== controleBusca) return;
+
+          if (!profile) {
+            profileInput.value = "";
+            setMessage(`Nenhum perfil salvo para ${area}. Cadastre primeiro o Perfil Pedagógico do Aluno nessa disciplina.`, "error");
+            return;
+          }
+
+          profileInput.value = formatProfileForAi(profile);
+
+          try {
+            const evolutions = await findEvolutions(student, area);
+            if (token === controleBusca && evolutionsInput) {
+              evolutionsInput.value = evolutions.length
+                ? formatEvolutionsForAi(evolutions)
+                : "Ainda não há evoluções anteriores salvas para esta área.";
+            }
+          } catch (evolutionError) {
+            console.warn("INTEGRO: evoluções anteriores não carregadas.", evolutionError);
+          }
+
+          setMessage(`Perfil de ${area} carregado com sucesso.`, "");
+        } catch (error) {
+          console.error("INTEGRO: erro ao carregar perfil por disciplina.", error);
+          if (token === controleBusca) {
+            profileInput.value = "";
+            setMessage("Erro ao carregar o perfil salvo. Verifique se o perfil foi salvo no Supabase.", "error");
+          }
+        }
+      }
+
+      function scheduleLoad() {
+        clearTimeout(timerBusca);
+        timerBusca = setTimeout(loadCorrectProfile, 250);
+      }
+
+      areaInput.addEventListener("change", function (event) {
+        event.stopImmediatePropagation();
+        ++controleBusca;
+        clearAiPlanContext("Atualizando perfil da disciplina selecionada...");
+
+        if (!areaInput.value) {
+          setMessage("Selecione uma área para carregar o perfil pedagógico.", "error");
+          return;
+        }
+
+        scheduleLoad();
+      }, true);
+
+      loadProfileBtn?.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        loadCorrectProfile();
+      }, true);
+
+      studentSelect.addEventListener("change", function () {
+        ++controleBusca;
+        clearAiPlanContext("Aluno alterado. Confirme a disciplina para carregar o perfil correto.");
+
+        if (areaInput.value) {
+          scheduleLoad();
+        }
+      });
+
+      document.querySelectorAll('[data-section-target="aiWeeklyPlanSection"]').forEach((button) => {
+        button.addEventListener("click", () => {
+          if (areaInput.value) {
+            setTimeout(loadCorrectProfile, 350);
+          }
+        });
+      });
+    })();
+
+    (function initSavedStudentPlansModule() {
+      const cfg = window.INTEGRO_SUPABASE;
+
+      if (!cfg || !window.supabase) {
+        console.warn("INTEGRO: configuração do Supabase não encontrada para planos salvos.");
+        return;
+      }
+
+      const client = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+      const studentSelect = document.getElementById("studentSelect");
+      const studentMeta = document.getElementById("studentMeta");
+      const welcomeName = document.getElementById("welcomeName");
+
+      const startDateInput = document.getElementById("savedPlansStartDate");
+      const endDateInput = document.getElementById("savedPlansEndDate");
+      const areaFilter = document.getElementById("savedPlansAreaFilter");
+      const statusFilter = document.getElementById("savedPlansStatusFilter");
+      const searchInput = document.getElementById("savedPlansSearchInput");
+      const searchBtn = document.getElementById("savedPlansSearchBtn");
+      const thisMonthBtn = document.getElementById("savedPlansThisMonthBtn");
+      const clearBtn = document.getElementById("savedPlansClearBtn");
+      const printListBtn = document.getElementById("savedPlansPrintListBtn");
+      const messageEl = document.getElementById("savedPlansMessage");
+      const listEl = document.getElementById("savedPlansList");
+
+      const totalKpi = document.getElementById("savedPlansTotalKpi");
+      const activeKpi = document.getElementById("savedPlansActiveKpi");
+      const doneKpi = document.getElementById("savedPlansDoneKpi");
+      const lastKpi = document.getElementById("savedPlansLastKpi");
+
+      const detailBox = document.getElementById("savedPlanDetailBox");
+      const detailTitle = document.getElementById("savedPlanDetailTitle");
+      const detailMeta = document.getElementById("savedPlanDetailMeta");
+      const detailText = document.getElementById("savedPlanDetailText");
+      const closeDetailBtn = document.getElementById("savedPlanCloseDetailBtn");
+      const useAsBaseBtn = document.getElementById("savedPlanUseAsBaseBtn");
+      const printDetailBtn = document.getElementById("savedPlanPrintDetailBtn");
+      const copyDetailBtn = document.getElementById("savedPlanCopyDetailBtn");
+      const openPlanFormBtn = document.getElementById("savedPlanOpenPlanFormBtn");
+
+      if (!studentSelect || !listEl || !searchBtn) {
+        return;
+      }
+
+      let currentPlans = [];
+      let selectedPlan = null;
+
+      function isUuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+      }
+
+      function escapeHtml(value = "") {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function normalize(value = "") {
+        return String(value)
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .trim();
+      }
+
+      function setMessage(text, type) {
+        if (!messageEl) return;
+        messageEl.textContent = text || "";
+        messageEl.style.color = type === "error" ? "#b42318" : "#0f3d2e";
+      }
+
+      function getStudentInfo() {
+        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+        return {
+          id: studentSelect.value || "",
+          name: selectedOption?.textContent?.trim() || "Aluno não informado"
+        };
+      }
+
+      function getSchoolName() {
+        const raw = studentMeta?.textContent || "";
+        return raw ? raw.replace(/^Escola:\s*/i, "").trim() : "INSTITUTO INTEGRO";
+      }
+
+      function getTeacherName() {
+        const raw = welcomeName?.textContent || "";
+        if (!raw || raw.toLowerCase().includes("carregando")) return "";
+        return raw.trim();
+      }
+
+      function toBrDate(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+        return date.toLocaleDateString("pt-BR");
+      }
+
+      function toBrDateTime(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+        return date.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function getTodayIso() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function setCurrentMonthFilter() {
+        const now = new Date();
+        const first = new Date(now.getFullYear(), now.getMonth(), 1);
+        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        startDateInput.value = first.toISOString().slice(0, 10);
+        endDateInput.value = last.toISOString().slice(0, 10);
+      }
+
+      function formatPlanFull(plan) {
+        return [
+          `Título: ${plan.title || "Plano de estudo"}`,
+          `Semana/período: ${plan.week_reference || "Não informado"}`,
+          `Status: ${plan.status || "ativo"}`,
+          `Salvo em: ${toBrDateTime(plan.created_at)}`,
+          "",
+          plan.description || "Sem descrição registrada."
+        ].join("\n");
+      }
+
+      function inferArea(plan) {
+        const text = normalize(`${plan.title || ""} ${plan.description || ""}`);
+        const candidates = [
+          ["Matemática", ["matematica", "tabuada", "fracao", "decimal", "calculo", "operacao", "problema"]],
+          ["Língua Portuguesa", ["lingua portuguesa", "portugues", "leitura", "escrita", "texto", "pontuacao", "silaba", "interpretacao"]],
+          ["Coordenação Motora", ["coordenacao", "motora", "psicomotricidade", "tracado", "coordenação"]],
+          ["Raciocínio Lógico", ["raciocinio", "logico", "sequencia", "padrao"]],
+          ["INTEGRO Lab", ["integro lab", "robotica", "scratch", "informatica", "computador"]],
+          ["Ciências", ["ciencias", "corpo", "seres vivos", "energia", "ambiente"]],
+          ["História", ["historia"]],
+          ["Geografia", ["geografia", "mapa", "territorio", "paisagem"]],
+          ["Química", ["quimica"]],
+          ["Física", ["fisica"]],
+          ["Biologia", ["biologia"]],
+          ["Redação", ["redacao", "produção textual", "producao textual"]]
+        ];
+
+        const found = candidates.find(([, keys]) => keys.some((key) => text.includes(normalize(key))));
+        return found ? found[0] : "Área não identificada";
+      }
+
+      function applyClientFilters(plans) {
+        const area = areaFilter?.value || "";
+        const term = normalize(searchInput?.value || "");
+
+        return plans.filter((plan) => {
+          const combined = normalize(`${plan.title || ""} ${plan.description || ""} ${plan.week_reference || ""}`);
+
+          if (area && !combined.includes(normalize(area))) {
+            const inferred = normalize(inferArea(plan));
+            if (!inferred.includes(normalize(area))) return false;
+          }
+
+          if (term && !combined.includes(term)) return false;
+
+          return true;
+        });
+      }
+
+      function updateKpis(plans) {
+        const total = plans.length;
+        const active = plans.filter((plan) => normalize(plan.status) === "ativo").length;
+        const done = plans.filter((plan) => normalize(plan.status) === "concluido" || normalize(plan.status) === "concluído").length;
+        const last = plans[0]?.created_at ? toBrDate(plans[0].created_at) : "—";
+
+        if (totalKpi) totalKpi.textContent = total;
+        if (activeKpi) activeKpi.textContent = active;
+        if (doneKpi) doneKpi.textContent = done;
+        if (lastKpi) lastKpi.textContent = last;
+      }
+
+      function renderPlans(plans) {
+        currentPlans = plans;
+        updateKpis(plans);
+
+        if (!plans.length) {
+          listEl.innerHTML = `
+            <div class="saved-plans-empty">
+              Nenhum plano encontrado para o aluno selecionado com os filtros informados.<br>
+              Ajuste a data, limpe o filtro de área ou verifique se o plano foi salvo no formulário de Plano de estudo.
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = plans.map((plan, index) => {
+          const title = plan.title || "Plano de estudo";
+          const description = plan.description || "Sem descrição registrada.";
+          const preview = description.length > 360 ? `${description.slice(0, 360)}...` : description;
+          const area = inferArea(plan);
+          const status = plan.status || "ativo";
+          const savedAt = toBrDateTime(plan.created_at);
+
+          return `
+            <article class="saved-plan-card" data-plan-index="${index}">
+              <div class="saved-plan-card-header">
+                <div class="saved-plan-title-wrap">
+                  <h3>${escapeHtml(title)}</h3>
+                  <div class="saved-plan-meta">
+                    <span>Semana: ${escapeHtml(plan.week_reference || "Não informada")}</span>
+                    <span>Salvo em: ${escapeHtml(savedAt)}</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                  <span class="saved-plan-pill">${escapeHtml(status)}</span>
+                  <span class="saved-plan-pill secondary">${escapeHtml(area)}</span>
+                </div>
+              </div>
+
+              <p class="saved-plan-preview">${escapeHtml(preview)}</p>
+
+              <div class="saved-plan-actions">
+                <button type="button" class="btn btn-primary small-btn saved-plan-view-btn" data-plan-index="${index}">Ver completo</button>
+                <button type="button" class="btn btn-secondary small-btn saved-plan-use-btn" data-plan-index="${index}">Usar como base</button>
+                <button type="button" class="btn btn-secondary small-btn saved-plan-copy-btn" data-plan-index="${index}">Copiar</button>
+                <button type="button" class="btn btn-secondary small-btn saved-plan-print-btn" data-plan-index="${index}">Imprimir</button>
+              </div>
+            </article>
+          `;
+        }).join("\n");
+      }
+
+      async function loadSavedPlans() {
+        const student = getStudentInfo();
+
+        if (!student.name || student.name === "Aluno não informado") {
+          alert("Selecione um aluno antes de consultar os planos salvos.");
+          return;
+        }
+
+        try {
+          setMessage("Buscando planos salvos...", "");
+          listEl.innerHTML = `<div class="saved-plans-empty">Carregando planos salvos do aluno...</div>`;
+
+          let query = client
+            .from("student_plans")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(200);
+
+          if (isUuid(student.id)) {
+            query = query.eq("student_id", student.id);
+          } else {
+            query = query.eq("student_name", student.name);
+          }
+
+          if (startDateInput?.value) {
+            query = query.gte("created_at", `${startDateInput.value}T00:00:00`);
+          }
+
+          if (endDateInput?.value) {
+            query = query.lte("created_at", `${endDateInput.value}T23:59:59`);
+          }
+
+          if (statusFilter?.value) {
+            query = query.eq("status", statusFilter.value);
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+
+          const filtered = applyClientFilters(data || []);
+          renderPlans(filtered);
+          hideDetail();
+
+          setMessage(`${filtered.length} plano(s) encontrado(s) para ${student.name}.`, "");
+        } catch (error) {
+          console.error("INTEGRO: erro ao buscar planos salvos.", error);
+          currentPlans = [];
+          updateKpis([]);
+          listEl.innerHTML = `<div class="saved-plans-empty">Erro ao carregar os planos salvos. Verifique a tabela student_plans no Supabase.</div>`;
+          setMessage("Erro ao buscar planos salvos.", "error");
+        }
+      }
+
+      function showDetail(plan) {
+        selectedPlan = plan;
+        if (!detailBox || !plan) return;
+
+        detailTitle.textContent = plan.title || "Plano de estudo";
+        detailMeta.textContent = `Semana: ${plan.week_reference || "Não informada"} | Status: ${plan.status || "ativo"} | Salvo em: ${toBrDateTime(plan.created_at)}`;
+        detailText.value = plan.description || "Sem descrição registrada.";
+        detailBox.classList.add("active");
+        detailBox.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function hideDetail() {
+        selectedPlan = null;
+        if (detailBox) detailBox.classList.remove("active");
+      }
+
+      function openSection(sectionId) {
+        document.querySelectorAll(".action-section").forEach((section) => section.classList.remove("active"));
+        const target = document.getElementById(sectionId);
+        if (target) {
+          target.classList.add("active");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+
+      function usePlanAsBase(plan) {
+        if (!plan) return;
+
+        const planForm = document.getElementById("planForm");
+        if (!planForm) {
+          alert("Formulário de Plano de estudo não encontrado.");
+          return;
+        }
+
+        const titleInput = planForm.elements["title"];
+        const descriptionInput = planForm.elements["description"];
+        const weekInputPlan = planForm.elements["week_reference"];
+        const statusInput = planForm.elements["status"];
+
+        if (titleInput) titleInput.value = `${plan.title || "Plano de estudo"} — revisão`;
+        if (descriptionInput) descriptionInput.value = plan.description || "";
+        if (weekInputPlan) weekInputPlan.value = plan.week_reference || "";
+        if (statusInput) statusInput.value = "ativo";
+
+        openSection("planSection");
+      }
+
+      async function copyPlan(plan) {
+        if (!plan) return;
+        const text = formatPlanFull(plan);
+        try {
+          await navigator.clipboard.writeText(text);
+          setMessage("Plano copiado para a área de transferência.", "");
+        } catch (error) {
+          alert("Não foi possível copiar automaticamente. Abra o plano completo e copie manualmente.");
+        }
+      }
+
+      function printPlan(plan) {
+        if (!plan) return;
+        const student = getStudentInfo();
+        const html = buildPrintHtml({
+          title: plan.title || "Plano de estudo",
+          subtitle: "Plano salvo do aluno",
+          studentName: student.name,
+          area: inferArea(plan),
+          week: plan.week_reference || "Não informada",
+          status: plan.status || "ativo",
+          savedAt: toBrDateTime(plan.created_at),
+          body: plan.description || "Sem descrição registrada."
+        });
+        openPrintWindow(html);
+      }
+
+      function printList() {
+        const student = getStudentInfo();
+
+        if (!currentPlans.length) {
+          alert("Não há planos filtrados para imprimir.");
+          return;
+        }
+
+        const body = currentPlans.map((plan, index) => [
+          `PLANO ${index + 1}`,
+          `Título: ${plan.title || "Plano de estudo"}`,
+          `Semana/período: ${plan.week_reference || "Não informado"}`,
+          `Área estimada: ${inferArea(plan)}`,
+          `Status: ${plan.status || "ativo"}`,
+          `Salvo em: ${toBrDateTime(plan.created_at)}`,
+          "",
+          plan.description || "Sem descrição registrada.",
+          ""
+        ].join("\n")).join("\n----------------------------------------\n\n");
+
+        const html = buildPrintHtml({
+          title: "Planos salvos do aluno",
+          subtitle: "Lista filtrada de planos",
+          studentName: student.name,
+          area: areaFilter?.value || "Todas",
+          week: `Período: ${startDateInput?.value || "início livre"} até ${endDateInput?.value || "final livre"}`,
+          status: statusFilter?.value || "Todos",
+          savedAt: new Date().toLocaleString("pt-BR"),
+          body
+        });
+        openPrintWindow(html);
+      }
+
+      function buildPrintHtml({ title, subtitle, studentName, area, week, status, savedAt, body }) {
+        const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
+        return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(title)} - INTEGRO</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.45; }
+    .barra-acoes { background: #1d6b3a; color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 999; }
+    .barra-acoes button { background: white; color: #1d6b3a; border: none; border-radius: 8px; padding: 9px 14px; font-weight: bold; cursor: pointer; }
+    .folha { width: 180mm; max-width: 180mm; margin: 12mm auto; background: white; }
+    .cabecalho { border: 2px solid #1d6b3a; padding: 12px; text-align: center; margin-bottom: 14px; }
+    .cabecalho h1 { margin: 0; color: #1d6b3a; font-size: 20px; letter-spacing: 0.5px; }
+    .cabecalho h2 { margin: 6px 0 0 0; color: #222; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 18px; table-layout: fixed; }
+    td { width: 50%; border: 1px solid #999; padding: 7px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere; }
+    td strong { color: #123d25; }
+    .conteudo { border: 1px solid #b9cfc0; border-radius: 10px; padding: 12px; line-height: 1.55; }
+    .rodape { margin-top: 30px; padding-top: 8px; border-top: 1px solid #999; text-align: center; font-size: 9px; color: #444; }
+    @media print { .barra-acoes { display: none !important; } .folha { width: 100%; max-width: 100%; margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="barra-acoes"><strong>${escapeHtml(title)} - INTEGRO</strong><button onclick="window.print()">Imprimir / Salvar como PDF</button></div>
+  <main class="folha">
+    <div class="cabecalho"><h1>INSTITUTO INTEGRO</h1><h2>${escapeHtml(subtitle)}</h2></div>
+    <table>
+      <tr><td><strong>Aluno:</strong><br>${escapeHtml(studentName)}</td><td><strong>Área:</strong><br>${escapeHtml(area)}</td></tr>
+      <tr><td><strong>Semana/período:</strong><br>${escapeHtml(week)}</td><td><strong>Status:</strong><br>${escapeHtml(status)}</td></tr>
+      <tr><td><strong>Professor(a):</strong><br>${escapeHtml(getTeacherName() || "Não informado")}</td><td><strong>Salvo/emitido em:</strong><br>${escapeHtml(savedAt)}</td></tr>
+      <tr><td colspan="2"><strong>Escola:</strong><br>${escapeHtml(getSchoolName())}</td></tr>
+    </table>
+    <div class="conteudo">${safeBody}</div>
+    <div class="rodape">Documento gerado pelo Portal do Professor INTEGRO.</div>
+  </main>
+</body>
+</html>`;
+      }
+
+      function openPrintWindow(html) {
+        const win = window.open("", "_blank");
+        if (!win) {
+          alert("O navegador bloqueou a janela de impressão. Permita pop-ups para imprimir.");
+          return;
+        }
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+      }
+
+      listEl.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-plan-index]");
+        if (!button) return;
+
+        const index = Number(button.dataset.planIndex);
+        const plan = currentPlans[index];
+        if (!plan) return;
+
+        if (button.classList.contains("saved-plan-view-btn")) showDetail(plan);
+        if (button.classList.contains("saved-plan-use-btn")) usePlanAsBase(plan);
+        if (button.classList.contains("saved-plan-copy-btn")) copyPlan(plan);
+        if (button.classList.contains("saved-plan-print-btn")) printPlan(plan);
+      });
+
+      searchBtn.addEventListener("click", loadSavedPlans);
+      printListBtn?.addEventListener("click", printList);
+
+      thisMonthBtn?.addEventListener("click", () => {
+        setCurrentMonthFilter();
+        loadSavedPlans();
+      });
+
+      clearBtn?.addEventListener("click", () => {
+        startDateInput.value = "";
+        endDateInput.value = "";
+        areaFilter.value = "";
+        statusFilter.value = "";
+        searchInput.value = "";
+        loadSavedPlans();
+      });
+
+      [startDateInput, endDateInput, areaFilter, statusFilter].forEach((input) => {
+        input?.addEventListener("change", () => {
+          if (studentSelect.value) loadSavedPlans();
+        });
+      });
+
+      searchInput?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          loadSavedPlans();
+        }
+      });
+
+      closeDetailBtn?.addEventListener("click", hideDetail);
+      useAsBaseBtn?.addEventListener("click", () => usePlanAsBase(selectedPlan));
+      printDetailBtn?.addEventListener("click", () => printPlan(selectedPlan));
+      copyDetailBtn?.addEventListener("click", () => copyPlan(selectedPlan));
+      openPlanFormBtn?.addEventListener("click", () => openSection("planSection"));
+
+      studentSelect.addEventListener("change", () => {
+        currentPlans = [];
+        selectedPlan = null;
+        updateKpis([]);
+        hideDetail();
+        listEl.innerHTML = `<div class="saved-plans-empty">Aluno alterado. Clique em <strong>Buscar planos salvos</strong> para carregar o histórico.</div>`;
+        setMessage("", "");
+      });
+
+      document.querySelectorAll('[data-section-target="savedPlansSection"]').forEach((button) => {
+        button.addEventListener("click", () => {
+          setTimeout(() => {
+            if (!startDateInput.value && !endDateInput.value) {
+              setCurrentMonthFilter();
+            }
+            if (studentSelect.value) {
+              loadSavedPlans();
+            }
+          }, 350);
+        });
+      });
+    })();
+
   </script>
 
   <!-- PWA INTEGRO -->
