@@ -268,6 +268,34 @@
       color: #45665b;
     }
 
+    .saved-plan-pill.warning {
+      background: #fff7e6;
+      color: #8a5200;
+      border: 1px solid #f3d19c;
+    }
+
+    .saved-plan-card.archived {
+      background: #fbfbf8;
+      border-style: dashed;
+      opacity: 0.92;
+    }
+
+    .saved-plan-danger-note {
+      border: 1px solid #f1b8b8;
+      border-radius: 14px;
+      background: #fff8f8;
+      color: #8a1f1f;
+      padding: 10px 12px;
+      line-height: 1.45;
+      font-size: 0.9rem;
+    }
+
+    .btn-danger-soft {
+      border-color: #f1b8b8 !important;
+      background: #fff8f8 !important;
+      color: #8a1f1f !important;
+    }
+
     .saved-plan-preview {
       margin: 0;
       color: #24423a;
@@ -1260,6 +1288,7 @@
               <option value="">Todos</option>
               <option value="ativo">Ativo</option>
               <option value="concluido">Concluído</option>
+              <option value="arquivado">Arquivado</option>
             </select>
           </label>
         </div>
@@ -1329,6 +1358,15 @@
         <div class="grid two-cols">
           <button type="button" id="savedPlanCopyDetailBtn" class="btn btn-secondary">Copiar descrição</button>
           <button type="button" id="savedPlanOpenPlanFormBtn" class="btn btn-secondary">Abrir formulário de Plano de estudo</button>
+        </div>
+
+        <div class="saved-plan-danger-note">
+          <strong>Área de segurança:</strong> arquivar apenas oculta o plano da rotina principal, sem apagar o histórico. Excluir definitivamente remove o registro do Supabase.
+        </div>
+
+        <div class="grid two-cols">
+          <button type="button" id="savedPlanArchiveDetailBtn" class="btn btn-secondary">Arquivar plano selecionado</button>
+          <button type="button" id="savedPlanDeleteDetailBtn" class="btn btn-secondary btn-danger-soft">Excluir definitivamente</button>
         </div>
       </div>
     </section>
@@ -3456,6 +3494,8 @@
       const printDetailBtn = document.getElementById("savedPlanPrintDetailBtn");
       const copyDetailBtn = document.getElementById("savedPlanCopyDetailBtn");
       const openPlanFormBtn = document.getElementById("savedPlanOpenPlanFormBtn");
+      const archiveDetailBtn = document.getElementById("savedPlanArchiveDetailBtn");
+      const deleteDetailBtn = document.getElementById("savedPlanDeleteDetailBtn");
 
       if (!studentSelect || !listEl || !searchBtn) {
         return;
@@ -3624,10 +3664,14 @@
           const preview = description.length > 360 ? `${description.slice(0, 360)}...` : description;
           const area = inferArea(plan);
           const status = plan.status || "ativo";
+          const statusNormalizado = normalize(status);
+          const isArchived = statusNormalizado === "arquivado";
           const savedAt = toBrDateTime(plan.created_at);
+          const archiveLabel = isArchived ? "Restaurar" : "Arquivar";
+          const statusPillClass = isArchived ? "saved-plan-pill warning" : "saved-plan-pill";
 
           return `
-            <article class="saved-plan-card" data-plan-index="${index}">
+            <article class="saved-plan-card ${isArchived ? "archived" : ""}" data-plan-index="${index}">
               <div class="saved-plan-card-header">
                 <div class="saved-plan-title-wrap">
                   <h3>${escapeHtml(title)}</h3>
@@ -3638,7 +3682,7 @@
                 </div>
 
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                  <span class="saved-plan-pill">${escapeHtml(status)}</span>
+                  <span class="${statusPillClass}">${escapeHtml(status)}</span>
                   <span class="saved-plan-pill secondary">${escapeHtml(area)}</span>
                 </div>
               </div>
@@ -3650,6 +3694,8 @@
                 <button type="button" class="btn btn-secondary small-btn saved-plan-use-btn" data-plan-index="${index}">Usar como base</button>
                 <button type="button" class="btn btn-secondary small-btn saved-plan-copy-btn" data-plan-index="${index}">Copiar</button>
                 <button type="button" class="btn btn-secondary small-btn saved-plan-print-btn" data-plan-index="${index}">Imprimir</button>
+                <button type="button" class="btn btn-secondary small-btn saved-plan-archive-btn" data-plan-index="${index}">${archiveLabel}</button>
+                <button type="button" class="btn btn-secondary small-btn btn-danger-soft saved-plan-delete-btn" data-plan-index="${index}">Excluir</button>
               </div>
             </article>
           `;
@@ -3716,6 +3762,13 @@
         detailTitle.textContent = plan.title || "Plano de estudo";
         detailMeta.textContent = `Semana: ${plan.week_reference || "Não informada"} | Status: ${plan.status || "ativo"} | Salvo em: ${toBrDateTime(plan.created_at)}`;
         detailText.value = plan.description || "Sem descrição registrada.";
+
+        if (archiveDetailBtn) {
+          archiveDetailBtn.textContent = normalize(plan.status || "ativo") === "arquivado"
+            ? "Restaurar plano selecionado"
+            : "Arquivar plano selecionado";
+        }
+
         detailBox.classList.add("active");
         detailBox.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -3723,6 +3776,108 @@
       function hideDetail() {
         selectedPlan = null;
         if (detailBox) detailBox.classList.remove("active");
+      }
+
+      function getPlanId(plan) {
+        return plan?.id || plan?.plan_id || plan?.uuid || "";
+      }
+
+      async function setPlanStatus(plan, newStatus) {
+        const planId = getPlanId(plan);
+
+        if (!planId) {
+          alert("Não foi possível identificar o ID deste plano para alterar o status.");
+          return;
+        }
+
+        const actionLabel = newStatus === "arquivado" ? "arquivar" : "restaurar";
+        const confirmMessage = newStatus === "arquivado"
+          ? "Deseja arquivar este plano? Ele continuará salvo no Supabase e poderá ser consultado pelo filtro Arquivado."
+          : "Deseja restaurar este plano para a lista de planos ativos?";
+
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        try {
+          setMessage(`${actionLabel === "arquivar" ? "Arquivando" : "Restaurando"} plano...`, "");
+
+          const payload = {
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          };
+
+          const { error } = await client
+            .from("student_plans")
+            .update(payload)
+            .eq("id", planId);
+
+          if (error) throw error;
+
+          selectedPlan = null;
+          hideDetail();
+          await loadSavedPlans();
+          setMessage(newStatus === "arquivado" ? "Plano arquivado com sucesso." : "Plano restaurado com sucesso.", "");
+        } catch (error) {
+          console.error("INTEGRO: erro ao alterar status do plano.", error);
+          alert(`Não foi possível ${actionLabel} o plano. Verifique se a tabela student_plans aceita o status ${newStatus}.`);
+          setMessage(`Erro ao ${actionLabel} plano.`, "error");
+        }
+      }
+
+      async function archiveOrRestorePlan(plan) {
+        const status = normalize(plan?.status || "ativo");
+        const newStatus = status === "arquivado" ? "ativo" : "arquivado";
+        await setPlanStatus(plan, newStatus);
+      }
+
+      async function deletePlan(plan) {
+        const planId = getPlanId(plan);
+
+        if (!planId) {
+          alert("Não foi possível identificar o ID deste plano para excluir.");
+          return;
+        }
+
+        const titulo = plan?.title || "Plano de estudo";
+        const primeiraConfirmacao = confirm(
+          `ATENÇÃO: você está prestes a excluir definitivamente o plano:
+
+${titulo}
+
+Essa ação remove o registro do Supabase e não poderá ser desfeita. Deseja continuar?`
+        );
+
+        if (!primeiraConfirmacao) {
+          return;
+        }
+
+        const segundaConfirmacao = prompt('Para confirmar a exclusão definitiva, digite EXCLUIR em letras maiúsculas:');
+
+        if (segundaConfirmacao !== "EXCLUIR") {
+          alert("Exclusão cancelada. O plano foi mantido.");
+          return;
+        }
+
+        try {
+          setMessage("Excluindo plano definitivamente...", "");
+
+          const { error } = await client
+            .from("student_plans")
+            .delete()
+            .eq("id", planId);
+
+          if (error) throw error;
+
+          selectedPlan = null;
+          hideDetail();
+          await loadSavedPlans();
+          setMessage("Plano excluído definitivamente com sucesso.", "");
+        } catch (error) {
+          console.error("INTEGRO: erro ao excluir plano.", error);
+          alert("Não foi possível excluir o plano. Verifique as permissões da tabela student_plans no Supabase.");
+          setMessage("Erro ao excluir plano.", "error");
+        }
       }
 
       function openSection(sectionId) {
@@ -3883,6 +4038,8 @@
         if (button.classList.contains("saved-plan-use-btn")) usePlanAsBase(plan);
         if (button.classList.contains("saved-plan-copy-btn")) copyPlan(plan);
         if (button.classList.contains("saved-plan-print-btn")) printPlan(plan);
+        if (button.classList.contains("saved-plan-archive-btn")) archiveOrRestorePlan(plan);
+        if (button.classList.contains("saved-plan-delete-btn")) deletePlan(plan);
       });
 
       searchBtn.addEventListener("click", loadSavedPlans);
@@ -3920,6 +4077,8 @@
       printDetailBtn?.addEventListener("click", () => printPlan(selectedPlan));
       copyDetailBtn?.addEventListener("click", () => copyPlan(selectedPlan));
       openPlanFormBtn?.addEventListener("click", () => openSection("planSection"));
+      archiveDetailBtn?.addEventListener("click", () => archiveOrRestorePlan(selectedPlan));
+      deleteDetailBtn?.addEventListener("click", () => deletePlan(selectedPlan));
 
       studentSelect.addEventListener("change", () => {
         currentPlans = [];
