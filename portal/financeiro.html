@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="./financeiro.css" />
   <link rel="stylesheet" href="./financeiro-auto-responsavel.css" />
-  <link rel="stylesheet" href="./financeiro-mensalidades.css?v=20260512" />
+  <link rel="stylesheet" href="./financeiro-mensalidades.css?v=20260512-aba" />
 
   <!-- PWA INTEGRO -->
   <link rel="manifest" href="/manifest.webmanifest" />
@@ -75,13 +75,9 @@
       </article>
     </section>
 
-    <!-- 
-      O painel mensal de mensalidades será inserido automaticamente aqui
-      pelo arquivo financeiro-mensalidades.js, logo abaixo dos cards de resumo.
-    -->
-
     <section class="tabs" aria-label="Áreas financeiras">
       <button class="tab active" data-tab="caixa" type="button">Frente de caixa</button>
+      <button class="tab" data-tab="mensalidades" type="button">Mensalidades</button>
       <button class="tab" data-tab="entradas" type="button">Entradas</button>
       <button class="tab" data-tab="saidas" type="button">Saídas</button>
       <button class="tab" data-tab="relatorios" type="button">Relatórios</button>
@@ -231,6 +227,10 @@
           </p>
         </aside>
       </div>
+    </section>
+
+    <section id="mensalidades" class="panel">
+      <div id="monthlyTuitionPanelMount"></div>
     </section>
 
     <section id="entradas" class="panel">
@@ -462,9 +462,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./financeiro.js?v=20260512-mensalidades"></script>
+  <script src="./financeiro.js?v=20260512-mensalidades-aba"></script>
   <script src="./financeiro-auto-responsavel.js?v=20260505"></script>
-  <script src="./financeiro-mensalidades.js?v=20260512"></script>
+  <script src="./financeiro-mensalidades.js?v=20260512-aba"></script>
   <script src="./financeiro-diretor.js"></script>
 
   <!-- PWA INTEGRO -->
