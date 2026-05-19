@@ -8,7 +8,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script defer src="./gestao-escolar.js?v=20260507-vencimento-ficha-fix"></script>
+  <script defer src="./gestao-escolar.js?v=20260517-pre-matricula"></script>
   <script defer src="./gestao-empresa.js?v=20260505"></script>
 
   <style>
@@ -146,7 +146,7 @@
 
     .school-box {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
       margin-top: 18px;
     }
@@ -518,10 +518,13 @@
       .gestao-buttons {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+
+      .school-box {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 980px) {
-      .school-box,
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -543,6 +546,7 @@
     }
 
     @media (max-width: 620px) {
+      .school-box,
       .gestao-buttons {
         grid-template-columns: 1fr;
       }
@@ -607,7 +611,12 @@
 
         <div class="metric">
           <strong id="studentsCount">0</strong>
-          <span>Alunos cadastrados</span>
+          <span>Alunos matriculados</span>
+        </div>
+
+        <div class="metric">
+          <strong id="reservedStudentsCount">0</strong>
+          <span>Reservas / pré-matrículas</span>
         </div>
       </div>
     </section>
@@ -647,7 +656,7 @@
         <button class="gestao-nav-button" type="button" data-gestao-tab="painel-alunos">
           <span class="gestao-nav-icon">5</span>
           <strong>Alunos</strong>
-          <small>Editar, imprimir ficha ou excluir alunos.</small>
+          <small>Editar, imprimir ficha, matricular reserva ou excluir alunos.</small>
         </button>
 
         <button class="gestao-nav-button" type="button" data-gestao-tab="painel-vinculos">
@@ -756,10 +765,11 @@
             </div>
 
             <div>
-              <label for="studentActive">Situação</label>
+              <label for="studentActive">Situação da matrícula</label>
               <select id="studentActive">
-                <option value="true">Ativo</option>
-                <option value="false">Inativo</option>
+                <option value="matriculado">Matriculado</option>
+                <option value="pre_matricula">Pré-matrícula / reserva</option>
+                <option value="inativo">Inativo</option>
               </select>
             </div>
 
@@ -871,7 +881,9 @@
 
       <article id="painel-alunos" class="card gestao-panel">
         <h2>Alunos cadastrados</h2>
-        <div class="mini">Esta lista permite conferir alunos, pacote e vencimento da mensalidade.</div>
+        <div class="mini">
+          Esta lista permite conferir alunos matriculados, reservas/pré-matrículas, pacote e vencimento da mensalidade.
+        </div>
 
         <div style="margin-top:14px; overflow:auto">
           <table>
@@ -893,7 +905,7 @@
 
       <article id="painel-vinculos" class="card gestao-panel">
         <h2>Vínculos ativos</h2>
-        <div class="mini">Cada vínculo mostra qual professor está associado a cada aluno.</div>
+        <div class="mini">Cada vínculo mostra qual professor está associado a cada aluno matriculado.</div>
 
         <div style="margin-top:14px; overflow:auto">
           <table>
@@ -1070,7 +1082,7 @@
         <div class="modal-header">
           <div>
             <h2 id="studentEditTitle">Editar aluno</h2>
-            <p class="sub">Atualize os dados cadastrais do aluno, responsáveis, pacote e vencimento.</p>
+            <p class="sub">Atualize os dados cadastrais do aluno, responsáveis, pacote, vencimento e situação da matrícula.</p>
           </div>
 
           <button type="button" class="btn-small" id="closeStudentEdit">Fechar</button>
@@ -1122,10 +1134,11 @@
               </div>
 
               <div>
-                <label for="editStudentActive">Situação</label>
+                <label for="editStudentActive">Situação da matrícula</label>
                 <select id="editStudentActive">
-                  <option value="true">Ativo</option>
-                  <option value="false">Inativo</option>
+                  <option value="matriculado">Matriculado</option>
+                  <option value="pre_matricula">Pré-matrícula / reserva</option>
+                  <option value="inativo">Inativo</option>
                 </select>
               </div>
 
