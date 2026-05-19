@@ -62,6 +62,36 @@
     });
   }
 
+  function getEnrollmentStatus(student) {
+    if (student?.enrollment_status) {
+      return student.enrollment_status;
+    }
+
+    return student?.active === false ? 'inativo' : 'matriculado';
+  }
+
+  function enrollmentLabel(statusValue) {
+    const labels = {
+      matriculado: 'Matriculado',
+      pre_matricula: 'Pré-matrícula / reserva',
+      inativo: 'Inativo'
+    };
+
+    return labels[statusValue] || 'Matriculado';
+  }
+
+  function isStudentEnrolled(student) {
+    return getEnrollmentStatus(student) === 'matriculado';
+  }
+
+  function isStudentReserved(student) {
+    return getEnrollmentStatus(student) === 'pre_matricula';
+  }
+
+  function activeFromEnrollmentStatus(statusValue) {
+    return statusValue === 'matriculado';
+  }
+
   function optionList(items, labelKey, valueKey, placeholder) {
     return [`<option value="">${placeholder}</option>`].concat(
       (items || []).map((item) => `<option value="${safe(item[valueKey])}">${safe(item[labelKey])}</option>`)
@@ -288,7 +318,7 @@
   async function loadStudents() {
     const { data, error } = await client
       .from('students')
-      .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, notes, school_id, monthly_due_day, package_id')
+      .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, enrollment_status, reserved_at, enrolled_at, notes, school_id, monthly_due_day, package_id')
       .eq('school_id', profile.school_id)
       .order('full_name', { ascending: true });
 
@@ -297,37 +327,59 @@
     }
 
     students = data || [];
-    text('studentsCount', String(students.length));
+
+    const enrolledCount = students.filter(isStudentEnrolled).length;
+    const reservedCount = students.filter(isStudentReserved).length;
+
+    text('studentsCount', String(enrolledCount));
+    text('reservedStudentsCount', String(reservedCount));
 
     html('studentsTable', students.length
-      ? students.map((s) => `
-        <tr>
-          <td>
-            <strong>${safe(s.full_name)}</strong><br>
-            <span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span><br>
-            <span class="small">Vencimento: ${s.monthly_due_day ? 'dia ' + safe(s.monthly_due_day) : '-'}</span><br>
-            <span class="small">Pacote: ${safe(getPackageName(s.package_id))}</span>
-          </td>
-          <td>${safe(formatDateBR(s.birth_date) || '-')}</td>
-          <td>
-            ${safe(s.guardian_1_name || '-')}<br>
-            <span class="small">${safe(s.guardian_1_email || '')}</span><br>
-            <span class="small">${safe(s.guardian_2_name ? 'Outro resp.: ' + s.guardian_2_name : '')}</span>
-          </td>
-          <td>
-            ${safe(s.guardian_1_phone || '-')}<br>
-            <span class="small">${safe(s.guardian_2_phone || '')}</span>
-          </td>
-          <td>${s.active ? 'Ativo' : 'Inativo'}</td>
-          <td>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">Editar</button>
-              <button class="btn-small" type="button" data-print-student="${safe(s.id)}" style="background:#e8f4ee;color:#114a3b;">Imprimir ficha</button>
-              <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">Excluir</button>
-            </div>
-          </td>
-        </tr>
-      `).join('')
+      ? students.map((s) => {
+        const enrollmentStatus = getEnrollmentStatus(s);
+
+        return `
+          <tr>
+            <td>
+              <strong>${safe(s.full_name)}</strong><br>
+              <span class="small">CPF resp.: ${safe(s.guardian_1_cpf || '-')}</span><br>
+              <span class="small">Vencimento: ${s.monthly_due_day ? 'dia ' + safe(s.monthly_due_day) : '-'}</span><br>
+              <span class="small">Pacote: ${safe(getPackageName(s.package_id))}</span>
+            </td>
+
+            <td>${safe(formatDateBR(s.birth_date) || '-')}</td>
+
+            <td>
+              ${safe(s.guardian_1_name || '-')}<br>
+              <span class="small">${safe(s.guardian_1_email || '')}</span><br>
+              <span class="small">${safe(s.guardian_2_name ? 'Outro resp.: ' + s.guardian_2_name : '')}</span>
+            </td>
+
+            <td>
+              ${safe(s.guardian_1_phone || '-')}<br>
+              <span class="small">${safe(s.guardian_2_phone || '')}</span>
+            </td>
+
+            <td>${safe(enrollmentLabel(enrollmentStatus))}</td>
+
+            <td>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                ${
+                  enrollmentStatus === 'pre_matricula'
+                    ? `<button class="btn-small" type="button" data-enroll-student="${safe(s.id)}" style="background:#dcfce7;color:#166534;">
+                        Matricular
+                      </button>`
+                    : ''
+                }
+
+                <button class="btn-small" type="button" data-edit-student="${safe(s.id)}">Editar</button>
+                <button class="btn-small" type="button" data-print-student="${safe(s.id)}" style="background:#e8f4ee;color:#114a3b;">Imprimir ficha</button>
+                <button class="btn-small" type="button" data-delete-student="${safe(s.id)}" style="background:#fee2e2;color:#991b1b;">Excluir</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('')
       : '<tr><td colspan="6" class="empty">Nenhum aluno cadastrado.</td></tr>'
     );
 
@@ -335,10 +387,10 @@
 
     if (studentSelect) {
       studentSelect.innerHTML = optionList(
-        students.filter(s => s.active !== false),
+        students.filter(isStudentEnrolled),
         'full_name',
         'id',
-        'Selecione um aluno'
+        'Selecione um aluno matriculado'
       );
     }
   }
@@ -356,11 +408,13 @@
     }
 
     const teacherNames = new Map(teachers.map((t) => [t.id, t.full_name]));
+    const enrolledStudentIds = new Set(students.filter(isStudentEnrolled).map((s) => s.id));
     const studentNames = new Map(students.map((s) => [s.id, s.full_name]));
 
     const rows = (data || []).filter((v) =>
       teacherNames.has(v.teacher_profile_id) &&
-      studentNames.has(v.student_id)
+      studentNames.has(v.student_id) &&
+      enrolledStudentIds.has(v.student_id)
     );
 
     html('linksTable', rows.length
@@ -370,7 +424,7 @@
           <td>${safe(studentNames.get(v.student_id))}</td>
         </tr>
       `).join('')
-      : '<tr><td colspan="2" class="empty">Nenhum vínculo criado.</td></tr>'
+      : '<tr><td colspan="2" class="empty">Nenhum vínculo ativo com aluno matriculado.</td></tr>'
     );
   }
 
@@ -518,8 +572,10 @@
       const guardianEmail = $('guardianPrimaryEmail').value.trim().toLowerCase();
       const guardianPassword = $('guardianPassword').value.trim();
 
+      const enrollmentStatus = $('studentActive')?.value || 'matriculado';
       const dueDayValue = $('studentMonthlyDueDay')?.value || '';
       const packageValue = $('studentPackageId')?.value || '';
+      const now = new Date().toISOString();
 
       const payload = {
         full_name: $('studentName').value.trim(),
@@ -530,7 +586,10 @@
         guardian_1_phone: $('guardianPrimaryPhone').value.trim(),
         guardian_2_name: $('guardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('guardianSecondaryPhone').value.trim() || null,
-        active: $('studentActive').value === 'true',
+        active: activeFromEnrollmentStatus(enrollmentStatus),
+        enrollment_status: enrollmentStatus,
+        reserved_at: enrollmentStatus === 'pre_matricula' ? now : null,
+        enrolled_at: enrollmentStatus === 'matriculado' ? now : null,
         monthly_due_day: dueDayValue ? Number(dueDayValue) : null,
         package_id: packageValue || null,
         notes: $('studentNotes').value.trim() || null,
@@ -592,7 +651,12 @@
         cpf: payload.guardian_1_cpf,
       });
 
-      status('studentStatus', 'ok', 'Aluno cadastrado, login do responsável criado e Portal da Família vinculado com sucesso.');
+      const msg = enrollmentStatus === 'pre_matricula'
+        ? 'Aluno cadastrado como pré-matrícula/reserva. Ele não entrou no total de alunos matriculados.'
+        : 'Aluno cadastrado, login do responsável criado e Portal da Família vinculado com sucesso.';
+
+      status('studentStatus', 'ok', msg);
+
       $('studentForm').reset();
 
       await refreshAll();
@@ -612,7 +676,7 @@
       const student_id = $('linkStudent').value;
 
       if (!teacher_profile_id || !student_id) {
-        status('linkStatus', 'warn', 'Selecione um professor e um aluno.');
+        status('linkStatus', 'warn', 'Selecione um professor e um aluno matriculado.');
         return;
       }
 
@@ -650,7 +714,7 @@
     value('editGuardianPrimaryPhone', s.guardian_1_phone);
     value('editGuardianSecondaryName', s.guardian_2_name);
     value('editGuardianSecondaryPhone', s.guardian_2_phone);
-    value('editStudentActive', String(s.active !== false));
+    value('editStudentActive', getEnrollmentStatus(s));
     value('editStudentMonthlyDueDay', s.monthly_due_day || '');
     value('editStudentPackageId', s.package_id || '');
     value('editStudentNotes', s.notes);
@@ -670,8 +734,13 @@
         return;
       }
 
+      const oldStudent = students.find((item) => item.id === id);
+      const oldStatus = getEnrollmentStatus(oldStudent);
+
+      const enrollmentStatus = $('editStudentActive')?.value || 'matriculado';
       const dueDayValue = $('editStudentMonthlyDueDay')?.value || '';
       const packageValue = $('editStudentPackageId')?.value || '';
+      const now = new Date().toISOString();
 
       const payload = {
         full_name: $('editStudentName').value.trim(),
@@ -682,11 +751,20 @@
         guardian_1_phone: $('editGuardianPrimaryPhone').value.trim(),
         guardian_2_name: $('editGuardianSecondaryName').value.trim() || null,
         guardian_2_phone: $('editGuardianSecondaryPhone').value.trim() || null,
-        active: $('editStudentActive').value === 'true',
+        active: activeFromEnrollmentStatus(enrollmentStatus),
+        enrollment_status: enrollmentStatus,
         monthly_due_day: dueDayValue ? Number(dueDayValue) : null,
         package_id: packageValue || null,
         notes: $('editStudentNotes').value.trim() || null,
       };
+
+      if (enrollmentStatus === 'pre_matricula' && oldStatus !== 'pre_matricula') {
+        payload.reserved_at = now;
+      }
+
+      if (enrollmentStatus === 'matriculado' && oldStatus !== 'matriculado') {
+        payload.enrolled_at = now;
+      }
 
       if (
         !payload.full_name ||
@@ -715,7 +793,7 @@
         .update(payload)
         .eq('id', id)
         .eq('school_id', profile.school_id)
-        .select('id, full_name, monthly_due_day, package_id')
+        .select('id, full_name, enrollment_status, active')
         .maybeSingle();
 
       if (error) {
@@ -729,7 +807,7 @@
       status(
         'studentEditStatus',
         'ok',
-        `Aluno atualizado com sucesso. Vencimento salvo: ${updatedStudent.monthly_due_day ? 'dia ' + updatedStudent.monthly_due_day : 'não informado'}.`
+        `Aluno atualizado com sucesso. Situação: ${enrollmentLabel(updatedStudent.enrollment_status)}.`
       );
 
       await refreshAll();
@@ -804,7 +882,7 @@
 
       const { data: freshStudent, error: studentError } = await client
         .from('students')
-        .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, notes, school_id, monthly_due_day, package_id')
+        .select('id, full_name, birth_date, guardian_1_name, guardian_1_cpf, guardian_1_email, guardian_1_phone, guardian_2_name, guardian_2_phone, active, enrollment_status, notes, school_id, monthly_due_day, package_id')
         .eq('id', studentId)
         .eq('school_id', profile.school_id)
         .maybeSingle();
@@ -861,6 +939,7 @@
 
       const studentPackageName = getPackageName(student.package_id);
       const monthlyDueDay = student.monthly_due_day ? `Dia ${student.monthly_due_day}` : 'Não informado';
+      const enrollmentStatus = enrollmentLabel(getEnrollmentStatus(student));
 
       const today = new Date().toLocaleDateString('pt-BR');
 
@@ -1050,8 +1129,8 @@
         </div>
 
         <div class="field">
-          <span class="label">Situação</span>
-          <span class="value">${student.active === false ? 'Inativo' : 'Ativo'}</span>
+          <span class="label">Situação da matrícula</span>
+          <span class="value">${safe(enrollmentStatus)}</span>
         </div>
       </div>
     </div>
@@ -1161,6 +1240,48 @@
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erro ao gerar ficha do aluno.');
+    }
+  }
+
+  async function handleEnrollStudent(studentId) {
+    const student = students.find((item) => item.id === studentId);
+
+    if (!student) {
+      alert('Aluno não encontrado na lista atual.');
+      return;
+    }
+
+    const confirmMessage =
+      `Deseja matricular o aluno "${student.full_name}"?\n\n` +
+      `Ele deixará de ser pré-matrícula/reserva e passará a contar como aluno matriculado ativo.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      status('studentStatus', 'warn', 'Matriculando aluno. Aguarde...');
+
+      const { error } = await client
+        .from('students')
+        .update({
+          active: true,
+          enrollment_status: 'matriculado',
+          enrolled_at: new Date().toISOString()
+        })
+        .eq('id', studentId)
+        .eq('school_id', profile.school_id);
+
+      if (error) {
+        throw error;
+      }
+
+      status('studentStatus', 'ok', 'Aluno matriculado com sucesso. Ele agora conta como aluno ativo.');
+
+      await refreshAll();
+    } catch (err) {
+      console.error(err);
+      status('studentStatus', 'error', err.message || 'Erro ao matricular aluno.');
     }
   }
 
@@ -1282,6 +1403,7 @@
       const printStudentBtn = ev.target.closest('[data-print-student]');
       const deleteStudentBtn = ev.target.closest('[data-delete-student]');
       const deleteTeacherBtn = ev.target.closest('[data-delete-teacher]');
+      const enrollStudentBtn = ev.target.closest('[data-enroll-student]');
 
       if (studentBtn) {
         openStudentEdit(studentBtn.getAttribute('data-edit-student'));
@@ -1301,6 +1423,10 @@
 
       if (deleteTeacherBtn) {
         handleDeleteTeacher(deleteTeacherBtn.getAttribute('data-delete-teacher'));
+      }
+
+      if (enrollStudentBtn) {
+        handleEnrollStudent(enrollStudentBtn.getAttribute('data-enroll-student'));
       }
 
       if (ev.target.classList && ev.target.classList.contains('modal-backdrop')) {
