@@ -1,11 +1,11 @@
-/* INTEGRO — Painel mensal de mensalidades */
+/* INTEGRO — Painel mensal de mensalidades compacto */
 
 .tuition-panel {
   background: #ffffff;
   border: 1px solid #d7e7df;
   border-radius: 24px;
-  padding: 22px;
-  margin: 22px 0;
+  padding: 20px;
+  margin: 18px 0 24px;
   box-shadow: 0 12px 30px rgba(18, 50, 42, 0.08);
 }
 
@@ -18,7 +18,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 18px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
@@ -34,13 +34,14 @@
 .tuition-panel-head h2 {
   margin: 0 0 6px;
   color: #0b5242;
-  font-size: 1.45rem;
+  font-size: 1.35rem;
 }
 
 .tuition-panel-head .muted {
   margin: 0;
   color: #61746d;
   line-height: 1.45;
+  max-width: 680px;
 }
 
 .tuition-month-controls {
@@ -63,11 +64,13 @@
 .tuition-btn {
   border: none;
   border-radius: 999px;
-  padding: 11px 15px;
+  padding: 10px 14px;
   font-weight: 800;
   cursor: pointer;
   background: #e8f2ee;
   color: #0b5242;
+  font-size: 0.88rem;
+  white-space: nowrap;
 }
 
 .tuition-btn:hover {
@@ -94,17 +97,22 @@
   border: 1px solid #d7e4dd;
 }
 
+.tuition-btn.compact {
+  padding: 8px 11px;
+  font-size: 0.8rem;
+}
+
 .tuition-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .tuition-kpi {
   border: 1px solid #d7e4dd;
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 13px 14px;
   background: #f8fcfa;
 }
 
@@ -112,13 +120,13 @@
   display: block;
   color: #61746d;
   font-weight: 700;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .tuition-kpi strong {
   display: block;
   color: #0b5242;
-  font-size: 1.65rem;
+  font-size: 1.55rem;
 }
 
 .tuition-kpi.danger {
@@ -151,9 +159,9 @@
 
 .tuition-filter-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .tuition-filter {
@@ -161,9 +169,10 @@
   background: #ffffff;
   color: #0b5242;
   border-radius: 999px;
-  padding: 9px 13px;
+  padding: 8px 12px;
   font-weight: 800;
   cursor: pointer;
+  font-size: 0.86rem;
 }
 
 .tuition-filter.active {
@@ -172,43 +181,118 @@
   border-color: #0b5242;
 }
 
-.tuition-columns {
+.tuition-warning {
+  background: #fff8e1;
+  color: #7a5600;
+  border: 1px solid #f1d797;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.tuition-compact-area {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
-.tuition-column {
-  background: #f8fcfa;
+.tuition-lane {
   border: 1px solid #d7e4dd;
+  background: #f8fcfa;
   border-radius: 20px;
   padding: 14px;
-  min-height: 180px;
 }
 
-.tuition-column h3 {
-  margin: 0 0 4px;
+.tuition-lane-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tuition-lane-title h3 {
+  margin: 0 0 3px;
   color: #0b5242;
   font-size: 1.02rem;
 }
 
-.tuition-column p {
-  margin: 0 0 12px;
+.tuition-lane-title p {
+  margin: 0;
   color: #61746d;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.35;
 }
 
-.tuition-list {
-  display: grid;
-  gap: 10px;
+.tuition-lane-counter {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e8f2ee;
+  color: #0b5242;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.tuition-lane-counter.danger {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.tuition-lane-counter.today {
+  background: #fff3cd;
+  color: #8a6100;
+}
+
+.tuition-lane-counter.paid {
+  background: #e5f7e9;
+  color: #176a34;
+}
+
+.tuition-scroll-wrap {
+  position: relative;
+}
+
+.tuition-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 12px;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tuition-scroll::-webkit-scrollbar {
+  height: 9px;
+}
+
+.tuition-scroll::-webkit-scrollbar-track {
+  background: #e8f2ee;
+  border-radius: 999px;
+}
+
+.tuition-scroll::-webkit-scrollbar-thumb {
+  background: #9fc6b6;
+  border-radius: 999px;
 }
 
 .tuition-card {
+  flex: 0 0 255px;
+  max-width: 255px;
+  min-height: 245px;
   background: #ffffff;
   border: 1px solid #d7e4dd;
   border-radius: 16px;
   padding: 13px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
 }
 
 .tuition-card.late {
@@ -229,7 +313,7 @@
 .tuition-card-head {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
   margin-bottom: 8px;
 }
@@ -238,11 +322,13 @@
   display: block;
   color: #12322a;
   line-height: 1.25;
+  font-size: 0.98rem;
 }
 
 .tuition-card small {
   color: #61746d;
   line-height: 1.35;
+  font-size: 0.82rem;
 }
 
 .tuition-status {
@@ -250,8 +336,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 0.75rem;
+  padding: 5px 8px;
+  font-size: 0.72rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -278,38 +364,79 @@
 
 .tuition-card-info {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   margin: 8px 0;
   color: #61746d;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  line-height: 1.28;
+}
+
+.tuition-card-info span {
+  overflow-wrap: anywhere;
 }
 
 .tuition-card-actions {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .tuition-empty {
+  flex: 0 0 255px;
   border: 1px dashed #d7e4dd;
   border-radius: 14px;
   padding: 14px;
   color: #61746d;
   background: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.tuition-scroll-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tuition-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #d7e4dd;
+  background: #ffffff;
+  color: #0b5242;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tuition-arrow:hover {
+  background: #e8f2ee;
+}
+
+.tuition-message {
+  display: none;
+  border-radius: 14px;
+  padding: 11px 13px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   font-size: 0.92rem;
   line-height: 1.4;
 }
 
-.tuition-warning {
-  background: #fff8e1;
-  color: #7a5600;
-  border: 1px solid #f1d797;
-  border-radius: 16px;
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  font-size: 0.93rem;
-  line-height: 1.45;
+.tuition-message.show {
+  display: block;
+}
+
+.tuition-message.ok {
+  background: #e5f7e9;
+  color: #176a34;
+}
+
+.tuition-message.error {
+  background: #fff1f0;
+  color: #b42318;
 }
 
 .tuition-modal {
@@ -388,36 +515,15 @@
   margin-top: 16px;
 }
 
-.tuition-message {
-  display: none;
-  border-radius: 14px;
-  padding: 11px 13px;
-  margin-top: 12px;
-  font-size: 0.92rem;
-  line-height: 1.4;
-}
-
-.tuition-message.show {
-  display: block;
-}
-
-.tuition-message.ok {
-  background: #e5f7e9;
-  color: #176a34;
-}
-
-.tuition-message.error {
-  background: #fff1f0;
-  color: #b42318;
-}
-
 @media (max-width: 1180px) {
-  .tuition-columns {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .tuition-kpis {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tuition-card,
+  .tuition-empty {
+    flex-basis: 245px;
+    max-width: 245px;
   }
 }
 
@@ -439,10 +545,27 @@
     min-width: 0;
   }
 
-  .tuition-columns,
   .tuition-kpis,
   .tuition-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tuition-lane {
+    padding: 12px;
+  }
+
+  .tuition-lane-head {
+    align-items: center;
+  }
+
+  .tuition-lane-title p {
+    display: none;
+  }
+
+  .tuition-card,
+  .tuition-empty {
+    flex-basis: 82vw;
+    max-width: 82vw;
   }
 
   .tuition-modal-card {
