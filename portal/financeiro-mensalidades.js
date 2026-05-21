@@ -1,11 +1,11 @@
 /*
   INTEGRO — Painel mensal de mensalidades compacto
 
-  Funções:
-  - Mostra atrasados, vencendo hoje, a vencer e pagos.
-  - Mostra os cartões em rolagem lateral, sem empurrar a página para baixo.
-  - Botão "Baixar sem caixa" registra pagamento direto.
-  - Botão "Enviar ao caixa" mantém o fluxo com desconto.
+  Ajuste:
+  - "Baixar sem caixa" NÃO cria entrada financeira.
+  - NÃO imprime recibo.
+  - NÃO altera o caixa.
+  - Apenas oculta o aluno do painel daquele mês, pois o pagamento já foi lançado na Frente de caixa.
 */
 
 (function () {
@@ -26,10 +26,10 @@
     students: [],
     packages: [],
     entries: [],
+    panelStatuses: [],
     rows: [],
     selectedMonth: currentMonthValue(),
-    activeFilter: "todos",
-    selectedStudentForPayment: null
+    activeFilter: "todos"
   };
 
   function $(id) {
@@ -72,6 +72,10 @@
   function todayISO() {
     const now = new Date();
     return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+
+  function monthRefISO(monthValue) {
+    return `${monthValue || currentMonthValue()}-01`;
   }
 
   function monthParts(monthValue) {
@@ -129,7 +133,6 @@
 
   function formatDateBR(date) {
     if (!date) return "—";
-
     return date.toLocaleDateString("pt-BR");
   }
 
@@ -165,7 +168,7 @@
           <p class="eyebrow">ACOMPANHAMENTO DE MENSALIDADES</p>
           <h2>Painel mensal compacto</h2>
           <p class="muted">
-            Controle os pagamentos por mês. Os alunos aparecem em cartões laterais para não alongar a tela.
+            Controle os vencimentos por mês. Os cartões podem ser arrastados para o lado para não alongar a tela.
           </p>
         </div>
 
@@ -180,8 +183,8 @@
       <div id="tuitionPanelMessage" class="tuition-message"></div>
 
       <div class="tuition-warning">
-        Use <strong>Baixar sem caixa</strong> para pagamento sem desconto. 
-        Use <strong>Enviar ao caixa</strong> quando precisar aplicar desconto ou ajustar valores.
+        Use <strong>Ocultar do painel</strong> quando a mensalidade já tiver sido lançada pela Frente de caixa.
+        Essa ação não cria entrada, não imprime recibo e não altera o caixa.
       </div>
 
       <section class="tuition-kpis">
@@ -276,7 +279,7 @@
           <div class="tuition-lane-head">
             <div class="tuition-lane-title">
               <h3>Pagos</h3>
-              <p>Alunos com mensalidade baixada no mês selecionado.</p>
+              <p>Alunos com mensalidade baixada pela Frente de caixa no mês selecionado.</p>
             </div>
 
             <div class="tuition-scroll-actions">
@@ -302,82 +305,6 @@
       const main = document.querySelector("main.page") || document.body;
       main.prepend(panel);
     }
-
-    createPaymentModal();
-  }
-
-  function createPaymentModal() {
-    if ($("tuitionPaymentModal")) {
-      return;
-    }
-
-    const modal = document.createElement("div");
-    modal.id = "tuitionPaymentModal";
-    modal.className = "tuition-modal";
-
-    modal.innerHTML = `
-      <div class="tuition-modal-backdrop" data-close-tuition-modal></div>
-
-      <section class="tuition-modal-card" role="dialog" aria-modal="true" aria-labelledby="tuitionPaymentTitle">
-        <h2 id="tuitionPaymentTitle">Baixar mensalidade sem caixa</h2>
-        <p class="muted" id="tuitionPaymentDescription">
-          Esta baixa registra o pagamento direto, sem desconto. Para desconto ou ajuste de valor, use "Enviar ao caixa".
-        </p>
-
-        <div class="tuition-modal-grid">
-          <label>
-            Aluno
-            <input id="tuitionPayStudentName" disabled />
-          </label>
-
-          <label>
-            Competência
-            <input id="tuitionPayCompetence" disabled />
-          </label>
-
-          <label>
-            Pacote
-            <input id="tuitionPayPackage" disabled />
-          </label>
-
-          <label>
-            Valor
-            <input id="tuitionPayAmount" disabled />
-          </label>
-
-          <label>
-            Forma de pagamento
-            <select id="tuitionPayMethod">
-              <option value="PIX">PIX</option>
-              <option value="Dinheiro">Dinheiro</option>
-              <option value="Cartão de crédito">Cartão de crédito</option>
-              <option value="Cartão de débito">Cartão de débito</option>
-              <option value="Transferência">Transferência</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </label>
-
-          <label>
-            Recebido de
-            <input id="tuitionPayPayer" disabled />
-          </label>
-
-          <label class="full">
-            Observação
-            <textarea id="tuitionPayNotes" rows="2" placeholder="Opcional. Ex.: pagamento confirmado por PIX."></textarea>
-          </label>
-        </div>
-
-        <div id="tuitionModalMessage" class="tuition-message"></div>
-
-        <div class="tuition-modal-actions">
-          <button class="tuition-btn ghost" type="button" data-close-tuition-modal>Cancelar</button>
-          <button class="tuition-btn primary" type="button" id="tuitionConfirmPaymentBtn">Confirmar baixa sem caixa</button>
-        </div>
-      </section>
-    `;
-
-    document.body.appendChild(modal);
   }
 
   async function loadContext() {
@@ -427,8 +354,9 @@
 
     const { startISO, endISO } = monthStartEndISO(state.selectedMonth);
     const selectedMonthText = monthLabel(state.selectedMonth);
+    const monthRef = monthRefISO(state.selectedMonth);
 
-    const [studentsRes, packagesRes, entriesRes] = await Promise.all([
+    const [studentsRes, packagesRes, entriesRes, panelStatusRes] = await Promise.all([
       client
         .from("students")
         .select("id, full_name, active, enrollment_status, guardian_1_name, guardian_1_cpf, guardian_1_phone, guardian_1_email, monthly_due_day, package_id")
@@ -448,21 +376,34 @@
         .eq("school_id", state.school.id)
         .eq("entry_type", "mensalidade")
         .order("created_at", { ascending: false })
-        .limit(1000)
+        .limit(1000),
+
+      client
+        .from("finance_tuition_panel_status")
+        .select("id, school_id, student_id, month_ref, status, notes, created_at")
+        .eq("school_id", state.school.id)
+        .eq("month_ref", monthRef)
     ]);
 
     if (studentsRes.error) throw studentsRes.error;
     if (packagesRes.error) throw packagesRes.error;
     if (entriesRes.error) throw entriesRes.error;
 
+    if (panelStatusRes.error) {
+      throw new Error(
+        "Erro ao carregar baixas do painel. Verifique se a tabela finance_tuition_panel_status foi criada no Supabase."
+      );
+    }
+
     state.students = studentsRes.data || [];
     state.packages = packagesRes.data || [];
     state.entries = entriesRes.data || [];
+    state.panelStatuses = panelStatusRes.data || [];
 
     state.rows = buildRows({
       students: state.students,
-      packages: state.packages,
       entries: state.entries,
+      panelStatuses: state.panelStatuses,
       selectedMonth: state.selectedMonth,
       selectedMonthText,
       startISO,
@@ -488,7 +429,13 @@
     return created.getFullYear() === year && created.getMonth() === monthIndex;
   }
 
-  function buildRows({ students, entries, selectedMonth, selectedMonthText }) {
+  function hasPanelBaixa(studentId, panelStatuses) {
+    return (panelStatuses || []).some((item) => {
+      return item.student_id === studentId && item.status === "baixado_painel";
+    });
+  }
+
+  function buildRows({ students, entries, panelStatuses, selectedMonth, selectedMonthText }) {
     const activeStudents = (students || []).filter((student) => {
       if (student.active === false) return false;
       if (student.enrollment_status && student.enrollment_status !== "matriculado") return false;
@@ -507,6 +454,8 @@
           isEntryForSelectedMonth(entry, selectedMonth, selectedMonthText);
       });
 
+      const panelBaixa = hasPanelBaixa(student.id, panelStatuses);
+
       let status = "sem_configuracao";
       let statusLabel = "Sem configuração";
       let days = null;
@@ -514,6 +463,9 @@
       if (paidEntry) {
         status = "pago";
         statusLabel = "Pago";
+      } else if (panelBaixa) {
+        status = "baixado_painel";
+        statusLabel = "Oculto do painel";
       } else if (!dueDay || !packageItem) {
         status = "sem_configuracao";
         statusLabel = "Completar cadastro";
@@ -538,6 +490,7 @@
         dueDay,
         dueDate,
         paidEntry,
+        panelBaixa,
         status,
         statusLabel,
         days
@@ -548,7 +501,8 @@
         hoje: 2,
         vencer: 3,
         sem_configuracao: 4,
-        pago: 5
+        pago: 5,
+        baixado_painel: 6
       };
 
       const statusCompare = (order[a.status] || 99) - (order[b.status] || 99);
@@ -636,7 +590,7 @@
       detailText = "Cadastre vencimento e pacote";
     }
 
-    const canQuickPay = row.status !== "pago" && row.packageItem && row.dueDay;
+    const canHideFromPanel = row.status !== "pago";
 
     return `
       <article class="tuition-card ${statusClass}" data-student-id="${safe(student.id)}">
@@ -658,8 +612,8 @@
 
         <div class="tuition-card-actions">
           ${
-            canQuickPay
-              ? `<button class="tuition-btn primary compact" type="button" data-action="quick-pay" data-student-id="${safe(student.id)}">Baixar sem caixa</button>`
+            canHideFromPanel
+              ? `<button class="tuition-btn primary compact" type="button" data-action="hide-panel" data-student-id="${safe(student.id)}">Ocultar do painel</button>`
               : ""
           }
 
@@ -697,7 +651,7 @@
     });
   }
 
-  function openPaymentModal(studentId) {
+  async function hideFromPanel(studentId) {
     const row = state.rows.find((item) => item.student.id === studentId);
 
     if (!row) {
@@ -705,137 +659,47 @@
       return;
     }
 
-    if (!row.packageItem) {
-      alert("Este aluno ainda não possui pacote vinculado. Vincule o pacote na Gestão Escolar.");
+    const confirmText =
+      `Deseja ocultar "${row.student.full_name}" do painel de mensalidades deste mês?\n\n` +
+      `Essa ação NÃO cria entrada financeira, NÃO imprime recibo e NÃO altera o caixa.\n\n` +
+      `Use somente quando a mensalidade já tiver sido lançada pela Frente de caixa.`;
+
+    if (!confirm(confirmText)) {
       return;
     }
-
-    if (!row.dueDay) {
-      alert("Este aluno ainda não possui dia de vencimento cadastrado. Cadastre o vencimento na Gestão Escolar.");
-      return;
-    }
-
-    state.selectedStudentForPayment = row;
-
-    $("tuitionPayStudentName").value = row.student.full_name || "";
-    $("tuitionPayCompetence").value = `${monthLabel(state.selectedMonth)} — vencimento dia ${row.dueDay}`;
-    $("tuitionPayPackage").value = row.packageItem.name || "";
-    $("tuitionPayAmount").value = money(row.packageItem.default_amount);
-    $("tuitionPayPayer").value = row.student.guardian_1_name || "";
-    $("tuitionPayMethod").value = "PIX";
-    $("tuitionPayNotes").value = "";
-
-    const modalMessage = $("tuitionModalMessage");
-    if (modalMessage) {
-      modalMessage.className = "tuition-message";
-      modalMessage.textContent = "";
-    }
-
-    $("tuitionPaymentModal").classList.add("show");
-  }
-
-  function closePaymentModal() {
-    $("tuitionPaymentModal")?.classList.remove("show");
-    state.selectedStudentForPayment = null;
-  }
-
-  function setModalMessage(message, type) {
-    const box = $("tuitionModalMessage");
-
-    if (!box) return;
-
-    box.textContent = message || "";
-    box.className = `tuition-message show ${type || "ok"}`;
-
-    if (!message) {
-      box.className = "tuition-message";
-    }
-  }
-
-  async function confirmQuickPayment() {
-    const row = state.selectedStudentForPayment;
-
-    if (!row) {
-      setModalMessage("Nenhum aluno selecionado para baixa.", "error");
-      return;
-    }
-
-    if (!row.packageItem) {
-      setModalMessage("O aluno não possui pacote financeiro vinculado.", "error");
-      return;
-    }
-
-    if (row.paidEntry) {
-      setModalMessage("Esta mensalidade já consta como paga neste mês.", "error");
-      return;
-    }
-
-    const confirmBtn = $("tuitionConfirmPaymentBtn");
 
     try {
-      if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Registrando...";
-      }
-
-      const amount = Number(row.packageItem.default_amount || 0);
-      const competence = `${monthLabel(state.selectedMonth)} — vencimento dia ${row.dueDay}`;
-      const notes = $("tuitionPayNotes")?.value?.trim() || "";
-
-      const description = notes
-        ? `Pagamento de mensalidade referente a ${monthLabel(state.selectedMonth)}. ${notes}`
-        : `Pagamento de mensalidade referente a ${monthLabel(state.selectedMonth)}.`;
+      setMessage("Ocultando aluno do painel deste mês...", "ok");
 
       const payload = {
         school_id: state.school.id,
-        entry_type: "mensalidade",
-        entry_date: todayISO(),
         student_id: row.student.id,
-        student_name_snapshot: row.student.full_name || "Aluno não informado",
-        payer_name: row.student.guardian_1_name || "Responsável não informado",
-        payer_document: row.student.guardian_1_cpf || "Não informado",
-        package_id: row.packageItem.id,
-        package_name_snapshot: row.packageItem.name || null,
-        discount_id: null,
-        discount_name_snapshot: null,
-        gross_amount: amount,
-        discount_amount: 0,
-        amount_paid: amount,
-        payment_method: $("tuitionPayMethod")?.value || "PIX",
-        competence_month: competence,
-        description,
-        created_by: state.user.id
+        month_ref: monthRefISO(state.selectedMonth),
+        status: "baixado_painel",
+        notes: "Ocultado do painel porque a mensalidade já foi lançada pela Frente de caixa.",
+        created_by: state.user.id,
+        updated_at: new Date().toISOString()
       };
 
-      const { data, error } = await client
-        .from("finance_entries")
-        .insert(payload)
-        .select("*")
-        .single();
+      const { error } = await client
+        .from("finance_tuition_panel_status")
+        .upsert(payload, {
+          onConflict: "school_id,student_id,month_ref"
+        });
 
       if (error) {
         throw error;
       }
 
-      setModalMessage("Baixa registrada com sucesso.", "ok");
-
-      closePaymentModal();
-
       await reloadPanel();
 
-      if (typeof window.printExistingReceipt === "function" && data) {
-        window.printExistingReceipt(data);
-      } else {
-        setMessage("Baixa registrada com sucesso. Recarregue a lista de entradas para imprimir o recibo.", "ok");
-      }
+      setMessage(
+        "Aluno ocultado do painel deste mês. Nenhuma entrada financeira foi criada e nenhum recibo foi emitido.",
+        "ok"
+      );
     } catch (error) {
       console.error(error);
-      setModalMessage(error.message || "Erro ao registrar baixa.", "error");
-    } finally {
-      if (confirmBtn) {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Confirmar baixa sem caixa";
-      }
+      setMessage(error.message || "Erro ao ocultar aluno do painel.", "error");
     }
   }
 
@@ -1006,8 +870,8 @@
       if (actionBtn) {
         const action = actionBtn.dataset.action;
 
-        if (action === "quick-pay") {
-          openPaymentModal(actionBtn.dataset.studentId);
+        if (action === "hide-panel") {
+          hideFromPanel(actionBtn.dataset.studentId);
         }
 
         if (action === "send-cashier") {
@@ -1019,18 +883,6 @@
         }
 
         return;
-      }
-
-      if (event.target.closest("[data-close-tuition-modal]")) {
-        closePaymentModal();
-      }
-    });
-
-    $("tuitionConfirmPaymentBtn")?.addEventListener("click", confirmQuickPayment);
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closePaymentModal();
       }
     });
   }
