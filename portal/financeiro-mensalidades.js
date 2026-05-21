@@ -1,12 +1,11 @@
 /*
-  INTEGRO — Painel mensal de mensalidades
+  INTEGRO — Painel mensal de mensalidades compacto
 
   Funções:
-  - Mostra alunos atrasados, vencendo hoje, a vencer e pagos.
-  - Usa o dia de vencimento salvo no cadastro do aluno.
-  - Usa o pacote financeiro vinculado ao aluno.
-  - Permite dar baixa rápida sem desconto.
-  - Permite enviar o aluno para a frente de caixa quando houver desconto.
+  - Mostra atrasados, vencendo hoje, a vencer e pagos.
+  - Mostra os cartões em rolagem lateral, sem empurrar a página para baixo.
+  - Botão "Baixar sem caixa" registra pagamento direto.
+  - Botão "Enviar ao caixa" mantém o fluxo com desconto.
 */
 
 (function () {
@@ -164,9 +163,9 @@
       <div class="tuition-panel-head">
         <div>
           <p class="eyebrow">ACOMPANHAMENTO DE MENSALIDADES</p>
-          <h2>Painel mensal de vencimentos</h2>
+          <h2>Painel mensal compacto</h2>
           <p class="muted">
-            Acompanhe, por mês, quem está atrasado, quem vence hoje, quem ainda vai vencer e quem já pagou.
+            Controle os pagamentos por mês. Os alunos aparecem em cartões laterais para não alongar a tela.
           </p>
         </div>
 
@@ -181,8 +180,8 @@
       <div id="tuitionPanelMessage" class="tuition-message"></div>
 
       <div class="tuition-warning">
-        O painel usa o vencimento cadastrado na ficha do aluno e o pacote financeiro vinculado. 
-        Para pagamentos com desconto, use o botão <strong>Enviar ao caixa</strong> e aplique o desconto na frente de caixa.
+        Use <strong>Baixar sem caixa</strong> para pagamento sem desconto. 
+        Use <strong>Enviar ao caixa</strong> quando precisar aplicar desconto ou ajustar valores.
       </div>
 
       <section class="tuition-kpis">
@@ -215,42 +214,92 @@
         <button class="tuition-filter" type="button" data-tuition-filter="pago">Pagos</button>
       </div>
 
-      <section class="tuition-columns">
-        <article class="tuition-column" data-column="atrasado">
-          <h3>Atrasados</h3>
-          <p>Alunos com vencimento anterior ao dia vigente e sem baixa no mês.</p>
-          <div id="tuitionLateList" class="tuition-list"></div>
+      <section class="tuition-compact-area">
+        <article class="tuition-lane" data-lane="atrasado">
+          <div class="tuition-lane-head">
+            <div class="tuition-lane-title">
+              <h3>Atrasados</h3>
+              <p>Vencimento anterior ao dia vigente e sem baixa no mês.</p>
+            </div>
+
+            <div class="tuition-scroll-actions">
+              <span class="tuition-lane-counter danger" id="tuitionLateLaneCount">0</span>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionLateList" data-scroll-dir="-1">‹</button>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionLateList" data-scroll-dir="1">›</button>
+            </div>
+          </div>
+
+          <div class="tuition-scroll-wrap">
+            <div id="tuitionLateList" class="tuition-scroll"></div>
+          </div>
         </article>
 
-        <article class="tuition-column" data-column="hoje">
-          <h3>Vencem hoje</h3>
-          <p>Alunos cuja mensalidade vence no dia vigente.</p>
-          <div id="tuitionTodayList" class="tuition-list"></div>
+        <article class="tuition-lane" data-lane="hoje">
+          <div class="tuition-lane-head">
+            <div class="tuition-lane-title">
+              <h3>Vencem hoje</h3>
+              <p>Mensalidades que vencem exatamente no dia vigente.</p>
+            </div>
+
+            <div class="tuition-scroll-actions">
+              <span class="tuition-lane-counter today" id="tuitionTodayLaneCount">0</span>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionTodayList" data-scroll-dir="-1">‹</button>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionTodayList" data-scroll-dir="1">›</button>
+            </div>
+          </div>
+
+          <div class="tuition-scroll-wrap">
+            <div id="tuitionTodayList" class="tuition-scroll"></div>
+          </div>
         </article>
 
-        <article class="tuition-column" data-column="vencer">
-          <h3>Vão vencer</h3>
-          <p>Alunos com vencimento posterior ao dia vigente.</p>
-          <div id="tuitionSoonList" class="tuition-list"></div>
+        <article class="tuition-lane" data-lane="vencer">
+          <div class="tuition-lane-head">
+            <div class="tuition-lane-title">
+              <h3>Vão vencer</h3>
+              <p>Mensalidades com vencimento posterior ao dia vigente.</p>
+            </div>
+
+            <div class="tuition-scroll-actions">
+              <span class="tuition-lane-counter" id="tuitionSoonLaneCount">0</span>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionSoonList" data-scroll-dir="-1">‹</button>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionSoonList" data-scroll-dir="1">›</button>
+            </div>
+          </div>
+
+          <div class="tuition-scroll-wrap">
+            <div id="tuitionSoonList" class="tuition-scroll"></div>
+          </div>
         </article>
 
-        <article class="tuition-column" data-column="pago">
-          <h3>Pagos</h3>
-          <p>Alunos com mensalidade baixada no mês selecionado.</p>
-          <div id="tuitionPaidList" class="tuition-list"></div>
+        <article class="tuition-lane" data-lane="pago">
+          <div class="tuition-lane-head">
+            <div class="tuition-lane-title">
+              <h3>Pagos</h3>
+              <p>Alunos com mensalidade baixada no mês selecionado.</p>
+            </div>
+
+            <div class="tuition-scroll-actions">
+              <span class="tuition-lane-counter paid" id="tuitionPaidLaneCount">0</span>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionPaidList" data-scroll-dir="-1">‹</button>
+              <button class="tuition-arrow" type="button" data-scroll-target="tuitionPaidList" data-scroll-dir="1">›</button>
+            </div>
+          </div>
+
+          <div class="tuition-scroll-wrap">
+            <div id="tuitionPaidList" class="tuition-scroll"></div>
+          </div>
         </article>
       </section>
     `;
 
-    const kpis = document.querySelector(".kpis");
-    const tabs = document.querySelector(".tabs");
-    const main = document.querySelector("main.page") || document.body;
+    const mount = document.getElementById("monthlyTuitionPanelMount");
 
-    if (kpis && kpis.parentNode) {
-      kpis.insertAdjacentElement("afterend", panel);
-    } else if (tabs && tabs.parentNode) {
-      tabs.insertAdjacentElement("beforebegin", panel);
+    if (mount) {
+      mount.innerHTML = "";
+      mount.appendChild(panel);
     } else {
+      const main = document.querySelector("main.page") || document.body;
       main.prepend(panel);
     }
 
@@ -270,9 +319,9 @@
       <div class="tuition-modal-backdrop" data-close-tuition-modal></div>
 
       <section class="tuition-modal-card" role="dialog" aria-modal="true" aria-labelledby="tuitionPaymentTitle">
-        <h2 id="tuitionPaymentTitle">Dar baixa na mensalidade</h2>
+        <h2 id="tuitionPaymentTitle">Baixar mensalidade sem caixa</h2>
         <p class="muted" id="tuitionPaymentDescription">
-          Confirme os dados do pagamento. Esta baixa será registrada como mensalidade sem desconto.
+          Esta baixa registra o pagamento direto, sem desconto. Para desconto ou ajuste de valor, use "Enviar ao caixa".
         </p>
 
         <div class="tuition-modal-grid">
@@ -323,7 +372,7 @@
 
         <div class="tuition-modal-actions">
           <button class="tuition-btn ghost" type="button" data-close-tuition-modal>Cancelar</button>
-          <button class="tuition-btn primary" type="button" id="tuitionConfirmPaymentBtn">Confirmar baixa</button>
+          <button class="tuition-btn primary" type="button" id="tuitionConfirmPaymentBtn">Confirmar baixa sem caixa</button>
         </div>
       </section>
     `;
@@ -382,8 +431,9 @@
     const [studentsRes, packagesRes, entriesRes] = await Promise.all([
       client
         .from("students")
-        .select("id, full_name, active, guardian_1_name, guardian_1_cpf, guardian_1_phone, guardian_1_email, monthly_due_day, package_id")
+        .select("id, full_name, active, enrollment_status, guardian_1_name, guardian_1_cpf, guardian_1_phone, guardian_1_email, monthly_due_day, package_id")
         .eq("school_id", state.school.id)
+        .eq("active", true)
         .order("full_name", { ascending: true }),
 
       client
@@ -439,7 +489,12 @@
   }
 
   function buildRows({ students, entries, selectedMonth, selectedMonthText }) {
-    const activeStudents = (students || []).filter((student) => student.active !== false);
+    const activeStudents = (students || []).filter((student) => {
+      if (student.active === false) return false;
+      if (student.enrollment_status && student.enrollment_status !== "matriculado") return false;
+      return true;
+    });
+
     const today = dateOnly(new Date());
 
     return activeStudents.map((student) => {
@@ -507,8 +562,8 @@
     });
   }
 
-  function rowsByStatus(status) {
-    return state.rows.filter((row) => row.status === status);
+  function rowsByStatus(statusValue) {
+    return state.rows.filter((row) => row.status === statusValue);
   }
 
   function render() {
@@ -522,15 +577,20 @@
     $("tuitionSoonCount").textContent = String(soonRows.length);
     $("tuitionPaidCount").textContent = String(paidRows.length);
 
-    renderList("tuitionLateList", lateRows, "atrasado");
-    renderList("tuitionTodayList", todayRows, "hoje");
-    renderList("tuitionSoonList", soonRows, "vencer");
-    renderList("tuitionPaidList", paidRows, "pago");
+    $("tuitionLateLaneCount").textContent = String(lateRows.length);
+    $("tuitionTodayLaneCount").textContent = String(todayRows.length);
+    $("tuitionSoonLaneCount").textContent = String(soonRows.length);
+    $("tuitionPaidLaneCount").textContent = String(paidRows.length);
+
+    renderList("tuitionLateList", lateRows);
+    renderList("tuitionTodayList", todayRows);
+    renderList("tuitionSoonList", soonRows);
+    renderList("tuitionPaidList", paidRows);
 
     applyFilter();
   }
 
-  function renderList(containerId, rows, type) {
+  function renderList(containerId, rows) {
     const container = $(containerId);
 
     if (!container) return;
@@ -540,10 +600,10 @@
       return;
     }
 
-    container.innerHTML = rows.map((row) => cardHtml(row, type)).join("");
+    container.innerHTML = rows.map((row) => cardHtml(row)).join("");
   }
 
-  function cardHtml(row, type) {
+  function cardHtml(row) {
     const student = row.student;
     const packageItem = row.packageItem;
     const packageName = packageItem?.name || "Pacote não vinculado";
@@ -565,7 +625,7 @@
     if (row.status === "atrasado" && row.days !== null) {
       detailText = `${Math.abs(row.days)} dia(s) de atraso`;
     } else if (row.status === "hoje") {
-      detailText = "Vence no dia vigente";
+      detailText = "Vence hoje";
     } else if (row.status === "vencer" && row.days !== null) {
       detailText = `Vence em ${row.days} dia(s)`;
     } else if (row.status === "pago") {
@@ -573,7 +633,7 @@
         ? `Pago em ${new Date(row.paidEntry.created_at).toLocaleDateString("pt-BR")}`
         : "Pago no mês";
     } else {
-      detailText = "Cadastre vencimento e pacote na ficha do aluno";
+      detailText = "Cadastre vencimento e pacote";
     }
 
     const canQuickPay = row.status !== "pago" && row.packageItem && row.dueDay;
@@ -599,19 +659,19 @@
         <div class="tuition-card-actions">
           ${
             canQuickPay
-              ? `<button class="tuition-btn primary" type="button" data-action="quick-pay" data-student-id="${safe(student.id)}">Dar baixa</button>`
+              ? `<button class="tuition-btn primary compact" type="button" data-action="quick-pay" data-student-id="${safe(student.id)}">Baixar sem caixa</button>`
               : ""
           }
 
           ${
             row.status !== "pago"
-              ? `<button class="tuition-btn ghost" type="button" data-action="send-cashier" data-student-id="${safe(student.id)}">Enviar ao caixa</button>`
+              ? `<button class="tuition-btn ghost compact" type="button" data-action="send-cashier" data-student-id="${safe(student.id)}">Enviar ao caixa</button>`
               : ""
           }
 
           ${
             row.status === "pago" && row.paidEntry
-              ? `<button class="tuition-btn ghost" type="button" data-action="print-receipt" data-entry-id="${safe(row.paidEntry.id)}">Imprimir recibo</button>`
+              ? `<button class="tuition-btn ghost compact" type="button" data-action="print-receipt" data-entry-id="${safe(row.paidEntry.id)}">Imprimir recibo</button>`
               : ""
           }
         </div>
@@ -626,13 +686,13 @@
       button.classList.toggle("active", button.dataset.tuitionFilter === filter);
     });
 
-    document.querySelectorAll(".tuition-column").forEach((column) => {
-      const type = column.dataset.column;
+    document.querySelectorAll(".tuition-lane").forEach((lane) => {
+      const type = lane.dataset.lane;
 
       if (filter === "todos") {
-        column.style.display = "";
+        lane.style.display = "";
       } else {
-        column.style.display = type === filter ? "" : "none";
+        lane.style.display = type === filter ? "" : "none";
       }
     });
   }
@@ -705,6 +765,11 @@
       return;
     }
 
+    if (row.paidEntry) {
+      setModalMessage("Esta mensalidade já consta como paga neste mês.", "error");
+      return;
+    }
+
     const confirmBtn = $("tuitionConfirmPaymentBtn");
 
     try {
@@ -769,7 +834,7 @@
     } finally {
       if (confirmBtn) {
         confirmBtn.disabled = false;
-        confirmBtn.textContent = "Confirmar baixa";
+        confirmBtn.textContent = "Confirmar baixa sem caixa";
       }
     }
   }
@@ -843,10 +908,13 @@
       amountPaid.value = Number(row.packageItem.default_amount || 0).toFixed(2);
     }
 
-    document.getElementById("caixa")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+    const caixaPanel = document.getElementById("caixa");
+    if (caixaPanel) {
+      caixaPanel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
 
     setMessage("Aluno enviado para a frente de caixa. Aplique o desconto, se houver, e finalize o lançamento por lá.", "ok");
   }
@@ -865,6 +933,19 @@
     }
 
     alert("Função de impressão do recibo não encontrada. Verifique se o financeiro.js carregou corretamente.");
+  }
+
+  function scrollLane(targetId, direction) {
+    const el = $(targetId);
+
+    if (!el) return;
+
+    const amount = Math.max(260, Math.floor(el.clientWidth * 0.85));
+
+    el.scrollBy({
+      left: Number(direction || 1) * amount,
+      behavior: "smooth"
+    });
   }
 
   function changeMonth(delta) {
@@ -912,6 +993,12 @@
       if (filterBtn) {
         state.activeFilter = filterBtn.dataset.tuitionFilter || "todos";
         applyFilter();
+        return;
+      }
+
+      const scrollBtn = event.target.closest("[data-scroll-target]");
+      if (scrollBtn) {
+        scrollLane(scrollBtn.dataset.scrollTarget, scrollBtn.dataset.scrollDir);
         return;
       }
 
