@@ -8,9 +8,9 @@
 
   <link rel="stylesheet" href="./financeiro.css" />
   <link rel="stylesheet" href="./financeiro-auto-responsavel.css" />
-  <link rel="stylesheet" href="./financeiro-mensalidades.css?v=20260521-painel-compacto" />
+  <link rel="stylesheet" href="./financeiro-mensalidades.css?v=20260521-baixa-painel" />
+  <link rel="stylesheet" href="./financeiro-recolho.css?v=20260609-recolho-caixa" />
 
-  <!-- PWA INTEGRO -->
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#004d3a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -41,9 +41,9 @@
     <section class="hero">
       <div>
         <p class="eyebrow">FINANCEIRO INTEGRO</p>
-        <h1>Entradas, saídas, mensalidades, pacotes, descontos, recibos e relatórios</h1>
+        <h1>Entradas, saídas, mensalidades, recolho do caixa, pacotes, descontos, recibos e relatórios</h1>
         <p class="muted">
-          Use esta área como frente de caixa. Registre mensalidades, outras entradas, despesas e baixe relatórios semanais, mensais ou anuais.
+          Use esta área como frente de caixa. Registre mensalidades, outras entradas, despesas e acompanhe o ciclo empresarial mensal do INTEGRO.
         </p>
       </div>
 
@@ -78,6 +78,7 @@
     <section class="tabs" aria-label="Áreas financeiras">
       <button class="tab active" data-tab="caixa" type="button">Frente de caixa</button>
       <button class="tab" data-tab="mensalidades" type="button">Mensalidades</button>
+      <button class="tab" data-tab="recolho" type="button">Recolho do caixa</button>
       <button class="tab" data-tab="entradas" type="button">Entradas</button>
       <button class="tab" data-tab="saidas" type="button">Saídas</button>
       <button class="tab" data-tab="relatorios" type="button">Relatórios</button>
@@ -197,12 +198,12 @@
 
             <label>
               Referência
-              <input id="competenceMonth" type="text" placeholder="Ex.: Abril/2026, Semana 1 ou Avulso" />
+              <input id="competenceMonth" type="text" placeholder="Ex.: Junho/2026, Semana 1 ou Avulso" />
             </label>
 
             <label class="full">
               Descrição do recebimento *
-              <textarea id="entryDescription" rows="3" required placeholder="Ex.: Mensalidade de abril, taxa de matrícula, avaliação diagnóstica ou venda de material."></textarea>
+              <textarea id="entryDescription" rows="3" required placeholder="Ex.: Mensalidade de junho, taxa de matrícula, avaliação diagnóstica ou venda de material."></textarea>
             </label>
           </div>
 
@@ -233,6 +234,10 @@
       <div id="monthlyTuitionPanelMount"></div>
     </section>
 
+    <section id="recolho" class="panel">
+      <div id="cashCyclePanelMount"></div>
+    </section>
+
     <section id="entradas" class="panel">
       <div class="card">
         <h2>Registros de entradas</h2>
@@ -248,7 +253,24 @@
         <form id="expenseForm" class="card form-card">
           <h2>Lançar saída</h2>
 
+          <p class="muted">
+            Toda saída precisa indicar de qual parte do recolho ela sairá. Isso mantém o ciclo empresarial organizado.
+          </p>
+
           <div class="form-grid">
+            <label class="full">
+              De onde essa saída vai sair? *
+              <select id="expenseAllocationBucket" required>
+                <option value="">Selecione a origem da saída</option>
+                <option value="operacoes">Contas e operações — 30%</option>
+                <option value="fundo_caixa">Fundo de caixa — 10% + transferências</option>
+                <option value="acionista_1">Quota do Acionista 1 — 20%</option>
+                <option value="acionista_2">Quota do Acionista 2 — 20%</option>
+                <option value="acionista_3">Quota do Acionista 3 — 20%</option>
+                <option value="ajuste_administrativo">Ajuste administrativo</option>
+              </select>
+            </label>
+
             <label class="full">
               Descrição da saída *
               <textarea id="expenseDescription" rows="3" required placeholder="Descreva o motivo da saída"></textarea>
@@ -464,12 +486,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./financeiro.js?v=20260521-painel-compacto"></script>
+  <script src="./financeiro.js?v=20260609-recolho-caixa"></script>
   <script src="./financeiro-auto-responsavel.js?v=20260505"></script>
-  <<script src="./financeiro-mensalidades.js?v=20260521-baixa-painel"></script>
+  <script src="./financeiro-mensalidades.js?v=20260521-baixa-painel"></script>
+  <script src="./financeiro-recolho.js?v=20260609-recolho-caixa"></script>
   <script src="./financeiro-diretor.js"></script>
 
-  <!-- PWA INTEGRO -->
   <script src="/pwa-install.js"></script>
 </body>
 </html>
