@@ -18,8 +18,22 @@
     editingId: null
   };
 
-  const HEADER_IMAGE_PATH = "../assets/memorandos/memorando_cabecalho.png";
-  const FOOTER_IMAGE_PATH = "../assets/memorandos/memorando_rodape.png";
+  /*
+    Caminho correto das imagens do memorando.
+
+    Estrutura esperada:
+    integro-site/
+    ├── assets/
+    │   └── memorandos/
+    │       ├── memorando_cabecalho.png
+    │       └── memorando_rodape.png
+    └── portal/
+        ├── documentos-memorandos.html
+        ├── documentos-memorandos.css
+        └── documentos-memorandos.js
+  */
+  const HEADER_IMAGE_PATH = "/assets/memorandos/memorando_cabecalho.png";
+  const FOOTER_IMAGE_PATH = "/assets/memorandos/memorando_rodape.png";
 
   function $(id) {
     return document.getElementById(id);
@@ -36,7 +50,7 @@
 
   function safe(value) {
     return String(value ?? "")
-      .replaceAll("&", "&amp;")
+      .replaceAll("&", "&amp")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
@@ -46,6 +60,7 @@
   function brDate(iso) {
     if (!iso) return "";
     const [y, m, d] = String(iso).slice(0, 10).split("-");
+    if (!y || !m || !d) return iso;
     return `${d}/${m}/${y}`;
   }
 
@@ -102,7 +117,10 @@
 
     state.school = school;
 
-    $("userBadge").textContent = profile.full_name || profile.role || "Usuário";
+    const userBadge = $("userBadge");
+    if (userBadge) {
+      userBadge.textContent = profile.full_name || profile.role || "Usuário";
+    }
   }
 
   async function loadDocuments() {
@@ -141,7 +159,11 @@
     if (!list) return;
 
     if (!state.documents.length) {
-      list.innerHTML = `<div class="record-item"><small>Nenhum memorando registrado neste ano.</small></div>`;
+      list.innerHTML = `
+        <div class="record-item">
+          <small>Nenhum memorando registrado neste ano.</small>
+        </div>
+      `;
       return;
     }
 
@@ -153,6 +175,7 @@
           <b>Para:</b> ${safe(doc.destination_name || "Não informado")}<br>
           <b>Status:</b> ${safe(doc.status || "rascunho")}
         </small>
+
         <div class="record-actions">
           <button class="btn ghost" type="button" data-load-doc="${safe(doc.id)}">Editar</button>
           <button class="btn ghost" type="button" data-download-doc="${safe(doc.id)}">Gerar Word</button>
@@ -218,7 +241,10 @@
 
     toggleCustomSubject();
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 
   function validateBeforeWord(data) {
@@ -275,58 +301,6 @@
     return result.data;
   }
 
-  async function generateWithAI(mode = "gerar") {
-    const data = collectForm();
-
-    let extraTone = $("tone").value;
-
-    if (mode === "melhorar") {
-      extraTone = "melhore o texto já existente, mantendo tom institucional, clareza e objetividade";
-      data.userContext += `\n\nTexto atual para melhorar:\n${$("finalText").value}`;
-    }
-
-    if (mode === "enxuto") {
-      extraTone = "reescreva de forma mais objetiva, enxuta, institucional e clara";
-      data.userContext += `\n\nTexto atual para reduzir:\n${$("finalText").value}`;
-    }
-
-    if (mode === "firme") {
-      extraTone = "reescreva com tom mais firme, técnico, respeitoso e administrativo";
-      data.userContext += `\n\nTexto atual para ajustar:\n${$("finalText").value}`;
-    }
-
-    setStatus("Gerando texto com IA...", "warn");
-
-    const { data: sessionData } = await client.auth.getSession();
-    const token = sessionData?.session?.access_token;
-
-    if (!token) {
-      throw new Error("Sessão não encontrada.");
-    }
-
-    const { data: response, error } = await client.functions.invoke("gerar-memorando-ia", {
-      body: {
-        ...data,
-        tone: extraTone
-      },
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (error) throw error;
-
-    if (!response?.text) {
-      throw new Error(response?.error || "A IA não retornou texto.");
-    }
-
-    $("finalText").value = response.text;
-
-    await saveAiDraft(response.text);
-
-    setStatus("Texto gerado com sucesso. Revise antes de gerar o Word.", "ok");
-  }
-
   async function saveAiDraft(aiText) {
     const data = collectForm();
 
@@ -365,24 +339,100 @@
     await loadDocuments();
   }
 
+  async function generateWithAI(mode = "gerar") {
+    const data = collectForm();
+
+    let extraTone = $("tone").value;
+
+    if (mode === "melhorar") {
+      extraTone = "melhore o texto já existente, mantendo tom institucional, clareza e objetividade";
+      data.user_context += `\n\nTexto atual para melhorar:\n${$("finalText").value}`;
+    }
+
+    if (mode === "enxuto") {
+      extraTone = "reescreva de forma mais objetiva, enxuta, institucional e clara";
+      data.user_context += `\n\nTexto atual para reduzir:\n${$("finalText").value}`;
+    }
+
+    if (mode === "firme") {
+      extraTone = "reescreva com tom mais firme, técnico, respeitoso e administrativo";
+      data.user_context += `\n\nTexto atual para ajustar:\n${$("finalText").value}`;
+    }
+
+    setStatus("Gerando texto com IA...", "warn");
+
+    const { data: sessionData } = await client.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error("Sessão não encontrada.");
+    }
+
+    const { data: response, error } = await client.functions.invoke("gerar-memorando-ia", {
+      body: {
+        subjectCategory: data.subject_category,
+        subjectCustom: data.subject_custom,
+        destinationName: data.destination_name,
+        destinationSector: data.destination_sector,
+        memoSubject: data.memo_subject,
+        priority: data.priority,
+        deadlineText: data.deadline_text,
+        locationText: data.location_text,
+        equipmentText: data.equipment_text,
+        problemDescription: data.problem_description,
+        requestedAction: data.requested_action,
+        userContext: data.user_context,
+        tone: extraTone
+      },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (error) throw error;
+
+    if (!response?.text) {
+      throw new Error(response?.error || "A IA não retornou texto.");
+    }
+
+    $("finalText").value = response.text;
+
+    await saveAiDraft(response.text);
+
+    setStatus("Texto gerado com sucesso. Revise antes de gerar o Word.", "ok");
+  }
+
   async function imageToDataUrl(path) {
     const res = await fetch(path);
-    if (!res.ok) throw new Error(`Não foi possível carregar a imagem: ${path}`);
+
+    if (!res.ok) {
+      throw new Error(`Não foi possível carregar a imagem: ${path}`);
+    }
 
     const blob = await res.blob();
 
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
+
       reader.onloadend = () => resolve(reader.result);
       reader.onerror = reject;
+
       reader.readAsDataURL(blob);
     });
   }
 
   function nl2br(text) {
-    return safe(text)
+    const paragraphs = String(text || "")
       .split(/\n{2,}/)
-      .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean);
+
+    if (!paragraphs.length) {
+      return "";
+    }
+
+    return paragraphs
+      .map((paragraph) => `<p>${safe(paragraph).replace(/\n/g, "<br>")}</p>`)
       .join("");
   }
 
@@ -392,6 +442,10 @@
 
     const docDate = $("documentDate").value || todayISO();
 
+    const signerLine = doc.signer_role
+      ? `${safe(doc.signer_role)}`
+      : "Direção Escolar";
+
     const html = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -399,90 +453,123 @@
 <head>
   <meta charset="UTF-8">
   <title>${safe(doc.document_code)}</title>
+
   <style>
     @page WordSection1 {
       size: 21cm 29.7cm;
-      margin: 1.2cm 1.35cm 1.2cm 1.35cm;
+      margin: 1.25cm 1.35cm 1.2cm 1.35cm;
     }
 
     body {
+      margin: 0;
+      padding: 0;
       font-family: Arial, Helvetica, sans-serif;
-      color: #111;
-      font-size: 12pt;
+      color: #111111;
+      font-size: 11pt;
     }
 
     .WordSection1 {
       page: WordSection1;
-      width: 100%;
+      width: 18.3cm;
+      margin: 0 auto;
+    }
+
+    .memo-wrapper {
+      width: 18.3cm;
+      margin: 0 auto;
+    }
+
+    .header-area {
+      width: 18.3cm;
+      height: 2.45cm;
+      overflow: hidden;
+      text-align: center;
+      margin: 0 0 0.15cm 0;
     }
 
     .header-img {
-      width: 100%;
+      width: 16.2cm;
+      height: auto;
+      max-height: 2.25cm;
       display: block;
-      margin-bottom: 8px;
+      margin: 0 auto;
+      border: none;
     }
 
     .sector {
+      width: 18.3cm;
       text-align: right;
       font-weight: bold;
-      font-size: 12pt;
-      margin: 2px 0 8px;
+      font-size: 10.5pt;
+      margin: 0 0 0.12cm 0;
+      line-height: 1.1;
     }
 
     table.memo-table {
-      width: 100%;
+      width: 18.3cm;
       border-collapse: collapse;
       table-layout: fixed;
-      margin-top: 4px;
+      margin: 0;
     }
 
     .memo-table td {
-      border: 1px solid #333;
-      padding: 7px 8px;
-      vertical-align: top;
-      font-size: 11.5pt;
+      border: 1px solid #333333;
+      padding: 0.16cm 0.18cm;
+      vertical-align: middle;
+      font-size: 10.5pt;
+      height: 0.58cm;
     }
 
-    .label {
+    .memo-table .label {
       font-weight: bold;
-      letter-spacing: .4px;
+      letter-spacing: 0.3px;
     }
 
     .subject-row td {
-      height: 34px;
+      height: 0.72cm;
     }
 
     .body-box {
-      border-left: 1px solid #333;
-      border-right: 1px solid #333;
-      min-height: 500px;
-      padding: 58px 6px 28px 6px;
-      position: relative;
+      width: 18.3cm;
+      border-left: 1px solid #333333;
+      border-right: 1px solid #333333;
+      min-height: 12.3cm;
+      padding: 0.95cm 0.28cm 0.7cm 0.28cm;
     }
 
     .salutation {
-      margin-left: 86px;
-      margin-bottom: 58px;
+      margin-left: 2cm;
+      margin-bottom: 1.05cm;
+      font-size: 11pt;
     }
 
     .memo-text {
-      line-height: 1.5;
+      font-size: 11pt;
+      line-height: 1.35;
       text-align: justify;
+      margin: 0;
+      padding: 0;
     }
 
     .memo-text p {
-      margin: 0 0 14px;
+      margin: 0 0 0.38cm 0;
       text-indent: 0;
     }
 
     .closing {
-      margin-top: 50px;
-      margin-left: 86px;
+      margin-top: 1.15cm;
+      margin-left: 2cm;
+      font-size: 11pt;
     }
 
     .signature {
-      margin-top: 70px;
+      margin-top: 1.35cm;
       text-align: center;
+      font-size: 10.5pt;
+      line-height: 1.25;
+    }
+
+    .signature strong {
       font-weight: bold;
     }
 
@@ -492,56 +579,93 @@
     }
 
     .bottom-border {
-      border-left: 1px solid #333;
-      border-right: 1px solid #333;
-      border-bottom: 1px solid #333;
-      height: 1px;
+      width: 18.3cm;
+      border-left: 1px solid #333333;
+      border-right: 1px solid #333333;
+      border-bottom: 1px solid #333333;
+      height: 0.01cm;
+      line-height: 0;
+      font-size: 0;
+    }
+
+    .footer-area {
+      width: 18.3cm;
+      margin-top: 1.15cm;
+      text-align: center;
+      overflow: hidden;
     }
 
     .footer-img {
-      width: 100%;
+      width: 18.1cm;
+      height: auto;
+      max-height: 1.25cm;
       display: block;
-      margin-top: 70px;
+      margin: 0 auto;
+      border: none;
     }
   </style>
 </head>
+
 <body>
   <div class="WordSection1">
-    <img class="header-img" src="${headerImage}" />
-    <div class="sector">${safe(doc.origin_sector || "CLIQUE AQUI E INSIRA O SEU SETOR")}</div>
-
-    <table class="memo-table">
-      <tr>
-        <td style="width: 48%;"><span class="label">DATA:</span> ${safe(brDate(docDate))}</td>
-        <td style="width: 52%;"><span class="label">MEMORANDO:</span> ${safe(String(doc.document_number).padStart(3, "0"))}/${safe(doc.document_year)}</td>
-      </tr>
-      <tr>
-        <td><span class="label">DE:</span> ${safe(doc.origin_sector || "")}</td>
-        <td><span class="label">PARA:</span> ${safe(doc.destination_name || "")}${doc.destination_sector ? " — " + safe(doc.destination_sector) : ""}</td>
-      </tr>
-      <tr class="subject-row">
-        <td colspan="2"><span class="label">ASSUNTO:</span> ${safe(doc.memo_subject || "")}</td>
-      </tr>
-    </table>
-
-    <div class="body-box">
-      <div class="salutation">Senhor(a) Chefe,</div>
-
-      <div class="memo-text">
-        ${nl2br(doc.final_text || "")}
+    <div class="memo-wrapper">
+      <div class="header-area">
+        <img class="header-img" src="${headerImage}" />
       </div>
 
-      <div class="closing">Atenciosamente,</div>
+      <div class="sector">
+        ${safe(doc.origin_sector || "CLIQUE AQUI E INSIRA O SEU SETOR")}
+      </div>
 
-      <div class="signature">
-        ${safe(doc.signer_name || "Chefe do setor")}
-        <span>${safe(doc.signer_role || "Setor")} – Semed</span>
+      <table class="memo-table">
+        <tr>
+          <td style="width: 48%;">
+            <span class="label">DATA:</span> ${safe(brDate(docDate))}
+          </td>
+
+          <td style="width: 52%;">
+            <span class="label">MEMORANDO:</span> ${safe(String(doc.document_number).padStart(3, "0"))}/${safe(doc.document_year)}
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span class="label">DE:</span> ${safe(doc.origin_sector || "")}
+          </td>
+
+          <td>
+            <span class="label">PARA:</span> ${safe(doc.destination_name || "")}${doc.destination_sector ? " — " + safe(doc.destination_sector) : ""}
+          </td>
+        </tr>
+
+        <tr class="subject-row">
+          <td colspan="2">
+            <span class="label">ASSUNTO:</span> ${safe(doc.memo_subject || "")}
+          </td>
+        </tr>
+      </table>
+
+      <div class="body-box">
+        <div class="salutation">Senhor(a) Chefe,</div>
+
+        <div class="memo-text">
+          ${nl2br(doc.final_text || "")}
+        </div>
+
+        <div class="closing">Atenciosamente,</div>
+
+        <div class="signature">
+          <strong>${safe(doc.signer_name || "Chefe do setor")}</strong>
+          <span>${signerLine}</span>
+        </div>
+      </div>
+
+      <div class="bottom-border"></div>
+
+      <div class="footer-area">
+        <img class="footer-img" src="${footerImage}" />
       </div>
     </div>
-
-    <div class="bottom-border"></div>
-
-    <img class="footer-img" src="${footerImage}" />
   </div>
 </body>
 </html>`;
@@ -557,6 +681,7 @@
 
     a.href = url;
     a.download = fileName;
+
     document.body.appendChild(a);
     a.click();
 
@@ -598,6 +723,18 @@
     if (lower.includes("internet") || lower.includes("computadores") || lower.includes("impressora")) {
       if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos suporte técnico para verificação e solução do problema informado.";
     }
+
+    if (lower.includes("transporte")) {
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e adoção das providências necessárias quanto à demanda de transporte informada.";
+    }
+
+    if (lower.includes("segurança")) {
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos apoio e providências relacionadas à segurança patrimonial.";
+    }
+
+    if (lower.includes("alimentação") || lower.includes("merenda")) {
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e providências quanto à situação relacionada à alimentação escolar.";
+    }
   }
 
   async function handleSubmit(event) {
@@ -627,6 +764,7 @@
     state.editingId = null;
 
     $("memoForm").reset();
+
     $("documentDate").value = todayISO();
     $("documentYear").value = currentYear();
 
@@ -636,6 +774,7 @@
 
     $("priority").value = "normal";
     $("subjectCategory").value = "Manutenção de ar-condicionado";
+    $("originSector").value = "Direção Escolar";
     $("signerName").value = state.profile?.full_name || "";
     $("signerRole").value = "Direção Escolar";
 
@@ -651,25 +790,33 @@
   function bindEvents() {
     $("memoForm").addEventListener("submit", handleSubmit);
 
-    $("generateAiBtn").addEventListener("click", () => generateWithAI("gerar").catch((error) => {
-      console.error(error);
-      setStatus(error.message || "Erro ao gerar texto.", "error");
-    }));
+    $("generateAiBtn").addEventListener("click", () => {
+      generateWithAI("gerar").catch((error) => {
+        console.error(error);
+        setStatus(error.message || "Erro ao gerar texto.", "error");
+      });
+    });
 
-    $("improveBtn").addEventListener("click", () => generateWithAI("melhorar").catch((error) => {
-      console.error(error);
-      setStatus(error.message || "Erro ao melhorar texto.", "error");
-    }));
+    $("improveBtn").addEventListener("click", () => {
+      generateWithAI("melhorar").catch((error) => {
+        console.error(error);
+        setStatus(error.message || "Erro ao melhorar texto.", "error");
+      });
+    });
 
-    $("shortenBtn").addEventListener("click", () => generateWithAI("enxuto").catch((error) => {
-      console.error(error);
-      setStatus(error.message || "Erro ao deixar texto mais objetivo.", "error");
-    }));
+    $("shortenBtn").addEventListener("click", () => {
+      generateWithAI("enxuto").catch((error) => {
+        console.error(error);
+        setStatus(error.message || "Erro ao deixar texto mais objetivo.", "error");
+      });
+    });
 
-    $("firmBtn").addEventListener("click", () => generateWithAI("firme").catch((error) => {
-      console.error(error);
-      setStatus(error.message || "Erro ao deixar texto mais firme.", "error");
-    }));
+    $("firmBtn").addEventListener("click", () => {
+      generateWithAI("firme").catch((error) => {
+        console.error(error);
+        setStatus(error.message || "Erro ao deixar texto mais firme.", "error");
+      });
+    });
 
     $("saveDraftBtn").addEventListener("click", async () => {
       try {
@@ -703,15 +850,22 @@
 
     document.addEventListener("click", async (event) => {
       const loadBtn = event.target.closest("[data-load-doc]");
+
       if (loadBtn) {
         const doc = state.documents.find((item) => item.id === loadBtn.dataset.loadDoc);
-        if (doc) fillForm(doc);
+
+        if (doc) {
+          fillForm(doc);
+        }
+
         return;
       }
 
       const downloadBtn = event.target.closest("[data-download-doc]");
+
       if (downloadBtn) {
         const doc = state.documents.find((item) => item.id === downloadBtn.dataset.downloadDoc);
+
         if (doc) {
           try {
             await generateWord(doc);
@@ -732,6 +886,7 @@
 
       $("documentDate").value = todayISO();
       $("documentYear").value = currentYear();
+      $("originSector").value = "Direção Escolar";
       $("signerName").value = state.profile?.full_name || "";
       $("signerRole").value = "Direção Escolar";
 
