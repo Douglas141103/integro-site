@@ -18,7 +18,8 @@
   const DEFAULT_DESTINATION_SECTOR = "Divisão Distrital Zona Leste I";
 
   const DEFAULT_SIGNER_NAME = "André Henrique Batista da Silva";
-  const DEFAULT_SIGNER_ROLE = "Diretor da E.M. Etelvina Pereira Braga\nPortaria 1369/2024-SEMED/GS";
+  const DEFAULT_SIGNER_ROLE =
+    "Diretor da E.M. Etelvina Pereira Braga\nPortaria 1369/2024-SEMED/GS";
 
   const HEADER_IMAGE_PATH = "/assets/memorandos/memorando_logo_semed.png";
   const STAMP_IMAGE_PATH = "/assets/memorandos/memorando_carimbo_escola.png";
@@ -452,9 +453,10 @@
         img.src = dataUrl;
       });
 
-      const format = blob.type.toLowerCase().includes("jpeg") || blob.type.toLowerCase().includes("jpg")
-        ? "JPEG"
-        : "PNG";
+      const format =
+        blob.type.toLowerCase().includes("jpeg") || blob.type.toLowerCase().includes("jpg")
+          ? "JPEG"
+          : "PNG";
 
       return {
         dataUrl,
@@ -634,6 +636,25 @@
     pdf.setTextColor(0, 0, 0);
   }
 
+  function normalizeSignerRole(roleText) {
+    let text = plain(roleText || "").replace(/\r/g, "").trim();
+
+    text = text.replace(/\s*Portaria\s*/i, "\nPortaria ");
+    text = text.replace(/\n{2,}/g, "\n");
+
+    return text.trim();
+  }
+
+  function getSignatureRoleLines(pdf, roleText, maxWidth) {
+    const normalized = normalizeSignerRole(roleText);
+
+    return normalized
+      .split("\n")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .flatMap((part) => pdf.splitTextToSize(part, maxWidth));
+  }
+
   function drawMemoHeaderAndProtocol(pdf, doc, headerAsset, stampAsset, docDate, isContinuation = false) {
     const left = 15;
     const top = 22;
@@ -660,7 +681,14 @@
     pdf.setLineWidth(0.25);
 
     if (headerAsset) {
-      drawImageContain(pdf, headerAsset, left + 5, headerTop + 6, 86, 19);
+      drawImageContain(
+        pdf,
+        headerAsset,
+        left + 4,
+        headerTop + 3,
+        splitX - left - 8,
+        25
+      );
     } else {
       drawFallbackHeader(pdf, left + 4, headerTop + 4);
     }
@@ -718,7 +746,7 @@
     pdf.rect(left, bodyTop, width, bodyHeight);
 
     if (stampAsset && !isContinuation) {
-      drawImageContain(pdf, stampAsset, left + width - 45, bodyTop + 16, 32, 32);
+      drawImageContain(pdf, stampAsset, left + width - 44, bodyTop + 16, 30, 30);
     }
 
     if (!isContinuation) {
@@ -808,8 +836,9 @@
     const textLeft = layout.left + 25;
     const maxTextWidth = layout.width - 50;
 
-    const signatureRoleLines = pdf.splitTextToSize(
-      plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
+    const signatureRoleLines = getSignatureRoleLines(
+      pdf,
+      doc.signer_role || DEFAULT_SIGNER_ROLE,
       90
     );
 
@@ -867,8 +896,9 @@
     const fontSize = 11.8;
     const lineHeight = 6.8;
 
-    const signatureRoleLines = pdf.splitTextToSize(
-      plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
+    const signatureRoleLines = getSignatureRoleLines(
+      pdf,
+      doc.signer_role || DEFAULT_SIGNER_ROLE,
       90
     );
 
