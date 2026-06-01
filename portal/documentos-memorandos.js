@@ -19,21 +19,22 @@
   };
 
   /*
-    Caminho correto das imagens do memorando.
-
-    Estrutura esperada:
+    Estrutura recomendada:
     integro-site/
     ├── assets/
     │   └── memorandos/
-    │       ├── memorando_cabecalho.png
-    │       └── memorando_rodape.png
+    │       └── memorando_cabecalho.png
     └── portal/
         ├── documentos-memorandos.html
         ├── documentos-memorandos.css
         └── documentos-memorandos.js
+
+    Observação:
+    Este novo gerador usa PDF direto.
+    A imagem é usada somente para o logotipo SEMED/Manaus no cabeçalho.
+    Se a imagem não carregar, o PDF ainda será gerado com texto no cabeçalho.
   */
   const HEADER_IMAGE_PATH = "/assets/memorandos/memorando_cabecalho.png";
-  const FOOTER_IMAGE_PATH = "/assets/memorandos/memorando_rodape.png";
 
   function $(id) {
     return document.getElementById(id);
@@ -50,16 +51,27 @@
 
   function safe(value) {
     return String(value ?? "")
-      .replaceAll("&", "&amp")
+      .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
 
+  function plain(value) {
+    return String(value ?? "")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#039;", "'");
+  }
+
   function brDate(iso) {
     if (!iso) return "";
-    const [y, m, d] = String(iso).slice(0, 10).split("-");
+    const parts = String(iso).slice(0, 10).split("-");
+    if (parts.length !== 3) return iso;
+    const [y, m, d] = parts;
     if (!y || !m || !d) return iso;
     return `${d}/${m}/${y}`;
   }
@@ -178,7 +190,7 @@
 
         <div class="record-actions">
           <button class="btn ghost" type="button" data-load-doc="${safe(doc.id)}">Editar</button>
-          <button class="btn ghost" type="button" data-download-doc="${safe(doc.id)}">Gerar Word</button>
+          <button class="btn ghost" type="button" data-download-doc="${safe(doc.id)}">Gerar PDF</button>
         </div>
       </article>
     `).join("");
@@ -247,7 +259,7 @@
     });
   }
 
-  function validateBeforeWord(data) {
+  function validateBeforePdf(data) {
     if (!data.document_number) throw new Error("Informe o número do memorando.");
     if (!data.document_year) throw new Error("Informe o ano.");
     if (!data.origin_sector) throw new Error("Informe a origem.");
@@ -271,7 +283,7 @@
 
     if (status === "emitido") {
       payload.issued_at = new Date().toISOString();
-      payload.generated_file_name = `memorando-${String(data.document_number).padStart(3, "0")}-${data.document_year}.doc`;
+      payload.generated_file_name = `memorando-${String(data.document_number).padStart(3, "0")}-${data.document_year}.pdf`;
     }
 
     let result;
@@ -399,294 +411,403 @@
 
     await saveAiDraft(response.text);
 
-    setStatus("Texto gerado com sucesso. Revise antes de gerar o Word.", "ok");
+    setStatus("Texto gerado com sucesso. Revise antes de gerar o PDF.", "ok");
   }
 
-  async function imageToDataUrl(path) {
-    const res = await fetch(path);
+  async function tryImageToDataUrl(path) {
+    try {
+      const res = await fetch(path);
 
-    if (!res.ok) {
-      throw new Error(`Não foi possível carregar a imagem: ${path}`);
+      if (!res.ok) {
+        console.warn(`Imagem não carregada: ${path}`);
+        return null;
+      }
+
+      const blob = await res.blob();
+
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn(`Erro ao carregar imagem: ${path}`, error);
+      return null;
     }
-
-    const blob = await res.blob();
-
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-
-      reader.readAsDataURL(blob);
-    });
   }
 
-  function nl2br(text) {
-    const paragraphs = String(text || "")
+  function normalizeMemoText(text) {
+    let result = String(text || "").trim();
+
+    result = result.replace(/^Prezado\(a\).*?,\s*/i, "");
+    result = result.replace(/^Prezado.*?,\s*/i, "");
+    result = result.replace(/^Senhor\(a\).*?,\s*/i, "");
+    result = result.replace(/Atenciosamente,?/gi, "");
+    result = result.replace(/\(Assinado Digitalmente\)/gi, "");
+
+    return result.trim();
+  }
+
+  function splitParagraphs(text) {
+    return normalizeMemoText(text)
       .split(/\n{2,}/)
-      .map((paragraph) => paragraph.trim())
+      .map((p) => p.trim())
       .filter(Boolean);
-
-    if (!paragraphs.length) {
-      return "";
-    }
-
-    return paragraphs
-      .map((paragraph) => `<p>${safe(paragraph).replace(/\n/g, "<br>")}</p>`)
-      .join("");
   }
 
-  async function generateWord(doc) {
-    const headerImage = await imageToDataUrl(HEADER_IMAGE_PATH);
-    const footerImage = await imageToDataUrl(FOOTER_IMAGE_PATH);
+  function getDocumentDateForPdf(doc) {
+    const inputDate = $("documentDate")?.value;
 
-    const docDate = $("documentDate").value || todayISO();
-
-    const signerLine = doc.signer_role
-      ? `${safe(doc.signer_role)}`
-      : "Direção Escolar";
-
-    const html = `
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-  <meta charset="UTF-8">
-  <title>${safe(doc.document_code)}</title>
-
-  <style>
-    @page WordSection1 {
-      size: 21cm 29.7cm;
-      margin: 1.25cm 1.35cm 1.2cm 1.35cm;
+    if (state.editingId === doc.id && inputDate) {
+      return inputDate;
     }
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #111111;
-      font-size: 11pt;
+    if (doc.issued_at) {
+      return String(doc.issued_at).slice(0, 10);
     }
 
-    .WordSection1 {
-      page: WordSection1;
-      width: 18.3cm;
-      margin: 0 auto;
+    if (doc.created_at) {
+      return String(doc.created_at).slice(0, 10);
     }
 
-    .memo-wrapper {
-      width: 18.3cm;
-      margin: 0 auto;
+    return inputDate || todayISO();
+  }
+
+  function getSalutation(doc) {
+    const destinationSector = plain(doc.destination_sector || "").trim();
+    const destinationName = plain(doc.destination_name || "").trim();
+
+    if (destinationSector) {
+      return `Prezado Chefe da ${destinationSector},`;
     }
 
-    .header-area {
-      width: 18.3cm;
-      height: 2.45cm;
-      overflow: hidden;
-      text-align: center;
-      margin: 0 0 0.15cm 0;
+    if (destinationName) {
+      return `Prezado(a) ${destinationName},`;
     }
 
-    .header-img {
-      width: 16.2cm;
-      height: auto;
-      max-height: 2.25cm;
-      display: block;
-      margin: 0 auto;
-      border: none;
-    }
+    return "Prezado(a) Chefe,";
+  }
 
-    .sector {
-      width: 18.3cm;
-      text-align: right;
-      font-weight: bold;
-      font-size: 10.5pt;
-      margin: 0 0 0.12cm 0;
-      line-height: 1.1;
-    }
-
-    table.memo-table {
-      width: 18.3cm;
-      border-collapse: collapse;
-      table-layout: fixed;
-      margin: 0;
-    }
-
-    .memo-table td {
-      border: 1px solid #333333;
-      padding: 0.16cm 0.18cm;
-      vertical-align: middle;
-      font-size: 10.5pt;
-      height: 0.58cm;
-    }
-
-    .memo-table .label {
-      font-weight: bold;
-      letter-spacing: 0.3px;
-    }
-
-    .subject-row td {
-      height: 0.72cm;
-    }
-
-    .body-box {
-      width: 18.3cm;
-      border-left: 1px solid #333333;
-      border-right: 1px solid #333333;
-      min-height: 12.3cm;
-      padding: 0.95cm 0.28cm 0.7cm 0.28cm;
-    }
-
-    .salutation {
-      margin-left: 2cm;
-      margin-bottom: 1.05cm;
-      font-size: 11pt;
-    }
-
-    .memo-text {
-      font-size: 11pt;
-      line-height: 1.35;
-      text-align: justify;
-      margin: 0;
-      padding: 0;
-    }
-
-    .memo-text p {
-      margin: 0 0 0.38cm 0;
-      text-indent: 0;
-    }
-
-    .closing {
-      margin-top: 1.15cm;
-      margin-left: 2cm;
-      font-size: 11pt;
-    }
-
-    .signature {
-      margin-top: 1.35cm;
-      text-align: center;
-      font-size: 10.5pt;
-      line-height: 1.25;
-    }
-
-    .signature strong {
-      font-weight: bold;
-    }
-
-    .signature span {
-      display: block;
-      font-weight: normal;
-    }
-
-    .bottom-border {
-      width: 18.3cm;
-      border-left: 1px solid #333333;
-      border-right: 1px solid #333333;
-      border-bottom: 1px solid #333333;
-      height: 0.01cm;
-      line-height: 0;
-      font-size: 0;
-    }
-
-    .footer-area {
-      width: 18.3cm;
-      margin-top: 1.15cm;
-      text-align: center;
-      overflow: hidden;
-    }
-
-    .footer-img {
-      width: 18.1cm;
-      height: auto;
-      max-height: 1.25cm;
-      display: block;
-      margin: 0 auto;
-      border: none;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="WordSection1">
-    <div class="memo-wrapper">
-      <div class="header-area">
-        <img class="header-img" src="${headerImage}" />
-      </div>
-
-      <div class="sector">
-        ${safe(doc.origin_sector || "CLIQUE AQUI E INSIRA O SEU SETOR")}
-      </div>
-
-      <table class="memo-table">
-        <tr>
-          <td style="width: 48%;">
-            <span class="label">DATA:</span> ${safe(brDate(docDate))}
-          </td>
-
-          <td style="width: 52%;">
-            <span class="label">MEMORANDO:</span> ${safe(String(doc.document_number).padStart(3, "0"))}/${safe(doc.document_year)}
-          </td>
-        </tr>
-
-        <tr>
-          <td>
-            <span class="label">DE:</span> ${safe(doc.origin_sector || "")}
-          </td>
-
-          <td>
-            <span class="label">PARA:</span> ${safe(doc.destination_name || "")}${doc.destination_sector ? " — " + safe(doc.destination_sector) : ""}
-          </td>
-        </tr>
-
-        <tr class="subject-row">
-          <td colspan="2">
-            <span class="label">ASSUNTO:</span> ${safe(doc.memo_subject || "")}
-          </td>
-        </tr>
-      </table>
-
-      <div class="body-box">
-        <div class="salutation">Senhor(a) Chefe,</div>
-
-        <div class="memo-text">
-          ${nl2br(doc.final_text || "")}
-        </div>
-
-        <div class="closing">Atenciosamente,</div>
-
-        <div class="signature">
-          <strong>${safe(doc.signer_name || "Chefe do setor")}</strong>
-          <span>${signerLine}</span>
-        </div>
-      </div>
-
-      <div class="bottom-border"></div>
-
-      <div class="footer-area">
-        <img class="footer-img" src="${footerImage}" />
-      </div>
-    </div>
-  </div>
-</body>
-</html>`;
-
-    const blob = new Blob(["\ufeff", html], {
-      type: "application/msword;charset=utf-8"
+  function drawTextLines(pdf, lines, x, y, lineHeight) {
+    lines.forEach((line) => {
+      pdf.text(line, x, y);
+      y += lineHeight;
     });
 
-    const fileName = `memorando-${String(doc.document_number).padStart(3, "0")}-${doc.document_year}.doc`;
+    return y;
+  }
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+  function drawFallbackHeader(pdf) {
+    pdf.setTextColor(0, 173, 173);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(20);
+    pdf.text("Semed", 18, 38);
 
-    a.href = url;
-    a.download = fileName;
+    pdf.setFontSize(7);
+    pdf.text("Secretaria Municipal de", 19, 42);
+    pdf.text("Educação", 19, 45);
 
-    document.body.appendChild(a);
-    a.click();
+    pdf.setFontSize(24);
+    pdf.text("Manaus", 61, 38);
 
-    a.remove();
-    URL.revokeObjectURL(url);
+    pdf.setFontSize(8);
+    pdf.text("Prefeitura de", 75, 29);
+    pdf.setFontSize(11);
+    pdf.text("Gente que trabalha", 74, 45);
+
+    pdf.setTextColor(0, 0, 0);
+  }
+
+  function drawMemoPdfLayout(pdf, doc, headerImage, docDate) {
+    const left = 14;
+    const top = 24;
+    const width = 182;
+
+    const logoCellWidth = 96;
+    const headerHeight = 28;
+    const rowHeight = 14;
+    const subjectHeight = 12;
+    const bodyTop = top + headerHeight + rowHeight + subjectHeight;
+    const protocolTop = 246;
+    const protocolHeight = 22;
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setLineWidth(0.25);
+
+    /*
+      Cabeçalho e tabela superior
+    */
+    pdf.rect(left, top, width, headerHeight);
+    pdf.line(left + logoCellWidth, top, left + logoCellWidth, top + headerHeight);
+
+    if (headerImage) {
+      try {
+        pdf.addImage(headerImage, "PNG", left + 4, top + 9, 86, 16);
+      } catch (error) {
+        console.warn("Falha ao inserir cabeçalho como imagem. Usando cabeçalho textual.", error);
+        drawFallbackHeader(pdf);
+      }
+    } else {
+      drawFallbackHeader(pdf);
+    }
+
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.text(
+      `MEMORANDO Nº ${String(doc.document_number).padStart(2, "0")}/${doc.document_year}`,
+      left + logoCellWidth + 2,
+      top + 9
+    );
+
+    pdf.rect(left, top + headerHeight, width, rowHeight);
+    pdf.line(left + logoCellWidth, top + headerHeight, left + logoCellWidth, top + headerHeight + rowHeight);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.text("DA:", left + 2, top + headerHeight + 8.5);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text(
+      plain(doc.origin_sector || "").toUpperCase(),
+      left + 11,
+      top + headerHeight + 8.5,
+      {
+        maxWidth: logoCellWidth - 13
+      }
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PARA:", left + logoCellWidth + 2, top + headerHeight + 8.5);
+
+    pdf.text(
+      plain(doc.destination_name || "").toUpperCase(),
+      left + logoCellWidth + 17,
+      top + headerHeight + 8.5,
+      {
+        maxWidth: width - logoCellWidth - 18
+      }
+    );
+
+    pdf.rect(left, top + headerHeight + rowHeight, width, subjectHeight);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.text("ASSUNTO:", left + 2, top + headerHeight + rowHeight + 7.7);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.text(
+      plain(doc.memo_subject || ""),
+      left + 23,
+      top + headerHeight + rowHeight + 7.7,
+      {
+        maxWidth: width - 25
+      }
+    );
+
+    /*
+      Caixa do corpo
+    */
+    pdf.rect(left, bodyTop, width, protocolTop - bodyTop);
+
+    /*
+      Simulação de carimbo institucional azul no canto direito
+      Inspirado no modelo enviado, sem depender de imagem externa.
+    */
+    pdf.setDrawColor(42, 99, 190);
+    pdf.setTextColor(42, 99, 190);
+    pdf.setLineWidth(0.35);
+    pdf.circle(left + width - 24, bodyTop + 25, 12);
+    pdf.circle(left + width - 24, bodyTop + 25, 8.5);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(5.2);
+    pdf.text("MUNICIPIO DE MANAUS", left + width - 35, bodyTop + 21);
+    pdf.text("SECRETARIA DE EDUCACAO", left + width - 35, bodyTop + 31);
+
+    pdf.setFontSize(4.8);
+    pdf.text("ESCOLA MUNICIPAL", left + width - 32, bodyTop + 24);
+    pdf.text("ETELVINA PEREIRA BRAGA", left + width - 35, bodyTop + 27);
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setLineWidth(0.25);
+
+    /*
+      Protocolo inferior
+    */
+    pdf.rect(left, protocolTop, width, protocolHeight);
+
+    const col1 = 39;
+    const col2 = 51;
+    const col3 = 49;
+    const col4 = width - col1 - col2 - col3;
+
+    pdf.line(left + col1, protocolTop, left + col1, protocolTop + protocolHeight);
+    pdf.line(left + col1 + col2, protocolTop, left + col1 + col2, protocolTop + protocolHeight);
+    pdf.line(left + col1 + col2 + col3, protocolTop, left + col1 + col2 + col3, protocolTop + protocolHeight);
+    pdf.line(left, protocolTop + 11, left + width, protocolTop + 11);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10.5);
+    pdf.text("DATA", left + col1 / 2, protocolTop + 7, { align: "center" });
+    pdf.text("ENVIADO POR", left + col1 + col2 / 2, protocolTop + 7, { align: "center" });
+    pdf.text("RECEBIDO POR", left + col1 + col2 + col3 / 2, protocolTop + 7, { align: "center" });
+    pdf.text("DATA", left + col1 + col2 + col3 + col4 / 2, protocolTop + 7, { align: "center" });
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9.5);
+    pdf.text(brDate(docDate), left + col1 / 2, protocolTop + 18, { align: "center" });
+
+    pdf.setFont("helvetica", "normal");
+    pdf.text(
+      plain(doc.origin_sector || "").toUpperCase(),
+      left + col1 + col2 / 2,
+      protocolTop + 18,
+      {
+        align: "center",
+        maxWidth: col2 - 4
+      }
+    );
+
+    return {
+      left,
+      top,
+      width,
+      bodyTop,
+      protocolTop
+    };
+  }
+
+  function drawMemoBody(pdf, doc, layout) {
+    const bodyX = layout.left + 13;
+    const textX = layout.left + 13;
+    const maxTextWidth = layout.width - 26;
+
+    const salutationY = layout.bodyTop + 17;
+    let y = layout.bodyTop + 40;
+
+    const maxBodyTextY = 195;
+
+    let fontSize = 12;
+    let lineHeight = 7;
+
+    const paragraphs = splitParagraphs(doc.final_text || "");
+
+    function calculateHeight(size, lh) {
+      pdf.setFontSize(size);
+      let total = 0;
+
+      paragraphs.forEach((paragraph) => {
+        const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
+        total += lines.length * lh + 4;
+      });
+
+      return total;
+    }
+
+    let neededHeight = calculateHeight(fontSize, lineHeight);
+
+    if (neededHeight > 78) {
+      fontSize = 10.8;
+      lineHeight = 6.1;
+      neededHeight = calculateHeight(fontSize, lineHeight);
+    }
+
+    if (neededHeight > 88) {
+      fontSize = 9.8;
+      lineHeight = 5.5;
+      neededHeight = calculateHeight(fontSize, lineHeight);
+    }
+
+    pdf.setTextColor(0, 0, 0);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+    pdf.text(getSalutation(doc), bodyX, salutationY);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(fontSize);
+
+    paragraphs.forEach((paragraph) => {
+      const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
+
+      lines.forEach((line) => {
+        if (y < maxBodyTextY) {
+          pdf.text(line, textX, y);
+        }
+        y += lineHeight;
+      });
+
+      y += 3.5;
+    });
+
+    const closingY = Math.min(Math.max(y + 22, 206), 214);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+    pdf.text("Atenciosamente,", layout.left + layout.width / 2, closingY, {
+      align: "center"
+    });
+
+    const signatureY = closingY + 19;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.text("(Assinado Digitalmente)", layout.left + layout.width / 2, signatureY, {
+      align: "center"
+    });
+
+    pdf.text(plain(doc.signer_name || "Responsável"), layout.left + layout.width / 2, signatureY + 6, {
+      align: "center"
+    });
+
+    const roleLines = pdf.splitTextToSize(plain(doc.signer_role || "Direção Escolar"), 90);
+
+    let roleY = signatureY + 12;
+
+    roleLines.forEach((line) => {
+      pdf.text(line, layout.left + layout.width / 2, roleY, {
+        align: "center"
+      });
+      roleY += 5.5;
+    });
+  }
+
+  async function generatePDF(doc) {
+    const jsPDFConstructor = window.jspdf?.jsPDF;
+
+    if (!jsPDFConstructor) {
+      throw new Error("Biblioteca jsPDF não carregada. Verifique o script no HTML.");
+    }
+
+    const headerImage = await tryImageToDataUrl(HEADER_IMAGE_PATH);
+    const docDate = getDocumentDateForPdf(doc);
+
+    const pdf = new jsPDFConstructor({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+      compress: true
+    });
+
+    pdf.setProperties({
+      title: `Memorando ${String(doc.document_number).padStart(3, "0")}/${doc.document_year}`,
+      subject: plain(doc.memo_subject || "Memorando"),
+      author: plain(doc.origin_sector || "INTEGRO"),
+      creator: "Portal INTEGRO"
+    });
+
+    const layout = drawMemoPdfLayout(pdf, doc, headerImage, docDate);
+    drawMemoBody(pdf, doc, layout);
+
+    const fileName = `memorando-${String(doc.document_number).padStart(3, "0")}-${doc.document_year}.pdf`;
+
+    pdf.save(fileName);
   }
 
   function toggleCustomSubject() {
@@ -706,6 +827,11 @@
     if (lower.includes("ar-condicionado")) {
       if (!$("equipmentText").value) $("equipmentText").value = "Aparelho de ar-condicionado";
       if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos avaliação técnica e realização dos reparos necessários.";
+    }
+
+    if (lower.includes("aquisição de ar-condicionado")) {
+      if (!$("equipmentText").value) $("equipmentText").value = "Aparelho de ar-condicionado";
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e aquisição de aparelho de ar-condicionado para atender à necessidade apresentada.";
     }
 
     if (lower.includes("elétrica")) {
@@ -735,6 +861,10 @@
     if (lower.includes("alimentação") || lower.includes("merenda")) {
       if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e providências quanto à situação relacionada à alimentação escolar.";
     }
+
+    if (lower.includes("alteração de carga")) {
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e registro da alteração de carga horária informada.";
+    }
   }
 
   async function handleSubmit(event) {
@@ -742,21 +872,21 @@
 
     try {
       const data = collectForm();
-      validateBeforeWord(data);
+      validateBeforePdf(data);
 
-      setStatus("Salvando memorando e gerando Word...", "warn");
+      setStatus("Salvando memorando e gerando PDF...", "warn");
 
       const saved = await saveDocument("emitido");
 
-      await generateWord(saved);
+      await generatePDF(saved);
 
-      setStatus("Memorando salvo e Word gerado com sucesso.", "ok");
+      setStatus("Memorando salvo e PDF gerado com sucesso.", "ok");
 
       clearForm(false);
       await loadDocuments();
     } catch (error) {
       console.error(error);
-      setStatus(error.message || "Erro ao gerar memorando.", "error");
+      setStatus(error.message || "Erro ao gerar memorando em PDF.", "error");
     }
   }
 
@@ -774,7 +904,7 @@
 
     $("priority").value = "normal";
     $("subjectCategory").value = "Manutenção de ar-condicionado";
-    $("originSector").value = "Direção Escolar";
+    $("originSector").value = "EMEF ETELVINA PEREIRA BRAGA";
     $("signerName").value = state.profile?.full_name || "";
     $("signerRole").value = "Direção Escolar";
 
@@ -868,10 +998,10 @@
 
         if (doc) {
           try {
-            await generateWord(doc);
+            await generatePDF(doc);
           } catch (error) {
             console.error(error);
-            setStatus(error.message || "Erro ao gerar Word.", "error");
+            setStatus(error.message || "Erro ao gerar PDF.", "error");
           }
         }
       }
@@ -886,7 +1016,8 @@
 
       $("documentDate").value = todayISO();
       $("documentYear").value = currentYear();
-      $("originSector").value = "Direção Escolar";
+
+      $("originSector").value = "EMEF ETELVINA PEREIRA BRAGA";
       $("signerName").value = state.profile?.full_name || "";
       $("signerRole").value = "Direção Escolar";
 
