@@ -20,7 +20,8 @@
   const DEFAULT_SIGNER_NAME = "André Henrique Batista da Silva";
   const DEFAULT_SIGNER_ROLE = "Diretor da E.M. Etelvina Pereira Braga\nPortaria 1369/2024-SEMED/GS";
 
-  const HEADER_IMAGE_PATH = "/assets/memorandos/memorando_cabecalho.png";
+  const HEADER_IMAGE_PATH = "/assets/memorandos/memorando_logo_semed.png";
+  const STAMP_IMAGE_PATH = "/assets/memorandos/memorando_carimbo_escola.png";
 
   const state = {
     user: null,
@@ -249,7 +250,7 @@
     $("problemDescription").value = doc.problem_description || "";
     $("requestedAction").value = doc.requested_action || "";
     $("userContext").value = doc.user_context || "";
-    $("finalText").value = doc.final_text || doc.ai_generated_text || "";
+    $("finalText").value = cleanInstitutionText(doc.final_text || doc.ai_generated_text || "");
     $("signerName").value = doc.signer_name || "";
     $("signerRole").value = doc.signer_role || "";
 
@@ -274,6 +275,8 @@
 
   async function saveDocument(status = "rascunho") {
     const data = collectForm();
+
+    data.final_text = cleanInstitutionText(data.final_text);
 
     const payload = {
       ...data,
@@ -317,12 +320,13 @@
 
   async function saveAiDraft(aiText) {
     const data = collectForm();
+    const cleanedText = cleanInstitutionText(aiText);
 
     const payload = {
       ...data,
       school_id: state.school.id,
-      ai_generated_text: aiText,
-      final_text: aiText,
+      ai_generated_text: cleanedText,
+      final_text: cleanedText,
       status: "gerado_pela_ia",
       updated_at: new Date().toISOString(),
       created_by: state.user.id
@@ -448,15 +452,22 @@
   function cleanInstitutionText(text) {
     let result = String(text || "").trim();
 
+    result = result.replace(/O Instituto INTEGRO/gi, "A escola");
+    result = result.replace(/O Instituto Integro/gi, "A escola");
+    result = result.replace(/O Instituto Íntegro/gi, "A escola");
+    result = result.replace(/o Instituto INTEGRO/gi, "a escola");
+    result = result.replace(/o Instituto Integro/gi, "a escola");
+    result = result.replace(/o Instituto Íntegro/gi, "a escola");
+
     result = result.replace(/Instituto INTEGRO/gi, SCHOOL_FULL_NAME);
     result = result.replace(/Instituto Integro/gi, SCHOOL_FULL_NAME);
     result = result.replace(/Instituto Íntegro/gi, SCHOOL_FULL_NAME);
-    result = result.replace(/Instituto/gi, "escola");
     result = result.replace(/Portal INTEGRO/gi, "sistema institucional");
-    result = result.replace(/O Integro/gi, "A escola");
-    result = result.replace(/O INTEGRO/gi, "A escola");
-    result = result.replace(/o Integro/gi, "a escola");
-    result = result.replace(/o INTEGRO/gi, "a escola");
+    result = result.replace(/INTEGRO/gi, SCHOOL_SHORT_NAME);
+
+    result = result.replace(/\s+/g, " ");
+    result = result.replace(/\s+\./g, ".");
+    result = result.replace(/\s+,/g, ",");
 
     return result.trim();
   }
@@ -478,19 +489,25 @@
 
     if (!normalized) return [];
 
-    const paragraphs = normalized
+    const byBlankLine = normalized
       .split(/\n{2,}/)
       .map((p) => p.trim())
       .filter(Boolean);
 
-    if (paragraphs.length <= 1) {
-      return normalized
-        .split(/\n/)
-        .map((p) => p.trim())
-        .filter(Boolean);
+    if (byBlankLine.length > 1) {
+      return byBlankLine;
     }
 
-    return paragraphs;
+    const byLine = normalized
+      .split(/\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (byLine.length > 1) {
+      return byLine;
+    }
+
+    return [normalized];
   }
 
   function getDocumentDateForPdf(doc) {
@@ -546,48 +563,7 @@
     pdf.setTextColor(0, 0, 0);
   }
 
-  function drawSchoolStamp(pdf, centerX, centerY) {
-    pdf.setDrawColor(48, 89, 190);
-    pdf.setTextColor(48, 89, 190);
-    pdf.setLineWidth(0.35);
-
-    pdf.circle(centerX, centerY, 13.5);
-    pdf.circle(centerX, centerY, 9.5);
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(5.2);
-
-    pdf.text("MUNICIPIO DE MANAUS", centerX, centerY - 8.3, {
-      align: "center"
-    });
-
-    pdf.text("SECRETARIA DE EDUCACAO", centerX, centerY + 10.2, {
-      align: "center"
-    });
-
-    pdf.setFontSize(4.8);
-
-    pdf.text("ESCOLA MUNICIPAL", centerX, centerY - 3.8, {
-      align: "center"
-    });
-
-    pdf.text("ETELVINA", centerX, centerY - 0.2, {
-      align: "center"
-    });
-
-    pdf.text("PEREIRA BRAGA", centerX, centerY + 3.2, {
-      align: "center"
-    });
-
-    pdf.text("A CRIACAO 29", centerX, centerY + 6.4, {
-      align: "center"
-    });
-
-    pdf.setDrawColor(0, 0, 0);
-    pdf.setTextColor(0, 0, 0);
-  }
-
-  function drawMemoPdfLayout(pdf, doc, headerImage, docDate) {
+  function drawMemoPdfLayout(pdf, doc, headerImage, stampImage, docDate) {
     const left = 15;
     const top = 23;
     const width = 180;
@@ -612,16 +588,11 @@
     pdf.setTextColor(0, 0, 0);
     pdf.setLineWidth(0.28);
 
-    /*
-      Cabeçalho superior:
-      lado esquerdo com logomarca SEMED/Manaus
-      lado direito com MEMORANDO Nº
-    */
     if (headerImage) {
       try {
-        pdf.addImage(headerImage, "PNG", left + 4, headerTop + 5, 86, 22);
+        pdf.addImage(headerImage, "PNG", left + 5, headerTop + 5, 87, 22);
       } catch (error) {
-        console.warn("Falha ao inserir cabeçalho. Usando texto.", error);
+        console.warn("Falha ao inserir logo. Usando texto.", error);
         drawFallbackHeader(pdf, left + 4, headerTop + 4);
       }
     } else {
@@ -639,40 +610,30 @@
       headerTop + 11
     );
 
-    /*
-      Linha DA / PARA
-    */
     pdf.rect(left, infoTop, width, infoHeight);
     pdf.line(splitX, infoTop, splitX, infoTop + infoHeight);
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(14);
 
-    pdf.text("DA:", left + 2, infoTop + 11.5);
+    pdf.text("DA:", left + 2, infoTop + 10);
 
-    pdf.text(
+    const originLines = pdf.splitTextToSize(
       plain(doc.origin_sector || SCHOOL_ORIGIN_NAME).toUpperCase(),
-      left + 13,
-      infoTop + 11.5,
-      {
-        maxWidth: splitX - left - 15
-      }
+      splitX - left - 16
     );
 
-    pdf.text("PARA:", splitX + 3, infoTop + 11.5);
+    pdf.text(originLines, left + 13, infoTop + 8);
 
-    pdf.text(
+    pdf.text("PARA:", splitX + 3, infoTop + 10);
+
+    const destinationLines = pdf.splitTextToSize(
       plain(doc.destination_name || DEFAULT_DESTINATION).toUpperCase(),
-      splitX + 21,
-      infoTop + 11.5,
-      {
-        maxWidth: left + width - splitX - 24
-      }
+      left + width - splitX - 25
     );
 
-    /*
-      Linha ASSUNTO
-    */
+    pdf.text(destinationLines, splitX + 21, infoTop + 10);
+
     pdf.rect(left, subjectTop, width, subjectHeight);
 
     pdf.setFont("helvetica", "bold");
@@ -689,16 +650,16 @@
       }
     );
 
-    /*
-      Caixa do corpo
-    */
     pdf.rect(left, bodyTop, width, bodyHeight);
 
-    drawSchoolStamp(pdf, left + width - 31, bodyTop + 29);
+    if (stampImage) {
+      try {
+        pdf.addImage(stampImage, "PNG", left + width - 46, bodyTop + 14, 30, 30);
+      } catch (error) {
+        console.warn("Falha ao inserir carimbo.", error);
+      }
+    }
 
-    /*
-      Protocolo inferior
-    */
     pdf.rect(left, protocolTop, width, protocolHeight);
 
     const col1 = 37;
@@ -762,7 +723,7 @@
     const salutationY = layout.bodyTop + 23;
     let y = layout.bodyTop + 51;
 
-    const maxTextY = layout.bodyTop + 104;
+    const maxTextY = layout.bodyTop + 103;
 
     let fontSize = 13.2;
     let lineHeight = 8;
@@ -801,18 +762,12 @@
       lineHeight = 5.6;
     }
 
-    /*
-      Saudação
-    */
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(14.5);
 
     pdf.text(getSalutation(doc), textLeft, salutationY);
 
-    /*
-      Corpo
-    */
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(fontSize);
 
@@ -830,9 +785,6 @@
       y += 5;
     });
 
-    /*
-      Fechamento fixo do modelo
-    */
     const closingText =
       "Sem mais para o momento, reiteramos votos de estima e consideração.";
 
@@ -848,9 +800,6 @@
       closingY += 7;
     });
 
-    /*
-      Atenciosamente
-    */
     const atenciosamenteY = layout.bodyTop + 137;
 
     pdf.setFont("helvetica", "normal");
@@ -860,13 +809,10 @@
       align: "center"
     });
 
-    /*
-      Assinatura
-    */
-    const signatureY = atenciosamenteY + 18;
+    const signatureY = atenciosamenteY + 17;
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(11);
+    pdf.setFontSize(10.5);
 
     pdf.text("(Assinado Digitalmente)", layout.left + layout.width / 2, signatureY, {
       align: "center"
@@ -875,7 +821,7 @@
     pdf.text(
       plain(doc.signer_name || DEFAULT_SIGNER_NAME),
       layout.left + layout.width / 2,
-      signatureY + 6,
+      signatureY + 5.5,
       {
         align: "center"
       }
@@ -883,17 +829,17 @@
 
     const roleLines = pdf.splitTextToSize(
       plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
-      90
+      88
     );
 
-    let roleY = signatureY + 12;
+    let roleY = signatureY + 10.7;
 
     roleLines.forEach((line) => {
       pdf.text(line, layout.left + layout.width / 2, roleY, {
         align: "center"
       });
 
-      roleY += 5.4;
+      roleY += 4.8;
     });
   }
 
@@ -905,7 +851,10 @@
     }
 
     const headerImage = await tryImageToDataUrl(HEADER_IMAGE_PATH);
+    const stampImage = await tryImageToDataUrl(STAMP_IMAGE_PATH);
     const docDate = getDocumentDateForPdf(doc);
+
+    doc.final_text = cleanInstitutionText(doc.final_text || "");
 
     const pdf = new jsPDFConstructor({
       orientation: "portrait",
@@ -921,7 +870,7 @@
       creator: "Sistema de Memorandos da Escola Municipal Etelvina Pereira Braga"
     });
 
-    const layout = drawMemoPdfLayout(pdf, doc, headerImage, docDate);
+    const layout = drawMemoPdfLayout(pdf, doc, headerImage, stampImage, docDate);
 
     drawMemoBody(pdf, doc, layout);
 
@@ -944,6 +893,16 @@
     }
 
     const lower = category.toLowerCase();
+
+    if (lower.includes("cadeira")) {
+      if (!$("equipmentText").value) {
+        $("equipmentText").value = "Cadeiras";
+      }
+
+      if (!$("requestedAction").value) {
+        $("requestedAction").value = "Solicitamos avaliação técnica e realização dos reparos necessários nas cadeiras indicadas.";
+      }
+    }
 
     if (lower.includes("ar-condicionado")) {
       if (!$("equipmentText").value) {
