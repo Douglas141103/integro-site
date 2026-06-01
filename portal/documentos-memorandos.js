@@ -684,10 +684,10 @@
       drawImageContain(
         pdf,
         headerAsset,
-        left + 4,
-        headerTop + 3,
-        splitX - left - 8,
-        25
+        left - 3,
+        headerTop + 2,
+        splitX - left + 4,
+        28
       );
     } else {
       drawFallbackHeader(pdf, left + 4, headerTop + 4);
