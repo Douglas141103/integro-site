@@ -6,7 +6,7 @@
 
   <title>Memorandos personalizados | INTEGRO</title>
 
-  <link rel="stylesheet" href="./documentos-memorandos.css?v=202606-memorandos-ia" />
+  <link rel="stylesheet" href="./documentos-memorandos.css?v=202606-memorandos-pdf" />
 
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#004d3a" />
@@ -16,6 +16,7 @@
   <header class="topbar">
     <div class="brand">
       <img src="../logo-whatsapp.png" alt="INTEGRO" onerror="this.style.display='none'" />
+
       <div>
         <span>DOCUMENTOS INSTITUCIONAIS</span>
         <strong>Memorandos personalizados</strong>
@@ -37,7 +38,7 @@
         <h1>Gerador de memorandos personalizados</h1>
         <p class="muted">
           Preencha os campos principais, escolha um assunto pré-pronto, gere a minuta com IA,
-          revise o texto e baixe o memorando em Word no modelo timbrado.
+          revise o texto e baixe o memorando em PDF no modelo institucional.
         </p>
       </div>
 
@@ -81,23 +82,24 @@
 
           <label>
             De / Origem
-            <input id="originSector" type="text" placeholder="Ex.: Direção Escolar" />
+            <input id="originSector" type="text" placeholder="Ex.: EMEF ETELVINA PEREIRA BRAGA" />
           </label>
 
           <label>
             Para / Destinatário
-            <input id="destinationName" type="text" placeholder="Ex.: Chefe do Setor" />
+            <input id="destinationName" type="text" placeholder="Ex.: DDZ LESTE 1" />
           </label>
 
           <label>
             Setor destinatário
-            <input id="destinationSector" type="text" placeholder="Ex.: DDZ, SEMED, Setor de Infraestrutura" />
+            <input id="destinationSector" type="text" placeholder="Ex.: Divisão Distrital Zona Leste I" />
           </label>
 
           <label>
             Assunto pré-pronto
             <select id="subjectCategory">
               <option value="Manutenção de ar-condicionado">Manutenção de ar-condicionado</option>
+              <option value="Aquisição de ar-condicionado">Aquisição de ar-condicionado</option>
               <option value="Manutenção elétrica">Manutenção elétrica</option>
               <option value="Manutenção hidráulica">Manutenção hidráulica</option>
               <option value="Manutenção predial">Manutenção predial</option>
@@ -118,6 +120,7 @@
               <option value="Problema com portas, fechaduras ou janelas">Problema com portas, fechaduras ou janelas</option>
               <option value="Solicitação de servidor / funcionário">Solicitação de servidor / funcionário</option>
               <option value="Solicitação de professor">Solicitação de professor</option>
+              <option value="Alteração de carga horária de servidor">Alteração de carga horária de servidor</option>
               <option value="Comunicação de ausência de servidor">Comunicação de ausência de servidor</option>
               <option value="Registro de ocorrência administrativa">Registro de ocorrência administrativa</option>
               <option value="Encaminhamento de aluno">Encaminhamento de aluno</option>
@@ -142,7 +145,7 @@
 
           <label class="full">
             Assunto formal do memorando
-            <input id="memoSubject" type="text" placeholder="Ex.: Solicitação de manutenção em aparelho de ar-condicionado" />
+            <input id="memoSubject" type="text" placeholder="Ex.: Solicitação de aquisição de Ar-Condicionado." />
           </label>
 
           <label>
@@ -188,12 +191,12 @@
 
           <label>
             Nome para assinatura
-            <input id="signerName" type="text" placeholder="Ex.: André Silva" />
+            <input id="signerName" type="text" placeholder="Ex.: André Henrique Batista da Silva" />
           </label>
 
           <label>
             Cargo/setor para assinatura
-            <input id="signerRole" type="text" placeholder="Ex.: Diretor Escolar" />
+            <input id="signerRole" type="text" placeholder="Ex.: Diretor da E.M. Etelvina Pereira Braga - Portaria 1369/2024-SEMED/GS" />
           </label>
         </div>
 
@@ -206,11 +209,11 @@
 
         <label class="editor-label">
           Texto final do memorando
-          <textarea id="finalText" rows="13" placeholder="O texto gerado pela IA aparecerá aqui. Você poderá revisar antes de baixar o Word."></textarea>
+          <textarea id="finalText" rows="13" placeholder="O texto gerado pela IA aparecerá aqui. Você poderá revisar antes de baixar o PDF."></textarea>
         </label>
 
         <div class="actions">
-          <button class="btn primary" type="submit">Salvar e gerar Word</button>
+          <button class="btn primary" type="submit">Salvar e gerar PDF</button>
           <button class="btn ghost" type="button" id="saveDraftBtn">Salvar rascunho</button>
           <button class="btn danger" type="button" id="clearBtn">Limpar</button>
         </div>
@@ -229,7 +232,7 @@
             <li>Número do memorando automático.</li>
             <li>Assuntos pré-prontos para poupar digitação.</li>
             <li>IA redige a minuta institucional.</li>
-            <li>Você revisa antes de gerar o Word.</li>
+            <li>Você revisa antes de gerar o PDF.</li>
             <li>Histórico fica salvo no portal.</li>
           </ul>
         </section>
@@ -238,8 +241,9 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="./config.js"></script>
-  <script src="./documentos-memorandos.js?v=202606-memorandos-ia"></script>
+  <script src="./documentos-memorandos.js?v=202606-pdf-definitivo"></script>
   <script src="/pwa-install.js"></script>
 </body>
 </html>
