@@ -222,6 +222,17 @@
       gap: 8px;
       transition: .2s ease;
       box-shadow: none;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    .gestao-nav-link {
+      cursor: pointer;
+    }
+
+    .gestao-nav-link:visited {
+      color: var(--green-900);
     }
 
     .gestao-nav-button:hover {
@@ -670,6 +681,12 @@
           <strong>Dados da empresa</strong>
           <small>CNPJ/CPF, endereço e dados para documentos.</small>
         </button>
+
+        <a class="gestao-nav-button gestao-nav-link" href="./documentos-memorandos.html">
+          <span class="gestao-nav-icon">8</span>
+          <strong>Memorandos personalizados</strong>
+          <small>Crie memorandos com IA e gere em Word no modelo timbrado.</small>
+        </a>
       </div>
     </section>
 
