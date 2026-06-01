@@ -480,6 +480,7 @@
     result = result.replace(/^Senhor\(a\).*?,\s*/i, "");
     result = result.replace(/Atenciosamente,?/gi, "");
     result = result.replace(/\(Assinado Digitalmente\)/gi, "");
+    result = result.replace(/Sem mais para o momento, reiteramos votos de estima e consideração\.?/gi, "");
 
     return result.trim();
   }
@@ -563,9 +564,9 @@
     pdf.setTextColor(0, 0, 0);
   }
 
-  function drawMemoPdfLayout(pdf, doc, headerImage, stampImage, docDate) {
+  function drawMemoHeaderAndProtocol(pdf, doc, headerImage, stampImage, docDate, isContinuation = false) {
     const left = 15;
-    const top = 23;
+    const top = 22;
     const width = 180;
 
     const splitX = 105;
@@ -586,11 +587,11 @@
 
     pdf.setDrawColor(0, 0, 0);
     pdf.setTextColor(0, 0, 0);
-    pdf.setLineWidth(0.28);
+    pdf.setLineWidth(0.25);
 
     if (headerImage) {
       try {
-        pdf.addImage(headerImage, "PNG", left + 5, headerTop + 5, 87, 22);
+        pdf.addImage(headerImage, "PNG", left + 7, headerTop + 8, 74, 15);
       } catch (error) {
         console.warn("Falha ao inserir logo. Usando texto.", error);
         drawFallbackHeader(pdf, left + 4, headerTop + 4);
@@ -602,21 +603,23 @@
     pdf.rect(splitX, headerTop, left + width - splitX, headerHeight);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(15.5);
+    pdf.setFontSize(13.8);
 
-    pdf.text(
-      `MEMORANDO Nº ${doc.document_number}/${doc.document_year}`,
-      splitX + 3,
-      headerTop + 11
-    );
+    const memoTitle = isContinuation
+      ? `MEMORANDO Nº ${doc.document_number}/${doc.document_year} - CONTINUAÇÃO`
+      : `MEMORANDO Nº ${doc.document_number}/${doc.document_year}`;
+
+    const memoTitleLines = pdf.splitTextToSize(memoTitle, left + width - splitX - 8);
+
+    pdf.text(memoTitleLines, splitX + 3, headerTop + 10);
 
     pdf.rect(left, infoTop, width, infoHeight);
     pdf.line(splitX, infoTop, splitX, infoTop + infoHeight);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(14);
+    pdf.setFontSize(11.5);
 
-    pdf.text("DA:", left + 2, infoTop + 10);
+    pdf.text("DA:", left + 2, infoTop + 8);
 
     const originLines = pdf.splitTextToSize(
       plain(doc.origin_sector || SCHOOL_ORIGIN_NAME).toUpperCase(),
@@ -637,66 +640,68 @@
     pdf.rect(left, subjectTop, width, subjectHeight);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12.5);
+    pdf.setFontSize(10.8);
     pdf.text("ASSUNTO:", left + 2, subjectTop + 8.4);
 
     pdf.setFont("helvetica", "normal");
     pdf.text(
       plain(doc.memo_subject || ""),
-      left + 25,
+      left + 23,
       subjectTop + 8.4,
       {
-        maxWidth: width - 27
+        maxWidth: width - 25
       }
     );
 
     pdf.rect(left, bodyTop, width, bodyHeight);
 
-    if (stampImage) {
+    if (stampImage && !isContinuation) {
       try {
-        pdf.addImage(stampImage, "PNG", left + width - 46, bodyTop + 14, 30, 30);
+        pdf.addImage(stampImage, "PNG", left + width - 43, bodyTop + 15, 27, 27);
       } catch (error) {
         console.warn("Falha ao inserir carimbo.", error);
       }
     }
 
-    pdf.rect(left, protocolTop, width, protocolHeight);
+    if (!isContinuation) {
+      pdf.rect(left, protocolTop, width, protocolHeight);
 
-    const col1 = 37;
-    const col2 = 49;
-    const col3 = 48;
-    const col4 = width - col1 - col2 - col3;
+      const col1 = 37;
+      const col2 = 49;
+      const col3 = 48;
+      const col4 = width - col1 - col2 - col3;
 
-    pdf.line(left + col1, protocolTop, left + col1, protocolTop + protocolHeight);
-    pdf.line(left + col1 + col2, protocolTop, left + col1 + col2, protocolTop + protocolHeight);
-    pdf.line(left + col1 + col2 + col3, protocolTop, left + col1 + col2 + col3, protocolTop + protocolHeight);
+      pdf.line(left + col1, protocolTop, left + col1, protocolTop + protocolHeight);
+      pdf.line(left + col1 + col2, protocolTop, left + col1 + col2, protocolTop + protocolHeight);
+      pdf.line(left + col1 + col2 + col3, protocolTop, left + col1 + col2 + col3, protocolTop + protocolHeight);
 
-    pdf.line(left, protocolTop + 11, left + width, protocolTop + 11);
+      pdf.line(left, protocolTop + 11, left + width, protocolTop + 11);
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(10.5);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9.4);
 
-    pdf.text("DATA", left + col1 / 2, protocolTop + 7.2, { align: "center" });
-    pdf.text("ENVIADO POR", left + col1 + col2 / 2, protocolTop + 7.2, { align: "center" });
-    pdf.text("RECEBIDO POR", left + col1 + col2 + col3 / 2, protocolTop + 7.2, { align: "center" });
-    pdf.text("DATA", left + col1 + col2 + col3 + col4 / 2, protocolTop + 7.2, { align: "center" });
+      pdf.text("DATA", left + col1 / 2, protocolTop + 7.2, { align: "center" });
+      pdf.text("ENVIADO POR", left + col1 + col2 / 2, protocolTop + 7.2, { align: "center" });
+      pdf.text("RECEBIDO POR", left + col1 + col2 + col3 / 2, protocolTop + 7.2, { align: "center" });
+      pdf.text("DATA", left + col1 + col2 + col3 + col4 / 2, protocolTop + 7.2, { align: "center" });
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9.2);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8.5);
 
-    pdf.text(brDate(docDate), left + col1 / 2, protocolTop + 18.7, { align: "center" });
+      pdf.text(brDate(docDate), left + col1 / 2, protocolTop + 18.7, { align: "center" });
 
-    pdf.setFont("helvetica", "normal");
+      pdf.setFont("helvetica", "normal");
 
-    pdf.text(
-      SCHOOL_PROTOCOL_NAME,
-      left + col1 + col2 / 2,
-      protocolTop + 18.7,
-      {
-        align: "center",
-        maxWidth: col2 - 4
-      }
-    );
+      pdf.text(
+        SCHOOL_PROTOCOL_NAME,
+        left + col1 + col2 / 2,
+        protocolTop + 18.7,
+        {
+          align: "center",
+          maxWidth: col2 - 4
+        }
+      );
+    }
 
     return {
       left,
@@ -716,103 +721,160 @@
     };
   }
 
-  function drawMemoBody(pdf, doc, layout) {
+  function getTextLinesForPdf(pdf, doc, maxTextWidth, fontSize) {
+    const paragraphs = splitParagraphs(doc.final_text || "");
+    const result = [];
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(fontSize);
+
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+      const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
+
+      lines.forEach((line) => {
+        result.push({
+          text: line,
+          paragraphIndex
+        });
+      });
+
+      result.push({
+        text: "",
+        paragraphIndex
+      });
+    });
+
+    return result;
+  }
+
+  function drawMemoBody(pdf, doc, layout, headerImage, stampImage, docDate) {
     const textLeft = layout.left + 25;
     const maxTextWidth = layout.width - 50;
 
     const salutationY = layout.bodyTop + 23;
-    let y = layout.bodyTop + 51;
+    const firstTextY = layout.bodyTop + 51;
 
-    const maxTextY = layout.bodyTop + 103;
+    const fontSize = 11.8;
+    const lineHeight = 6.8;
 
-    let fontSize = 13.2;
-    let lineHeight = 8;
+    const signatureRoleLines = pdf.splitTextToSize(
+      plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
+      90
+    );
 
-    const paragraphs = splitParagraphs(doc.final_text || "");
+    const signatureBlockHeight = 6 + 6 + (signatureRoleLines.length * 4.8);
+    const protocolSafeY = layout.protocolTop - 8;
 
-    function estimateHeight(size, lh) {
-      pdf.setFontSize(size);
+    const signatureY = protocolSafeY - signatureBlockHeight;
+    const atenciosamenteY = signatureY - 15;
+    const closingY = atenciosamenteY - 18;
 
-      let total = 0;
+    const maxTextYFirstPage = closingY - 8;
 
-      paragraphs.forEach((paragraph) => {
-        const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
-        total += lines.length * lh + 5;
-      });
-
-      return total;
-    }
-
-    let estimated = estimateHeight(fontSize, lineHeight);
-
-    if (estimated > 70) {
-      fontSize = 12;
-      lineHeight = 7.1;
-      estimated = estimateHeight(fontSize, lineHeight);
-    }
-
-    if (estimated > 84) {
-      fontSize = 10.8;
-      lineHeight = 6.3;
-      estimated = estimateHeight(fontSize, lineHeight);
-    }
-
-    if (estimated > 98) {
-      fontSize = 9.8;
-      lineHeight = 5.6;
-    }
+    const allLines = getTextLinesForPdf(pdf, doc, maxTextWidth, fontSize);
 
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(14.5);
+    pdf.setFontSize(13);
 
     pdf.text(getSalutation(doc), textLeft, salutationY);
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(fontSize);
 
-    paragraphs.forEach((paragraph) => {
-      const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
+    let y = firstTextY;
+    let index = 0;
 
-      lines.forEach((line) => {
-        if (y <= maxTextY) {
-          pdf.text(line, textLeft, y);
+    while (index < allLines.length) {
+      const item = allLines[index];
+
+      if (y > maxTextYFirstPage) {
+        break;
+      }
+
+      if (item.text) {
+        pdf.text(item.text, textLeft, y);
+        y += lineHeight;
+      } else {
+        y += 3.8;
+      }
+
+      index++;
+    }
+
+    if (index < allLines.length) {
+      pdf.addPage();
+
+      const continuationLayout = drawMemoHeaderAndProtocol(
+        pdf,
+        doc,
+        headerImage,
+        null,
+        docDate,
+        true
+      );
+
+      let continuationY = continuationLayout.bodyTop + 18;
+      const continuationMaxY = continuationLayout.bodyTop + continuationLayout.bodyHeight - 18;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(fontSize);
+
+      while (index < allLines.length) {
+        const item = allLines[index];
+
+        if (continuationY > continuationMaxY) {
+          pdf.addPage();
+
+          const nextLayout = drawMemoHeaderAndProtocol(
+            pdf,
+            doc,
+            headerImage,
+            null,
+            docDate,
+            true
+          );
+
+          continuationY = nextLayout.bodyTop + 18;
         }
 
-        y += lineHeight;
-      });
+        if (item.text) {
+          pdf.text(item.text, textLeft, continuationY);
+          continuationY += lineHeight;
+        } else {
+          continuationY += 3.8;
+        }
 
-      y += 5;
-    });
+        index++;
+      }
+
+      return;
+    }
 
     const closingText =
       "Sem mais para o momento, reiteramos votos de estima e consideração.";
 
     const closingLines = pdf.splitTextToSize(closingText, maxTextWidth);
 
-    let closingY = Math.max(y + 8, layout.bodyTop + 112);
-
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12.5);
+    pdf.setFontSize(11.3);
+
+    let currentClosingY = Math.max(y + 10, closingY);
 
     closingLines.forEach((line) => {
-      pdf.text(line, textLeft, closingY);
-      closingY += 7;
+      pdf.text(line, textLeft, currentClosingY);
+      currentClosingY += 6;
     });
 
-    const atenciosamenteY = layout.bodyTop + 137;
-
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
+    pdf.setFontSize(11);
 
     pdf.text("Atenciosamente,", layout.left + layout.width / 2, atenciosamenteY, {
       align: "center"
     });
 
-    const signatureY = atenciosamenteY + 17;
-
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(10.5);
+    pdf.setFontSize(9.8);
 
     pdf.text("(Assinado Digitalmente)", layout.left + layout.width / 2, signatureY, {
       align: "center"
@@ -821,25 +883,20 @@
     pdf.text(
       plain(doc.signer_name || DEFAULT_SIGNER_NAME),
       layout.left + layout.width / 2,
-      signatureY + 5.5,
+      signatureY + 5.2,
       {
         align: "center"
       }
     );
 
-    const roleLines = pdf.splitTextToSize(
-      plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
-      88
-    );
+    let roleY = signatureY + 10;
 
-    let roleY = signatureY + 10.7;
-
-    roleLines.forEach((line) => {
+    signatureRoleLines.forEach((line) => {
       pdf.text(line, layout.left + layout.width / 2, roleY, {
         align: "center"
       });
 
-      roleY += 4.8;
+      roleY += 4.6;
     });
   }
 
@@ -870,9 +927,16 @@
       creator: "Sistema de Memorandos da Escola Municipal Etelvina Pereira Braga"
     });
 
-    const layout = drawMemoPdfLayout(pdf, doc, headerImage, stampImage, docDate);
+    const layout = drawMemoHeaderAndProtocol(
+      pdf,
+      doc,
+      headerImage,
+      stampImage,
+      docDate,
+      false
+    );
 
-    drawMemoBody(pdf, doc, layout);
+    drawMemoBody(pdf, doc, layout, headerImage, stampImage, docDate);
 
     const fileName = `memorando-${doc.document_number}-${doc.document_year}.pdf`;
 
