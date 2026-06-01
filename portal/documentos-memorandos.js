@@ -67,11 +67,9 @@
     if (!iso) return "";
 
     const parts = String(iso).slice(0, 10).split("-");
-
     if (parts.length !== 3) return iso;
 
     const [y, m, d] = parts;
-
     if (!y || !m || !d) return iso;
 
     return `${d}/${m}/${y}`;
@@ -79,7 +77,6 @@
 
   function setStatus(message, type = "ok") {
     const box = $("statusBox");
-
     if (!box) return;
 
     if (!message) {
@@ -132,7 +129,6 @@
     state.school = school;
 
     const userBadge = $("userBadge");
-
     if (userBadge) {
       userBadge.textContent = profile.full_name || profile.role || "Usuário";
     }
@@ -170,7 +166,6 @@
 
   function renderDocuments() {
     const list = $("documentsList");
-
     if (!list) return;
 
     if (!state.documents.length) {
@@ -275,7 +270,6 @@
 
   async function saveDocument(status = "rascunho") {
     const data = collectForm();
-
     data.final_text = cleanInstitutionText(data.final_text);
 
     const payload = {
@@ -458,8 +452,7 @@
         img.src = dataUrl;
       });
 
-      const mime = blob.type || "image/png";
-      const format = mime.toLowerCase().includes("jpeg") || mime.toLowerCase().includes("jpg")
+      const format = blob.type.toLowerCase().includes("jpeg") || blob.type.toLowerCase().includes("jpg")
         ? "JPEG"
         : "PNG";
 
@@ -514,7 +507,7 @@
     result = result.replace(/Portal INTEGRO/gi, "sistema institucional");
     result = result.replace(/INTEGRO/gi, SCHOOL_SHORT_NAME);
 
-    result = result.replace(/\s+/g, " ");
+    result = result.replace(/[ \t]+/g, " ");
     result = result.replace(/\s+\./g, ".");
     result = result.replace(/\s+,/g, ",");
 
@@ -544,18 +537,14 @@
       .map((p) => p.trim())
       .filter(Boolean);
 
-    if (byBlankLine.length > 1) {
-      return byBlankLine;
-    }
+    if (byBlankLine.length > 1) return byBlankLine;
 
     const byLine = normalized
       .split(/\n/)
       .map((p) => p.trim())
       .filter(Boolean);
 
-    if (byLine.length > 1) {
-      return byLine;
-    }
+    if (byLine.length > 1) return byLine;
 
     return [normalized];
   }
@@ -563,17 +552,9 @@
   function getDocumentDateForPdf(doc) {
     const inputDate = $("documentDate")?.value;
 
-    if (state.editingId === doc.id && inputDate) {
-      return inputDate;
-    }
-
-    if (doc.issued_at) {
-      return String(doc.issued_at).slice(0, 10);
-    }
-
-    if (doc.created_at) {
-      return String(doc.created_at).slice(0, 10);
-    }
+    if (state.editingId === doc.id && inputDate) return inputDate;
+    if (doc.issued_at) return String(doc.issued_at).slice(0, 10);
+    if (doc.created_at) return String(doc.created_at).slice(0, 10);
 
     return inputDate || todayISO();
   }
@@ -591,6 +572,46 @@
     }
 
     return "Prezado(a) Chefe,";
+  }
+
+  function drawJustifiedLine(pdf, line, x, y, maxWidth, isLastLine) {
+    const cleanLine = String(line || "").trim();
+
+    if (!cleanLine) return;
+
+    const words = cleanLine.split(/\s+/);
+
+    if (isLastLine || words.length <= 1) {
+      pdf.text(cleanLine, x, y);
+      return;
+    }
+
+    const lineWidth = pdf.getTextWidth(cleanLine);
+
+    if (lineWidth < maxWidth * 0.72) {
+      pdf.text(cleanLine, x, y);
+      return;
+    }
+
+    const wordsWidth = words.reduce((sum, word) => sum + pdf.getTextWidth(word), 0);
+    const spaces = words.length - 1;
+    const spaceWidth = (maxWidth - wordsWidth) / spaces;
+
+    if (spaceWidth > 6 || spaceWidth < 1) {
+      pdf.text(cleanLine, x, y);
+      return;
+    }
+
+    let currentX = x;
+
+    words.forEach((word, index) => {
+      pdf.text(word, currentX, y);
+      currentX += pdf.getTextWidth(word);
+
+      if (index < words.length - 1) {
+        currentX += spaceWidth;
+      }
+    });
   }
 
   function drawFallbackHeader(pdf, x, y) {
@@ -639,7 +660,7 @@
     pdf.setLineWidth(0.25);
 
     if (headerAsset) {
-      drawImageContain(pdf, headerAsset, left + 8, headerTop + 7, 75, 17);
+      drawImageContain(pdf, headerAsset, left + 5, headerTop + 6, 86, 19);
     } else {
       drawFallbackHeader(pdf, left + 4, headerTop + 4);
     }
@@ -654,7 +675,6 @@
       : `MEMORANDO Nº ${doc.document_number}/${doc.document_year}`;
 
     const memoTitleLines = pdf.splitTextToSize(memoTitle, left + width - splitX - 8);
-
     pdf.text(memoTitleLines, splitX + 3, headerTop + 10);
 
     pdf.rect(left, infoTop, width, infoHeight);
@@ -692,15 +712,13 @@
       plain(doc.memo_subject || ""),
       left + 23,
       subjectTop + 8.4,
-      {
-        maxWidth: width - 25
-      }
+      { maxWidth: width - 25 }
     );
 
     pdf.rect(left, bodyTop, width, bodyHeight);
 
     if (stampAsset && !isContinuation) {
-      drawImageContain(pdf, stampAsset, left + width - 48, bodyTop + 16, 34, 34);
+      drawImageContain(pdf, stampAsset, left + width - 45, bodyTop + 16, 32, 32);
     }
 
     if (!isContinuation) {
@@ -714,7 +732,6 @@
       pdf.line(left + col1, protocolTop, left + col1, protocolTop + protocolHeight);
       pdf.line(left + col1 + col2, protocolTop, left + col1 + col2, protocolTop + protocolHeight);
       pdf.line(left + col1 + col2 + col3, protocolTop, left + col1 + col2 + col3, protocolTop + protocolHeight);
-
       pdf.line(left, protocolTop + 11, left + width, protocolTop + 11);
 
       pdf.setFont("helvetica", "bold");
@@ -727,11 +744,9 @@
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(8.5);
-
       pdf.text(brDate(docDate), left + col1 / 2, protocolTop + 18.7, { align: "center" });
 
       pdf.setFont("helvetica", "normal");
-
       pdf.text(
         SCHOOL_PROTOCOL_NAME,
         left + col1 + col2 / 2,
@@ -748,12 +763,6 @@
       top,
       width,
       splitX,
-      headerTop,
-      headerHeight,
-      infoTop,
-      infoHeight,
-      subjectTop,
-      subjectHeight,
       bodyTop,
       bodyHeight,
       protocolTop,
@@ -768,26 +777,87 @@
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(fontSize);
 
-    paragraphs.forEach((paragraph, paragraphIndex) => {
+    paragraphs.forEach((paragraph) => {
       const lines = pdf.splitTextToSize(plain(paragraph), maxTextWidth);
 
-      lines.forEach((line) => {
+      lines.forEach((line, index) => {
         result.push({
           text: line,
-          paragraphIndex
+          isLastLine: index === lines.length - 1
         });
       });
 
       result.push({
         text: "",
-        paragraphIndex
+        isLastLine: true
       });
     });
+
+    while (result.length && !result[result.length - 1].text) {
+      result.pop();
+    }
 
     return result;
   }
 
-  function drawMemoBody(pdf, doc, layout, headerAsset, stampAsset, docDate) {
+  function hasRemainingText(lines, startIndex) {
+    return lines.slice(startIndex).some((item) => String(item.text || "").trim());
+  }
+
+  function drawClosingAndSignature(pdf, doc, layout, afterY) {
+    const textLeft = layout.left + 25;
+    const maxTextWidth = layout.width - 50;
+
+    const signatureRoleLines = pdf.splitTextToSize(
+      plain(doc.signer_role || DEFAULT_SIGNER_ROLE),
+      90
+    );
+
+    const signatureBlockHeight = 6 + 6 + (signatureRoleLines.length * 4.8);
+    const protocolSafeY = layout.protocolTop - 8;
+
+    const signatureY = protocolSafeY - signatureBlockHeight;
+    const atenciosamenteY = signatureY - 15;
+    const minClosingY = atenciosamenteY - 18;
+
+    const closingText = "Sem mais para o momento, reiteramos votos de estima e consideração.";
+    const closingLines = pdf.splitTextToSize(closingText, maxTextWidth);
+
+    let closingY = Math.max(afterY + 10, minClosingY);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11.3);
+
+    closingLines.forEach((line) => {
+      pdf.text(line, textLeft, closingY);
+      closingY += 6;
+    });
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text("Atenciosamente,", layout.left + layout.width / 2, atenciosamenteY, { align: "center" });
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9.8);
+
+    pdf.text("(Assinado Digitalmente)", layout.left + layout.width / 2, signatureY, { align: "center" });
+
+    pdf.text(
+      plain(doc.signer_name || DEFAULT_SIGNER_NAME),
+      layout.left + layout.width / 2,
+      signatureY + 5.2,
+      { align: "center" }
+    );
+
+    let roleY = signatureY + 10;
+
+    signatureRoleLines.forEach((line) => {
+      pdf.text(line, layout.left + layout.width / 2, roleY, { align: "center" });
+      roleY += 4.6;
+    });
+  }
+
+  function drawMemoBody(pdf, doc, layout, headerAsset, docDate) {
     const textLeft = layout.left + 25;
     const maxTextWidth = layout.width - 50;
 
@@ -816,7 +886,6 @@
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(13);
-
     pdf.text(getSalutation(doc), textLeft, salutationY);
 
     pdf.setFont("helvetica", "normal");
@@ -828,12 +897,12 @@
     while (index < allLines.length) {
       const item = allLines[index];
 
-      if (y > maxTextYFirstPage) {
+      if (String(item.text || "").trim() && y > maxTextYFirstPage) {
         break;
       }
 
       if (item.text) {
-        pdf.text(item.text, textLeft, y);
+        drawJustifiedLine(pdf, item.text, textLeft, y, maxTextWidth, item.isLastLine);
         y += lineHeight;
       } else {
         y += 3.8;
@@ -842,7 +911,7 @@
       index++;
     }
 
-    if (index < allLines.length) {
+    if (hasRemainingText(allLines, index)) {
       pdf.addPage();
 
       const continuationLayout = drawMemoHeaderAndProtocol(
@@ -863,7 +932,7 @@
       while (index < allLines.length) {
         const item = allLines[index];
 
-        if (continuationY > continuationMaxY) {
+        if (String(item.text || "").trim() && continuationY > continuationMaxY) {
           pdf.addPage();
 
           const nextLayout = drawMemoHeaderAndProtocol(
@@ -879,7 +948,7 @@
         }
 
         if (item.text) {
-          pdf.text(item.text, textLeft, continuationY);
+          drawJustifiedLine(pdf, item.text, textLeft, continuationY, maxTextWidth, item.isLastLine);
           continuationY += lineHeight;
         } else {
           continuationY += 3.8;
@@ -891,53 +960,7 @@
       return;
     }
 
-    const closingText =
-      "Sem mais para o momento, reiteramos votos de estima e consideração.";
-
-    const closingLines = pdf.splitTextToSize(closingText, maxTextWidth);
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(11.3);
-
-    let currentClosingY = Math.max(y + 10, closingY);
-
-    closingLines.forEach((line) => {
-      pdf.text(line, textLeft, currentClosingY);
-      currentClosingY += 6;
-    });
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(11);
-
-    pdf.text("Atenciosamente,", layout.left + layout.width / 2, atenciosamenteY, {
-      align: "center"
-    });
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9.8);
-
-    pdf.text("(Assinado Digitalmente)", layout.left + layout.width / 2, signatureY, {
-      align: "center"
-    });
-
-    pdf.text(
-      plain(doc.signer_name || DEFAULT_SIGNER_NAME),
-      layout.left + layout.width / 2,
-      signatureY + 5.2,
-      {
-        align: "center"
-      }
-    );
-
-    let roleY = signatureY + 10;
-
-    signatureRoleLines.forEach((line) => {
-      pdf.text(line, layout.left + layout.width / 2, roleY, {
-        align: "center"
-      });
-
-      roleY += 4.6;
-    });
+    drawClosingAndSignature(pdf, doc, layout, y);
   }
 
   async function generatePDF(doc) {
@@ -976,7 +999,7 @@
       false
     );
 
-    drawMemoBody(pdf, doc, layout, headerAsset, stampAsset, docDate);
+    drawMemoBody(pdf, doc, layout, headerAsset, docDate);
 
     const fileName = `memorando-${doc.document_number}-${doc.document_year}.pdf`;
 
@@ -984,9 +1007,7 @@
   }
 
   function toggleCustomSubject() {
-    const isOther = $("subjectCategory").value === "Outro";
-
-    $("subjectCustomWrap").hidden = !isOther;
+    $("subjectCustomWrap").hidden = $("subjectCategory").value !== "Outro";
   }
 
   function applySubjectSuggestion() {
@@ -999,81 +1020,56 @@
     const lower = category.toLowerCase();
 
     if (lower.includes("cadeira")) {
-      if (!$("equipmentText").value) {
-        $("equipmentText").value = "Cadeiras";
-      }
-
+      if (!$("equipmentText").value) $("equipmentText").value = "Cadeiras";
       if (!$("requestedAction").value) {
         $("requestedAction").value = "Solicitamos avaliação técnica e realização dos reparos necessários nas cadeiras indicadas.";
       }
     }
 
     if (lower.includes("ar-condicionado")) {
-      if (!$("equipmentText").value) {
-        $("equipmentText").value = "Aparelho de ar-condicionado";
-      }
-
+      if (!$("equipmentText").value) $("equipmentText").value = "Aparelho de ar-condicionado";
       if (!$("requestedAction").value) {
         $("requestedAction").value = "Solicitamos avaliação técnica e realização dos reparos necessários.";
       }
     }
 
     if (lower.includes("aquisição de ar-condicionado")) {
-      if (!$("equipmentText").value) {
-        $("equipmentText").value = "Aparelho de ar-condicionado";
-      }
-
+      if (!$("equipmentText").value) $("equipmentText").value = "Aparelho de ar-condicionado";
       if (!$("requestedAction").value) {
         $("requestedAction").value = "Solicitamos análise e aquisição de aparelho de ar-condicionado para atender à necessidade apresentada.";
       }
     }
 
     if (lower.includes("elétrica")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos vistoria técnica e correção da situação elétrica informada.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos vistoria técnica e correção da situação elétrica informada.";
     }
 
     if (lower.includes("hidráulica")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos vistoria e manutenção hidráulica no local indicado.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos vistoria e manutenção hidráulica no local indicado.";
     }
 
     if (lower.includes("material")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos o envio ou disponibilização dos materiais necessários.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos o envio ou disponibilização dos materiais necessários.";
     }
 
     if (lower.includes("internet") || lower.includes("computadores") || lower.includes("impressora")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos suporte técnico para verificação e solução do problema informado.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos suporte técnico para verificação e solução do problema informado.";
     }
 
     if (lower.includes("transporte")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos análise e adoção das providências necessárias quanto à demanda de transporte informada.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e adoção das providências necessárias quanto à demanda de transporte informada.";
     }
 
     if (lower.includes("segurança")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos apoio e providências relacionadas à segurança patrimonial.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos apoio e providências relacionadas à segurança patrimonial.";
     }
 
     if (lower.includes("alimentação") || lower.includes("merenda")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos análise e providências quanto à situação relacionada à alimentação escolar.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e providências quanto à situação relacionada à alimentação escolar.";
     }
 
     if (lower.includes("alteração de carga")) {
-      if (!$("requestedAction").value) {
-        $("requestedAction").value = "Solicitamos análise e registro da alteração de carga horária informada.";
-      }
+      if (!$("requestedAction").value) $("requestedAction").value = "Solicitamos análise e registro da alteração de carga horária informada.";
     }
   }
 
@@ -1082,7 +1078,6 @@
 
     try {
       const data = collectForm();
-
       validateBeforePdf(data);
 
       setStatus("Salvando memorando e gerando PDF...", "warn");
@@ -1094,11 +1089,9 @@
       setStatus("Memorando salvo e PDF gerado com sucesso.", "ok");
 
       clearForm(false);
-
       await loadDocuments();
     } catch (error) {
       console.error(error);
-
       setStatus(error.message || "Erro ao gerar memorando em PDF.", "error");
     }
   }
@@ -1131,7 +1124,6 @@
 
   async function logout() {
     await client.auth.signOut();
-
     window.location.href = "./login.html";
   }
 
@@ -1141,7 +1133,6 @@
     $("generateAiBtn").addEventListener("click", () => {
       generateWithAI("gerar").catch((error) => {
         console.error(error);
-
         setStatus(error.message || "Erro ao gerar texto.", "error");
       });
     });
@@ -1149,7 +1140,6 @@
     $("improveBtn").addEventListener("click", () => {
       generateWithAI("melhorar").catch((error) => {
         console.error(error);
-
         setStatus(error.message || "Erro ao melhorar texto.", "error");
       });
     });
@@ -1157,7 +1147,6 @@
     $("shortenBtn").addEventListener("click", () => {
       generateWithAI("enxuto").catch((error) => {
         console.error(error);
-
         setStatus(error.message || "Erro ao deixar texto mais objetivo.", "error");
       });
     });
@@ -1165,7 +1154,6 @@
     $("firmBtn").addEventListener("click", () => {
       generateWithAI("firme").catch((error) => {
         console.error(error);
-
         setStatus(error.message || "Erro ao deixar texto mais firme.", "error");
       });
     });
@@ -1173,11 +1161,9 @@
     $("saveDraftBtn").addEventListener("click", async () => {
       try {
         await saveDocument("rascunho");
-
         setStatus("Rascunho salvo com sucesso.", "ok");
       } catch (error) {
         console.error(error);
-
         setStatus(error.message || "Erro ao salvar rascunho.", "error");
       }
     });
@@ -1196,7 +1182,6 @@
     $("documentYear").addEventListener("change", () => {
       loadDocuments().catch((error) => {
         console.error(error);
-
         setStatus(error.message || "Erro ao carregar memorandos do ano.", "error");
       });
     });
@@ -1208,11 +1193,7 @@
 
       if (loadBtn) {
         const doc = state.documents.find((item) => item.id === loadBtn.dataset.loadDoc);
-
-        if (doc) {
-          fillForm(doc);
-        }
-
+        if (doc) fillForm(doc);
         return;
       }
 
@@ -1226,7 +1207,6 @@
             await generatePDF(doc);
           } catch (error) {
             console.error(error);
-
             setStatus(error.message || "Erro ao gerar PDF.", "error");
           }
         }
@@ -1259,7 +1239,6 @@
       setStatus("Módulo de memorandos carregado.", "ok");
     } catch (error) {
       console.error(error);
-
       setStatus(error.message || "Erro ao iniciar módulo de memorandos.", "error");
     }
   }
