@@ -424,7 +424,7 @@
     setStatus("Texto gerado com sucesso. Revise antes de gerar o PDF.", "ok");
   }
 
-  async function tryImageToDataUrl(path) {
+  async function loadImageAsset(path) {
     try {
       const res = await fetch(path);
 
@@ -435,7 +435,7 @@
 
       const blob = await res.blob();
 
-      return await new Promise((resolve, reject) => {
+      const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
 
         reader.onloadend = () => resolve(reader.result);
@@ -443,10 +443,59 @@
 
         reader.readAsDataURL(blob);
       });
+
+      const imageInfo = await new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+          resolve({
+            width: img.naturalWidth || img.width,
+            height: img.naturalHeight || img.height
+          });
+        };
+
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      const mime = blob.type || "image/png";
+      const format = mime.toLowerCase().includes("jpeg") || mime.toLowerCase().includes("jpg")
+        ? "JPEG"
+        : "PNG";
+
+      return {
+        dataUrl,
+        width: imageInfo.width,
+        height: imageInfo.height,
+        format
+      };
     } catch (error) {
       console.warn(`Erro ao carregar imagem: ${path}`, error);
       return null;
     }
+  }
+
+  function drawImageContain(pdf, asset, x, y, boxWidth, boxHeight) {
+    if (!asset || !asset.width || !asset.height) return;
+
+    const imageRatio = asset.width / asset.height;
+    const boxRatio = boxWidth / boxHeight;
+
+    let drawWidth = boxWidth;
+    let drawHeight = boxHeight;
+
+    if (imageRatio > boxRatio) {
+      drawWidth = boxWidth;
+      drawHeight = boxWidth / imageRatio;
+    } else {
+      drawHeight = boxHeight;
+      drawWidth = boxHeight * imageRatio;
+    }
+
+    const drawX = x + (boxWidth - drawWidth) / 2;
+    const drawY = y + (boxHeight - drawHeight) / 2;
+
+    pdf.addImage(asset.dataUrl, asset.format, drawX, drawY, drawWidth, drawHeight);
   }
 
   function cleanInstitutionText(text) {
@@ -564,7 +613,7 @@
     pdf.setTextColor(0, 0, 0);
   }
 
-  function drawMemoHeaderAndProtocol(pdf, doc, headerImage, stampImage, docDate, isContinuation = false) {
+  function drawMemoHeaderAndProtocol(pdf, doc, headerAsset, stampAsset, docDate, isContinuation = false) {
     const left = 15;
     const top = 22;
     const width = 180;
@@ -589,13 +638,8 @@
     pdf.setTextColor(0, 0, 0);
     pdf.setLineWidth(0.25);
 
-    if (headerImage) {
-      try {
-        pdf.addImage(headerImage, "PNG", left + 7, headerTop + 8, 74, 15);
-      } catch (error) {
-        console.warn("Falha ao inserir logo. Usando texto.", error);
-        drawFallbackHeader(pdf, left + 4, headerTop + 4);
-      }
+    if (headerAsset) {
+      drawImageContain(pdf, headerAsset, left + 8, headerTop + 7, 75, 17);
     } else {
       drawFallbackHeader(pdf, left + 4, headerTop + 4);
     }
@@ -603,7 +647,7 @@
     pdf.rect(splitX, headerTop, left + width - splitX, headerHeight);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13.8);
+    pdf.setFontSize(13.4);
 
     const memoTitle = isContinuation
       ? `MEMORANDO Nº ${doc.document_number}/${doc.document_year} - CONTINUAÇÃO`
@@ -617,13 +661,13 @@
     pdf.line(splitX, infoTop, splitX, infoTop + infoHeight);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(11.5);
+    pdf.setFontSize(11.3);
 
     pdf.text("DA:", left + 2, infoTop + 8);
 
     const originLines = pdf.splitTextToSize(
       plain(doc.origin_sector || SCHOOL_ORIGIN_NAME).toUpperCase(),
-      splitX - left - 16
+      splitX - left - 18
     );
 
     pdf.text(originLines, left + 13, infoTop + 8);
@@ -655,12 +699,8 @@
 
     pdf.rect(left, bodyTop, width, bodyHeight);
 
-    if (stampImage && !isContinuation) {
-      try {
-        pdf.addImage(stampImage, "PNG", left + width - 43, bodyTop + 15, 27, 27);
-      } catch (error) {
-        console.warn("Falha ao inserir carimbo.", error);
-      }
+    if (stampAsset && !isContinuation) {
+      drawImageContain(pdf, stampAsset, left + width - 48, bodyTop + 16, 34, 34);
     }
 
     if (!isContinuation) {
@@ -747,7 +787,7 @@
     return result;
   }
 
-  function drawMemoBody(pdf, doc, layout, headerImage, stampImage, docDate) {
+  function drawMemoBody(pdf, doc, layout, headerAsset, stampAsset, docDate) {
     const textLeft = layout.left + 25;
     const maxTextWidth = layout.width - 50;
 
@@ -808,7 +848,7 @@
       const continuationLayout = drawMemoHeaderAndProtocol(
         pdf,
         doc,
-        headerImage,
+        headerAsset,
         null,
         docDate,
         true
@@ -829,7 +869,7 @@
           const nextLayout = drawMemoHeaderAndProtocol(
             pdf,
             doc,
-            headerImage,
+            headerAsset,
             null,
             docDate,
             true
@@ -907,8 +947,8 @@
       throw new Error("Biblioteca jsPDF não carregada. Verifique o script no HTML.");
     }
 
-    const headerImage = await tryImageToDataUrl(HEADER_IMAGE_PATH);
-    const stampImage = await tryImageToDataUrl(STAMP_IMAGE_PATH);
+    const headerAsset = await loadImageAsset(HEADER_IMAGE_PATH);
+    const stampAsset = await loadImageAsset(STAMP_IMAGE_PATH);
     const docDate = getDocumentDateForPdf(doc);
 
     doc.final_text = cleanInstitutionText(doc.final_text || "");
@@ -930,13 +970,13 @@
     const layout = drawMemoHeaderAndProtocol(
       pdf,
       doc,
-      headerImage,
-      stampImage,
+      headerAsset,
+      stampAsset,
       docDate,
       false
     );
 
-    drawMemoBody(pdf, doc, layout, headerImage, stampImage, docDate);
+    drawMemoBody(pdf, doc, layout, headerAsset, stampAsset, docDate);
 
     const fileName = `memorando-${doc.document_number}-${doc.document_year}.pdf`;
 
