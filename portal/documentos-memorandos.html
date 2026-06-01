@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Memorandos personalizados | INTEGRO</title>
+
+  <link rel="stylesheet" href="./documentos-memorandos.css?v=202606-memorandos-ia" />
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#004d3a" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="../logo-whatsapp.png" alt="INTEGRO" onerror="this.style.display='none'" />
+      <div>
+        <span>DOCUMENTOS INSTITUCIONAIS</span>
+        <strong>Memorandos personalizados</strong>
+      </div>
+    </div>
+
+    <nav class="top-actions">
+      <span id="userBadge" class="pill">Carregando...</span>
+      <a class="btn ghost" href="./gestao-escolar.html">Voltar à gestão</a>
+      <a class="btn ghost" href="./dashboard.html">Portal</a>
+      <button id="logoutBtn" class="btn ghost" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">ESCRITA INSTITUCIONAL COM IA</p>
+        <h1>Gerador de memorandos personalizados</h1>
+        <p class="muted">
+          Preencha os campos principais, escolha um assunto pré-pronto, gere a minuta com IA,
+          revise o texto e baixe o memorando em Word no modelo timbrado.
+        </p>
+      </div>
+
+      <div class="summary-card">
+        <small>Próximo memorando</small>
+        <strong id="nextMemoNumber">--</strong>
+      </div>
+    </section>
+
+    <section id="statusBox" class="status" hidden></section>
+
+    <section class="layout-grid">
+      <form id="memoForm" class="card form-card">
+        <h2>Novo memorando</h2>
+
+        <div class="form-grid">
+          <label>
+            Número
+            <input id="documentNumber" type="number" min="1" placeholder="Automático" />
+          </label>
+
+          <label>
+            Ano
+            <input id="documentYear" type="number" min="2026" />
+          </label>
+
+          <label>
+            Data
+            <input id="documentDate" type="date" />
+          </label>
+
+          <label>
+            Prioridade
+            <select id="priority">
+              <option value="normal">Normal</option>
+              <option value="baixa">Baixa</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </label>
+
+          <label>
+            De / Origem
+            <input id="originSector" type="text" placeholder="Ex.: Direção Escolar" />
+          </label>
+
+          <label>
+            Para / Destinatário
+            <input id="destinationName" type="text" placeholder="Ex.: Chefe do Setor" />
+          </label>
+
+          <label>
+            Setor destinatário
+            <input id="destinationSector" type="text" placeholder="Ex.: DDZ, SEMED, Setor de Infraestrutura" />
+          </label>
+
+          <label>
+            Assunto pré-pronto
+            <select id="subjectCategory">
+              <option value="Manutenção de ar-condicionado">Manutenção de ar-condicionado</option>
+              <option value="Manutenção elétrica">Manutenção elétrica</option>
+              <option value="Manutenção hidráulica">Manutenção hidráulica</option>
+              <option value="Manutenção predial">Manutenção predial</option>
+              <option value="Limpeza e conservação">Limpeza e conservação</option>
+              <option value="Retirada de entulho">Retirada de entulho</option>
+              <option value="Dedetização / controle de pragas">Dedetização / controle de pragas</option>
+              <option value="Retirada de cupins">Retirada de cupins</option>
+              <option value="Solicitação de material de limpeza">Solicitação de material de limpeza</option>
+              <option value="Solicitação de material pedagógico">Solicitação de material pedagógico</option>
+              <option value="Solicitação de material de expediente">Solicitação de material de expediente</option>
+              <option value="Solicitação de mobiliário">Solicitação de mobiliário</option>
+              <option value="Solicitação de equipamento tecnológico">Solicitação de equipamento tecnológico</option>
+              <option value="Problema com internet">Problema com internet</option>
+              <option value="Problema com computadores">Problema com computadores</option>
+              <option value="Problema com impressora">Problema com impressora</option>
+              <option value="Problema com bebedouro">Problema com bebedouro</option>
+              <option value="Problema com ventiladores">Problema com ventiladores</option>
+              <option value="Problema com portas, fechaduras ou janelas">Problema com portas, fechaduras ou janelas</option>
+              <option value="Solicitação de servidor / funcionário">Solicitação de servidor / funcionário</option>
+              <option value="Solicitação de professor">Solicitação de professor</option>
+              <option value="Comunicação de ausência de servidor">Comunicação de ausência de servidor</option>
+              <option value="Registro de ocorrência administrativa">Registro de ocorrência administrativa</option>
+              <option value="Encaminhamento de aluno">Encaminhamento de aluno</option>
+              <option value="Solicitação de apoio pedagógico">Solicitação de apoio pedagógico</option>
+              <option value="Solicitação de apoio psicossocial">Solicitação de apoio psicossocial</option>
+              <option value="Solicitação de transporte">Solicitação de transporte</option>
+              <option value="Solicitação de alimentação escolar">Solicitação de alimentação escolar</option>
+              <option value="Comunicação sobre merenda">Comunicação sobre merenda</option>
+              <option value="Solicitação de segurança patrimonial">Solicitação de segurança patrimonial</option>
+              <option value="Solicitação de reunião">Solicitação de reunião</option>
+              <option value="Encaminhamento de documentos">Encaminhamento de documentos</option>
+              <option value="Resposta a solicitação recebida">Resposta a solicitação recebida</option>
+              <option value="Prestação de informações">Prestação de informações</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+
+          <label id="subjectCustomWrap" hidden>
+            Descreva o outro assunto
+            <input id="subjectCustom" type="text" placeholder="Digite o assunto personalizado" />
+          </label>
+
+          <label class="full">
+            Assunto formal do memorando
+            <input id="memoSubject" type="text" placeholder="Ex.: Solicitação de manutenção em aparelho de ar-condicionado" />
+          </label>
+
+          <label>
+            Local relacionado
+            <input id="locationText" type="text" placeholder="Ex.: Sala 04, secretaria, laboratório..." />
+          </label>
+
+          <label>
+            Equipamento/material
+            <input id="equipmentText" type="text" placeholder="Ex.: ar-condicionado, impressora, bebedouro..." />
+          </label>
+
+          <label>
+            Prazo desejado
+            <input id="deadlineText" type="text" placeholder="Ex.: com urgência, até sexta-feira..." />
+          </label>
+
+          <label>
+            Tom da IA
+            <select id="tone">
+              <option value="institucional, claro e objetivo">Institucional e objetivo</option>
+              <option value="firme, técnico e respeitoso">Mais firme</option>
+              <option value="cordial, administrativo e claro">Mais cordial</option>
+              <option value="enxuto, direto e formal">Mais enxuto</option>
+              <option value="detalhado, técnico e fundamentado">Mais detalhado</option>
+            </select>
+          </label>
+
+          <label class="full">
+            Descrição da situação/problema
+            <textarea id="problemDescription" rows="4" placeholder="Explique a situação com suas palavras."></textarea>
+          </label>
+
+          <label class="full">
+            Providência solicitada
+            <textarea id="requestedAction" rows="3" placeholder="Ex.: solicitamos visita técnica, substituição, reparo, envio de material..."></textarea>
+          </label>
+
+          <label class="full">
+            Informações adicionais para a IA
+            <textarea id="userContext" rows="3" placeholder="Coloque detalhes importantes que não podem ficar de fora."></textarea>
+          </label>
+
+          <label>
+            Nome para assinatura
+            <input id="signerName" type="text" placeholder="Ex.: André Silva" />
+          </label>
+
+          <label>
+            Cargo/setor para assinatura
+            <input id="signerRole" type="text" placeholder="Ex.: Diretor Escolar" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="button" id="generateAiBtn">Gerar texto com IA</button>
+          <button class="btn ghost" type="button" id="improveBtn">Melhorar texto</button>
+          <button class="btn ghost" type="button" id="shortenBtn">Deixar mais objetivo</button>
+          <button class="btn ghost" type="button" id="firmBtn">Deixar mais firme</button>
+        </div>
+
+        <label class="editor-label">
+          Texto final do memorando
+          <textarea id="finalText" rows="13" placeholder="O texto gerado pela IA aparecerá aqui. Você poderá revisar antes de baixar o Word."></textarea>
+        </label>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Salvar e gerar Word</button>
+          <button class="btn ghost" type="button" id="saveDraftBtn">Salvar rascunho</button>
+          <button class="btn danger" type="button" id="clearBtn">Limpar</button>
+        </div>
+      </form>
+
+      <aside class="side-column">
+        <section class="card">
+          <h2>Histórico</h2>
+          <p class="muted">Memorandos emitidos ou salvos como rascunho.</p>
+          <div id="documentsList" class="records"></div>
+        </section>
+
+        <section class="card">
+          <h2>Automação</h2>
+          <ul class="tips">
+            <li>Número do memorando automático.</li>
+            <li>Assuntos pré-prontos para poupar digitação.</li>
+            <li>IA redige a minuta institucional.</li>
+            <li>Você revisa antes de gerar o Word.</li>
+            <li>Histórico fica salvo no portal.</li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./documentos-memorandos.js?v=202606-memorandos-ia"></script>
+  <script src="/pwa-install.js"></script>
+</body>
+</html>
