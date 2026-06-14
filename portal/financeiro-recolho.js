@@ -3,12 +3,18 @@
   Ciclo empresarial mensal:
   - Início: todo dia 9
   - Primeiro ciclo do sistema: 09/06/2026
-  Distribuição:
+
+  Regra de distribuição:
   - 30% Contas e operações
   - 10% Fundo de caixa
   - 20% Acionista 1
   - 20% Acionista 2
   - 20% Acionista 3
+
+  Ajuste importante:
+  - Ajustes administrativos continuam existindo no banco.
+  - Ajustes administrativos NÃO aparecem nas movimentações internas visíveis.
+  - Ajustes administrativos NÃO aparecem no espelho/relatório de recolho.
 */
 
 (function () {
@@ -60,9 +66,17 @@
       label: "Ajuste administrativo",
       percent: 0,
       percentLabel: "Ajuste",
-      className: "shareholder"
+      className: "administrative"
     }
   };
+
+  const VISIBLE_BUCKET_ORDER = [
+    "operacoes",
+    "fundo_caixa",
+    "acionista_1",
+    "acionista_2",
+    "acionista_3"
+  ];
 
   const state = {
     user: null,
@@ -104,8 +118,12 @@
     return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
   }
 
+  function todayISO() {
+    return dateISO(new Date());
+  }
+
   function parseDateLocal(iso) {
-    const [year, month, day] = String(iso).split("-").map(Number);
+    const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
     return new Date(year, month - 1, day);
   }
 
@@ -123,10 +141,6 @@
     const date = typeof value === "string" ? parseDateLocal(value.slice(0, 10)) : value;
 
     return date.toLocaleDateString("pt-BR");
-  }
-
-  function todayISO() {
-    return dateISO(new Date());
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
@@ -177,6 +191,15 @@
     el.className = `cash-status show ${type || "ok"}`;
   }
 
+  function setModalMessage(message, type) {
+    const el = $("cashModalMessage");
+
+    if (!el) return;
+
+    el.textContent = message || "";
+    el.className = message ? `cash-status show ${type || "ok"}` : "cash-status";
+  }
+
   function showModal() {
     $("cashMovementModal")?.classList.add("show");
   }
@@ -201,6 +224,31 @@
     };
 
     return labels[type] || type || "Movimento";
+  }
+
+  function isAdministrativeAdjustment(movement) {
+    const type = String(movement?.movement_type || "").toLowerCase();
+    const source = String(movement?.source_bucket || "").toLowerCase();
+    const destination = String(movement?.destination_bucket || "").toLowerCase();
+    const description = String(movement?.description || "").toLowerCase();
+    const notes = String(movement?.notes || "").toLowerCase();
+
+    return (
+      source === "ajuste_administrativo" ||
+      destination === "ajuste_administrativo" ||
+      type === "ajuste_credito" ||
+      type === "ajuste_debito" ||
+      description.includes("ajuste administrativo") ||
+      description.includes("ajuste interno") ||
+      notes.includes("ajuste administrativo") ||
+      notes.includes("ajuste interno")
+    );
+  }
+
+  function getVisibleCycleMovements() {
+    return (state.movements || []).filter((movement) => {
+      return !isAdministrativeAdjustment(movement);
+    });
   }
 
   async function loadContext() {
@@ -331,19 +379,30 @@
         base: totalEntries * BUCKETS[bucket].percent,
         debits: 0,
         credits: 0,
+        visibleDebits: 0,
+        visibleCredits: 0,
         available: totalEntries * BUCKETS[bucket].percent
       };
     });
 
     state.movements.forEach((movement) => {
       const amount = Number(movement.amount || 0);
+      const hiddenAdmin = isAdministrativeAdjustment(movement);
 
       if (movement.source_bucket && buckets[movement.source_bucket]) {
         buckets[movement.source_bucket].debits += amount;
+
+        if (!hiddenAdmin) {
+          buckets[movement.source_bucket].visibleDebits += amount;
+        }
       }
 
       if (movement.destination_bucket && buckets[movement.destination_bucket]) {
         buckets[movement.destination_bucket].credits += amount;
+
+        if (!hiddenAdmin) {
+          buckets[movement.destination_bucket].visibleCredits += amount;
+        }
       }
     });
 
@@ -351,8 +410,17 @@
       item.available = item.base + item.credits - item.debits;
     });
 
-    const totalDebits = Object.values(buckets).reduce((sum, item) => sum + item.debits, 0);
-    const totalCredits = Object.values(buckets).reduce((sum, item) => sum + item.credits, 0);
+    const visibleMovements = getVisibleCycleMovements();
+
+    const totalDebits = visibleMovements.reduce((sum, movement) => {
+      if (!movement.source_bucket) return sum;
+      return sum + Number(movement.amount || 0);
+    }, 0);
+
+    const totalCredits = visibleMovements.reduce((sum, movement) => {
+      if (!movement.destination_bucket) return sum;
+      return sum + Number(movement.amount || 0);
+    }, 0);
 
     return {
       totalEntries,
@@ -399,6 +467,7 @@
           <strong>Regra do ciclo:</strong>
           toda saída deve indicar a origem do dinheiro. Após pagar as contas, o restante de
           <strong>Contas e operações</strong> pode ser transferido para o <strong>Fundo de caixa</strong>.
+          Ajustes administrativos são internos e não aparecem nas movimentações visíveis nem no espelho de recolho.
         </div>
 
         <section class="cash-cycle-info">
@@ -542,9 +611,7 @@
 
     if (!grid) return;
 
-    const order = ["operacoes", "fundo_caixa", "acionista_1", "acionista_2", "acionista_3"];
-
-    grid.innerHTML = order.map((bucket) => {
+    grid.innerHTML = VISIBLE_BUCKET_ORDER.map((bucket) => {
       const item = state.totals.buckets[bucket];
       const config = BUCKETS[bucket];
 
@@ -563,16 +630,16 @@
 
             <div class="cash-value-line">
               <span>Entradas internas</span>
-              <strong>${money(item.credits)}</strong>
+              <strong>${money(item.visibleCredits)}</strong>
             </div>
 
             <div class="cash-value-line">
               <span>Usado / pago</span>
-              <strong>${money(item.debits)}</strong>
+              <strong>${money(item.visibleDebits)}</strong>
             </div>
 
             <div class="cash-value-line available ${item.available < 0 ? "warning" : ""}">
-              <span>Disponível</span>
+              <span>Disponível ajustado</span>
               <strong>${money(item.available)}</strong>
             </div>
           </div>
@@ -614,10 +681,12 @@
 
     if (!container) return;
 
-    if (!state.movements.length) {
+    const visibleMovements = getVisibleCycleMovements();
+
+    if (!visibleMovements.length) {
       container.innerHTML = `
         <div class="cash-empty">
-          Nenhuma movimentação interna registrada neste ciclo.
+          Nenhuma movimentação interna visível registrada neste ciclo.
         </div>
       `;
       return;
@@ -638,13 +707,36 @@
           </thead>
 
           <tbody>
-            ${state.movements.map((movement) => `
+            ${visibleMovements.map((movement) => `
               <tr>
                 <td>${safe(formatDateBR(movement.movement_date))}</td>
-                <td><span class="cash-badge">${safe(movementTypeLabel(movement.movement_type))}</span></td>
-                <td>${movement.source_bucket ? `<span class="cash-badge debit">${safe(bucketLabel(movement.source_bucket))}</span>` : "—"}</td>
-                <td>${movement.destination_bucket ? `<span class="cash-badge credit">${safe(bucketLabel(movement.destination_bucket))}</span>` : "—"}</td>
-                <td><strong>${money(movement.amount)}</strong></td>
+
+                <td>
+                  <span class="cash-badge">
+                    ${safe(movementTypeLabel(movement.movement_type))}
+                  </span>
+                </td>
+
+                <td>
+                  ${
+                    movement.source_bucket
+                      ? `<span class="cash-badge debit">${safe(bucketLabel(movement.source_bucket))}</span>`
+                      : "—"
+                  }
+                </td>
+
+                <td>
+                  ${
+                    movement.destination_bucket
+                      ? `<span class="cash-badge credit">${safe(bucketLabel(movement.destination_bucket))}</span>`
+                      : "—"
+                  }
+                </td>
+
+                <td>
+                  <strong>${money(movement.amount)}</strong>
+                </td>
+
                 <td>
                   ${safe(movement.description || "")}
                   ${movement.notes ? `<br><small>${safe(movement.notes)}</small>` : ""}
@@ -666,8 +758,7 @@
       bucket
     };
 
-    $("cashModalMessage").className = "cash-status";
-    $("cashModalMessage").textContent = "";
+    setModalMessage("");
 
     $("cashModalAmount").value = "";
     $("cashModalDate").value = todayISO();
@@ -715,8 +806,9 @@
     }
 
     if (action === "manual-adjust") {
-      $("cashModalTitle").textContent = "Lançar ajuste interno";
-      $("cashModalDescription").textContent = "Use somente para ajustes administrativos do ciclo.";
+      $("cashModalTitle").textContent = "Lançar ajuste administrativo";
+      $("cashModalDescription").textContent =
+        "Use somente para correções internas. Esse ajuste não aparecerá nas movimentações visíveis nem no espelho de recolho.";
       $("cashModalSource").value = "";
       $("cashModalDestination").value = "";
       $("cashModalDescriptionInput").value = "Ajuste administrativo do ciclo";
@@ -768,6 +860,7 @@
     if (state.modalAction.action === "fund-expense") movementType = "saida";
     if (state.modalAction.action === "pay-shareholder-full") movementType = "pagamento_acionista";
     if (state.modalAction.action === "pay-shareholder-partial") movementType = "pagamento_acionista";
+
     if (state.modalAction.action === "manual-adjust") {
       movementType = source && destination ? "transferencia" : destination ? "ajuste_credito" : "ajuste_debito";
     }
@@ -803,15 +896,6 @@
       console.error(error);
       setModalMessage(error.message || "Erro ao salvar movimentação.", "error");
     }
-  }
-
-  function setModalMessage(message, type) {
-    const el = $("cashModalMessage");
-
-    if (!el) return;
-
-    el.textContent = message;
-    el.className = `cash-status show ${type || "ok"}`;
   }
 
   async function transferOperationsRestToFund() {
@@ -924,7 +1008,7 @@
       return;
     }
 
-    const bucketRows = ["operacoes", "fundo_caixa", "acionista_1", "acionista_2", "acionista_3"]
+    const bucketRows = VISIBLE_BUCKET_ORDER
       .map((bucket) => {
         const item = state.totals.buckets[bucket];
 
@@ -933,25 +1017,27 @@
             <td>${safe(item.label)}</td>
             <td>${safe(item.percentLabel)}</td>
             <td>${money(item.base)}</td>
-            <td>${money(item.credits)}</td>
-            <td>${money(item.debits)}</td>
+            <td>${money(item.visibleCredits)}</td>
+            <td>${money(item.visibleDebits)}</td>
             <td>${money(item.available)}</td>
           </tr>
         `;
       }).join("");
 
-    const movementRows = state.movements.length
-      ? state.movements.map((m) => `
+    const visibleMovements = getVisibleCycleMovements();
+
+    const movementRows = visibleMovements.length
+      ? visibleMovements.map((m) => `
         <tr>
           <td>${safe(formatDateBR(m.movement_date))}</td>
           <td>${safe(movementTypeLabel(m.movement_type))}</td>
-          <td>${safe(bucketLabel(m.source_bucket))}</td>
-          <td>${safe(bucketLabel(m.destination_bucket))}</td>
+          <td>${m.source_bucket ? safe(bucketLabel(m.source_bucket)) : "—"}</td>
+          <td>${m.destination_bucket ? safe(bucketLabel(m.destination_bucket)) : "—"}</td>
           <td>${money(m.amount)}</td>
           <td>${safe(m.description || "")}</td>
         </tr>
       `).join("")
-      : `<tr><td colspan="6">Nenhuma movimentação registrada.</td></tr>`;
+      : `<tr><td colspan="6">Nenhuma movimentação interna visível registrada.</td></tr>`;
 
     const html = `
 <!DOCTYPE html>
@@ -970,6 +1056,7 @@
     th { color:#0b5242; background:#eef7f2; }
     .footer { margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; }
     .sig { border-top:1px solid #12322a; text-align:center; padding-top:8px; }
+    .note { font-size:11px; color:#567; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -982,6 +1069,10 @@
     <strong>Saldo do ciclo:</strong> ${money(state.totals.cycleBalance)}<br>
     <strong>Status:</strong> ${safe(state.cycle.status)}
   </div>
+
+  <p class="note">
+    Observação: ajustes administrativos são controles internos e não são exibidos neste espelho de recolho.
+  </p>
 
   <h2>Distribuição do ciclo</h2>
   <table>
