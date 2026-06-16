@@ -1,57 +1,79 @@
-const CACHE_NAME = "integro-pwa-v1";
+const CACHE_NAME = "integro-pwa-v20260616-login-fix";
 
-const APP_SHELL = [
+const SAFE_STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/assets/pwa/icon-192.png",
   "/assets/pwa/icon-512.png",
-  "/portal/config.js",
-  "/portal/index.html",
-  "/portal/dashboard.html",
-  "/portal/gestao-escolar.html",
-  "/portal/financeiro.html",
-  "/portal-professor/index.html",
-  "/portal-professor/dashboard.html",
-  "/portal-familia/index.html",
-  "/portal-familia/dashboard.html"
+  "/logo-whatsapp.png"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+      Promise.allSettled(
+        SAFE_STATIC_ASSETS.map((url) => cache.add(url))
+      )
     )
   );
+
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
-      Promise.all(names.map((name) => {
-        if (name !== CACHE_NAME) return caches.delete(name);
-        return Promise.resolve();
-      }))
+      Promise.all(
+        names.map((name) => caches.delete(name))
+      )
     )
   );
+
   self.clients.claim();
 });
 
+function shouldNeverCache(url) {
+  const path = url.pathname;
+
+  return (
+    path.startsWith("/portal/") ||
+    path.startsWith("/portal-professor/") ||
+    path.startsWith("/portal-familia/") ||
+    path === "/portal/config.js" ||
+    path.endsWith(".js") ||
+    path.endsWith(".css") ||
+    path.includes("config.js") ||
+    path.includes("app.js") ||
+    path.includes("dashboard") ||
+    path.includes("login")
+  );
+}
+
+async function networkOnly(request) {
+  return fetch(request, {
+    cache: "reload"
+  });
+}
+
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
+
   try {
-    const fresh = await fetch(request);
+    const fresh = await fetch(request, {
+      cache: "reload"
+    });
+
     if (fresh && fresh.ok) {
       cache.put(request, fresh.clone());
     }
+
     return fresh;
   } catch (error) {
     const cached = await cache.match(request);
+
     if (cached) return cached;
-    if (request.mode === "navigate") {
-      return cache.match("/index.html");
-    }
+
     throw error;
   }
 }
@@ -59,23 +81,37 @@ async function networkFirst(request) {
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
+
   const fetchPromise = fetch(request)
     .then((fresh) => {
-      if (fresh && fresh.ok) cache.put(request, fresh.clone());
+      if (fresh && fresh.ok) {
+        cache.put(request, fresh.clone());
+      }
+
       return fresh;
     })
     .catch(() => cached);
+
   return cached || fetchPromise;
 }
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
+
+  if (request.method !== "GET") {
+    return;
+  }
 
   const url = new URL(request.url);
 
-  // Não cacheia chamadas externas, especialmente Supabase e CDN.
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (shouldNeverCache(url)) {
+    event.respondWith(networkOnly(request));
+    return;
+  }
 
   const acceptsHtml = request.headers.get("accept")?.includes("text/html");
 
