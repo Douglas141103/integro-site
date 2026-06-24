@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Cursos | INTEGRO</title>
-  <link rel="stylesheet" href="./cursos.css?v=20260624-modulo-cursos-v2" />
+  <link rel="stylesheet" href="./cursos.css?v=20260624-modulo-cursos-v3" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#004d3a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -34,7 +34,7 @@
     <section class="hero">
       <div>
         <p class="eyebrow">INTEGRO CURSOS</p>
-        <h1>Cursos, turmas, matrículas, frequência, avaliações, notas e certificados</h1>
+        <h1>Cursos, módulos, matérias, turmas, frequência, notas e certificados</h1>
         <p class="muted">Esta área organiza a unidade de cursos sem misturar os dados com a rotina do reforço escolar.</p>
       </div>
       <div class="summary-card">
@@ -54,6 +54,7 @@
 
     <section class="tabs" aria-label="Áreas de cursos">
       <button class="tab active" data-tab="cursos" type="button">Cursos</button>
+      <button class="tab" data-tab="modulos" type="button">Módulos/matérias</button>
       <button class="tab" data-tab="turmas" type="button">Turmas</button>
       <button class="tab" data-tab="matriculas" type="button">Matrículas</button>
       <button class="tab" data-tab="aulas" type="button">Aulas e frequência</button>
@@ -68,7 +69,7 @@
           <p class="muted">Crie os cursos oferecidos pela unidade, como informática, inglês, redação ou formação específica.</p>
           <div class="form-grid">
             <label class="full">Nome do curso *<input id="courseName" required placeholder="Ex.: Informática Básica" /></label>
-            <label>Carga horária<input id="courseWorkload" type="number" min="0" step="1" placeholder="Ex.: 40" /></label>
+            <label>Carga horária total<input id="courseWorkload" type="number" min="0" step="1" placeholder="Ex.: 40" /></label>
             <label>Duração<input id="courseDuration" placeholder="Ex.: 3 meses" /></label>
             <label class="full">Descrição<textarea id="courseDescription" rows="4" placeholder="Resumo do curso, objetivos e público-alvo."></textarea></label>
           </div>
@@ -78,6 +79,27 @@
           </div>
         </form>
         <div class="card"><h2>Cursos cadastrados</h2><div id="coursesList" class="records"></div></div>
+      </div>
+    </section>
+
+    <section id="modulos" class="panel">
+      <div class="grid two">
+        <form id="moduleForm" class="card form-card">
+          <h2>Cadastrar módulo ou matéria</h2>
+          <p class="muted">Use esta área para dividir o curso em módulos, matérias ou componentes. Depois, aulas e avaliações poderão ser vinculadas a esses módulos.</p>
+          <div class="form-grid">
+            <label class="full">Curso *<select id="moduleCourse" required></select></label>
+            <label class="full">Nome do módulo/matéria *<input id="moduleName" required placeholder="Ex.: Módulo 1 — Introdução à Informática" /></label>
+            <label>Carga horária<input id="moduleWorkload" type="number" min="0" step="1" placeholder="Ex.: 10" /></label>
+            <label>Ordem<input id="moduleOrder" type="number" min="1" step="1" placeholder="Ex.: 1" /></label>
+            <label class="full">Descrição<textarea id="moduleDescription" rows="4" placeholder="Conteúdos, habilidades ou objetivos do módulo."></textarea></label>
+          </div>
+          <div class="actions">
+            <button class="btn primary" type="submit">Salvar módulo/matéria</button>
+            <button class="btn ghost" type="button" id="clearModuleBtn">Limpar</button>
+          </div>
+        </form>
+        <div class="card"><h2>Módulos e matérias cadastrados</h2><div id="modulesList" class="records"></div></div>
       </div>
     </section>
 
@@ -133,9 +155,10 @@
       <div class="grid two">
         <form id="lessonForm" class="card form-card">
           <h2>Lançar aula</h2>
-          <p class="muted">Registre a aula da turma. Depois selecione a aula para lançar frequência.</p>
+          <p class="muted">Registre a aula da turma e vincule ao módulo/matéria correspondente.</p>
           <div class="form-grid">
             <label>Turma *<select id="lessonClass" required></select></label>
+            <label>Módulo/matéria<select id="lessonModule"></select></label>
             <label>Data da aula *<input id="lessonDate" type="date" required /></label>
             <label class="full">Título da aula *<input id="lessonTitle" required placeholder="Ex.: Aula 1 - Introdução" /></label>
             <label class="full">Conteúdo trabalhado<textarea id="lessonSummary" rows="4" placeholder="Resumo do que foi trabalhado na aula."></textarea></label>
@@ -155,10 +178,11 @@
       <div class="grid two">
         <form id="assessmentForm" class="card form-card">
           <h2>Criar avaliação</h2>
-          <p class="muted">Crie provas, atividades, trabalhos práticos ou avaliações finais.</p>
+          <p class="muted">Crie provas, atividades, trabalhos práticos ou avaliações finais vinculadas ao curso e ao módulo/matéria.</p>
           <div class="form-grid">
             <label>Curso *<select id="assessmentCourse" required></select></label>
             <label>Turma<select id="assessmentClass"></select></label>
+            <label>Módulo/matéria<select id="assessmentModule"></select></label>
             <label class="full">Título da avaliação *<input id="assessmentTitle" required placeholder="Ex.: Prova final" /></label>
             <label>Tipo<select id="assessmentType"><option value="atividade">Atividade</option><option value="prova">Prova</option><option value="trabalho">Trabalho</option><option value="pratica">Prática</option><option value="final">Final</option></select></label>
             <label>Nota máxima<input id="assessmentMaxScore" type="number" min="0" step="0.1" value="10" /></label>
@@ -197,7 +221,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./cursos.js?v=20260624-modulo-cursos-v2"></script>
-  <script src="./cursos-documentos.js?v=20260624-boletim-certificado-v1"></script>
+  <script src="./cursos-modulos.js?v=20260624-modulos-materias-v1"></script>
+  <script src="./cursos-documentos.js?v=20260624-boletim-certificado-v2"></script>
   <script src="/pwa-install.js"></script>
 </body>
 </html>
