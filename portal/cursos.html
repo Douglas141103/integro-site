@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Cursos | INTEGRO</title>
-
-  <link rel="stylesheet" href="./cursos.css?v=20260624-modulo-cursos-v1" />
-
+  <link rel="stylesheet" href="./cursos.css?v=20260624-modulo-cursos-v2" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#004d3a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -25,7 +23,6 @@
         <strong>Gestão de Cursos</strong>
       </div>
     </div>
-
     <nav class="top-actions">
       <span id="userBadge" class="pill">Carregando...</span>
       <a class="btn ghost" href="./dashboard.html">Voltar ao portal</a>
@@ -38,11 +35,8 @@
       <div>
         <p class="eyebrow">INTEGRO CURSOS</p>
         <h1>Cursos, turmas, matrículas, frequência, avaliações, notas e certificados</h1>
-        <p class="muted">
-          Esta área organiza a unidade de cursos sem misturar os dados com a rotina do reforço escolar.
-        </p>
+        <p class="muted">Esta área organiza a unidade de cursos sem misturar os dados com a rotina do reforço escolar.</p>
       </div>
-
       <div class="summary-card">
         <small>Unidade ativa</small>
         <strong id="schoolName">--</strong>
@@ -50,22 +44,10 @@
     </section>
 
     <section class="kpis">
-      <article>
-        <small>Cursos ativos</small>
-        <strong id="kpiCourses">0</strong>
-      </article>
-      <article>
-        <small>Turmas abertas</small>
-        <strong id="kpiClasses">0</strong>
-      </article>
-      <article>
-        <small>Matrículas</small>
-        <strong id="kpiEnrollments">0</strong>
-      </article>
-      <article>
-        <small>Certificados</small>
-        <strong id="kpiCertificates">0</strong>
-      </article>
+      <article><small>Cursos ativos</small><strong id="kpiCourses">0</strong></article>
+      <article><small>Turmas abertas</small><strong id="kpiClasses">0</strong></article>
+      <article><small>Matrículas</small><strong id="kpiEnrollments">0</strong></article>
+      <article><small>Certificados</small><strong id="kpiCertificates">0</strong></article>
     </section>
 
     <section id="statusBox" class="status" hidden></section>
@@ -84,39 +66,18 @@
         <form id="courseForm" class="card form-card">
           <h2>Cadastrar curso</h2>
           <p class="muted">Crie os cursos oferecidos pela unidade, como informática, inglês, redação ou formação específica.</p>
-
           <div class="form-grid">
-            <label class="full">
-              Nome do curso *
-              <input id="courseName" required placeholder="Ex.: Informática Básica" />
-            </label>
-
-            <label>
-              Carga horária
-              <input id="courseWorkload" type="number" min="0" step="1" placeholder="Ex.: 40" />
-            </label>
-
-            <label>
-              Duração
-              <input id="courseDuration" placeholder="Ex.: 3 meses" />
-            </label>
-
-            <label class="full">
-              Descrição
-              <textarea id="courseDescription" rows="4" placeholder="Resumo do curso, objetivos e público-alvo."></textarea>
-            </label>
+            <label class="full">Nome do curso *<input id="courseName" required placeholder="Ex.: Informática Básica" /></label>
+            <label>Carga horária<input id="courseWorkload" type="number" min="0" step="1" placeholder="Ex.: 40" /></label>
+            <label>Duração<input id="courseDuration" placeholder="Ex.: 3 meses" /></label>
+            <label class="full">Descrição<textarea id="courseDescription" rows="4" placeholder="Resumo do curso, objetivos e público-alvo."></textarea></label>
           </div>
-
           <div class="actions">
             <button class="btn primary" type="submit">Salvar curso</button>
             <button class="btn ghost" type="button" id="clearCourseBtn">Limpar</button>
           </div>
         </form>
-
-        <div class="card">
-          <h2>Cursos cadastrados</h2>
-          <div id="coursesList" class="records"></div>
-        </div>
+        <div class="card"><h2>Cursos cadastrados</h2><div id="coursesList" class="records"></div></div>
       </div>
     </section>
 
@@ -125,59 +86,21 @@
         <form id="classForm" class="card form-card">
           <h2>Criar turma</h2>
           <p class="muted">Cada curso pode ter uma ou mais turmas com período, horário e professor responsável.</p>
-
           <div class="form-grid">
-            <label>
-              Curso *
-              <select id="classCourse" required></select>
-            </label>
-
-            <label>
-              Nome da turma *
-              <input id="className" required placeholder="Ex.: Turma A - Sábado" />
-            </label>
-
-            <label>
-              Data inicial
-              <input id="classStart" type="date" />
-            </label>
-
-            <label>
-              Data final
-              <input id="classEnd" type="date" />
-            </label>
-
-            <label>
-              Professor responsável
-              <select id="classTeacher"></select>
-            </label>
-
-            <label>
-              Status
-              <select id="classStatus">
-                <option value="aberta">Aberta</option>
-                <option value="em_andamento">Em andamento</option>
-                <option value="concluida">Concluída</option>
-                <option value="cancelada">Cancelada</option>
-              </select>
-            </label>
-
-            <label class="full">
-              Horário / dias de aula
-              <textarea id="classSchedule" rows="3" placeholder="Ex.: Sábados, das 8h às 11h."></textarea>
-            </label>
+            <label>Curso *<select id="classCourse" required></select></label>
+            <label>Nome da turma *<input id="className" required placeholder="Ex.: Turma A - Sábado" /></label>
+            <label>Data inicial<input id="classStart" type="date" /></label>
+            <label>Data final<input id="classEnd" type="date" /></label>
+            <label>Professor responsável<select id="classTeacher"></select></label>
+            <label>Status<select id="classStatus"><option value="aberta">Aberta</option><option value="em_andamento">Em andamento</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option></select></label>
+            <label class="full">Horário / dias de aula<textarea id="classSchedule" rows="3" placeholder="Ex.: Sábados, das 8h às 11h."></textarea></label>
           </div>
-
           <div class="actions">
             <button class="btn primary" type="submit">Salvar turma</button>
             <button class="btn ghost" type="button" id="clearClassBtn">Limpar</button>
           </div>
         </form>
-
-        <div class="card">
-          <h2>Turmas cadastradas</h2>
-          <div id="classesList" class="records"></div>
-        </div>
+        <div class="card"><h2>Turmas cadastradas</h2><div id="classesList" class="records"></div></div>
       </div>
     </section>
 
@@ -186,69 +109,23 @@
         <form id="enrollmentForm" class="card form-card">
           <h2>Matricular aluno em curso</h2>
           <p class="muted">A matrícula pode usar aluno já cadastrado ou nome digitado manualmente.</p>
-
           <div class="form-grid">
-            <label>
-              Curso *
-              <select id="enrollmentCourse" required></select>
-            </label>
-
-            <label>
-              Turma
-              <select id="enrollmentClass"></select>
-            </label>
-
-            <label class="full">
-              Aluno já cadastrado
-              <select id="enrollmentStudent"></select>
-            </label>
-
-            <label class="full">
-              Ou nome do aluno *
-              <input id="enrollmentStudentName" placeholder="Nome completo do aluno" />
-            </label>
-
-            <label>
-              Responsável
-              <input id="enrollmentGuardianName" placeholder="Nome do responsável" />
-            </label>
-
-            <label>
-              Telefone do responsável
-              <input id="enrollmentGuardianPhone" placeholder="WhatsApp / telefone" />
-            </label>
-
-            <label>
-              CPF do responsável
-              <input id="enrollmentGuardianDocument" placeholder="CPF ou documento" />
-            </label>
-
-            <label>
-              Data da matrícula
-              <input id="enrollmentDate" type="date" />
-            </label>
-
-            <label>
-              Status
-              <select id="enrollmentStatus">
-                <option value="matriculado">Matriculado</option>
-                <option value="cursando">Cursando</option>
-                <option value="concluido">Concluído</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </label>
+            <label>Curso *<select id="enrollmentCourse" required></select></label>
+            <label>Turma<select id="enrollmentClass"></select></label>
+            <label class="full">Aluno já cadastrado<select id="enrollmentStudent"></select></label>
+            <label class="full">Ou nome do aluno *<input id="enrollmentStudentName" placeholder="Nome completo do aluno" /></label>
+            <label>Responsável<input id="enrollmentGuardianName" placeholder="Nome do responsável" /></label>
+            <label>Telefone do responsável<input id="enrollmentGuardianPhone" placeholder="WhatsApp / telefone" /></label>
+            <label>CPF do responsável<input id="enrollmentGuardianDocument" placeholder="CPF ou documento" /></label>
+            <label>Data da matrícula<input id="enrollmentDate" type="date" /></label>
+            <label>Status<select id="enrollmentStatus"><option value="matriculado">Matriculado</option><option value="cursando">Cursando</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select></label>
           </div>
-
           <div class="actions">
             <button class="btn primary" type="submit">Salvar matrícula</button>
             <button class="btn ghost" type="button" id="clearEnrollmentBtn">Limpar</button>
           </div>
         </form>
-
-        <div class="card">
-          <h2>Matrículas registradas</h2>
-          <div id="enrollmentsList" class="records"></div>
-        </div>
+        <div class="card"><h2>Matrículas registradas</h2><div id="enrollmentsList" class="records"></div></div>
       </div>
     </section>
 
@@ -257,46 +134,19 @@
         <form id="lessonForm" class="card form-card">
           <h2>Lançar aula</h2>
           <p class="muted">Registre a aula da turma. Depois selecione a aula para lançar frequência.</p>
-
           <div class="form-grid">
-            <label>
-              Turma *
-              <select id="lessonClass" required></select>
-            </label>
-
-            <label>
-              Data da aula *
-              <input id="lessonDate" type="date" required />
-            </label>
-
-            <label class="full">
-              Título da aula *
-              <input id="lessonTitle" required placeholder="Ex.: Aula 1 - Introdução" />
-            </label>
-
-            <label class="full">
-              Conteúdo trabalhado
-              <textarea id="lessonSummary" rows="4" placeholder="Resumo do que foi trabalhado na aula."></textarea>
-            </label>
+            <label>Turma *<select id="lessonClass" required></select></label>
+            <label>Data da aula *<input id="lessonDate" type="date" required /></label>
+            <label class="full">Título da aula *<input id="lessonTitle" required placeholder="Ex.: Aula 1 - Introdução" /></label>
+            <label class="full">Conteúdo trabalhado<textarea id="lessonSummary" rows="4" placeholder="Resumo do que foi trabalhado na aula."></textarea></label>
           </div>
-
-          <div class="actions">
-            <button class="btn primary" type="submit">Salvar aula</button>
-          </div>
+          <div class="actions"><button class="btn primary" type="submit">Salvar aula</button></div>
         </form>
-
         <div class="card">
           <h2>Frequência da aula</h2>
-          <div class="form-grid compact">
-            <label class="full">
-              Aula
-              <select id="attendanceLesson"></select>
-            </label>
-          </div>
+          <div class="form-grid compact"><label class="full">Aula<select id="attendanceLesson"></select></label></div>
           <div id="attendanceList" class="records"></div>
-          <div class="actions">
-            <button class="btn primary" id="saveAttendanceBtn" type="button">Salvar frequência</button>
-          </div>
+          <div class="actions"><button class="btn primary" id="saveAttendanceBtn" type="button">Salvar frequência</button></div>
         </div>
       </div>
     </section>
@@ -306,67 +156,22 @@
         <form id="assessmentForm" class="card form-card">
           <h2>Criar avaliação</h2>
           <p class="muted">Crie provas, atividades, trabalhos práticos ou avaliações finais.</p>
-
           <div class="form-grid">
-            <label>
-              Curso *
-              <select id="assessmentCourse" required></select>
-            </label>
-
-            <label>
-              Turma
-              <select id="assessmentClass"></select>
-            </label>
-
-            <label class="full">
-              Título da avaliação *
-              <input id="assessmentTitle" required placeholder="Ex.: Prova final" />
-            </label>
-
-            <label>
-              Tipo
-              <select id="assessmentType">
-                <option value="atividade">Atividade</option>
-                <option value="prova">Prova</option>
-                <option value="trabalho">Trabalho</option>
-                <option value="pratica">Prática</option>
-                <option value="final">Final</option>
-              </select>
-            </label>
-
-            <label>
-              Nota máxima
-              <input id="assessmentMaxScore" type="number" min="0" step="0.1" value="10" />
-            </label>
-
-            <label>
-              Peso
-              <input id="assessmentWeight" type="number" min="0" step="0.1" value="1" />
-            </label>
-
-            <label>
-              Data
-              <input id="assessmentDate" type="date" />
-            </label>
+            <label>Curso *<select id="assessmentCourse" required></select></label>
+            <label>Turma<select id="assessmentClass"></select></label>
+            <label class="full">Título da avaliação *<input id="assessmentTitle" required placeholder="Ex.: Prova final" /></label>
+            <label>Tipo<select id="assessmentType"><option value="atividade">Atividade</option><option value="prova">Prova</option><option value="trabalho">Trabalho</option><option value="pratica">Prática</option><option value="final">Final</option></select></label>
+            <label>Nota máxima<input id="assessmentMaxScore" type="number" min="0" step="0.1" value="10" /></label>
+            <label>Peso<input id="assessmentWeight" type="number" min="0" step="0.1" value="1" /></label>
+            <label>Data<input id="assessmentDate" type="date" /></label>
           </div>
-
-          <div class="actions">
-            <button class="btn primary" type="submit">Salvar avaliação</button>
-          </div>
+          <div class="actions"><button class="btn primary" type="submit">Salvar avaliação</button></div>
         </form>
-
         <div class="card">
           <h2>Lançar notas</h2>
-          <div class="form-grid compact">
-            <label class="full">
-              Avaliação
-              <select id="gradeAssessment"></select>
-            </label>
-          </div>
+          <div class="form-grid compact"><label class="full">Avaliação<select id="gradeAssessment"></select></label></div>
           <div id="gradesList" class="records"></div>
-          <div class="actions">
-            <button class="btn primary" id="saveGradesBtn" type="button">Salvar notas</button>
-          </div>
+          <div class="actions"><button class="btn primary" id="saveGradesBtn" type="button">Salvar notas</button></div>
         </div>
       </div>
     </section>
@@ -376,34 +181,23 @@
         <div class="card form-card">
           <h2>Boletim e certificado</h2>
           <p class="muted">Selecione uma matrícula para gerar o boletim do curso ou emitir o certificado.</p>
-
-          <div class="form-grid">
-            <label class="full">
-              Matrícula
-              <select id="documentEnrollment"></select>
-            </label>
-          </div>
-
+          <div class="form-grid"><label class="full">Matrícula<select id="documentEnrollment"></select></label></div>
           <div id="documentPreview" class="document-preview"></div>
-
           <div class="actions">
             <button class="btn ghost" id="refreshDocumentBtn" type="button">Atualizar dados</button>
             <button class="btn primary" id="printReportBtn" type="button">Imprimir boletim</button>
             <button class="btn primary" id="printCertificateBtn" type="button">Emitir certificado</button>
           </div>
         </div>
-
-        <div class="card">
-          <h2>Certificados emitidos</h2>
-          <div id="certificatesList" class="records"></div>
-        </div>
+        <div class="card"><h2>Certificados emitidos</h2><div id="certificatesList" class="records"></div></div>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./cursos.js?v=20260624-modulo-cursos-v1"></script>
+  <script src="./cursos.js?v=20260624-modulo-cursos-v2"></script>
+  <script src="./cursos-documentos.js?v=20260624-boletim-certificado-v1"></script>
   <script src="/pwa-install.js"></script>
 </body>
 </html>
