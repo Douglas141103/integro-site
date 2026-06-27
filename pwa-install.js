@@ -33,6 +33,17 @@
     document.body.appendChild(btn);
   }
 
+  function loadHomeInstagramPanel() {
+    const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
+    if (!isHome || document.getElementById("homeInstagramPanelScript")) return;
+
+    const script = document.createElement("script");
+    script.id = "homeInstagramPanelScript";
+    script.src = "/assets/home-instagram-panel.js?v=20260627-stories-integro";
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js").catch((error) => {
@@ -40,6 +51,8 @@
       });
     });
   }
+
+  window.addEventListener("DOMContentLoaded", loadHomeInstagramPanel);
 
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
