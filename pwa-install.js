@@ -33,9 +33,8 @@
     document.body.appendChild(btn);
   }
 
-  function loadHomeScript(id, src) {
-    const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
-    if (!isHome || document.getElementById(id)) return;
+  function loadScript(id, src) {
+    if (document.getElementById(id)) return;
 
     const script = document.createElement("script");
     script.id = id;
@@ -44,10 +43,21 @@
     document.body.appendChild(script);
   }
 
-  function loadHomeAssets() {
+  function loadHomeScript(id, src) {
+    const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
+    if (!isHome) return;
+    loadScript(id, src);
+  }
+
+  function loadPageAssets() {
     loadHomeScript("homeInstagramPanelScript", "/assets/home-instagram-panel.js?v=20260627-real-files-v1");
     loadHomeScript("homeSiteImprovementsScript", "/assets/site-improvements.js?v=20260627-layout-portais-v1");
     loadHomeScript("buttonScheduleFixScript", "/assets/button-schedule-fix.js?v=20260627-fix-v1");
+
+    const isFinancePage = location.pathname.endsWith("/portal/financeiro.html") || location.pathname.includes("/portal/financeiro");
+    if (isFinancePage) {
+      loadScript("cashExtractsScript", "/portal/financeiro-recolho-extratos.js?v=20260627-extratos-recolho-v1");
+    }
   }
 
   if ("serviceWorker" in navigator) {
@@ -59,9 +69,9 @@
   }
 
   if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", loadHomeAssets);
+    window.addEventListener("DOMContentLoaded", loadPageAssets);
   } else {
-    loadHomeAssets();
+    loadPageAssets();
   }
 
   window.addEventListener("beforeinstallprompt", (event) => {
