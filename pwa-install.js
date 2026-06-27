@@ -39,7 +39,7 @@
 
     const script = document.createElement("script");
     script.id = "homeInstagramPanelScript";
-    script.src = "/assets/home-instagram-panel.js?v=20260627-stories-hero-imagens-v6";
+    script.src = "/assets/home-instagram-panel.js?v=20260627-real-files-v1";
     script.defer = true;
     document.body.appendChild(script);
   }
