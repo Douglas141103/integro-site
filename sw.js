@@ -1,4 +1,4 @@
-const CACHE_NAME = "integro-pwa-v20260616-login-fix";
+const CACHE_NAME = "integro-pwa-v20260627-instagram-stories";
 
 const SAFE_STATIC_ASSETS = [
   "/",
@@ -40,6 +40,7 @@ function shouldNeverCache(url) {
     path.startsWith("/portal/") ||
     path.startsWith("/portal-professor/") ||
     path.startsWith("/portal-familia/") ||
+    path.startsWith("/assets/instagram/") ||
     path === "/portal/config.js" ||
     path.endsWith(".js") ||
     path.endsWith(".css") ||
