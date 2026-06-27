@@ -47,6 +47,7 @@
   function loadHomeAssets() {
     loadHomeScript("homeInstagramPanelScript", "/assets/home-instagram-panel.js?v=20260627-real-files-v1");
     loadHomeScript("homeSiteImprovementsScript", "/assets/site-improvements.js?v=20260627-layout-portais-v1");
+    loadHomeScript("buttonScheduleFixScript", "/assets/button-schedule-fix.js?v=20260627-fix-v1");
   }
 
   if ("serviceWorker" in navigator) {
