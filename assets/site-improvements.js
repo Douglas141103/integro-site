@@ -18,10 +18,11 @@
   `;
   document.head.appendChild(style);
 
+  const portalPage = '/portal-acessos.html';
   const navPortal = Array.from(document.querySelectorAll('.nav-links a')).find(a => a.textContent.trim().toLowerCase() === 'portais');
-  if(navPortal) navPortal.href = '/acessos.html';
+  if(navPortal) navPortal.href = portalPage;
   const navAccess = Array.from(document.querySelectorAll('.nav-links a')).find(a => a.textContent.trim().toLowerCase().includes('acessar portais'));
-  if(navAccess){ navAccess.href = '/acessos.html'; navAccess.style.color = '#ffffff'; }
+  if(navAccess){ navAccess.href = portalPage; navAccess.style.color = '#ffffff'; }
 
   const h1 = document.querySelector('#inicio h1');
   if(h1) h1.textContent = 'Seu filho precisa de um apoio personalizado para ele?';
@@ -74,7 +75,7 @@
 
   const portalSection = document.querySelector('#portais .section-header p');
   if(portalSection) portalSection.textContent = 'Os ambientes de acesso ficam em uma página própria, com entrada para parceiro, família e professor.';
-  document.querySelectorAll('#portais .portal-card .btn').forEach(btn => { btn.href = '/acessos.html'; btn.textContent = 'Ir para acessos'; btn.style.color = '#ffffff'; });
+  document.querySelectorAll('#portais .portal-card .btn').forEach(btn => { btn.href = portalPage; btn.textContent = 'Ir para acessos'; btn.style.color = '#ffffff'; });
   const portalContainer = document.querySelector('#portais .container');
   if(portalContainer && !document.querySelector('.portal-note')){
     const note = document.createElement('div');
