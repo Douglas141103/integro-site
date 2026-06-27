@@ -39,7 +39,7 @@
 
     const script = document.createElement("script");
     script.id = "homeInstagramPanelScript";
-    script.src = "/assets/home-instagram-panel.js?v=20260627-stories-hero-imagens-v4";
+    script.src = "/assets/home-instagram-panel.js?v=20260627-stories-hero-imagens-v6";
     script.defer = true;
     document.body.appendChild(script);
   }
@@ -52,7 +52,11 @@
     });
   }
 
-  window.addEventListener("DOMContentLoaded", loadHomeInstagramPanel);
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", loadHomeInstagramPanel);
+  } else {
+    loadHomeInstagramPanel();
+  }
 
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
