@@ -33,15 +33,20 @@
     document.body.appendChild(btn);
   }
 
-  function loadHomeInstagramPanel() {
+  function loadHomeScript(id, src) {
     const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
-    if (!isHome || document.getElementById("homeInstagramPanelScript")) return;
+    if (!isHome || document.getElementById(id)) return;
 
     const script = document.createElement("script");
-    script.id = "homeInstagramPanelScript";
-    script.src = "/assets/home-instagram-panel.js?v=20260627-real-files-v1";
+    script.id = id;
+    script.src = src;
     script.defer = true;
     document.body.appendChild(script);
+  }
+
+  function loadHomeAssets() {
+    loadHomeScript("homeInstagramPanelScript", "/assets/home-instagram-panel.js?v=20260627-real-files-v1");
+    loadHomeScript("homeSiteImprovementsScript", "/assets/site-improvements.js?v=20260627-layout-portais-v1");
   }
 
   if ("serviceWorker" in navigator) {
@@ -53,9 +58,9 @@
   }
 
   if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", loadHomeInstagramPanel);
+    window.addEventListener("DOMContentLoaded", loadHomeAssets);
   } else {
-    loadHomeInstagramPanel();
+    loadHomeAssets();
   }
 
   window.addEventListener("beforeinstallprompt", (event) => {
