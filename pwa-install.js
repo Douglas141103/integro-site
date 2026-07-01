@@ -61,7 +61,7 @@
 
     const isFamilyPortal = location.pathname.includes("/portal-familia/");
     if (isFamilyPortal) {
-      loadScript("familyCoursesNoticeScript", "/portal-familia/cursos-familia-aviso.js?v=20260701-cursos-mobile-v3");
+      loadScript("familyCoursesNoticeScript", "/portal-familia/cursos-familia-aviso.js?v=20260701-cursos-responsivo-v4");
     }
   }
 
