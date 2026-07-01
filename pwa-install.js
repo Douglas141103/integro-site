@@ -58,6 +58,11 @@
     if (isFinancePage) {
       loadScript("cashExtractsScript", "/portal/financeiro-recolho-extratos.js?v=20260627-extratos-recolho-v1");
     }
+
+    const isFamilyPortal = location.pathname.includes("/portal-familia/");
+    if (isFamilyPortal) {
+      loadScript("familyCoursesNoticeScript", "/portal-familia/cursos-familia-aviso.js?v=20260701-cursos-notas-online-v1");
+    }
   }
 
   if ("serviceWorker" in navigator) {
