@@ -6,9 +6,9 @@
   let lastStudentId = '';
   let lastData = null;
 
-  function safe(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
-  function brDate(value){if(!value)return '—';const p=String(value).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:String(value);}
-  function num(value){if(value===null||value===undefined||value==='')return '—';const n=Number(value);return Number.isFinite(n)?String(n.toFixed(1)).replace('.',','):'—';}
+  function safe(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
+  function brDate(v){if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:String(v);}
+  function num(v){if(v===null||v===undefined||v==='')return '—';const n=Number(v);return Number.isFinite(n)?String(n.toFixed(1)).replace('.',','):'—';}
   function byId(items){return new Map((items||[]).map(function(item){return [item.id,item];}));}
 
   async function getClient(){
@@ -23,7 +23,46 @@
     if(document.getElementById('familiaCursosAvisoCss')) return;
     const style=document.createElement('style');
     style.id='familiaCursosAvisoCss';
-    style.textContent='.familia-cursos-aviso{border:1px solid rgba(15,61,46,.12);border-radius:22px;padding:20px;background:#fff;box-shadow:0 10px 24px rgba(7,49,35,.06)}.familia-cursos-aviso h4{margin:0 0 8px;color:#0f3d2e}.familia-cursos-aviso p{color:#607084;line-height:1.55}.familia-cursos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.familia-curso-btn{background:#f4fbf7;border:1px solid #d7e9df;border-radius:16px;padding:14px;color:#073b31;font-weight:900;cursor:pointer;text-align:left;font:inherit;transition:.2s}.familia-curso-btn:hover,.familia-curso-btn.active{background:#0f3d2e;color:#fff;transform:translateY(-1px)}.familia-curso-panel{display:none;margin-top:16px;background:#fbfefc;border:1px solid #dfeee6;border-radius:18px;padding:16px}.familia-curso-panel.active{display:block}.familia-curso-panel h5{margin:0 0 8px;color:#0f3d2e;font-size:1rem}.familia-curso-panel ul{margin:8px 0 0 18px;color:#607084;line-height:1.7}.familia-cursos-lista{display:grid;gap:10px;margin-top:10px}.familia-cursos-lista div,.curso-real-card{border:1px solid #d7e9df;border-radius:14px;padding:12px;background:#fff;color:#073b31}.curso-real-card{margin-bottom:12px}.curso-real-card strong{color:#0f3d2e}.curso-real-card small{display:block;color:#607084;margin-top:4px;line-height:1.45}.curso-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.curso-stat{background:#f4fbf7;border:1px solid #d7e9df;border-radius:14px;padding:10px}.curso-stat span{display:block;color:#607084;font-size:.78rem;font-weight:800}.curso-stat b{color:#0f3d2e}.curso-table{width:100%;border-collapse:collapse;margin-top:8px}.curso-table th,.curso-table td{border-bottom:1px solid #dfeee6;padding:8px;text-align:left;vertical-align:top}.curso-table th{background:#eef7f2;color:#0f3d2e}.curso-empty{background:#fff8e6;border:1px solid rgba(216,169,75,.35);border-radius:14px;padding:12px;color:#624000;font-weight:700;margin-top:10px}@media(max-width:800px){.familia-cursos-grid,.curso-stats{grid-template-columns:1fr}.curso-table{font-size:.88rem}}';
+    style.textContent=`
+      .familia-cursos-aviso{border:1px solid rgba(15,61,46,.12);border-radius:22px;padding:20px;background:#fff;box-shadow:0 10px 24px rgba(7,49,35,.06);overflow:hidden}
+      .familia-cursos-aviso h4{margin:0 0 8px;color:#0f3d2e}
+      .familia-cursos-aviso p{color:#607084;line-height:1.55}
+      .familia-cursos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+      .familia-curso-btn{background:#f4fbf7;border:1px solid #d7e9df;border-radius:16px;padding:14px;color:#073b31;font-weight:900;cursor:pointer;text-align:left;font:inherit;transition:.2s}
+      .familia-curso-btn:hover,.familia-curso-btn.active{background:#0f3d2e;color:#fff;transform:translateY(-1px)}
+      .familia-curso-panel{display:none;margin-top:16px;background:#fbfefc;border:1px solid #dfeee6;border-radius:18px;padding:16px;overflow:hidden}
+      .familia-curso-panel.active{display:block}
+      .familia-cursos-lista{display:grid;gap:10px;margin-top:10px}
+      .familia-cursos-lista div,.curso-real-card{border:1px solid #d7e9df;border-radius:14px;padding:12px;background:#fff;color:#073b31}
+      .curso-real-card{margin-bottom:12px;overflow:hidden}
+      .curso-real-card strong{color:#0f3d2e}
+      .curso-real-card small{display:block;color:#607084;margin-top:4px;line-height:1.45}
+      .curso-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+      .curso-stat{background:#f4fbf7;border:1px solid #d7e9df;border-radius:14px;padding:10px}
+      .curso-stat span{display:block;color:#607084;font-size:.78rem;font-weight:800}
+      .curso-stat b{color:#0f3d2e;word-break:break-word}
+      .curso-table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #dfeee6;border-radius:14px;background:#fff;margin-top:8px}
+      .curso-table{width:100%;min-width:760px;border-collapse:collapse}
+      .curso-table th,.curso-table td{border-bottom:1px solid #dfeee6;padding:8px;text-align:left;vertical-align:top;word-break:break-word}
+      .curso-table th{background:#eef7f2;color:#0f3d2e}
+      .curso-empty{background:#fff8e6;border:1px solid rgba(216,169,75,.35);border-radius:14px;padding:12px;color:#624000;font-weight:700;margin-top:10px}
+      .curso-table-empty{padding:12px;color:#607084}
+      @media (max-width:800px){
+        .familia-cursos-grid{grid-template-columns:1fr}
+        .curso-stats{grid-template-columns:repeat(2,1fr)}
+        .curso-table-wrap{overflow:visible;border:none;background:transparent}
+        .curso-table{min-width:0;border-collapse:separate;border-spacing:0 10px}
+        .curso-table thead{display:none}
+        .curso-table,.curso-table tbody,.curso-table tr,.curso-table td{display:block;width:100%}
+        .curso-table tbody{display:grid;gap:10px}
+        .curso-table tr{background:#fff;border:1px solid #d7e9df;border-radius:14px;padding:12px}
+        .curso-table td{border:none;padding:4px 0}
+        .curso-table td::before{content:attr(data-label);display:block;font-size:.72rem;font-weight:800;color:#607084;margin-bottom:2px;text-transform:uppercase}
+      }
+      @media (max-width:520px){
+        .curso-stats{grid-template-columns:1fr}
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -121,7 +160,7 @@
     const data=lastData;
     const target={notas:document.getElementById('cursoNotasDados'),componentes:document.getElementById('cursoComponentesDados'),online:document.getElementById('cursoOnlineDados')}[tipo||'notas'];
     if(!target) return;
-    if(!data) {target.innerHTML='Carregando dados dos cursos...';return;}
+    if(!data){target.innerHTML='Carregando dados dos cursos...';return;}
     if(!data.enrollments?.length){target.className='curso-empty';target.innerHTML='Nenhuma matrícula em curso foi encontrada para este aluno. Verifique se a matrícula do curso foi feita usando o aluno da base, ou se o nome digitado na matrícula é igual ao nome do aluno no portal da família.';return;}
     target.className='';
     if(tipo==='componentes') return renderComponentes(target,data);
@@ -132,9 +171,17 @@
   function renderNotas(target,data){
     const courses=byId(data.courses), classes=byId(data.classes), modules=byId(data.modules);
     target.innerHTML=data.enrollments.map(function(en){
-      const course=courses.get(en.course_id)||{};const klass=classes.get(en.class_id)||{};const ass=data.assessments.filter(function(a){return a.class_id===en.class_id;});const gr=data.grades.filter(function(g){return g.enrollment_id===en.id;});const average=en.final_average??avgFor(en,ass,gr);
-      const rows=ass.length?ass.map(function(a){const g=gr.find(function(x){return x.assessment_id===a.id;});const mod=modules.get(a.course_module_id);return `<tr><td>${safe(brDate(a.assessment_date))}</td><td>${safe(mod?.name||'Sem módulo/matéria')}</td><td>${safe(a.title||'Avaliação')}</td><td>${safe(a.assessment_type||'Atividade')}</td><td><strong>${safe(g?.score??'—')}</strong></td><td>${safe(a.max_score||10)}</td><td>${safe(g?.observation||'')}</td></tr>`;}).join(''):'<tr><td colspan="7">Nenhuma avaliação/nota lançada para esta turma.</td></tr>';
-      return `<article class="curso-real-card"><strong>${safe(course.name||'Curso')}</strong><small>Turma: ${safe(klass.class_name||'—')} • Status: ${safe(en.final_result||en.status||'Matriculado')}</small><div class="curso-stats"><div class="curso-stat"><span>Média geral</span><b>${num(average)}</b></div><div class="curso-stat"><span>Frequência</span><b>${en.attendance_percentage!=null?num(en.attendance_percentage)+'%':'—'}</b></div><div class="curso-stat"><span>Avaliações</span><b>${ass.length}</b></div><div class="curso-stat"><span>Notas lançadas</span><b>${gr.length}</b></div></div><table class="curso-table"><thead><tr><th>Data</th><th>Módulo/matéria</th><th>Avaliação</th><th>Tipo</th><th>Nota</th><th>Máx.</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table></article>`;
+      const course=courses.get(en.course_id)||{};
+      const klass=classes.get(en.class_id)||{};
+      const ass=data.assessments.filter(function(a){return a.class_id===en.class_id;});
+      const gr=data.grades.filter(function(g){return g.enrollment_id===en.id;});
+      const average=en.final_average??avgFor(en,ass,gr);
+      const rows=ass.length?ass.map(function(a){
+        const g=gr.find(function(x){return x.assessment_id===a.id;});
+        const mod=modules.get(a.course_module_id);
+        return `<tr><td data-label="Data">${safe(brDate(a.assessment_date))}</td><td data-label="Módulo/matéria">${safe(mod?.name||'Sem módulo/matéria')}</td><td data-label="Avaliação">${safe(a.title||'Avaliação')}</td><td data-label="Tipo">${safe(a.assessment_type||'Atividade')}</td><td data-label="Nota"><strong>${safe(g?.score??'—')}</strong></td><td data-label="Máx.">${safe(a.max_score||10)}</td><td data-label="Observação">${safe(g?.observation||'')}</td></tr>`;
+      }).join(''):'<tr><td colspan="7" class="curso-table-empty">Nenhuma avaliação/nota lançada para esta turma.</td></tr>';
+      return `<article class="curso-real-card"><strong>${safe(course.name||'Curso')}</strong><small>Turma: ${safe(klass.class_name||'—')} • Status: ${safe(en.final_result||en.status||'Matriculado')}</small><div class="curso-stats"><div class="curso-stat"><span>Média geral</span><b>${num(average)}</b></div><div class="curso-stat"><span>Frequência</span><b>${en.attendance_percentage!=null?num(en.attendance_percentage)+'%':'—'}</b></div><div class="curso-stat"><span>Avaliações</span><b>${ass.length}</b></div><div class="curso-stat"><span>Notas lançadas</span><b>${gr.length}</b></div></div><div class="curso-table-wrap"><table class="curso-table"><thead><tr><th>Data</th><th>Módulo/matéria</th><th>Avaliação</th><th>Tipo</th><th>Nota</th><th>Máx.</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table></div></article>`;
     }).join('');
   }
 
