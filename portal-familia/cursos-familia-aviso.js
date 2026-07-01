@@ -2,11 +2,28 @@
   if(window.__FAMILIA_CURSOS_AVISO__) return;
   window.__FAMILIA_CURSOS_AVISO__ = true;
 
+  let supabaseClient = null;
+  let lastStudentId = '';
+  let lastData = null;
+
+  function safe(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
+  function brDate(value){if(!value)return '—';const p=String(value).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:String(value);}
+  function num(value){if(value===null||value===undefined||value==='')return '—';const n=Number(value);return Number.isFinite(n)?String(n.toFixed(1)).replace('.',','):'—';}
+  function byId(items){return new Map((items||[]).map(function(item){return [item.id,item];}));}
+
+  async function getClient(){
+    if(supabaseClient) return supabaseClient;
+    const cfg=window.INTEGRO_SUPABASE||{};
+    const mod=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    supabaseClient=mod.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    return supabaseClient;
+  }
+
   function addCss(){
     if(document.getElementById('familiaCursosAvisoCss')) return;
     const style=document.createElement('style');
     style.id='familiaCursosAvisoCss';
-    style.textContent='.familia-cursos-aviso{border:1px solid rgba(15,61,46,.12);border-radius:22px;padding:20px;background:#fff;box-shadow:0 10px 24px rgba(7,49,35,.06)}.familia-cursos-aviso h4{margin:0 0 8px;color:#0f3d2e}.familia-cursos-aviso p{color:#607084;line-height:1.55}.familia-cursos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.familia-curso-btn{background:#f4fbf7;border:1px solid #d7e9df;border-radius:16px;padding:14px;color:#073b31;font-weight:900;cursor:pointer;text-align:left;font:inherit;transition:.2s}.familia-curso-btn:hover,.familia-curso-btn.active{background:#0f3d2e;color:#fff;transform:translateY(-1px)}.familia-curso-panel{display:none;margin-top:16px;background:#fbfefc;border:1px solid #dfeee6;border-radius:18px;padding:16px}.familia-curso-panel.active{display:block}.familia-curso-panel h5{margin:0 0 8px;color:#0f3d2e;font-size:1rem}.familia-curso-panel ul{margin:8px 0 0 18px;color:#607084;line-height:1.7}.familia-cursos-lista{display:grid;gap:10px;margin-top:10px}.familia-cursos-lista div{border:1px solid #d7e9df;border-radius:14px;padding:12px;background:#fff;color:#073b31;font-weight:700}@media(max-width:800px){.familia-cursos-grid{grid-template-columns:1fr}}';
+    style.textContent='.familia-cursos-aviso{border:1px solid rgba(15,61,46,.12);border-radius:22px;padding:20px;background:#fff;box-shadow:0 10px 24px rgba(7,49,35,.06)}.familia-cursos-aviso h4{margin:0 0 8px;color:#0f3d2e}.familia-cursos-aviso p{color:#607084;line-height:1.55}.familia-cursos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.familia-curso-btn{background:#f4fbf7;border:1px solid #d7e9df;border-radius:16px;padding:14px;color:#073b31;font-weight:900;cursor:pointer;text-align:left;font:inherit;transition:.2s}.familia-curso-btn:hover,.familia-curso-btn.active{background:#0f3d2e;color:#fff;transform:translateY(-1px)}.familia-curso-panel{display:none;margin-top:16px;background:#fbfefc;border:1px solid #dfeee6;border-radius:18px;padding:16px}.familia-curso-panel.active{display:block}.familia-curso-panel h5{margin:0 0 8px;color:#0f3d2e;font-size:1rem}.familia-curso-panel ul{margin:8px 0 0 18px;color:#607084;line-height:1.7}.familia-cursos-lista{display:grid;gap:10px;margin-top:10px}.familia-cursos-lista div,.curso-real-card{border:1px solid #d7e9df;border-radius:14px;padding:12px;background:#fff;color:#073b31}.curso-real-card{margin-bottom:12px}.curso-real-card strong{color:#0f3d2e}.curso-real-card small{display:block;color:#607084;margin-top:4px;line-height:1.45}.curso-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.curso-stat{background:#f4fbf7;border:1px solid #d7e9df;border-radius:14px;padding:10px}.curso-stat span{display:block;color:#607084;font-size:.78rem;font-weight:800}.curso-stat b{color:#0f3d2e}.curso-table{width:100%;border-collapse:collapse;margin-top:8px}.curso-table th,.curso-table td{border-bottom:1px solid #dfeee6;padding:8px;text-align:left;vertical-align:top}.curso-table th{background:#eef7f2;color:#0f3d2e}.curso-empty{background:#fff8e6;border:1px solid rgba(216,169,75,.35);border-radius:14px;padding:12px;color:#624000;font-weight:700;margin-top:10px}@media(max-width:800px){.familia-cursos-grid,.curso-stats{grid-template-columns:1fr}.curso-table{font-size:.88rem}}';
     document.head.appendChild(style);
   }
 
@@ -21,90 +38,145 @@
   }
 
   function abrirSecaoFamilia(sectionId){
-    if(!sectionId) return;
-    document.querySelectorAll('.family-section-panel').forEach(function(panel){
-      panel.classList.toggle('active', panel.id===sectionId);
-    });
-    document.querySelectorAll('[data-family-tab]').forEach(function(button){
-      button.classList.toggle('active', button.dataset.familyTab===sectionId);
-    });
+    document.querySelectorAll('.family-section-panel').forEach(function(panel){panel.classList.toggle('active',panel.id===sectionId);});
+    document.querySelectorAll('[data-family-tab]').forEach(function(button){button.classList.toggle('active',button.dataset.familyTab===sectionId);});
     const target=document.getElementById(sectionId);
-    if(target){
-      const top=target.getBoundingClientRect().top+window.scrollY-120;
-      window.scrollTo({top:top,behavior:'smooth'});
-    }
+    if(target) window.scrollTo({top:target.getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'});
     if(history.replaceState) history.replaceState(null,'','#'+sectionId);
   }
 
   function abrirSubAba(tipo){
-    if(!tipo) return;
-    document.querySelectorAll('[data-curso-subtab]').forEach(function(button){
-      button.classList.toggle('active', button.dataset.cursoSubtab===tipo);
-    });
-    document.querySelectorAll('[data-curso-panel]').forEach(function(panel){
-      panel.classList.toggle('active', panel.dataset.cursoPanel===tipo);
-    });
+    document.querySelectorAll('[data-curso-subtab]').forEach(function(button){button.classList.toggle('active',button.dataset.cursoSubtab===tipo);});
+    document.querySelectorAll('[data-curso-panel]').forEach(function(panel){panel.classList.toggle('active',panel.dataset.cursoPanel===tipo);});
+    renderPainel(tipo);
+  }
+
+  function baseBoxHtml(){
+    return '<h4>Acompanhamento dos cursos</h4><p>Esta área mostra os dados reais lançados na Gestão de Cursos: notas, médias, componentes curriculares/módulos e atividades online vinculadas ao estudante selecionado.</p><div class="familia-cursos-grid"><button class="familia-curso-btn active" type="button" data-curso-subtab="notas">Notas e médias</button><button class="familia-curso-btn" type="button" data-curso-subtab="componentes">Componentes curriculares</button><button class="familia-curso-btn" type="button" data-curso-subtab="online">Atividades online</button></div><div class="familia-curso-panel active" data-curso-panel="notas"><div id="cursoNotasDados" class="curso-empty">Carregando notas e médias...</div></div><div class="familia-curso-panel" data-curso-panel="componentes"><div id="cursoComponentesDados" class="curso-empty">Carregando componentes curriculares...</div></div><div class="familia-curso-panel" data-curso-panel="online"><div id="cursoOnlineDados" class="curso-empty">Carregando atividades online...</div></div>';
   }
 
   function criarAreaDashboard(){
     addCss();
     const hero=document.querySelector('.hero-actions');
     if(hero&&!hero.querySelector('[data-family-tab="courses-online"]')){
-      const btn=document.createElement('button');
-      btn.className='btn btn-light family-tab-button';
-      btn.type='button';
-      btn.dataset.familyTab='courses-online';
-      btn.textContent='Cursos e notas';
-      hero.insertBefore(btn,hero.children[1]||null);
+      const btn=document.createElement('button');btn.className='btn btn-light family-tab-button';btn.type='button';btn.dataset.familyTab='courses-online';btn.textContent='Cursos e notas';hero.insertBefore(btn,hero.children[1]||null);
     }
     const menu=document.querySelector('.family-section-buttons');
     if(menu&&!menu.querySelector('[data-family-tab="courses-online"]')){
-      const btn=document.createElement('button');
-      btn.className='family-nav-button';
-      btn.type='button';
-      btn.dataset.familyTab='courses-online';
-      btn.innerHTML='<span class="family-nav-icon">3</span><strong>Cursos, notas e online</strong><small>Acompanhe componentes curriculares, notas e atividades online.</small>';
-      const ref=menu.querySelector('[data-family-tab="materials"]');
-      ref?ref.insertAdjacentElement('afterend',btn):menu.appendChild(btn);
+      const btn=document.createElement('button');btn.className='family-nav-button';btn.type='button';btn.dataset.familyTab='courses-online';btn.innerHTML='<span class="family-nav-icon">3</span><strong>Cursos, notas e online</strong><small>Acompanhe componentes curriculares, notas e atividades online.</small>';
+      const ref=menu.querySelector('[data-family-tab="materials"]');ref?ref.insertAdjacentElement('afterend',btn):menu.appendChild(btn);
     }
     const grid=document.querySelector('.family-single-view');
     if(grid&&!document.getElementById('courses-online')){
-      const section=document.createElement('section');
-      section.id='courses-online';
-      section.className='content-card family-section-panel';
-      section.innerHTML='<div class="section-head"><div><p class="eyebrow">Cursos e atividades online</p><h3>Notas e componentes curriculares</h3><p class="muted">A família poderá acompanhar os cursos em que o aluno está matriculado, os módulos/matérias, notas, médias e atividades online lançadas pela equipe.</p></div></div><div class="familia-cursos-aviso"><h4>Acompanhamento dos cursos</h4><p>Esta área foi reservada para que o responsável acompanhe, em um só lugar, as notas do aluno, os componentes curriculares dos cursos, as médias, as aulas e as atividades online vinculadas ao estudante.</p><div class="familia-cursos-grid"><button class="familia-curso-btn active" type="button" data-curso-subtab="notas">Notas e médias</button><button class="familia-curso-btn" type="button" data-curso-subtab="componentes">Componentes curriculares</button><button class="familia-curso-btn" type="button" data-curso-subtab="online">Atividades online</button></div><div class="familia-curso-panel active" data-curso-panel="notas"><h5>Notas e médias</h5><p>Quando as avaliações forem lançadas pela equipe, a família poderá consultar as notas, a média do módulo e a média geral do curso.</p><div class="familia-cursos-lista"><div>Boletim do curso</div><div>Média por módulo ou matéria</div><div>Resultado do estudante</div></div></div><div class="familia-curso-panel" data-curso-panel="componentes"><h5>Componentes curriculares</h5><p>Esta parte organiza as matérias e módulos que compõem cada curso do estudante.</p><ul><li>Nome do componente curricular.</li><li>Carga horária do módulo.</li><li>Conteúdos e objetivos trabalhados.</li></ul></div><div class="familia-curso-panel" data-curso-panel="online"><h5>Atividades online</h5><p>Quando houver atividades online cadastradas, elas aparecerão aqui para acompanhamento da família.</p><ul><li>Aulas registradas.</li><li>Atividades propostas.</li><li>Orientações e prazos.</li></ul></div></div>';
-      const ref=document.getElementById('materials');
-      ref?ref.insertAdjacentElement('afterend',section):grid.appendChild(section);
+      const section=document.createElement('section');section.id='courses-online';section.className='content-card family-section-panel';
+      section.innerHTML='<div class="section-head"><div><p class="eyebrow">Cursos e atividades online</p><h3>Notas e componentes curriculares</h3><p class="muted">Acompanhe os cursos em que o aluno está matriculado, os módulos/matérias, notas, médias e atividades online lançadas pela equipe.</p></div></div><div class="familia-cursos-aviso">'+baseBoxHtml()+'</div>';
+      const ref=document.getElementById('materials');ref?ref.insertAdjacentElement('afterend',section):grid.appendChild(section);
     }else if(document.getElementById('courses-online')&&!document.querySelector('[data-curso-subtab]')){
-      const box=document.querySelector('#courses-online .familia-cursos-aviso');
-      if(box){
-        box.innerHTML='<h4>Acompanhamento dos cursos</h4><p>Esta área foi reservada para que o responsável acompanhe, em um só lugar, as notas do aluno, os componentes curriculares dos cursos, as médias, as aulas e as atividades online vinculadas ao estudante.</p><div class="familia-cursos-grid"><button class="familia-curso-btn active" type="button" data-curso-subtab="notas">Notas e médias</button><button class="familia-curso-btn" type="button" data-curso-subtab="componentes">Componentes curriculares</button><button class="familia-curso-btn" type="button" data-curso-subtab="online">Atividades online</button></div><div class="familia-curso-panel active" data-curso-panel="notas"><h5>Notas e médias</h5><p>Quando as avaliações forem lançadas pela equipe, a família poderá consultar as notas, a média do módulo e a média geral do curso.</p><div class="familia-cursos-lista"><div>Boletim do curso</div><div>Média por módulo ou matéria</div><div>Resultado do estudante</div></div></div><div class="familia-curso-panel" data-curso-panel="componentes"><h5>Componentes curriculares</h5><p>Esta parte organiza as matérias e módulos que compõem cada curso do estudante.</p><ul><li>Nome do componente curricular.</li><li>Carga horária do módulo.</li><li>Conteúdos e objetivos trabalhados.</li></ul></div><div class="familia-curso-panel" data-curso-panel="online"><h5>Atividades online</h5><p>Quando houver atividades online cadastradas, elas aparecerão aqui para acompanhamento da família.</p><ul><li>Aulas registradas.</li><li>Atividades propostas.</li><li>Orientações e prazos.</li></ul></div>';
-      }
+      const box=document.querySelector('#courses-online .familia-cursos-aviso');if(box) box.innerHTML=baseBoxHtml();
     }
+  }
+
+  function selectedStudent(){
+    const select=document.getElementById('student-selector');
+    return {id:select?.value||'',name:select?.options?.[select.selectedIndex]?.textContent?.trim()||''};
+  }
+
+  function avgFor(enrollment,assessments,grades){
+    let total=0, weightTotal=0;
+    assessments.forEach(function(a){const g=grades.find(function(x){return x.assessment_id===a.id&&x.enrollment_id===enrollment.id;});if(g?.score===null||g?.score===undefined||g?.score==='')return;const max=Number(a.max_score||10)||10;const w=Number(a.weight||1)||1;total+=((Number(g.score||0)/max)*10)*w;weightTotal+=w;});
+    return weightTotal?Number((total/weightTotal).toFixed(1)):null;
+  }
+
+  async function loadData(){
+    const student=selectedStudent();
+    if(!student.id) return {student,enrollments:[]};
+    const db=await getClient();
+    let {data:enrollments,error}=await db.from('course_enrollments').select('*').eq('student_id',student.id).order('created_at',{ascending:false});
+    if(error) throw error;
+    if((!enrollments||!enrollments.length)&&student.name){
+      const byName=await db.from('course_enrollments').select('*').ilike('student_name_snapshot',student.name).order('created_at',{ascending:false});
+      if(byName.error) throw byName.error;
+      enrollments=byName.data||[];
+    }
+    enrollments=enrollments||[];
+    if(!enrollments.length) return {student,enrollments:[]};
+    const courseIds=[...new Set(enrollments.map(function(e){return e.course_id;}).filter(Boolean))];
+    const classIds=[...new Set(enrollments.map(function(e){return e.class_id;}).filter(Boolean))];
+    const enrollmentIds=enrollments.map(function(e){return e.id;});
+    const [coursesRes,classesRes,modulesRes,assessmentsRes,gradesRes,lessonsRes,attendanceRes]=await Promise.all([
+      courseIds.length?db.from('courses').select('*').in('id',courseIds):Promise.resolve({data:[]}),
+      classIds.length?db.from('course_classes').select('*').in('id',classIds):Promise.resolve({data:[]}),
+      courseIds.length?db.from('course_modules').select('*').in('course_id',courseIds).order('order_index',{ascending:true}):Promise.resolve({data:[]}),
+      classIds.length?db.from('course_assessments').select('*').in('class_id',classIds).order('assessment_date',{ascending:true}):Promise.resolve({data:[]}),
+      enrollmentIds.length?db.from('course_grades').select('*').in('enrollment_id',enrollmentIds):Promise.resolve({data:[]}),
+      classIds.length?db.from('course_lessons').select('*').in('class_id',classIds).order('lesson_date',{ascending:false}):Promise.resolve({data:[]}),
+      enrollmentIds.length?db.from('course_attendance').select('*').in('enrollment_id',enrollmentIds):Promise.resolve({data:[]})
+    ]);
+    const err=[coursesRes,classesRes,modulesRes,assessmentsRes,gradesRes,lessonsRes,attendanceRes].find(function(r){return r.error;});
+    if(err) throw err.error;
+    return {student,enrollments,courses:coursesRes.data||[],classes:classesRes.data||[],modules:modulesRes.data||[],assessments:assessmentsRes.data||[],grades:gradesRes.data||[],lessons:lessonsRes.data||[],attendance:attendanceRes.data||[]};
+  }
+
+  function renderPainel(tipo){
+    const data=lastData;
+    const target={notas:document.getElementById('cursoNotasDados'),componentes:document.getElementById('cursoComponentesDados'),online:document.getElementById('cursoOnlineDados')}[tipo||'notas'];
+    if(!target) return;
+    if(!data) {target.innerHTML='Carregando dados dos cursos...';return;}
+    if(!data.enrollments?.length){target.className='curso-empty';target.innerHTML='Nenhuma matrícula em curso foi encontrada para este aluno. Verifique se a matrícula do curso foi feita usando o aluno da base, ou se o nome digitado na matrícula é igual ao nome do aluno no portal da família.';return;}
+    target.className='';
+    if(tipo==='componentes') return renderComponentes(target,data);
+    if(tipo==='online') return renderOnline(target,data);
+    return renderNotas(target,data);
+  }
+
+  function renderNotas(target,data){
+    const courses=byId(data.courses), classes=byId(data.classes), modules=byId(data.modules);
+    target.innerHTML=data.enrollments.map(function(en){
+      const course=courses.get(en.course_id)||{};const klass=classes.get(en.class_id)||{};const ass=data.assessments.filter(function(a){return a.class_id===en.class_id;});const gr=data.grades.filter(function(g){return g.enrollment_id===en.id;});const average=en.final_average??avgFor(en,ass,gr);
+      const rows=ass.length?ass.map(function(a){const g=gr.find(function(x){return x.assessment_id===a.id;});const mod=modules.get(a.course_module_id);return `<tr><td>${safe(brDate(a.assessment_date))}</td><td>${safe(mod?.name||'Sem módulo/matéria')}</td><td>${safe(a.title||'Avaliação')}</td><td>${safe(a.assessment_type||'Atividade')}</td><td><strong>${safe(g?.score??'—')}</strong></td><td>${safe(a.max_score||10)}</td><td>${safe(g?.observation||'')}</td></tr>`;}).join(''):'<tr><td colspan="7">Nenhuma avaliação/nota lançada para esta turma.</td></tr>';
+      return `<article class="curso-real-card"><strong>${safe(course.name||'Curso')}</strong><small>Turma: ${safe(klass.class_name||'—')} • Status: ${safe(en.final_result||en.status||'Matriculado')}</small><div class="curso-stats"><div class="curso-stat"><span>Média geral</span><b>${num(average)}</b></div><div class="curso-stat"><span>Frequência</span><b>${en.attendance_percentage!=null?num(en.attendance_percentage)+'%':'—'}</b></div><div class="curso-stat"><span>Avaliações</span><b>${ass.length}</b></div><div class="curso-stat"><span>Notas lançadas</span><b>${gr.length}</b></div></div><table class="curso-table"><thead><tr><th>Data</th><th>Módulo/matéria</th><th>Avaliação</th><th>Tipo</th><th>Nota</th><th>Máx.</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table></article>`;
+    }).join('');
+  }
+
+  function renderComponentes(target,data){
+    const courses=byId(data.courses), classes=byId(data.classes);
+    target.innerHTML=data.enrollments.map(function(en){
+      const course=courses.get(en.course_id)||{};const klass=classes.get(en.class_id)||{};const mods=data.modules.filter(function(m){return m.course_id===en.course_id;});
+      const items=mods.length?mods.map(function(m){const ass=data.assessments.filter(function(a){return a.course_module_id===m.id&&a.class_id===en.class_id;});const gr=data.grades.filter(function(g){return g.enrollment_id===en.id&&ass.some(function(a){return a.id===g.assessment_id;});});const avg=ass.length?avgFor(en,ass,gr):null;return `<div><strong>${safe(m.order_index?m.order_index+'. ':'')}${safe(m.name)}</strong><small>${m.workload_hours?`Carga horária: ${safe(m.workload_hours)}h<br>`:''}${safe(m.description||'Componente curricular cadastrado.')}<br>Média do módulo: <b>${num(avg)}</b> • Avaliações: ${ass.length}</small></div>`;}).join(''):'<div>Nenhum módulo/matéria cadastrado para este curso.</div>';
+      return `<article class="curso-real-card"><strong>${safe(course.name||'Curso')}</strong><small>Turma: ${safe(klass.class_name||'—')}</small><div class="familia-cursos-lista">${items}</div></article>`;
+    }).join('');
+  }
+
+  function renderOnline(target,data){
+    const courses=byId(data.courses), classes=byId(data.classes), modules=byId(data.modules);
+    target.innerHTML=data.enrollments.map(function(en){
+      const course=courses.get(en.course_id)||{};const klass=classes.get(en.class_id)||{};const lessons=data.lessons.filter(function(l){return l.class_id===en.class_id;});
+      const items=lessons.length?lessons.map(function(l){const mod=modules.get(l.course_module_id||l.module_id);return `<div><strong>${safe(l.title||'Aula / atividade')}</strong><small>${brDate(l.lesson_date)}${mod?` • ${safe(mod.name)}`:''}<br>${safe(l.content_summary||'Atividade/aula registrada pela equipe.')}</small></div>`;}).join(''):'<div>Nenhuma aula ou atividade online lançada para esta turma.</div>';
+      return `<article class="curso-real-card"><strong>${safe(course.name||'Curso')}</strong><small>Turma: ${safe(klass.class_name||'—')}</small><div class="familia-cursos-lista">${items}</div></article>`;
+    }).join('');
+  }
+
+  async function refreshDados(){
+    const student=selectedStudent();
+    if(!student.id) return;
+    if(student.id===lastStudentId&&lastData) return renderPainel(document.querySelector('[data-curso-subtab].active')?.dataset.cursoSubtab||'notas');
+    lastStudentId=student.id;lastData=null;
+    ['cursoNotasDados','cursoComponentesDados','cursoOnlineDados'].forEach(function(id){const el=document.getElementById(id);if(el) el.innerHTML='Carregando dados lançados em cursos...';});
+    try{lastData=await loadData();renderPainel(document.querySelector('[data-curso-subtab].active')?.dataset.cursoSubtab||'notas');}
+    catch(error){console.error(error);['cursoNotasDados','cursoComponentesDados','cursoOnlineDados'].forEach(function(id){const el=document.getElementById(id);if(el){el.className='curso-empty';el.innerHTML='Não foi possível carregar os dados dos cursos. Verifique se as permissões/RLS das tabelas course_enrollments, course_modules, course_assessments, course_grades e course_lessons permitem leitura pelo responsável. Detalhe: '+safe(error.message||'erro desconhecido');}});}
   }
 
   function start(){
     atualizarLogin();
     document.addEventListener('click',function(event){
       const tab=event.target.closest('[data-family-tab]');
-      if(tab&&tab.dataset.familyTab==='courses-online'){
-        event.preventDefault();
-        criarAreaDashboard();
-        abrirSecaoFamilia('courses-online');
-      }
+      if(tab&&tab.dataset.familyTab==='courses-online'){event.preventDefault();criarAreaDashboard();abrirSecaoFamilia('courses-online');setTimeout(refreshDados,250);}
       const sub=event.target.closest('[data-curso-subtab]');
-      if(sub){
-        event.preventDefault();
-        abrirSubAba(sub.dataset.cursoSubtab);
-      }
+      if(sub){event.preventDefault();abrirSubAba(sub.dataset.cursoSubtab);setTimeout(refreshDados,100);}
     });
+    document.addEventListener('change',function(event){if(event.target&&event.target.id==='student-selector'){lastStudentId='';lastData=null;setTimeout(refreshDados,700);}});
     if(location.pathname.includes('/portal-familia/dashboard.html')){
-      let tentativas=0;
-      const timer=setInterval(function(){
-        tentativas++;
-        criarAreaDashboard();
-        if(document.querySelector('.family-section-buttons')||tentativas>30) clearInterval(timer);
-      },300);
+      let tentativas=0;const timer=setInterval(function(){tentativas++;criarAreaDashboard();if(document.getElementById('student-selector')?.value){refreshDados();clearInterval(timer);}else if(tentativas>40){clearInterval(timer);}},300);
     }
   }
 
