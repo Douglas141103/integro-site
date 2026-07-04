@@ -60,6 +60,11 @@
       loadScript("cashAcionistaScript", "/portal/financeiro-recolho-acionista.js?v=20260702-acionista-v1");
     }
 
+    const isSchoolManagementPage = location.pathname.endsWith("/portal/gestao-escolar.html") || location.pathname.includes("/portal/gestao-escolar");
+    if (isSchoolManagementPage) {
+      loadScript("schoolShiftStudentsScript", "/portal/gestao-escolar-turnos.js?v=20260704-turnos-v1");
+    }
+
     const isFamilyPortal = location.pathname.includes("/portal-familia/");
     if (isFamilyPortal) {
       loadScript("familyCoursesNoticeScript", "/portal-familia/cursos-familia-aviso.js?v=20260701-cursos-responsivo-v4");
