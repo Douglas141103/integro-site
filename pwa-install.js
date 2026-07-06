@@ -64,6 +64,7 @@
     if (isSchoolManagementPage) {
       loadScript("schoolShiftStudentsScript", "/portal/gestao-escolar-turnos.js?v=20260704-turnos-v1");
       loadScript("schoolStatusSeparatedScript", "/portal/gestao-escolar-status-separado.js?v=20260704-status-separado-v1");
+      loadScript("monthlyCalculatorScript", "/portal/gestao-escolar-calculadora-mensalidades.js?v=20260704-calculadora-mensalidades-v1");
     }
 
     const isFamilyPortal = location.pathname.includes("/portal-familia/");
