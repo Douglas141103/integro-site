@@ -70,6 +70,7 @@
 
     const isCoursesPage = location.pathname.endsWith("/portal/cursos.html") || location.pathname.includes("/portal/cursos");
     if (isCoursesPage) {
+      loadScript("coursesAssessmentReturnScript", "/portal/cursos-avaliacoes-retorno.js?v=20260711-retorno-avaliacoes-v1");
       loadScript("coursesAssessmentSaveFixScript", "/portal/cursos-avaliacoes-salvar-fix.js?v=20260711-vinculo-modulo-v2");
       loadScript("coursesAssessmentsWorkspaceScript", "/portal/cursos-avaliacoes-organizadas.js?v=20260711-atividades-notas-v3");
     }
