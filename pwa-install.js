@@ -39,6 +39,7 @@
     const script = document.createElement("script");
     script.id = id;
     script.src = src;
+    script.async = false;
     script.defer = true;
     document.body.appendChild(script);
   }
@@ -69,7 +70,8 @@
 
     const isCoursesPage = location.pathname.endsWith("/portal/cursos.html") || location.pathname.includes("/portal/cursos");
     if (isCoursesPage) {
-      loadScript("coursesAssessmentsWorkspaceScript", "/portal/cursos-avaliacoes-organizadas.js?v=20260711-atividades-notas-v1");
+      loadScript("coursesAssessmentsWorkspaceScript", "/portal/cursos-avaliacoes-organizadas.js?v=20260711-atividades-notas-v2");
+      loadScript("coursesAssessmentSaveFixScript", "/portal/cursos-avaliacoes-salvar-fix.js?v=20260711-salvar-atividade-v1");
     }
 
     const isFamilyPortal = location.pathname.includes("/portal-familia/");
