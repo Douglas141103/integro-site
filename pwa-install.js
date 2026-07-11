@@ -67,6 +67,11 @@
       loadScript("schoolStatusSeparatedScript", "/portal/gestao-escolar-status-separado.js?v=20260704-status-separado-v1");
     }
 
+    const isCoursesPage = location.pathname.endsWith("/portal/cursos.html") || location.pathname.includes("/portal/cursos");
+    if (isCoursesPage) {
+      loadScript("coursesAssessmentsWorkspaceScript", "/portal/cursos-avaliacoes-organizadas.js?v=20260711-atividades-notas-v1");
+    }
+
     const isFamilyPortal = location.pathname.includes("/portal-familia/");
     if (isFamilyPortal) {
       loadScript("familyCoursesNoticeScript", "/portal-familia/cursos-familia-aviso.js?v=20260701-cursos-responsivo-v4");
