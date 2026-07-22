@@ -44,6 +44,13 @@
       "description": "Acessar gestão escolar e financeira.",
       "url": "/portal/index.html",
       "icons": [{ "src": "/assets/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Presença Facial",
+      "short_name": "Presença",
+      "description": "Registrar presença no tablet com reconhecimento facial autorizado.",
+      "url": "/portal/presenca-facial.html",
+      "icons": [{ "src": "/assets/pwa/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

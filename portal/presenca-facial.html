@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Presença Facial | INTEGRO</title>
+  <meta name="theme-color" content="#083c2d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
+  <link rel="stylesheet" href="./presenca-facial.css?v=20260721-1" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script type="module" src="./presenca-facial.js?v=20260721-1"></script>
+</head>
+
+<body>
+  <header class="app-header">
+    <a class="brand" href="./dashboard.html" aria-label="Voltar ao Portal do Parceiro">
+      <img src="../logo-whatsapp.png" alt="Instituto Integro" />
+      <span>
+        <small>INSTITUTO INTEGRO</small>
+        <strong>Presença Facial</strong>
+      </span>
+    </a>
+
+    <div class="header-actions">
+      <span id="connectionBadge" class="status-pill neutral">Preparando...</span>
+      <span id="userBadge" class="user-pill">Carregando usuário...</span>
+      <a class="button ghost compact" href="./dashboard.html">Portal</a>
+      <button id="logoutButton" class="button ghost compact" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro-card">
+      <div>
+        <span class="eyebrow">TERMINAL PARA TABLET</span>
+        <h1>Presença automática com confirmação facial</h1>
+        <p>O reconhecimento acontece no próprio tablet. Fotografias e vídeos não são enviados nem armazenados.</p>
+      </div>
+
+      <div class="clock-card" aria-live="polite">
+        <strong id="clockTime">--:--</strong>
+        <span id="clockDate">Carregando data...</span>
+      </div>
+    </section>
+
+    <div id="setupWarning" class="setup-warning hidden" role="alert">
+      <strong>O banco da presença facial ainda precisa ser preparado.</strong>
+      <span>Execute o arquivo <code>supabase/migrations/20260721_presenca_facial.sql</code> no Editor SQL do Supabase.</span>
+    </div>
+
+    <nav class="tab-bar" aria-label="Áreas da presença facial">
+      <button class="tab-button active" type="button" data-tab="terminal">Terminal</button>
+      <button class="tab-button" type="button" data-tab="cadastro">Cadastrar rosto</button>
+      <button class="tab-button" type="button" data-tab="gestao">Gestão</button>
+      <button class="tab-button" type="button" data-tab="privacidade">Privacidade</button>
+    </nav>
+
+    <section id="panel-terminal" class="tab-panel active" aria-labelledby="Terminal">
+      <div class="terminal-grid">
+        <article class="camera-card">
+          <div class="camera-stage" id="cameraStage">
+            <video id="cameraVideo" autoplay muted playsinline></video>
+            <canvas id="cameraOverlay" aria-hidden="true"></canvas>
+            <div class="face-guide" aria-hidden="true"></div>
+
+            <div id="cameraPlaceholder" class="camera-placeholder">
+              <div class="camera-symbol" aria-hidden="true">
+                <span></span>
+              </div>
+              <strong>Câmera pronta para iniciar</strong>
+              <p>Toque em “Iniciar terminal” e permita o uso da câmera.</p>
+            </div>
+
+            <div id="modelLoader" class="model-loader hidden" aria-live="polite">
+              <span class="spinner"></span>
+              <strong id="modelLoaderTitle">Preparando reconhecimento...</strong>
+              <small id="modelLoaderDetail">O primeiro carregamento pode demorar um pouco.</small>
+            </div>
+
+            <div id="cameraInstruction" class="camera-instruction">Toque em “Iniciar terminal”</div>
+          </div>
+
+          <div class="quality-strip" aria-label="Qualidade da captura">
+            <span id="qualityCamera" class="quality-chip">Câmera</span>
+            <span id="qualityLight" class="quality-chip">Luz</span>
+            <span id="qualityFace" class="quality-chip">Rosto</span>
+            <span id="qualityBlink" class="quality-chip">Piscar</span>
+            <span id="qualityLive" class="quality-chip">Prova de vida</span>
+          </div>
+
+          <div class="camera-actions">
+            <button id="startTerminalButton" class="button primary" type="button">Iniciar terminal</button>
+            <button id="stopCameraButton" class="button secondary" type="button" disabled>Parar câmera</button>
+            <button id="fullscreenButton" class="button secondary" type="button">Tela cheia</button>
+          </div>
+
+          <p class="camera-note">Câmera ajustada para 640 × 480 e até 12 quadros por segundo, ideal para o sensor de 2 MP.</p>
+        </article>
+
+        <aside class="terminal-side">
+          <article id="recognitionResult" class="recognition-card waiting" aria-live="assertive">
+            <div id="resultIcon" class="result-icon" aria-hidden="true">●</div>
+            <span id="resultEyebrow">AGUARDANDO</span>
+            <h2 id="resultTitle">Terminal ainda não iniciado</h2>
+            <p id="resultMessage">Quando o terminal estiver ativo, o aluno deve ficar sozinho diante da câmera.</p>
+            <div id="resultScore" class="result-score hidden"></div>
+          </article>
+
+          <article class="today-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">HOJE</span>
+                <h2>Presenças registradas</h2>
+              </div>
+              <strong id="todayCount" class="count-badge">0</strong>
+            </div>
+            <div id="todayAttendanceList" class="attendance-list">
+              <p class="empty-state">Nenhuma presença facial registrada hoje.</p>
+            </div>
+          </article>
+
+          <details class="manual-card">
+            <summary>Registrar presença manualmente</summary>
+            <div class="manual-content">
+              <label for="manualStudentSelect">Aluno</label>
+              <select id="manualStudentSelect">
+                <option value="">Selecione um aluno</option>
+              </select>
+              <button id="manualAttendanceButton" class="button secondary block" type="button">Confirmar presença manual</button>
+              <p id="manualStatus" class="form-status" aria-live="polite"></p>
+            </div>
+          </details>
+        </aside>
+      </div>
+    </section>
+
+    <section id="panel-cadastro" class="tab-panel" aria-labelledby="Cadastro facial">
+      <div class="two-column-grid">
+        <article class="content-card">
+          <span class="eyebrow">ETAPA 1</span>
+          <h2>Autorização e aluno</h2>
+          <p class="support-text">O cadastro só é liberado depois de registrar a autorização do responsável.</p>
+
+          <div class="form-grid">
+            <label class="full-field" for="enrollmentStudentSelect">
+              <span>Aluno</span>
+              <select id="enrollmentStudentSelect">
+                <option value="">Selecione um aluno matriculado</option>
+              </select>
+            </label>
+
+            <label for="guardianConsentName">
+              <span>Responsável que autorizou</span>
+              <input id="guardianConsentName" type="text" autocomplete="name" placeholder="Nome completo" />
+            </label>
+
+            <label for="guardianConsentDate">
+              <span>Data da autorização</span>
+              <input id="guardianConsentDate" type="date" />
+            </label>
+
+            <label class="full-field" for="guardianConsentReference">
+              <span>Referência do termo ou observação</span>
+              <input id="guardianConsentReference" type="text" placeholder="Ex.: Termo assinado e arquivado na secretaria" />
+            </label>
+          </div>
+
+          <label class="consent-check">
+            <input id="guardianConsentCheck" type="checkbox" />
+            <span>Confirmo que a autorização específica foi registrada e que o responsável recebeu as informações sobre finalidade, armazenamento e exclusão.</span>
+          </label>
+
+          <div class="privacy-mini">
+            <strong>O que será salvo?</strong>
+            <p>Cinco assinaturas matemáticas do rosto. A fotografia usada na captura é descartada imediatamente.</p>
+          </div>
+        </article>
+
+        <article class="content-card capture-card">
+          <span class="eyebrow">ETAPA 2</span>
+          <h2>Capturar cinco amostras</h2>
+          <p id="captureInstruction" class="capture-instruction">Selecione o aluno e inicie a câmera de cadastro.</p>
+
+          <div id="enrollmentPreview" class="enrollment-preview">
+            <video id="enrollmentVideo" autoplay muted playsinline></video>
+            <div class="enrollment-face-guide" aria-hidden="true"></div>
+            <span id="enrollmentPreviewStatus">Câmera desligada</span>
+          </div>
+
+          <div class="capture-progress" id="captureProgress" aria-label="Amostras capturadas">
+            <span data-sample="0">1</span>
+            <span data-sample="1">2</span>
+            <span data-sample="2">3</span>
+            <span data-sample="3">4</span>
+            <span data-sample="4">5</span>
+          </div>
+
+          <div class="capture-actions">
+            <button id="startEnrollmentButton" class="button primary" type="button">Iniciar câmera de cadastro</button>
+            <button id="captureSampleButton" class="button secondary" type="button" disabled>Capturar amostra</button>
+            <button id="resetSamplesButton" class="button ghost" type="button" disabled>Recomeçar</button>
+          </div>
+
+          <button id="saveTemplateButton" class="button primary block" type="button" disabled>Salvar cadastro facial</button>
+          <p id="enrollmentStatus" class="form-status" aria-live="polite"></p>
+        </article>
+      </div>
+    </section>
+
+    <section id="panel-gestao" class="tab-panel" aria-labelledby="Gestão facial">
+      <div class="stats-grid">
+        <article class="stat-card"><span>Alunos matriculados</span><strong id="studentsMetric">0</strong></article>
+        <article class="stat-card"><span>Rostos cadastrados</span><strong id="templatesMetric">0</strong></article>
+        <article class="stat-card"><span>Sem cadastro facial</span><strong id="pendingMetric">0</strong></article>
+        <article class="stat-card"><span>Presenças hoje</span><strong id="attendanceMetric">0</strong></article>
+      </div>
+
+      <article class="content-card management-card">
+        <div class="card-heading">
+          <div>
+            <span class="eyebrow">CADASTROS BIOMÉTRICOS</span>
+            <h2>Alunos autorizados</h2>
+          </div>
+          <button id="refreshDataButton" class="button secondary compact" type="button">Atualizar</button>
+        </div>
+        <div id="templatesList" class="management-list">
+          <p class="empty-state">Nenhum rosto cadastrado.</p>
+        </div>
+      </article>
+
+      <article class="content-card diagnostics-card">
+        <span class="eyebrow">DIAGNÓSTICO DO TABLET</span>
+        <h2>Condições para reconhecimento</h2>
+        <div class="diagnostics-grid">
+          <div><span>Resolução recebida</span><strong id="diagnosticResolution">Não testada</strong></div>
+          <div><span>Motor de IA</span><strong id="diagnosticBackend">Não carregado</strong></div>
+          <div><span>Modelo</span><strong>Human 3.3.6</strong></div>
+          <div><span>Processamento</span><strong>No próprio tablet</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="panel-privacidade" class="tab-panel" aria-labelledby="Privacidade">
+      <article class="content-card privacy-card">
+        <span class="eyebrow">PRIVACIDADE POR PADRÃO</span>
+        <h2>Proteções incorporadas ao sistema</h2>
+        <div class="privacy-grid">
+          <div><strong>Sem fotografias armazenadas</strong><p>A imagem existe somente durante o processamento da câmera e é descartada.</p></div>
+          <div><strong>Acesso restrito</strong><p>Somente usuários autorizados da mesma unidade conseguem acessar as assinaturas faciais.</p></div>
+          <div><strong>Exclusão imediata</strong><p>Direção e coordenação podem remover definitivamente o cadastro facial do aluno.</p></div>
+          <div><strong>Alternativa manual</strong><p>O aluno pode ter a presença registrada sem reconhecimento facial.</p></div>
+          <div><strong>Auditoria</strong><p>Data, horário, usuário, método e indicadores técnicos ficam registrados.</p></div>
+          <div><strong>Sem serviço externo de reconhecimento</strong><p>O vídeo não é enviado para APIs de reconhecimento facial.</p></div>
+        </div>
+
+        <div class="privacy-alert">
+          <strong>Antes do uso real</strong>
+          <p>A escola deve arquivar o termo de autorização, informar claramente a finalidade e manter um procedimento para consulta e exclusão dos dados.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <canvas id="analysisCanvas" width="80" height="60" hidden></canvas>
+  <canvas id="inferenceCanvas" width="640" height="480" hidden></canvas>
+  <script src="/pwa-install.js"></script>
+</body>
+</html>
