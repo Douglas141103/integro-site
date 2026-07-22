@@ -49,7 +49,7 @@ O navegador solicita 640 × 480 e limita a análise a 12 quadros por segundo. Is
 - Cadastre somente alunos com autorização registrada.
 - Faça o cadastro no mesmo tablet usado na entrada, sob a iluminação habitual.
 - Retire boné, máscara ou itens que escondam o rosto.
-- Toque uma vez em **Iniciar cadastro automático** e siga as cinco posições orientadas. O tablet captura as amostras e salva o cadastro sozinho; a captura manual permanece disponível como alternativa.
+- Toque uma vez em **Iniciar cadastro automático** e siga as cinco posições orientadas. Entre uma amostra e outra, a tela mostra uma contagem de cinco segundos para o aluno virar o rosto com calma. O tablet captura as amostras e salva o cadastro sozinho; a captura manual permanece disponível como alternativa.
 - Recadastre quando houver mudança física significativa ou redução persistente na qualidade do reconhecimento.
 
 ## Limites de segurança definidos
