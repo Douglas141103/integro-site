@@ -57,6 +57,7 @@ const CAPTURE_POSES = [
 ];
 
 const PENDING_ATTENDANCE_KEY = 'integro_pending_attendance_v1';
+const ENROLLMENT_POSE_DELAY_MS = 5000;
 
 const state = {
   session: null,
@@ -961,7 +962,11 @@ async function processAutomaticEnrollment(face) {
   if (!automatic.enabled || state.enrollmentSaving || state.enrollmentSamples.length >= CAPTURE_POSES.length) return;
 
   const now = Date.now();
-  if (now < state.enrollmentNextCaptureAt) return;
+  if (now < state.enrollmentNextCaptureAt) {
+    const seconds = Math.max(1, Math.ceil((state.enrollmentNextCaptureAt - now) / 1000));
+    $('enrollmentPreviewStatus').textContent = `Prepare a posição. Próxima captura em ${seconds}s...`;
+    return;
+  }
 
   const progress = updateAutomaticCapture(automatic, {
     qualityAccepted: state.currentQuality?.accepted,
@@ -985,7 +990,7 @@ async function processAutomaticEnrollment(face) {
     return;
   }
 
-  resetEnrollmentAutomation(true, 1700);
+  resetEnrollmentAutomation(true, ENROLLMENT_POSE_DELAY_MS);
   await captureEnrollmentSample({ automatic: true });
 }
 
@@ -1006,7 +1011,7 @@ function resetEnrollmentSamples(options = {}) {
   const resumeAutomatic = options?.resumeAutomatic === true;
   state.enrollmentSamples = [];
   state.blinkSeen = false;
-  resetEnrollmentAutomation(resumeAutomatic, resumeAutomatic ? 900 : 0);
+  resetEnrollmentAutomation(resumeAutomatic, resumeAutomatic ? ENROLLMENT_POSE_DELAY_MS : 0);
   document.querySelectorAll('[data-sample]').forEach(item => item.classList.remove('done'));
   $('saveTemplateButton').disabled = true;
   $('resetSamplesButton').disabled = true;
@@ -1073,7 +1078,7 @@ async function captureEnrollmentSample(options = {}) {
     }
     return true;
   } catch (error) {
-    if (automatic) resetEnrollmentAutomation(true, 1200);
+    if (automatic) resetEnrollmentAutomation(true, ENROLLMENT_POSE_DELAY_MS);
     setFormStatus('enrollmentStatus', error.message, 'error');
     return false;
   }
@@ -1192,7 +1197,7 @@ function bindEvents() {
     try {
       validateEnrollmentForm();
       await startCamera('enrollment');
-      resetEnrollmentAutomation(true, 900);
+      resetEnrollmentAutomation(true, ENROLLMENT_POSE_DELAY_MS);
       $('startEnrollmentButton').disabled = true;
       $('startEnrollmentButton').textContent = 'Cadastro automático ativo';
       $('captureInstruction').textContent = CAPTURE_POSES[state.enrollmentSamples.length] || CAPTURE_POSES[0];
