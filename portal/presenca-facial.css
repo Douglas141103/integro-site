@@ -873,6 +873,17 @@ select:focus {
   top: 165px;
 }
 
+.automation-note {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  color: #174d39;
+  border: 1px solid #a9d8bf;
+  border-radius: 14px;
+  background: #eaf8f0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .enrollment-preview {
   width: min(100%, 460px);
   aspect-ratio: 4 / 3;

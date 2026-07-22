@@ -8,8 +8,9 @@ import {
   formatPercentage,
   getLocalISODate,
   roundEmbedding,
+  updateAutomaticCapture,
   updateStableCandidate,
-} from './presenca-facial-core.mjs';
+} from './presenca-facial-core.mjs?v=20260721-2';
 
 const $ = id => document.getElementById(id);
 const cfg = window.INTEGRO_SUPABASE || {};
@@ -80,6 +81,15 @@ const state = {
   processingAttendance: false,
   pauseRecognitionUntil: 0,
   enrollmentSamples: [],
+  enrollmentAutomation: {
+    enabled: false,
+    stableFrames: 0,
+    countdownEndsAt: 0,
+    remainingMs: 0,
+    ready: false,
+  },
+  enrollmentNextCaptureAt: 0,
+  enrollmentSaving: false,
   setupReady: true,
   deviceId: null,
 };
@@ -494,6 +504,7 @@ async function startCamera(mode) {
     $('cameraPlaceholder').classList.add('hidden');
     hideLoader();
     $('startTerminalButton').disabled = true;
+    $('startEnrollmentButton').disabled = mode === 'enrollment' || !state.setupReady || !roleCanManageBiometrics();
     $('stopCameraButton').disabled = false;
     $('captureSampleButton').disabled = true;
     $('enrollmentPreviewStatus').textContent = 'Posicione o rosto';
@@ -541,6 +552,7 @@ function stopCamera() {
   state.currentQuality = null;
   state.blinkSeen = false;
   state.stableCandidate = null;
+  resetEnrollmentAutomation(false);
 
   state.stream?.getTracks?.().forEach(track => track.stop());
   state.stream = null;
@@ -549,6 +561,7 @@ function stopCamera() {
   $('cameraPlaceholder').classList.remove('hidden');
   $('startTerminalButton').disabled = !state.setupReady;
   $('startEnrollmentButton').disabled = !state.setupReady || !roleCanManageBiometrics();
+  $('startEnrollmentButton').textContent = 'Iniciar cadastro automático';
   $('stopCameraButton').disabled = true;
   $('captureSampleButton').disabled = true;
   $('cameraStage').classList.remove('accepted');
@@ -623,9 +636,16 @@ async function processCameraFrame() {
   $('cameraStage').classList.toggle('accepted', state.currentQuality.accepted);
   $('enrollmentPreview').classList.toggle('ready', state.currentQuality.accepted);
   $('enrollmentPreviewStatus').textContent = state.currentQuality.instruction;
-  $('captureSampleButton').disabled = !(state.mode === 'enrollment' && state.currentQuality.accepted && face?.embedding?.length);
+  $('captureSampleButton').disabled = !(
+    state.mode === 'enrollment'
+    && !state.enrollmentSaving
+    && state.enrollmentSamples.length < CAPTURE_POSES.length
+    && state.currentQuality.accepted
+    && face?.embedding?.length
+  );
 
   if (state.mode === 'terminal') await processTerminalRecognition(face);
+  else if (state.mode === 'enrollment') await processAutomaticEnrollment(face);
 }
 
 function drawCroppedFrame(video, canvas) {
@@ -905,6 +925,70 @@ function speak(message) {
   }
 }
 
+function playCaptureTone() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.08, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.14);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.14);
+    oscillator.addEventListener('ended', () => context.close().catch(() => {}), { once: true });
+  } catch (error) {
+    console.debug('Aviso sonoro não disponível:', error);
+  }
+}
+
+function resetEnrollmentAutomation(enabled = false, delayMs = 0) {
+  state.enrollmentAutomation = {
+    enabled,
+    stableFrames: 0,
+    countdownEndsAt: 0,
+    remainingMs: 0,
+    ready: false,
+  };
+  state.enrollmentNextCaptureAt = enabled ? Date.now() + delayMs : 0;
+}
+
+async function processAutomaticEnrollment(face) {
+  const automatic = state.enrollmentAutomation;
+  if (!automatic.enabled || state.enrollmentSaving || state.enrollmentSamples.length >= CAPTURE_POSES.length) return;
+
+  const now = Date.now();
+  if (now < state.enrollmentNextCaptureAt) return;
+
+  const progress = updateAutomaticCapture(automatic, {
+    qualityAccepted: state.currentQuality?.accepted,
+    embeddingReady: Boolean(face?.embedding?.length),
+  }, now, {
+    requiredFrames: 2,
+    countdownMs: 1200,
+  });
+
+  state.enrollmentAutomation = { ...progress, enabled: true };
+  if (!state.currentQuality?.accepted || !face?.embedding?.length) return;
+
+  if (progress.stableFrames < 2) {
+    $('enrollmentPreviewStatus').textContent = 'Ótimo. Mantenha essa posição...';
+    return;
+  }
+
+  if (!progress.ready) {
+    const seconds = Math.max(1, Math.ceil(progress.remainingMs / 1000));
+    $('enrollmentPreviewStatus').textContent = `Captura automática em ${seconds}...`;
+    return;
+  }
+
+  resetEnrollmentAutomation(true, 1700);
+  await captureEnrollmentSample({ automatic: true });
+}
+
 function validateEnrollmentForm() {
   const studentId = $('enrollmentStudentSelect').value;
   const guardianName = $('guardianConsentName').value.trim();
@@ -918,17 +1002,28 @@ function validateEnrollmentForm() {
   return { studentId, guardianName, consentDate };
 }
 
-function resetEnrollmentSamples() {
+function resetEnrollmentSamples(options = {}) {
+  const resumeAutomatic = options?.resumeAutomatic === true;
   state.enrollmentSamples = [];
   state.blinkSeen = false;
+  resetEnrollmentAutomation(resumeAutomatic, resumeAutomatic ? 900 : 0);
   document.querySelectorAll('[data-sample]').forEach(item => item.classList.remove('done'));
   $('saveTemplateButton').disabled = true;
   $('resetSamplesButton').disabled = true;
   $('captureInstruction').textContent = CAPTURE_POSES[0];
-  setFormStatus('enrollmentStatus', 'As amostras anteriores foram descartadas.');
+  if (resumeAutomatic) {
+    $('startEnrollmentButton').disabled = true;
+    $('startEnrollmentButton').textContent = 'Cadastro automático ativo';
+    setFormStatus('enrollmentStatus', 'Reiniciado. Posicione o rosto e o tablet fará as capturas sozinho.');
+  } else {
+    $('startEnrollmentButton').disabled = !state.setupReady || !roleCanManageBiometrics();
+    $('startEnrollmentButton').textContent = 'Iniciar cadastro automático';
+    setFormStatus('enrollmentStatus', 'As amostras anteriores foram descartadas.');
+  }
 }
 
-function captureEnrollmentSample() {
+async function captureEnrollmentSample(options = {}) {
+  const automatic = options?.automatic === true;
   try {
     validateEnrollmentForm();
     if (!state.currentQuality?.accepted || !state.currentFace?.embedding?.length) {
@@ -950,23 +1045,44 @@ function captureEnrollmentSample() {
 
     state.enrollmentSamples.push(embedding);
     document.querySelector(`[data-sample="${index}"]`)?.classList.add('done');
+    playCaptureTone();
     $('resetSamplesButton').disabled = false;
     $('captureSampleButton').disabled = true;
 
     if (state.enrollmentSamples.length === CAPTURE_POSES.length) {
-      $('captureInstruction').textContent = 'Cinco amostras concluídas. Confira a autorização e salve o cadastro.';
+      resetEnrollmentAutomation(false);
+      $('captureInstruction').textContent = automatic
+        ? 'Cinco amostras concluídas. Salvando o cadastro automaticamente...'
+        : 'Cinco amostras concluídas. Confira a autorização e salve o cadastro.';
       $('saveTemplateButton').disabled = false;
-      setFormStatus('enrollmentStatus', 'Captura concluída. As imagens já foram descartadas.', 'ok');
+      setFormStatus(
+        'enrollmentStatus',
+        automatic ? 'Captura concluída. Salvando automaticamente...' : 'Captura concluída. As imagens já foram descartadas.',
+        'ok',
+      );
+      if (automatic) await saveFaceTemplate({ automatic: true });
     } else {
-      $('captureInstruction').textContent = CAPTURE_POSES[state.enrollmentSamples.length];
-      setFormStatus('enrollmentStatus', `Amostra ${state.enrollmentSamples.length} de 5 capturada.`, 'ok');
+      const nextInstruction = CAPTURE_POSES[state.enrollmentSamples.length];
+      $('captureInstruction').textContent = nextInstruction;
+      setFormStatus(
+        'enrollmentStatus',
+        `Amostra ${state.enrollmentSamples.length} de 5 capturada${automatic ? ' automaticamente' : ''}. Prepare a próxima posição.`,
+        'ok',
+      );
+      if (automatic) speak(`Amostra ${state.enrollmentSamples.length} capturada. ${nextInstruction}.`);
     }
+    return true;
   } catch (error) {
+    if (automatic) resetEnrollmentAutomation(true, 1200);
     setFormStatus('enrollmentStatus', error.message, 'error');
+    return false;
   }
 }
 
-async function saveFaceTemplate() {
+async function saveFaceTemplate(options = {}) {
+  const automatic = options?.automatic === true;
+  if (state.enrollmentSaving) return;
+  state.enrollmentSaving = true;
   try {
     if (!roleCanManageBiometrics()) throw new Error('Somente direção, coordenação ou administração podem cadastrar rostos.');
     const form = validateEnrollmentForm();
@@ -1005,11 +1121,20 @@ async function saveFaceTemplate() {
     $('guardianConsentCheck').checked = false;
     $('saveTemplateButton').disabled = true;
     $('resetSamplesButton').disabled = true;
+    resetEnrollmentAutomation(false);
+    $('startEnrollmentButton').disabled = !state.setupReady || !roleCanManageBiometrics();
+    $('startEnrollmentButton').textContent = 'Cadastrar próximo aluno';
     await loadTemplates();
+    if (automatic) speak(`Cadastro facial de ${student?.full_name || 'aluno'} concluído.`);
   } catch (error) {
     if (tableIsMissing(error)) setSetupReady(false);
+    resetEnrollmentAutomation(false);
+    $('startEnrollmentButton').disabled = !state.setupReady || !roleCanManageBiometrics();
+    $('startEnrollmentButton').textContent = 'Tentar cadastro novamente';
     $('saveTemplateButton').disabled = state.enrollmentSamples.length !== CAPTURE_POSES.length;
     setFormStatus('enrollmentStatus', error.message || 'Erro ao salvar o cadastro facial.', 'error');
+  } finally {
+    state.enrollmentSaving = false;
   }
 }
 
@@ -1067,16 +1192,23 @@ function bindEvents() {
     try {
       validateEnrollmentForm();
       await startCamera('enrollment');
+      resetEnrollmentAutomation(true, 900);
+      $('startEnrollmentButton').disabled = true;
+      $('startEnrollmentButton').textContent = 'Cadastro automático ativo';
       $('captureInstruction').textContent = CAPTURE_POSES[state.enrollmentSamples.length] || CAPTURE_POSES[0];
+      setFormStatus('enrollmentStatus', 'Cadastro automático iniciado. Siga as orientações; não é necessário apertar a cada captura.', 'ok');
+      speak(`Cadastro automático iniciado. ${CAPTURE_POSES[state.enrollmentSamples.length] || CAPTURE_POSES[0]}. Pisque uma vez.`);
     } catch (error) {
       setFormStatus('enrollmentStatus', error.message, 'error');
     }
   });
   $('stopCameraButton').addEventListener('click', stopCamera);
   $('fullscreenButton').addEventListener('click', toggleFullscreen);
-  $('captureSampleButton').addEventListener('click', captureEnrollmentSample);
-  $('resetSamplesButton').addEventListener('click', resetEnrollmentSamples);
-  $('saveTemplateButton').addEventListener('click', saveFaceTemplate);
+  $('captureSampleButton').addEventListener('click', () => captureEnrollmentSample().catch(console.error));
+  $('resetSamplesButton').addEventListener('click', () => {
+    resetEnrollmentSamples({ resumeAutomatic: state.cameraRunning && state.mode === 'enrollment' });
+  });
+  $('saveTemplateButton').addEventListener('click', () => saveFaceTemplate().catch(console.error));
   $('manualAttendanceButton').addEventListener('click', registerManualAttendance);
   $('refreshDataButton').addEventListener('click', () => loadAllData().catch(error => alert(error.message)));
   $('logoutButton').addEventListener('click', async () => {
@@ -1088,6 +1220,7 @@ function bindEvents() {
   $('enrollmentStudentSelect').addEventListener('change', () => {
     const student = studentById($('enrollmentStudentSelect').value);
     $('guardianConsentName').value = student?.guardian_1_name || '';
+    $('guardianConsentCheck').checked = false;
     resetEnrollmentSamples();
   });
 

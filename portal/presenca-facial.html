@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png" />
-  <link rel="stylesheet" href="./presenca-facial.css?v=20260721-1" />
+  <link rel="stylesheet" href="./presenca-facial.css?v=20260721-2" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script type="module" src="./presenca-facial.js?v=20260721-1"></script>
+  <script type="module" src="./presenca-facial.js?v=20260721-2"></script>
 </head>
 
 <body>
@@ -183,7 +183,8 @@
 
         <article class="content-card capture-card">
           <span class="eyebrow">ETAPA 2</span>
-          <h2>Capturar cinco amostras</h2>
+          <h2>Cadastro automático em cinco amostras</h2>
+          <p class="automation-note"><strong>Sem apertar a cada foto:</strong> olhe para a câmera, siga as posições indicadas e o tablet fará as capturas e salvará sozinho.</p>
           <p id="captureInstruction" class="capture-instruction">Selecione o aluno e inicie a câmera de cadastro.</p>
 
           <div id="enrollmentPreview" class="enrollment-preview">
@@ -201,12 +202,12 @@
           </div>
 
           <div class="capture-actions">
-            <button id="startEnrollmentButton" class="button primary" type="button">Iniciar câmera de cadastro</button>
-            <button id="captureSampleButton" class="button secondary" type="button" disabled>Capturar amostra</button>
+            <button id="startEnrollmentButton" class="button primary" type="button">Iniciar cadastro automático</button>
+            <button id="captureSampleButton" class="button secondary" type="button" disabled>Capturar agora (opcional)</button>
             <button id="resetSamplesButton" class="button ghost" type="button" disabled>Recomeçar</button>
           </div>
 
-          <button id="saveTemplateButton" class="button primary block" type="button" disabled>Salvar cadastro facial</button>
+          <button id="saveTemplateButton" class="button primary block" type="button" disabled>Salvar agora (alternativa manual)</button>
           <p id="enrollmentStatus" class="form-status" aria-live="polite"></p>
         </article>
       </div>
