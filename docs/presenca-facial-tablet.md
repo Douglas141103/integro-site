@@ -5,7 +5,7 @@
 O módulo `portal/presenca-facial.html` acrescenta ao Portal do Parceiro:
 
 - terminal de reconhecimento facial individual;
-- cadastro orientado com cinco amostras por aluno;
+- cadastro automático e orientado com cinco amostras por aluno;
 - controle de enquadramento, iluminação e nitidez;
 - confirmação por piscar, antisspoofing e prova de vida;
 - três leituras consecutivas antes de registrar a presença;
@@ -49,7 +49,7 @@ O navegador solicita 640 × 480 e limita a análise a 12 quadros por segundo. Is
 - Cadastre somente alunos com autorização registrada.
 - Faça o cadastro no mesmo tablet usado na entrada, sob a iluminação habitual.
 - Retire boné, máscara ou itens que escondam o rosto.
-- Capture as cinco posições orientadas na tela.
+- Toque uma vez em **Iniciar cadastro automático** e siga as cinco posições orientadas. O tablet captura as amostras e salva o cadastro sozinho; a captura manual permanece disponível como alternativa.
 - Recadastre quando houver mudança física significativa ou redução persistente na qualidade do reconhecimento.
 
 ## Limites de segurança definidos
