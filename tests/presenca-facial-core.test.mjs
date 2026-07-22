@@ -7,6 +7,7 @@ import {
   findBestCandidate,
   getLocalISODate,
   roundEmbedding,
+  updateAutomaticCapture,
   updateStableCandidate,
 } from '../portal/presenca-facial-core.mjs';
 
@@ -53,6 +54,35 @@ test('exige três leituras consecutivas do mesmo aluno', () => {
   assert.equal(stable.ready, false);
   stable = updateStableCandidate(stable, match, 2000);
   assert.equal(stable.ready, true);
+});
+
+test('captura automática aguarda estabilidade e contagem regressiva', () => {
+  const input = { qualityAccepted: true, embeddingReady: true };
+  let capture = updateAutomaticCapture(null, input, 1000, { requiredFrames: 2, countdownMs: 1200 });
+  assert.equal(capture.stableFrames, 1);
+  assert.equal(capture.ready, false);
+
+  capture = updateAutomaticCapture(capture, input, 1500, { requiredFrames: 2, countdownMs: 1200 });
+  assert.equal(capture.countdownEndsAt, 2700);
+  assert.equal(capture.ready, false);
+
+  capture = updateAutomaticCapture(capture, input, 2700, { requiredFrames: 2, countdownMs: 1200 });
+  assert.equal(capture.ready, true);
+});
+
+test('captura automática reinicia quando a qualidade cai', () => {
+  const waiting = updateAutomaticCapture(
+    { stableFrames: 3, countdownEndsAt: 2200 },
+    { qualityAccepted: false, embeddingReady: true },
+    1800,
+  );
+
+  assert.deepEqual(waiting, {
+    stableFrames: 0,
+    countdownEndsAt: 0,
+    remainingMs: 0,
+    ready: false,
+  });
 });
 
 test('validação de qualidade exige luz, nitidez, vida e piscar', () => {
