@@ -109,6 +109,44 @@ export function updateStableCandidate(previous, candidate, now = Date.now(), opt
   };
 }
 
+export function updateAutomaticCapture(previous = {}, input = {}, now = Date.now(), options = {}) {
+  previous = previous || {};
+  const requiredFrames = Math.max(1, Number(options.requiredFrames) || 2);
+  const countdownMs = Math.max(0, Number(options.countdownMs) || 1200);
+  const eligible = Boolean(input.qualityAccepted && input.embeddingReady);
+
+  if (!eligible) {
+    return {
+      stableFrames: 0,
+      countdownEndsAt: 0,
+      remainingMs: 0,
+      ready: false,
+    };
+  }
+
+  const stableFrames = Math.max(0, Number(previous.stableFrames) || 0) + 1;
+  let countdownEndsAt = Math.max(0, Number(previous.countdownEndsAt) || 0);
+
+  if (stableFrames < requiredFrames) {
+    return {
+      stableFrames,
+      countdownEndsAt: 0,
+      remainingMs: countdownMs,
+      ready: false,
+    };
+  }
+
+  if (!countdownEndsAt) countdownEndsAt = now + countdownMs;
+  const remainingMs = Math.max(0, countdownEndsAt - now);
+
+  return {
+    stableFrames,
+    countdownEndsAt,
+    remainingMs,
+    ready: remainingMs === 0,
+  };
+}
+
 export function getLocalISODate(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
