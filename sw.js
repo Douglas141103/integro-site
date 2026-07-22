@@ -1,4 +1,4 @@
-const CACHE_NAME = "integro-pwa-v20260627-instagram-stories";
+const CACHE_NAME = "integro-pwa-v20260721-presenca-facial";
 
 const SAFE_STATIC_ASSETS = [
   "/",
@@ -25,7 +25,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
-        names.map((name) => caches.delete(name))
+        names
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       )
     )
   );
