@@ -1,4 +1,4 @@
-const CACHE_NAME = "integro-pwa-v20260721-presenca-facial-auto";
+const CACHE_NAME = "integro-pwa-v20260722-installer-restaurado";
 
 const SAFE_STATIC_ASSETS = [
   "/",
