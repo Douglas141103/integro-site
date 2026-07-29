@@ -1,6 +1,7 @@
 (function () {
   if (window.__INTEGRO_FINANCEIRO_SALDO_RECONCILIADO__) return;
   window.__INTEGRO_FINANCEIRO_SALDO_RECONCILIADO__ = true;
+  window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true;
 
   const cfg = window.INTEGRO_SUPABASE || {};
   const supabaseGlobal = window.supabase;
@@ -35,6 +36,8 @@
     duplicatesIgnored: [],
     snapshot: null,
     loading: false,
+    refreshQueued: false,
+    reconcileQueued: false,
     reconciliationAttempted: false,
   };
 
@@ -102,6 +105,10 @@
     const source = String(movement?.source_bucket || "").toLowerCase();
     const destination = String(movement?.destination_bucket || "").toLowerCase();
     const text = `${movement?.description || ""} ${movement?.notes || ""}`.toLowerCase();
+
+    if (text.includes(RECONCILIATION_MARK.toLowerCase())) {
+      return false;
+    }
 
     return (
       source === "ajuste_administrativo" ||
@@ -404,24 +411,7 @@
     state.movements = deduped.kept;
     state.duplicatesIgnored = deduped.duplicateIds;
     state.snapshot = calculateSnapshot();
-  }
-
-  async function cleanupDefiniteDuplicates() {
-    if (!state.duplicatesIgnored.length) return 0;
-
-    const ids = state.duplicatesIgnored.slice();
-    const { error } = await db
-      .from("finance_cash_cycle_movements")
-      .delete()
-      .in("id", ids)
-      .eq("school_id", state.school.id);
-
-    if (error) {
-      console.warn("INTEGRO: duplicidades identificadas, mas não foi possível removê-las.", error);
-      return 0;
-    }
-
-    return ids.length;
+    window.INTEGRO_FINANCE_SNAPSHOT = state.snapshot;
   }
 
   async function reconcileCurrentCycleOnce() {
@@ -458,7 +448,7 @@
       .insert({
         school_id: state.school.id,
         cycle_id: state.cycle.id,
-        movement_type: delta > 0 ? "saldo_anterior" : "reconciliacao_saldo",
+        movement_type: delta > 0 ? "ajuste_credito" : "ajuste_debito",
         source_bucket: source,
         destination_bucket: destination,
         amount,
@@ -505,6 +495,23 @@
       .finance-balance-item.final { background: #e8f5ee; border-color: #acd3bd; }
       .cash-value-line.balance-prior strong { color: #0b5242; }
       .balance-kpi-note { display:block; margin-top:4px; color:#61746d; font-size:.72rem; font-weight:700; }
+      .shareholder-negative-note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid rgba(216, 169, 75, .38);
+        border-radius: 14px;
+        background: #fff8e6;
+        color: #624000;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      .shareholder-negative-limit {
+        margin-top: 8px;
+        color: #61746d;
+        font-size: .8rem;
+        line-height: 1.35;
+      }
       @media (max-width: 980px) { .finance-balance-grid { grid-template-columns: 1fr; } }
     `;
     document.head.appendChild(style);
@@ -619,6 +626,25 @@
       const availableStrong = availableLine.querySelector("strong");
       if (availableStrong) availableStrong.textContent = money(data.available);
       availableLine.classList.toggle("warning", data.available < 0);
+
+      card.querySelectorAll(".shareholder-negative-note, .shareholder-negative-limit").forEach((element) => {
+        element.remove();
+      });
+
+      if (bucket.startsWith("acionista")) {
+        if (data.available < 0) {
+          const note = document.createElement("div");
+          note.className = "shareholder-negative-note";
+          note.textContent =
+            `Saldo negativo de ${money(data.available)}. Esse valor será descontado automaticamente do próximo ciclo.`;
+          card.querySelector(".cash-bucket-actions")?.insertAdjacentElement("beforebegin", note);
+        }
+
+        const limit = document.createElement("div");
+        limit.className = "shareholder-negative-limit";
+        limit.textContent = "Limite de segurança: não permitir saldo menor que R$ 1.000,00 negativo.";
+        card.querySelector(".cash-bucket-actions")?.insertAdjacentElement("afterend", limit);
+      }
     });
   }
 
@@ -638,15 +664,23 @@
   }
 
   async function refresh(options = {}) {
-    if (state.loading) return;
+    if (state.loading) {
+      state.refreshQueued = true;
+      if (options.reconcile !== false) {
+        state.reconcileQueued = true;
+      }
+      return;
+    }
     state.loading = true;
 
     try {
       await loadData();
 
-      if (options.cleanup !== false && state.duplicatesIgnored.length) {
-        const removed = await cleanupDefiniteDuplicates();
-        if (removed) await loadData();
+      if (state.duplicatesIgnored.length) {
+        console.warn(
+          `INTEGRO: ${state.duplicatesIgnored.length} possível(is) duplicidade(s) ignorada(s) no cálculo. ` +
+          "Nenhum registro foi excluído automaticamente."
+        );
       }
 
       if (options.reconcile !== false) {
@@ -664,16 +698,27 @@
       showPanelMessage(error.message || "Erro ao conferir o saldo financeiro.", "error");
     } finally {
       state.loading = false;
+
+      if (state.refreshQueued) {
+        const shouldReconcile = state.reconcileQueued;
+        state.refreshQueued = false;
+        state.reconcileQueued = false;
+        setTimeout(() => refresh({ reconcile: shouldReconcile }), 0);
+      }
     }
   }
 
   function bind() {
-    document.addEventListener("click", (event) => {
-      if (event.target.closest("#cashRefreshBtn")) {
-        setTimeout(() => refresh({ cleanup: true, reconcile: false }), 500);
-        setTimeout(paint, 1500);
+    const updateFromDatabase = () => {
+      if (state.snapshot) {
+        paint();
       }
-    }, true);
+
+      refresh({ reconcile: false });
+    };
+
+    document.addEventListener("integro:cash-cycle-base-rendered", updateFromDatabase);
+    document.addEventListener("integro:finance-data-changed", updateFromDatabase);
   }
 
   function start() {
@@ -684,8 +729,7 @@
       tries += 1;
       if ($("cashCyclePanel") && $("saldoAtual")) {
         clearInterval(timer);
-        refresh({ cleanup: true, reconcile: true });
-        setInterval(paint, 3000);
+        refresh({ reconcile: true });
       } else if (tries >= 40) {
         clearInterval(timer);
       }

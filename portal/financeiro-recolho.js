@@ -226,6 +226,16 @@
     return labels[type] || type || "Movimento";
   }
 
+  function availableForBucket(bucket) {
+    const unifiedValue = window.INTEGRO_FINANCE_SNAPSHOT?.buckets?.[bucket]?.available;
+
+    if (Number.isFinite(Number(unifiedValue))) {
+      return Number(unifiedValue);
+    }
+
+    return Number(state.totals?.buckets?.[bucket]?.available || 0);
+  }
+
   function isAdministrativeAdjustment(movement) {
     const type = String(movement?.movement_type || "").toLowerCase();
     const source = String(movement?.source_bucket || "").toLowerCase();
@@ -597,19 +607,32 @@
     $("cashCyclePeriod").textContent =
       `${formatDateBR(state.cycle.start_date)} a ${formatDateBR(state.cycle.end_date)}`;
 
-    $("cashTotalEntries").textContent = money(state.totals.totalEntries);
-    $("cashTotalDebits").textContent = money(state.totals.totalDebits);
-    $("cashCycleBalance").textContent = money(state.totals.cycleBalance);
+    if (!window.__INTEGRO_FINANCE_SINGLE_RENDERER__) {
+      $("cashTotalEntries").textContent = money(state.totals.totalEntries);
+      $("cashTotalDebits").textContent = money(state.totals.totalDebits);
+      $("cashCycleBalance").textContent = money(state.totals.cycleBalance);
+    }
+
     $("cashCycleStatus").textContent = state.cycle.status === "fechado" ? "Fechado" : "Aberto";
 
     renderBuckets();
     renderMovements();
+
+    document.dispatchEvent(new CustomEvent("integro:cash-cycle-base-rendered", {
+      detail: {
+        cycleId: state.cycle.id,
+        cycleKey: state.cycle.cycle_key
+      }
+    }));
   }
 
   function renderBuckets() {
     const grid = $("cashDistributionGrid");
 
     if (!grid) return;
+
+    const valuesDelegated = Boolean(window.__INTEGRO_FINANCE_SINGLE_RENDERER__);
+    const displayValue = (value) => valuesDelegated ? "—" : money(value);
 
     grid.innerHTML = VISIBLE_BUCKET_ORDER.map((bucket) => {
       const item = state.totals.buckets[bucket];
@@ -625,22 +648,22 @@
           <div class="cash-bucket-values">
             <div class="cash-value-line">
               <span>Valor previsto</span>
-              <strong>${money(item.base)}</strong>
+              <strong>${displayValue(item.base)}</strong>
             </div>
 
             <div class="cash-value-line">
               <span>Entradas internas</span>
-              <strong>${money(item.visibleCredits)}</strong>
+              <strong>${displayValue(item.visibleCredits)}</strong>
             </div>
 
             <div class="cash-value-line">
               <span>Usado / pago</span>
-              <strong>${money(item.visibleDebits)}</strong>
+              <strong>${displayValue(item.visibleDebits)}</strong>
             </div>
 
-            <div class="cash-value-line available ${item.available < 0 ? "warning" : ""}">
+            <div class="cash-value-line available ${!valuesDelegated && item.available < 0 ? "warning" : ""}">
               <span>Disponível ajustado</span>
-              <strong>${money(item.available)}</strong>
+              <strong>${displayValue(item.available)}</strong>
             </div>
           </div>
 
@@ -750,8 +773,7 @@
   }
 
   function openMovementModal(action, bucket) {
-    const totals = state.totals?.buckets || {};
-    const available = totals[bucket]?.available || 0;
+    const available = availableForBucket(bucket);
 
     state.modalAction = {
       action,
@@ -845,9 +867,7 @@
       return;
     }
 
-    const available = source && state.totals?.buckets?.[source]
-      ? Number(state.totals.buckets[source].available || 0)
-      : null;
+    const available = source ? availableForBucket(source) : null;
 
     if (source && source !== "ajuste_administrativo" && amount > available) {
       setModalMessage(`Valor maior que o disponível em ${bucketLabel(source)}. Disponível: ${money(available)}.`, "error");
@@ -899,7 +919,7 @@
   }
 
   async function transferOperationsRestToFund() {
-    const available = Number(state.totals?.buckets?.operacoes?.available || 0);
+    const available = availableForBucket("operacoes");
 
     if (available <= 0) {
       alert("Não há restante disponível em Contas e operações para transferir.");
@@ -959,13 +979,18 @@
     }
 
     const pendingShareholders = ["acionista_1", "acionista_2", "acionista_3"]
-      .filter((bucket) => Number(state.totals?.buckets?.[bucket]?.available || 0) > 0.01);
+      .filter((bucket) => availableForBucket(bucket) > 0.01);
+
+    const unifiedSnapshot = window.INTEGRO_FINANCE_SNAPSHOT;
+    const totalEntries = Number(unifiedSnapshot?.currentEntriesTotal ?? state.totals.totalEntries);
+    const totalDebits = Number(unifiedSnapshot?.currentExternal?.debits ?? state.totals.totalDebits);
+    const cycleBalance = Number(unifiedSnapshot?.currentBalance ?? state.totals.cycleBalance);
 
     let message =
       `Deseja fechar o ciclo ${formatDateBR(state.cycle.start_date)} a ${formatDateBR(state.cycle.end_date)}?\n\n` +
-      `Total recebido: ${money(state.totals.totalEntries)}\n` +
-      `Total utilizado/pago: ${money(state.totals.totalDebits)}\n` +
-      `Saldo do ciclo: ${money(state.totals.cycleBalance)}\n`;
+      `Total recebido: ${money(totalEntries)}\n` +
+      `Total utilizado/pago: ${money(totalDebits)}\n` +
+      `Saldo do ciclo: ${money(cycleBalance)}\n`;
 
     if (pendingShareholders.length) {
       message += `\nAtenção: ainda há saldo disponível para acionistas.\n`;
@@ -1008,9 +1033,22 @@
       return;
     }
 
+    const unifiedSnapshot = window.INTEGRO_FINANCE_SNAPSHOT;
+
     const bucketRows = VISIBLE_BUCKET_ORDER
       .map((bucket) => {
-        const item = state.totals.buckets[bucket];
+        const original = state.totals.buckets[bucket];
+        const reconciled = unifiedSnapshot?.buckets?.[bucket];
+        const item = reconciled
+          ? {
+              label: original.label,
+              percentLabel: original.percentLabel,
+              base: reconciled.base,
+              visibleCredits: reconciled.credits,
+              visibleDebits: reconciled.debits,
+              available: reconciled.available
+            }
+          : original;
 
         return `
           <tr>
@@ -1064,9 +1102,9 @@
   <p>Ciclo empresarial: ${safe(formatDateBR(state.cycle.start_date))} a ${safe(formatDateBR(state.cycle.end_date))}</p>
 
   <div class="box">
-    <strong>Total recebido:</strong> ${money(state.totals.totalEntries)}<br>
-    <strong>Total utilizado/pago:</strong> ${money(state.totals.totalDebits)}<br>
-    <strong>Saldo do ciclo:</strong> ${money(state.totals.cycleBalance)}<br>
+    <strong>Total recebido:</strong> ${money(unifiedSnapshot?.currentEntriesTotal ?? state.totals.totalEntries)}<br>
+    <strong>Total utilizado/pago:</strong> ${money(unifiedSnapshot?.currentExternal?.debits ?? state.totals.totalDebits)}<br>
+    <strong>Saldo do ciclo:</strong> ${money(unifiedSnapshot?.currentBalance ?? state.totals.cycleBalance)}<br>
     <strong>Status:</strong> ${safe(state.cycle.status)}
   </div>
 
@@ -1215,7 +1253,7 @@
         }
 
         const available = bucket !== "ajuste_administrativo"
-          ? Number(state.totals?.buckets?.[bucket]?.available || 0)
+          ? availableForBucket(bucket)
           : amount;
 
         if (bucket !== "ajuste_administrativo" && amount > available) {
@@ -1301,10 +1339,6 @@
         form.reset();
 
         await reloadCashCycle();
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 700);
       } catch (error) {
         console.error(error);
         alert(error.message || "Erro ao registrar saída no Recolho do Caixa.");
