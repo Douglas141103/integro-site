@@ -405,10 +405,15 @@ function renderKpis() {
   const entradas = state.entries.reduce((acc, e) => acc + Number(e.amount_paid || 0), 0);
   const saidas = state.expenses.reduce((acc, e) => acc + Number(e.amount || 0), 0);
 
-  $('totalEntradas').textContent = money(entradas);
-  $('totalSaidas').textContent = money(saidas);
-  $('saldoAtual').textContent = money(entradas - saidas);
+  if (!window.__INTEGRO_FINANCE_SINGLE_RENDERER__) {
+    $('totalEntradas').textContent = money(entradas);
+    $('totalSaidas').textContent = money(saidas);
+    $('saldoAtual').textContent = money(entradas - saidas);
+  }
+
   $('recibosCount').textContent = state.entries.length;
+
+  document.dispatchEvent(new CustomEvent('integro:finance-data-changed'));
 }
 
 function renderPackages() {

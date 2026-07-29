@@ -329,10 +329,11 @@
 
     const isFinancePage = location.pathname.endsWith("/portal/financeiro.html") || location.pathname.includes("/portal/financeiro");
     if (isFinancePage) {
+      window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true;
       loadScript("cashExtractsScript", "/portal/financeiro-recolho-extratos.js?v=20260627-extratos-recolho-v1");
-      loadScript("cashAcionistaScript", "/portal/financeiro-recolho-acionista.js?v=20260702-acionista-v1");
+      loadScript("cashAcionistaScript", "/portal/financeiro-recolho-acionista.js?v=20260729-single-renderer-v1");
       loadScript("financeMonthlyCalculatorScript", "/portal/financeiro-calculadora-mensalidades.js?v=20260704-calculadora-financeiro-v1");
-      loadScript("financeBalanceReconciliationScript", "/portal/financeiro-saldo-reconciliacao.js?v=20260712-saldo-1055-83-v1");
+      loadScript("financeBalanceReconciliationScript", "/portal/financeiro-saldo-reconciliacao.js?v=20260729-single-renderer-v1");
     }
 
     const isSchoolManagementPage = location.pathname.endsWith("/portal/gestao-escolar.html") || location.pathname.includes("/portal/gestao-escolar");
