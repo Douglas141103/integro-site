@@ -1,19 +1,585 @@
-(function(){
-if(window.__RECOLHO_ACIONISTA_LIMITE__)return;window.__RECOLHO_ACIONISTA_LIMITE__=true;
-const cfg=window.INTEGRO_SUPABASE,sg=window.supabase;if(!cfg||!sg?.createClient)return;const db=sg.createClient(cfg.url,cfg.anonKey);
-const FIRST='2026-06-09',DAY=9,LIM=-1000,AC=['acionista_1','acionista_2','acionista_3'],ORDER=['operacoes','fundo_caixa','acionista_1','acionista_2','acionista_3'],P={operacoes:.30,fundo_caixa:.10,acionista_1:.20,acionista_2:.20,acionista_3:.20},N={acionista_1:'Acionista 1',acionista_2:'Acionista 2',acionista_3:'Acionista 3',operacoes:'Contas e operações',fundo_caixa:'Fundo de caixa'};
-function $(id){return document.getElementById(id)}function ac(b){return AC.includes(b)}function m(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}function z(v){return String(v).padStart(2,'0')}function iso(d){return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())}function pd(s){const p=String(s).slice(0,10).split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}function am(d,n){return new Date(d.getFullYear(),d.getMonth()+n,d.getDate())}function ad(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}function cur(){let f=pd(FIRST),r=new Date(),s=new Date(r.getFullYear(),r.getMonth(),DAY);if(r<f)s=f;else if(r.getDate()<DAY)s=new Date(r.getFullYear(),r.getMonth()-1,DAY);let e=ad(am(s,1),-1);return{start:iso(s),end:iso(e),key:iso(s).slice(0,7)}}
-function admin(x){let t=String(x?.movement_type||'').toLowerCase(),s=String(x?.source_bucket||'').toLowerCase(),d=String(x?.destination_bucket||'').toLowerCase(),a=(String(x?.description||'')+' '+String(x?.notes||'')).toLowerCase();return s==='ajuste_administrativo'||d==='ajuste_administrativo'||t==='ajuste_credito'||t==='ajuste_debito'||a.includes('ajuste administrativo')||a.includes('ajuste interno')}
-function empty(){return{acionista_1:0,acionista_2:0,acionista_3:0}}
-function calc(entries,movs,carry){let total=(entries||[]).reduce((s,e)=>s+Number(e.amount_paid||0),0),b={};ORDER.forEach(k=>{let c=ac(k)?Number(carry?.[k]||0):0;b[k]={base:total*P[k],prior:c,debits:0,credits:0,visibleDebits:0,visibleCredits:0,available:total*P[k]+c}});(movs||[]).forEach(x=>{let val=Number(x.amount||0),hid=admin(x);if(x.source_bucket&&b[x.source_bucket]){b[x.source_bucket].debits+=val;if(!hid)b[x.source_bucket].visibleDebits+=val}if(x.destination_bucket&&b[x.destination_bucket]){b[x.destination_bucket].credits+=val;if(!hid)b[x.destination_bucket].visibleCredits+=val}});ORDER.forEach(k=>b[k].available=b[k].base+b[k].prior+b[k].credits-b[k].debits);return{total,b}}
-async function ctx(){const u=await db.auth.getUser();if(u.error||!u.data?.user)throw new Error('Usuário não autenticado.');const pr=await db.from('profiles').select('id,school_id').eq('id',u.data.user.id).maybeSingle();if(pr.error||!pr.data)throw new Error('Perfil não encontrado.');const sc=await db.from('schools').select('id,name').eq('id',pr.data.school_id).maybeSingle();if(sc.error||!sc.data)throw new Error('Unidade não encontrada.');let r=cur();const cy=await db.from('finance_cash_cycles').upsert({school_id:sc.data.id,cycle_key:r.key,start_date:r.start,end_date:r.end,status:'aberto',created_by:u.data.user.id,updated_at:new Date().toISOString()},{onConflict:'school_id,cycle_key'}).select('*').single();if(cy.error)throw cy.error;return{user:u.data.user,school:sc.data,cycle:cy.data}}
-async function snap(){let c=await ctx(),cy=c.cycle;let ce=db.from('finance_entries').select('id,entry_date,amount_paid').eq('school_id',c.school.id).gte('entry_date',cy.start_date).lte('entry_date',cy.end_date),cm=db.from('finance_cash_cycle_movements').select('*').eq('school_id',c.school.id).eq('cycle_id',cy.id),pc=db.from('finance_cash_cycles').select('id,start_date,end_date').eq('school_id',c.school.id).lt('start_date',cy.start_date).order('start_date',{ascending:true});let [er,mr,cr]=await Promise.all([ce,cm,pc]);if(er.error)throw er.error;if(mr.error)throw mr.error;if(cr.error)throw cr.error;let carry=empty(),pcs=cr.data||[];if(pcs.length){let ids=pcs.map(x=>x.id),pe=db.from('finance_entries').select('id,entry_date,amount_paid').eq('school_id',c.school.id).gte('entry_date',FIRST).lt('entry_date',cy.start_date),pm=db.from('finance_cash_cycle_movements').select('*').eq('school_id',c.school.id).in('cycle_id',ids);let [per,pmr]=await Promise.all([pe,pm]);if(per.error)throw per.error;if(pmr.error)throw pmr.error;pcs.forEach(p=>{let a=(per.data||[]).filter(e=>e.entry_date>=p.start_date&&e.entry_date<=p.end_date),mv=(pmr.data||[]).filter(x=>x.cycle_id===p.id),r=calc(a,mv,carry),n=empty();AC.forEach(k=>n[k]=Math.max(LIM,Math.min(0,Number(r.b[k]?.available||0))));carry=n})}let now=calc(er.data||[],mr.data||[],carry);return{...c,carry,buckets:now.b}}
-function css(){if($('negAcCss'))return;let s=document.createElement('style');s.id='negAcCss';s.textContent='.cash-value-line.shareholder-carryover strong,.cash-value-line.available.warning strong{color:#b42318!important}.shareholder-negative-note{margin-top:10px;padding:10px 12px;border:1px solid rgba(216,169,75,.38);border-radius:14px;background:#fff8e6;color:#624000;font-size:.82rem;font-weight:800;line-height:1.35}.shareholder-negative-limit{margin-top:8px;color:#61746d;font-size:.8rem;line-height:1.35}';document.head.appendChild(s)}
-async function paint(){return}
-function modalMsg(t,kind){let e=$('cashModalMessage');if(!e)return;e.textContent=t||'';e.className=t?'cash-status show '+(kind||'ok'):'cash-status'}function panelMsg(t,kind){let e=$('cashCycleMessage');if(!e)return;e.textContent=t||'';e.className=t?'cash-status show '+(kind||'ok'):'cash-status'}
-function checkLimit(s,source,amount){let available=Number(s.buckets[source]?.available||0),projected=available-amount;if(projected<LIM-.009)return{ok:false,available,projected};return{ok:true,available,projected}}
-async function save(ev){let source=$('cashModalSource')?.value||null;if(!ac(source))return;ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();let btn=$('cashModalSaveBtn'),dest=$('cashModalDestination')?.value||null,amount=Number($('cashModalAmount')?.value||0),dt=$('cashModalDate')?.value||iso(new Date()),desc=$('cashModalDescriptionInput')?.value.trim()||'',notes=$('cashModalNotes')?.value.trim()||null;if(!amount||amount<=0)return modalMsg('Informe um valor maior que zero.','error');if(!desc)return modalMsg('Informe a descrição da movimentação.','error');try{if(btn)btn.disabled=true;let s=await snap(),lim=checkLimit(s,source,amount);if(!lim.ok)return modalMsg('Retirada bloqueada. '+N[source]+' ficaria com '+m(lim.projected)+'. Limite permitido: '+m(LIM)+'. Valor máximo para retirar agora: '+m(Math.max(0,lim.available-LIM))+'.','error');if(lim.projected<0&&!confirm(N[source]+' ficará com saldo negativo de '+m(lim.projected)+'.\nEsse valor será descontado do próximo ciclo.\nConfirmar retirada?'))return modalMsg('Retirada cancelada.','error');let payload={school_id:s.school.id,cycle_id:s.cycle.id,movement_type:dest?'transferencia':'pagamento_acionista',source_bucket:source,destination_bucket:dest,amount,movement_date:dt,description:desc,notes:[notes,lim.projected<0?'Saldo negativo autorizado: '+m(lim.projected)+'. Descontar no próximo ciclo. Limite: '+m(LIM)+'.':null].filter(Boolean).join(' | ')||null,created_by:s.user.id,updated_at:new Date().toISOString()};let r=await db.from('finance_cash_cycle_movements').insert(payload);if(r.error)throw r.error;$('cashMovementModal')?.classList.remove('show');panelMsg(lim.projected<0?'Retirada registrada. '+N[source]+' ficou com saldo negativo de '+m(lim.projected)+', que será descontado no próximo ciclo.':'Retirada registrada com sucesso.','ok');$('cashRefreshBtn')?.click();setTimeout(paint,900);setTimeout(paint,1800)}catch(e){console.error(e);modalMsg(e.message||'Erro ao registrar retirada.','error')}finally{if(btn)btn.disabled=false}}
-async function exp(ev){let bucket=$('expenseAllocationBucket')?.value||'';if(!ac(bucket))return;ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();let amount=Number($('expenseAmount')?.value||0),date=$('expenseDate')?.value||iso(new Date()),desc=$('expenseDescription')?.value?.trim()||'',to=$('paidTo')?.value?.trim()||'',by=$('paidByName')?.value?.trim()||'',cat=$('expenseCategory')?.value?.trim()||null,notes=$('expenseNotes')?.value?.trim()||null;if(!amount||amount<=0)return alert('Informe um valor válido para a saída.');if(!desc||!to||!by)return alert('Preencha descrição, valor, destino e origem da saída.');try{let s=await snap(),lim=checkLimit(s,bucket,amount);if(!lim.ok)return alert('Saída bloqueada. '+N[bucket]+' ficaria com '+m(lim.projected)+'. Limite permitido: '+m(LIM)+'. Valor máximo para retirar agora: '+m(Math.max(0,lim.available-LIM))+'.');if(lim.projected<0&&!confirm(N[bucket]+' ficará com saldo negativo de '+m(lim.projected)+'.\nEsse valor será descontado do próximo ciclo.\nConfirmar saída?'))return;let er=await db.from('finance_expenses').insert({school_id:s.school.id,description:desc,amount,paid_to:to,paid_by_name:by,category:cat,expense_date:date,notes,allocation_bucket:bucket,cash_cycle_id:s.cycle.id,created_by:s.user.id}).select('*').single();if(er.error)throw er.error;let mr=await db.from('finance_cash_cycle_movements').insert({school_id:s.school.id,cycle_id:s.cycle.id,movement_type:'saida',source_bucket:bucket,destination_bucket:null,amount,movement_date:date,description:'Saída registrada: '+desc,notes:[notes||('Destino: '+to+'. Lançado por: '+by+'.'),lim.projected<0?'Saldo negativo autorizado: '+m(lim.projected)+'. Descontar no próximo ciclo. Limite: '+m(LIM)+'.':null].filter(Boolean).join(' | '),related_expense_id:er.data?.id||null,created_by:s.user.id,updated_at:new Date().toISOString()}).select('*').single();if(mr.error)throw mr.error;if(er.data?.id&&mr.data?.id)await db.from('finance_expenses').update({cash_movement_id:mr.data.id}).eq('id',er.data.id);ev.target.reset();panelMsg(lim.projected<0?'Saída registrada. '+N[bucket]+' ficou com saldo negativo de '+m(lim.projected)+', que será descontado no próximo ciclo.':'Saída registrada com sucesso.','ok');$('cashRefreshBtn')?.click();setTimeout(paint,900);setTimeout(paint,1800)}catch(e){console.error(e);alert(e.message||'Erro ao registrar saída.')}}
-function start(){css();document.addEventListener('click',e=>{if(e.target?.closest?.('#cashModalSaveBtn'))save(e)},true);document.addEventListener('submit',e=>{if(e.target?.id==='expenseForm')exp(e)},true)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+(function () {
+  if (window.__RECOLHO_ACIONISTA_LIMITE__) return;
+  window.__RECOLHO_ACIONISTA_LIMITE__ = true;
+
+  const cfg = window.INTEGRO_SUPABASE;
+  const supabaseGlobal = window.supabase;
+  if (!cfg || !supabaseGlobal?.createClient) return;
+
+  const db = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
+  const CYCLE_DAY = 9;
+  const NEGATIVE_LIMIT = -1000;
+  const SHAREHOLDERS = ["acionista_1", "acionista_2", "acionista_3"];
+  const BUCKET_ORDER = ["operacoes", "fundo_caixa", ...SHAREHOLDERS];
+  const PERCENTAGES = {
+    operacoes: 0.30,
+    fundo_caixa: 0.10,
+    acionista_1: 0.20,
+    acionista_2: 0.20,
+    acionista_3: 0.20,
+  };
+  const LABELS = {
+    operacoes: "Contas e operações",
+    fundo_caixa: "Fundo de caixa",
+    acionista_1: "Acionista 1",
+    acionista_2: "Acionista 2",
+    acionista_3: "Acionista 3",
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const isShareholder = (bucket) => SHAREHOLDERS.includes(bucket);
+
+  function money(value) {
+    return Number(value || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }
+
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function dateISO(date) {
+    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+  }
+
+  function addMonths(date, amount) {
+    return new Date(date.getFullYear(), date.getMonth() + amount, date.getDate());
+  }
+
+  function addDays(date, amount) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+  }
+
+  function currentCycleRange(reference = new Date()) {
+    let start = new Date(reference.getFullYear(), reference.getMonth(), CYCLE_DAY);
+    if (reference.getDate() < CYCLE_DAY) {
+      start = new Date(reference.getFullYear(), reference.getMonth() - 1, CYCLE_DAY);
+    }
+
+    const end = addDays(addMonths(start, 1), -1);
+    return {
+      start: dateISO(start),
+      end: dateISO(end),
+      key: dateISO(start).slice(0, 7),
+    };
+  }
+
+  function isAdministrative(movement) {
+    const type = String(movement?.movement_type || "").toLowerCase();
+    const source = String(movement?.source_bucket || "").toLowerCase();
+    const destination = String(movement?.destination_bucket || "").toLowerCase();
+    const text = `${movement?.description || ""} ${movement?.notes || ""}`.toLowerCase();
+
+    return (
+      source === "ajuste_administrativo" ||
+      destination === "ajuste_administrativo" ||
+      type === "ajuste_credito" ||
+      type === "ajuste_debito" ||
+      text.includes("ajuste administrativo") ||
+      text.includes("ajuste interno")
+    );
+  }
+
+  function unrepresentedExpenses(expenses, movements) {
+    const representedExpenseIds = new Set(
+      movements.map((movement) => movement.related_expense_id).filter(Boolean)
+    );
+    const movementIds = new Set(movements.map((movement) => movement.id).filter(Boolean));
+
+    return (expenses || []).filter((expense) => {
+      const text = `${expense?.description || ""} ${expense?.notes || ""}`.toLowerCase();
+      if (
+        String(expense?.allocation_bucket || "").toLowerCase() === "ajuste_administrativo" ||
+        text.includes("ajuste administrativo") ||
+        text.includes("ajuste interno")
+      ) {
+        return false;
+      }
+      if (representedExpenseIds.has(expense.id)) return false;
+      if (expense.related_cash_movement_id && movementIds.has(expense.related_cash_movement_id)) {
+        return false;
+      }
+      if (expense.cash_movement_id && movementIds.has(expense.cash_movement_id)) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function dedupeMovementsByExpense(movements) {
+    const seenExpenseIds = new Set();
+    return (movements || []).filter((movement) => {
+      if (!movement.related_expense_id) return true;
+      if (seenExpenseIds.has(movement.related_expense_id)) return false;
+      seenExpenseIds.add(movement.related_expense_id);
+      return true;
+    });
+  }
+
+  function calculateBuckets(entries, movements, expenses) {
+    const totalEntries = (entries || []).reduce(
+      (sum, entry) => sum + Number(entry.amount_paid || 0),
+      0
+    );
+    const visibleMovements = dedupeMovementsByExpense(movements).filter(
+      (movement) => !isAdministrative(movement)
+    );
+    const unlinkedExpenses = unrepresentedExpenses(expenses || [], visibleMovements);
+    const buckets = {};
+
+    BUCKET_ORDER.forEach((bucket) => {
+      buckets[bucket] = {
+        base: totalEntries * PERCENTAGES[bucket],
+        debits: 0,
+        credits: 0,
+        available: totalEntries * PERCENTAGES[bucket],
+      };
+    });
+
+    visibleMovements.forEach((movement) => {
+      const amount = Number(movement.amount || 0);
+      if (movement.source_bucket && buckets[movement.source_bucket]) {
+        buckets[movement.source_bucket].debits += amount;
+      }
+      if (movement.destination_bucket && buckets[movement.destination_bucket]) {
+        buckets[movement.destination_bucket].credits += amount;
+      }
+    });
+
+    unlinkedExpenses.forEach((expense) => {
+      const bucket = BUCKET_ORDER.includes(expense.allocation_bucket)
+        ? expense.allocation_bucket
+        : "operacoes";
+      buckets[bucket].debits += Number(expense.amount || 0);
+    });
+
+    BUCKET_ORDER.forEach((bucket) => {
+      const item = buckets[bucket];
+      item.available = item.base + item.credits - item.debits;
+    });
+
+    return buckets;
+  }
+
+  async function loadContext() {
+    const userResult = await db.auth.getUser();
+    if (userResult.error || !userResult.data?.user) {
+      throw new Error("Usuário não autenticado.");
+    }
+
+    const user = userResult.data.user;
+    const profileResult = await db
+      .from("profiles")
+      .select("id, school_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileResult.error || !profileResult.data) {
+      throw new Error("Perfil não encontrado.");
+    }
+
+    const schoolResult = await db
+      .from("schools")
+      .select("id, name")
+      .eq("id", profileResult.data.school_id)
+      .maybeSingle();
+
+    if (schoolResult.error || !schoolResult.data) {
+      throw new Error("Unidade não encontrada.");
+    }
+
+    const range = currentCycleRange();
+    const findCycle = () => db
+      .from("finance_cash_cycles")
+      .select("*")
+      .eq("school_id", schoolResult.data.id)
+      .eq("cycle_key", range.key)
+      .maybeSingle();
+
+    const existingCycleResult = await findCycle();
+    if (existingCycleResult.error) throw existingCycleResult.error;
+
+    let cycle = existingCycleResult.data;
+    if (!cycle) {
+      const insertCycleResult = await db
+        .from("finance_cash_cycles")
+        .insert({
+          school_id: schoolResult.data.id,
+          cycle_key: range.key,
+          start_date: range.start,
+          end_date: range.end,
+          status: "aberto",
+          created_by: user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .select("*")
+        .single();
+
+      if (insertCycleResult.error?.code === "23505") {
+        const retryCycleResult = await findCycle();
+        if (retryCycleResult.error || !retryCycleResult.data) {
+          throw retryCycleResult.error || insertCycleResult.error;
+        }
+        cycle = retryCycleResult.data;
+      } else {
+        if (insertCycleResult.error) throw insertCycleResult.error;
+        cycle = insertCycleResult.data;
+      }
+    }
+
+    return {
+      user,
+      school: schoolResult.data,
+      cycle,
+    };
+  }
+
+  async function currentCycleSnapshot() {
+    const context = await loadContext();
+    const { cycle, school } = context;
+
+    const [entriesResult, expensesResult, movementsResult] = await Promise.all([
+      db
+        .from("finance_entries")
+        .select("id, entry_date, amount_paid")
+        .eq("school_id", school.id)
+        .gte("entry_date", cycle.start_date)
+        .lte("entry_date", cycle.end_date),
+      db
+        .from("finance_expenses")
+        .select("*")
+        .eq("school_id", school.id)
+        .gte("expense_date", cycle.start_date)
+        .lte("expense_date", cycle.end_date),
+      db
+        .from("finance_cash_cycle_movements")
+        .select("*")
+        .eq("school_id", school.id)
+        .eq("cycle_id", cycle.id)
+        .gte("movement_date", cycle.start_date)
+        .lte("movement_date", cycle.end_date),
+    ]);
+
+    if (entriesResult.error) throw entriesResult.error;
+    if (expensesResult.error) throw expensesResult.error;
+    if (movementsResult.error) throw movementsResult.error;
+
+    return {
+      ...context,
+      buckets: calculateBuckets(
+        entriesResult.data || [],
+        movementsResult.data || [],
+        expensesResult.data || []
+      ),
+    };
+  }
+
+  function ensureStyles() {
+    if ($("negAcCss")) return;
+
+    const style = document.createElement("style");
+    style.id = "negAcCss";
+    style.textContent = `
+      .cash-value-line.available.warning strong { color: #b42318 !important; }
+      .shareholder-negative-note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid rgba(216, 169, 75, .38);
+        border-radius: 14px;
+        background: #fff8e6;
+        color: #624000;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      .shareholder-negative-limit {
+        margin-top: 8px;
+        color: #61746d;
+        font-size: .8rem;
+        line-height: 1.35;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function modalMessage(message, type = "ok") {
+    const element = $("cashModalMessage");
+    if (!element) return;
+    element.textContent = message || "";
+    element.className = message ? `cash-status show ${type}` : "cash-status";
+  }
+
+  function panelMessage(message, type = "ok") {
+    const element = $("cashCycleMessage");
+    if (!element) return;
+    element.textContent = message || "";
+    element.className = message ? `cash-status show ${type}` : "cash-status";
+  }
+
+  function checkLimit(snapshot, source, amount) {
+    const available = Number(snapshot.buckets[source]?.available || 0);
+    const projected = available - amount;
+    return {
+      ok: projected >= NEGATIVE_LIMIT - 0.009,
+      available,
+      projected,
+    };
+  }
+
+  function isDateInCurrentCycle(date, cycle) {
+    return date >= cycle.start_date && date <= cycle.end_date;
+  }
+
+  function negativeConfirmation(label, projected) {
+    return (
+      `${label} ficará com saldo negativo de ${money(projected)}.\n` +
+      "Esse valor afeta somente o ciclo atual; o próximo ciclo começa em R$ 0,00.\n" +
+      "Confirmar?"
+    );
+  }
+
+  function negativeNote(projected) {
+    return (
+      `Saldo negativo autorizado: ${money(projected)}. ` +
+      `Válido somente no ciclo atual; o próximo ciclo começa em R$ 0,00. ` +
+      `Limite: ${money(NEGATIVE_LIMIT)}.`
+    );
+  }
+
+  async function saveShareholderMovement(event) {
+    const source = $("cashModalSource")?.value || null;
+    if (!isShareholder(source)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const button = $("cashModalSaveBtn");
+    const destination = $("cashModalDestination")?.value || null;
+    const amount = Number($("cashModalAmount")?.value || 0);
+    const movementDate = $("cashModalDate")?.value || dateISO(new Date());
+    const description = $("cashModalDescriptionInput")?.value.trim() || "";
+    const notes = $("cashModalNotes")?.value.trim() || null;
+
+    if (!amount || amount <= 0) {
+      modalMessage("Informe um valor maior que zero.", "error");
+      return;
+    }
+    if (!description) {
+      modalMessage("Informe a descrição da movimentação.", "error");
+      return;
+    }
+
+    try {
+      if (button) button.disabled = true;
+
+      const snapshot = await currentCycleSnapshot();
+      if (!isDateInCurrentCycle(movementDate, snapshot.cycle)) {
+        modalMessage(
+          `Use uma data entre ${snapshot.cycle.start_date} e ${snapshot.cycle.end_date}, que é o ciclo atual.`,
+          "error"
+        );
+        return;
+      }
+
+      const limit = checkLimit(snapshot, source, amount);
+      if (!limit.ok) {
+        modalMessage(
+          `Retirada bloqueada. ${LABELS[source]} ficaria com ${money(limit.projected)}. ` +
+          `Limite permitido: ${money(NEGATIVE_LIMIT)}. ` +
+          `Valor máximo para retirar agora: ${money(Math.max(0, limit.available - NEGATIVE_LIMIT))}.`,
+          "error"
+        );
+        return;
+      }
+
+      if (
+        limit.projected < 0 &&
+        !confirm(negativeConfirmation(LABELS[source], limit.projected))
+      ) {
+        modalMessage("Retirada cancelada.", "error");
+        return;
+      }
+
+      const result = await db.from("finance_cash_cycle_movements").insert({
+        school_id: snapshot.school.id,
+        cycle_id: snapshot.cycle.id,
+        movement_type: destination ? "transferencia" : "pagamento_acionista",
+        source_bucket: source,
+        destination_bucket: destination,
+        amount,
+        movement_date: movementDate,
+        description,
+        notes: [notes, limit.projected < 0 ? negativeNote(limit.projected) : null]
+          .filter(Boolean)
+          .join(" | ") || null,
+        created_by: snapshot.user.id,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (result.error) throw result.error;
+
+      $("cashMovementModal")?.classList.remove("show");
+      panelMessage(
+        limit.projected < 0
+          ? `Retirada registrada. ${LABELS[source]} ficou com ${money(limit.projected)} somente neste ciclo.`
+          : "Retirada registrada com sucesso.",
+        "ok"
+      );
+      $("cashRefreshBtn")?.click();
+    } catch (error) {
+      console.error(error);
+      modalMessage(error.message || "Erro ao registrar retirada.", "error");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function saveShareholderExpense(event) {
+    const bucket = $("expenseAllocationBucket")?.value || "";
+    if (!isShareholder(bucket)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const amount = Number($("expenseAmount")?.value || 0);
+    const expenseDate = $("expenseDate")?.value || dateISO(new Date());
+    const description = $("expenseDescription")?.value?.trim() || "";
+    const paidTo = $("paidTo")?.value?.trim() || "";
+    const paidBy = $("paidByName")?.value?.trim() || "";
+    const category = $("expenseCategory")?.value?.trim() || null;
+    const notes = $("expenseNotes")?.value?.trim() || null;
+
+    if (!amount || amount <= 0) {
+      alert("Informe um valor válido para a saída.");
+      return;
+    }
+    if (!description || !paidTo || !paidBy) {
+      alert("Preencha descrição, valor, destino e origem da saída.");
+      return;
+    }
+
+    try {
+      const snapshot = await currentCycleSnapshot();
+      if (!isDateInCurrentCycle(expenseDate, snapshot.cycle)) {
+        alert(
+          `Use uma data entre ${snapshot.cycle.start_date} e ${snapshot.cycle.end_date}, que é o ciclo atual.`
+        );
+        return;
+      }
+
+      const limit = checkLimit(snapshot, bucket, amount);
+      if (!limit.ok) {
+        alert(
+          `Saída bloqueada. ${LABELS[bucket]} ficaria com ${money(limit.projected)}. ` +
+          `Limite permitido: ${money(NEGATIVE_LIMIT)}. ` +
+          `Valor máximo para retirar agora: ${money(Math.max(0, limit.available - NEGATIVE_LIMIT))}.`
+        );
+        return;
+      }
+
+      if (
+        limit.projected < 0 &&
+        !confirm(negativeConfirmation(LABELS[bucket], limit.projected))
+      ) {
+        return;
+      }
+
+      const expenseResult = await db
+        .from("finance_expenses")
+        .insert({
+          school_id: snapshot.school.id,
+          description,
+          amount,
+          paid_to: paidTo,
+          paid_by_name: paidBy,
+          category,
+          expense_date: expenseDate,
+          notes,
+          allocation_bucket: bucket,
+          cash_cycle_id: snapshot.cycle.id,
+          created_by: snapshot.user.id,
+        })
+        .select("*")
+        .single();
+
+      if (expenseResult.error) throw expenseResult.error;
+
+      const movementResult = await db
+        .from("finance_cash_cycle_movements")
+        .insert({
+          school_id: snapshot.school.id,
+          cycle_id: snapshot.cycle.id,
+          movement_type: "saida",
+          source_bucket: bucket,
+          destination_bucket: null,
+          amount,
+          movement_date: expenseDate,
+          description: `Saída registrada: ${description}`,
+          notes: [
+            notes || `Destino: ${paidTo}. Lançado por: ${paidBy}.`,
+            limit.projected < 0 ? negativeNote(limit.projected) : null,
+          ]
+            .filter(Boolean)
+            .join(" | "),
+          related_expense_id: expenseResult.data?.id || null,
+          created_by: snapshot.user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .select("*")
+        .single();
+
+      if (movementResult.error) throw movementResult.error;
+
+      if (expenseResult.data?.id && movementResult.data?.id) {
+        await db
+          .from("finance_expenses")
+          .update({ cash_movement_id: movementResult.data.id })
+          .eq("id", expenseResult.data.id);
+      }
+
+      event.target.reset();
+      panelMessage(
+        limit.projected < 0
+          ? `Saída registrada. ${LABELS[bucket]} ficou com ${money(limit.projected)} somente neste ciclo.`
+          : "Saída registrada com sucesso.",
+        "ok"
+      );
+      $("cashRefreshBtn")?.click();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Erro ao registrar saída.");
+    }
+  }
+
+  function start() {
+    ensureStyles();
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (event.target?.closest?.("#cashModalSaveBtn")) {
+          saveShareholderMovement(event);
+        }
+      },
+      true
+    );
+    document.addEventListener(
+      "submit",
+      (event) => {
+        if (event.target?.id === "expenseForm") {
+          saveShareholderExpense(event);
+        }
+      },
+      true
+    );
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
 })();

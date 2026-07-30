@@ -8,7 +8,6 @@
   if (!cfg || !cfg.url || !cfg.anonKey || !supabaseGlobal?.createClient) return;
 
   const client = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
-  const FIRST_CYCLE_START = "2026-06-09";
   const CYCLE_DAY = 9;
 
   const BUCKETS = {
@@ -64,14 +63,6 @@
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
-    const firstStart = parseDateLocal(FIRST_CYCLE_START);
-
-    if (referenceDate < firstStart) {
-      const start = firstStart;
-      const end = addDays(addMonths(start, 1), -1);
-      return { startISO: dateISO(start), endISO: dateISO(end), cycleKey: dateISO(start).slice(0, 7) };
-    }
-
     let start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), CYCLE_DAY);
     if (referenceDate.getDate() < CYCLE_DAY) start = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, CYCLE_DAY);
     const end = addDays(addMonths(start, 1), -1);
@@ -99,6 +90,16 @@
     return source === "ajuste_administrativo" || destination === "ajuste_administrativo" || type === "ajuste_credito" || type === "ajuste_debito" || description.includes("ajuste administrativo") || description.includes("ajuste interno") || notes.includes("ajuste administrativo") || notes.includes("ajuste interno");
   }
 
+  function dedupeMovementsByExpense(movements) {
+    const seenExpenseIds = new Set();
+    return (movements || []).filter((movement) => {
+      if (!movement.related_expense_id) return true;
+      if (seenExpenseIds.has(movement.related_expense_id)) return false;
+      seenExpenseIds.add(movement.related_expense_id);
+      return true;
+    });
+  }
+
   async function loadData() {
     const { data: userData, error: userError } = await client.auth.getUser();
     if (userError || !userData?.user) throw new Error("Usuário não autenticado.");
@@ -120,21 +121,43 @@
     if (schoolError || !school) throw new Error("Unidade ativa não encontrada.");
 
     const range = getCurrentCycleRange(new Date());
-    const { data: cycle, error: cycleError } = await client
+    const findCycle = () => client
       .from("finance_cash_cycles")
-      .upsert({
-        school_id: school.id,
-        cycle_key: range.cycleKey,
-        start_date: range.startISO,
-        end_date: range.endISO,
-        status: "aberto",
-        created_by: userData.user.id,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "school_id,cycle_key" })
       .select("*")
-      .single();
+      .eq("school_id", school.id)
+      .eq("cycle_key", range.cycleKey)
+      .maybeSingle();
 
-    if (cycleError) throw cycleError;
+    const existingCycleResult = await findCycle();
+    if (existingCycleResult.error) throw existingCycleResult.error;
+
+    let cycle = existingCycleResult.data;
+    if (!cycle) {
+      const insertCycleResult = await client
+        .from("finance_cash_cycles")
+        .insert({
+          school_id: school.id,
+          cycle_key: range.cycleKey,
+          start_date: range.startISO,
+          end_date: range.endISO,
+          status: "aberto",
+          created_by: userData.user.id,
+          updated_at: new Date().toISOString()
+        })
+        .select("*")
+        .single();
+
+      if (insertCycleResult.error?.code === "23505") {
+        const retryCycleResult = await findCycle();
+        if (retryCycleResult.error || !retryCycleResult.data) {
+          throw retryCycleResult.error || insertCycleResult.error;
+        }
+        cycle = retryCycleResult.data;
+      } else {
+        if (insertCycleResult.error) throw insertCycleResult.error;
+        cycle = insertCycleResult.data;
+      }
+    }
 
     const [entriesRes, movementsRes] = await Promise.all([
       client
@@ -149,6 +172,8 @@
         .select("*")
         .eq("school_id", school.id)
         .eq("cycle_id", cycle.id)
+        .gte("movement_date", cycle.start_date)
+        .lte("movement_date", cycle.end_date)
         .order("movement_date", { ascending: true })
     ]);
 
@@ -156,7 +181,8 @@
     if (movementsRes.error) throw movementsRes.error;
 
     const entries = entriesRes.data || [];
-    const movements = (movementsRes.data || []).filter((item) => !isAdministrativeAdjustment(item));
+    const movements = dedupeMovementsByExpense(movementsRes.data || [])
+      .filter((item) => !isAdministrativeAdjustment(item));
     const totals = calculateTotals(entries, movements);
 
     return { user: userData.user, profile, school, cycle, entries, movements, totals };

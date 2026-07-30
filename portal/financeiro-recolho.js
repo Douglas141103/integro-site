@@ -2,7 +2,7 @@
   INTEGRO — Recolho do Caixa
   Ciclo empresarial mensal:
   - Início: todo dia 9
-  - Primeiro ciclo do sistema: 09/06/2026
+  - Cada ciclo é independente e começa em R$ 0,00
 
   Regra de distribuição:
   - 30% Contas e operações
@@ -28,7 +28,6 @@
 
   const client = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
 
-  const FIRST_CYCLE_START = "2026-06-09";
   const CYCLE_DAY = 9;
 
   const BUCKETS = {
@@ -144,21 +143,6 @@
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
-    const firstStart = parseDateLocal(FIRST_CYCLE_START);
-
-    if (referenceDate < firstStart) {
-      const start = firstStart;
-      const end = addDays(addMonths(start, 1), -1);
-
-      return {
-        start,
-        end,
-        startISO: dateISO(start),
-        endISO: dateISO(end),
-        cycleKey: dateISO(start).slice(0, 7)
-      };
-    }
-
     let start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), CYCLE_DAY);
 
     if (referenceDate.getDate() < CYCLE_DAY) {
@@ -261,6 +245,16 @@
     });
   }
 
+  function dedupeMovementsByExpense(movements) {
+    const seenExpenseIds = new Set();
+    return (movements || []).filter((movement) => {
+      if (!movement.related_expense_id) return true;
+      if (seenExpenseIds.has(movement.related_expense_id)) return false;
+      seenExpenseIds.add(movement.related_expense_id);
+      return true;
+    });
+  }
+
   async function loadContext() {
     const { data: userData, error: userError } = await client.auth.getUser();
 
@@ -301,30 +295,45 @@
 
   async function ensureCurrentCycle() {
     const range = getCurrentCycleRange(new Date());
-
-    const payload = {
-      school_id: state.school.id,
-      cycle_key: range.cycleKey,
-      start_date: range.startISO,
-      end_date: range.endISO,
-      status: "aberto",
-      created_by: state.user.id,
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await client
+    const findCycle = () => client
       .from("finance_cash_cycles")
-      .upsert(payload, {
-        onConflict: "school_id,cycle_key"
+      .select("*")
+      .eq("school_id", state.school.id)
+      .eq("cycle_key", range.cycleKey)
+      .maybeSingle();
+
+    const existingResult = await findCycle();
+    if (existingResult.error) throw existingResult.error;
+    if (existingResult.data) {
+      state.cycle = existingResult.data;
+      return;
+    }
+
+    const insertResult = await client
+      .from("finance_cash_cycles")
+      .insert({
+        school_id: state.school.id,
+        cycle_key: range.cycleKey,
+        start_date: range.startISO,
+        end_date: range.endISO,
+        status: "aberto",
+        created_by: state.user.id,
+        updated_at: new Date().toISOString()
       })
       .select("*")
       .single();
 
-    if (error) {
-      throw error;
+    if (insertResult.error?.code === "23505") {
+      const retryResult = await findCycle();
+      if (retryResult.error || !retryResult.data) {
+        throw retryResult.error || insertResult.error;
+      }
+      state.cycle = retryResult.data;
+      return;
     }
 
-    state.cycle = data;
+    if (insertResult.error) throw insertResult.error;
+    state.cycle = insertResult.data;
   }
 
   async function loadCycleData() {
@@ -359,6 +368,8 @@
         .select("*")
         .eq("school_id", state.school.id)
         .eq("cycle_id", state.cycle.id)
+        .gte("movement_date", start)
+        .lte("movement_date", end)
         .order("created_at", { ascending: false })
     ]);
 
@@ -368,7 +379,7 @@
 
     state.entries = entriesRes.data || [];
     state.expenses = expensesRes.data || [];
-    state.movements = movementsRes.data || [];
+    state.movements = dedupeMovementsByExpense(movementsRes.data || []);
 
     state.totals = calculateTotals();
   }
@@ -398,21 +409,16 @@
     state.movements.forEach((movement) => {
       const amount = Number(movement.amount || 0);
       const hiddenAdmin = isAdministrativeAdjustment(movement);
+      if (hiddenAdmin) return;
 
       if (movement.source_bucket && buckets[movement.source_bucket]) {
         buckets[movement.source_bucket].debits += amount;
-
-        if (!hiddenAdmin) {
-          buckets[movement.source_bucket].visibleDebits += amount;
-        }
+        buckets[movement.source_bucket].visibleDebits += amount;
       }
 
       if (movement.destination_bucket && buckets[movement.destination_bucket]) {
         buckets[movement.destination_bucket].credits += amount;
-
-        if (!hiddenAdmin) {
-          buckets[movement.destination_bucket].visibleCredits += amount;
-        }
+        buckets[movement.destination_bucket].visibleCredits += amount;
       }
     });
 
@@ -632,6 +638,10 @@
     if (!grid) return;
 
     const valuesDelegated = Boolean(window.__INTEGRO_FINANCE_SINGLE_RENDERER__);
+    if (valuesDelegated && grid.querySelector(".cash-bucket-card")) {
+      return;
+    }
+
     const displayValue = (value) => valuesDelegated ? "—" : money(value);
 
     grid.innerHTML = VISIBLE_BUCKET_ORDER.map((bucket) => {
@@ -864,6 +874,14 @@
 
     if (!source && !destination) {
       setModalMessage("Informe uma origem ou um destino.", "error");
+      return;
+    }
+
+    if (movementDate < state.cycle.start_date || movementDate > state.cycle.end_date) {
+      setModalMessage(
+        `Use uma data entre ${formatDateBR(state.cycle.start_date)} e ${formatDateBR(state.cycle.end_date)}, que é o ciclo atual.`,
+        "error"
+      );
       return;
     }
 
@@ -1273,6 +1291,13 @@
 
         if (!description || !paidTo || !paidByName) {
           alert("Preencha descrição, valor, destino e origem da saída.");
+          return;
+        }
+
+        if (expenseDate < state.cycle.start_date || expenseDate > state.cycle.end_date) {
+          alert(
+            `Use uma data entre ${formatDateBR(state.cycle.start_date)} e ${formatDateBR(state.cycle.end_date)}, que é o ciclo atual.`
+          );
           return;
         }
 
