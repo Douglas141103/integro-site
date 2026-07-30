@@ -1,4 +1,4 @@
-const CACHE_NAME = "integro-pwa-v20260729-financeiro-estavel";
+const CACHE_NAME = "integro-pwa-v20260730-current-cycle";
 
 const SAFE_STATIC_ASSETS = [
   "/",

@@ -1,6 +1,6 @@
 (function () {
-  if (window.__INTEGRO_FINANCEIRO_SALDO_RECONCILIADO__) return;
-  window.__INTEGRO_FINANCEIRO_SALDO_RECONCILIADO__ = true;
+  if (window.__INTEGRO_FINANCEIRO_CICLO_ATUAL__) return;
+  window.__INTEGRO_FINANCEIRO_CICLO_ATUAL__ = true;
   window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true;
 
   const cfg = window.INTEGRO_SUPABASE || {};
@@ -9,11 +9,7 @@
 
   const db = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
 
-  const FIRST_CYCLE_START = "2026-06-09";
   const CYCLE_DAY = 9;
-  const TARGET_CYCLE_KEY = "2026-07";
-  const TARGET_BALANCE = 1055.83;
-  const RECONCILIATION_MARK = "INTEGRO_RECONCILIACAO_SALDO_1055_83";
 
   const ORDER = ["operacoes", "fundo_caixa", "acionista_1", "acionista_2", "acionista_3"];
   const BUCKETS = {
@@ -29,7 +25,6 @@
     profile: null,
     school: null,
     cycle: null,
-    cycles: [],
     entries: [],
     expenses: [],
     movements: [],
@@ -37,8 +32,6 @@
     snapshot: null,
     loading: false,
     refreshQueued: false,
-    reconcileQueued: false,
-    reconciliationAttempted: false,
   };
 
   const $ = (id) => document.getElementById(id);
@@ -81,11 +74,11 @@
   }
 
   function currentCycleRange(reference = new Date()) {
-    const first = parseLocal(FIRST_CYCLE_START);
     let start = new Date(reference.getFullYear(), reference.getMonth(), CYCLE_DAY);
 
-    if (reference < first) start = first;
-    else if (reference.getDate() < CYCLE_DAY) start = new Date(reference.getFullYear(), reference.getMonth() - 1, CYCLE_DAY);
+    if (reference.getDate() < CYCLE_DAY) {
+      start = new Date(reference.getFullYear(), reference.getMonth() - 1, CYCLE_DAY);
+    }
 
     const end = addDays(addMonths(start, 1), -1);
     return {
@@ -105,10 +98,6 @@
     const source = String(movement?.source_bucket || "").toLowerCase();
     const destination = String(movement?.destination_bucket || "").toLowerCase();
     const text = `${movement?.description || ""} ${movement?.notes || ""}`.toLowerCase();
-
-    if (text.includes(RECONCILIATION_MARK.toLowerCase())) {
-      return false;
-    }
 
     return (
       source === "ajuste_administrativo" ||
@@ -132,33 +121,11 @@
     return String(expense?.expense_date || expense?.created_at || "").slice(0, 10);
   }
 
-  function normalizedText(value) {
-    return String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function movementFingerprint(movement) {
-    return [
-      movement.cycle_id || "",
-      movementDate(movement),
-      movement.movement_type || "",
-      movement.source_bucket || "",
-      movement.destination_bucket || "",
-      Number(movement.amount || 0).toFixed(2),
-      normalizedText(movement.description),
-    ].join("|");
-  }
-
   function dedupeMovements(rows) {
     const ordered = (rows || []).slice().sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
     const kept = [];
     const duplicateIds = [];
     const byExpense = new Map();
-    const byFingerprint = new Map();
 
     ordered.forEach((movement) => {
       if (movement.related_expense_id) {
@@ -169,21 +136,6 @@
         byExpense.set(movement.related_expense_id, movement);
       }
 
-      const fingerprint = movementFingerprint(movement);
-      const prior = byFingerprint.get(fingerprint);
-
-      if (prior && !movement.related_expense_id && !prior.related_expense_id) {
-        const priorTime = new Date(prior.created_at || 0).getTime();
-        const currentTime = new Date(movement.created_at || 0).getTime();
-        const closeInTime = priorTime && currentTime && Math.abs(currentTime - priorTime) <= 15 * 60 * 1000;
-
-        if (closeInTime) {
-          duplicateIds.push(movement.id);
-          return;
-        }
-      }
-
-      byFingerprint.set(fingerprint, movement);
       kept.push(movement);
     });
 
@@ -194,11 +146,22 @@
     return new Set((movements || []).map((movement) => movement.related_expense_id).filter(Boolean));
   }
 
+  function isAdministrativeExpense(expense) {
+    const bucket = String(expense?.allocation_bucket || "").toLowerCase();
+    const text = `${expense?.description || ""} ${expense?.notes || ""}`.toLowerCase();
+    return (
+      bucket === "ajuste_administrativo" ||
+      text.includes("ajuste administrativo") ||
+      text.includes("ajuste interno")
+    );
+  }
+
   function unrepresentedExpenses(expenses, movements) {
     const represented = representedExpenseIds(movements);
     const movementIds = new Set((movements || []).map((movement) => movement.id));
 
     return (expenses || []).filter((expense) => {
+      if (isAdministrativeExpense(expense)) return false;
       if (represented.has(expense.id)) return false;
       if (expense.related_cash_movement_id && movementIds.has(expense.related_cash_movement_id)) return false;
       if (expense.cash_movement_id && movementIds.has(expense.cash_movement_id)) return false;
@@ -211,7 +174,6 @@
       acc[bucket] = {
         bucket,
         label: BUCKETS[bucket].label,
-        prior: 0,
         base: 0,
         credits: 0,
         debits: 0,
@@ -221,15 +183,15 @@
     }, {});
   }
 
-  function addEntriesToBuckets(buckets, entries, targetField) {
+  function addEntriesToBuckets(buckets, entries) {
     const total = (entries || []).reduce((sum, entry) => sum + Number(entry.amount_paid || 0), 0);
     ORDER.forEach((bucket) => {
-      buckets[bucket][targetField] += total * BUCKETS[bucket].percent;
+      buckets[bucket].base += total * BUCKETS[bucket].percent;
     });
     return total;
   }
 
-  function applyMovementsToBuckets(buckets, movements, targetPrefix = "") {
+  function applyMovementsToBuckets(buckets, movements) {
     (movements || []).forEach((movement) => {
       const amount = Number(movement.amount || 0);
       if (movement.source_bucket && buckets[movement.source_bucket]) buckets[movement.source_bucket].debits += amount;
@@ -264,71 +226,54 @@
   }
 
   function calculateSnapshot() {
-    const start = state.cycle.start_date;
-    const end = state.cycle.end_date;
-    const visibleMovements = state.movements.filter((movement) => !isAdministrative(movement));
-    const unlinkedExpenses = unrepresentedExpenses(state.expenses, visibleMovements);
+    return calculateCurrentCycleSnapshot({
+      cycle: state.cycle,
+      entries: state.entries,
+      expenses: state.expenses,
+      movements: state.movements,
+    });
+  }
 
-    const priorEntries = state.entries.filter((entry) => entryDate(entry) >= FIRST_CYCLE_START && entryDate(entry) < start);
-    const currentEntries = state.entries.filter((entry) => entryDate(entry) >= start && entryDate(entry) <= end);
+  function calculateCurrentCycleSnapshot({ cycle, entries = [], expenses = [], movements = [] }) {
+    const start = cycle.start_date;
+    const end = cycle.end_date;
+    const visibleMovements = movements.filter((movement) => !isAdministrative(movement));
+    const unlinkedExpenses = unrepresentedExpenses(expenses, visibleMovements);
 
-    const priorMovements = visibleMovements.filter((movement) => movementDate(movement) < start);
-    const currentMovements = visibleMovements.filter((movement) => movement.cycle_id === state.cycle.id || (movementDate(movement) >= start && movementDate(movement) <= end));
-
-    const priorExpenses = unlinkedExpenses.filter((expense) => expenseDate(expense) < start);
+    const currentEntries = entries.filter((entry) => entryDate(entry) >= start && entryDate(entry) <= end);
+    const currentMovements = visibleMovements.filter((movement) => {
+      const date = movementDate(movement);
+      return movement.cycle_id === cycle.id && date >= start && date <= end;
+    });
     const currentExpenses = unlinkedExpenses.filter((expense) => expenseDate(expense) >= start && expenseDate(expense) <= end);
 
-    const priorExternal = externalTotals(priorMovements, priorExpenses);
     const currentExternal = externalTotals(currentMovements, currentExpenses);
-
-    const priorEntriesTotal = priorEntries.reduce((sum, entry) => sum + Number(entry.amount_paid || 0), 0);
     const currentEntriesTotal = currentEntries.reduce((sum, entry) => sum + Number(entry.amount_paid || 0), 0);
-
-    const priorBalance = priorEntriesTotal + priorExternal.credits - priorExternal.debits;
-    const currentNet = currentEntriesTotal + currentExternal.credits - currentExternal.debits;
-    const currentBalance = priorBalance + currentNet;
+    const currentBalance = currentEntriesTotal + currentExternal.credits - currentExternal.debits;
 
     const buckets = emptyBuckets();
-    addEntriesToBuckets(buckets, priorEntries, "prior");
-    applyMovementsToBuckets(buckets, priorMovements);
-    applyExpensesToBuckets(buckets, priorExpenses);
-
-    ORDER.forEach((bucket) => {
-      buckets[bucket].prior = buckets[bucket].prior + buckets[bucket].credits - buckets[bucket].debits;
-      buckets[bucket].credits = 0;
-      buckets[bucket].debits = 0;
-    });
-
-    addEntriesToBuckets(buckets, currentEntries, "base");
+    addEntriesToBuckets(buckets, currentEntries);
     applyMovementsToBuckets(buckets, currentMovements);
     applyExpensesToBuckets(buckets, currentExpenses);
 
     ORDER.forEach((bucket) => {
-      buckets[bucket].available = buckets[bucket].prior + buckets[bucket].base + buckets[bucket].credits - buckets[bucket].debits;
+      buckets[bucket].available = buckets[bucket].base + buckets[bucket].credits - buckets[bucket].debits;
     });
 
-    const allExternal = externalTotals(visibleMovements, unlinkedExpenses);
-    const allEntriesTotal = state.entries
-      .filter((entry) => entryDate(entry) >= FIRST_CYCLE_START)
-      .reduce((sum, entry) => sum + Number(entry.amount_paid || 0), 0);
-
     return {
-      priorEntriesTotal,
       currentEntriesTotal,
-      priorExternal,
       currentExternal,
-      priorBalance,
-      currentNet,
       currentBalance,
       buckets,
-      allEntriesTotal,
-      allExternal,
-      allBalance: allEntriesTotal + allExternal.credits - allExternal.debits,
       currentEntriesCount: currentEntries.length,
       currentMovementsCount: currentMovements.length,
-      unlinkedExpensesCount: unlinkedExpenses.length,
+      unlinkedExpensesCount: currentExpenses.length,
     };
   }
+
+  window.INTEGRO_FINANCE_CYCLE_CORE = Object.freeze({
+    calculateCurrentCycleSnapshot,
+  });
 
   async function getContext() {
     const { data: authData, error: authError } = await db.auth.getUser();
@@ -356,18 +301,18 @@
 
   async function ensureCurrentCycle() {
     const range = currentCycleRange(new Date());
-
-    const { data: existing, error: existingError } = await db
+    const findCycle = () => db
       .from("finance_cash_cycles")
       .select("*")
       .eq("school_id", state.school.id)
       .eq("cycle_key", range.cycleKey)
       .maybeSingle();
 
-    if (existingError) throw existingError;
+    const existingResult = await findCycle();
+    if (existingResult.error) throw existingResult.error;
 
-    if (existing) {
-      state.cycle = existing;
+    if (existingResult.data) {
+      state.cycle = existingResult.data;
       return;
     }
 
@@ -385,6 +330,15 @@
       .select("*")
       .single();
 
+    if (error?.code === "23505") {
+      const retryResult = await findCycle();
+      if (retryResult.error || !retryResult.data) {
+        throw retryResult.error || error;
+      }
+      state.cycle = retryResult.data;
+      return;
+    }
+
     if (error) throw error;
     state.cycle = data;
   }
@@ -393,17 +347,17 @@
     if (!state.school?.id) await getContext();
     await ensureCurrentCycle();
 
-    const [cyclesRes, entriesRes, expensesRes, movementsRes] = await Promise.all([
-      db.from("finance_cash_cycles").select("*").eq("school_id", state.school.id).order("start_date", { ascending: true }),
-      db.from("finance_entries").select("*").eq("school_id", state.school.id).gte("entry_date", FIRST_CYCLE_START).order("entry_date", { ascending: true }),
-      db.from("finance_expenses").select("*").eq("school_id", state.school.id).gte("expense_date", FIRST_CYCLE_START).order("expense_date", { ascending: true }),
-      db.from("finance_cash_cycle_movements").select("*").eq("school_id", state.school.id).order("created_at", { ascending: true }),
+    const start = state.cycle.start_date;
+    const end = state.cycle.end_date;
+    const [entriesRes, expensesRes, movementsRes] = await Promise.all([
+      db.from("finance_entries").select("*").eq("school_id", state.school.id).gte("entry_date", start).lte("entry_date", end).order("entry_date", { ascending: true }),
+      db.from("finance_expenses").select("*").eq("school_id", state.school.id).gte("expense_date", start).lte("expense_date", end).order("expense_date", { ascending: true }),
+      db.from("finance_cash_cycle_movements").select("*").eq("school_id", state.school.id).eq("cycle_id", state.cycle.id).gte("movement_date", start).lte("movement_date", end).order("created_at", { ascending: true }),
     ]);
 
-    const error = [cyclesRes, entriesRes, expensesRes, movementsRes].find((result) => result.error)?.error;
+    const error = [entriesRes, expensesRes, movementsRes].find((result) => result.error)?.error;
     if (error) throw error;
 
-    state.cycles = cyclesRes.data || [];
     state.entries = entriesRes.data || [];
     state.expenses = expensesRes.data || [];
 
@@ -412,55 +366,6 @@
     state.duplicatesIgnored = deduped.duplicateIds;
     state.snapshot = calculateSnapshot();
     window.INTEGRO_FINANCE_SNAPSHOT = state.snapshot;
-  }
-
-  async function reconcileCurrentCycleOnce() {
-    if (state.reconciliationAttempted) return false;
-    state.reconciliationAttempted = true;
-
-    if (state.cycle?.cycle_key !== TARGET_CYCLE_KEY) return false;
-
-    const existing = state.movements.find((movement) => String(movement.notes || "").includes(RECONCILIATION_MARK));
-    if (existing) return false;
-
-    const current = Number(state.snapshot?.currentBalance || 0);
-    const delta = Number((TARGET_BALANCE - current).toFixed(2));
-    if (Math.abs(delta) < 0.01) return false;
-
-    let source = null;
-    let destination = null;
-
-    if (delta > 0) {
-      destination = "fundo_caixa";
-    } else {
-      source = ORDER
-        .map((bucket) => ({ bucket, available: Number(state.snapshot?.buckets?.[bucket]?.available || 0) }))
-        .sort((a, b) => b.available - a.available)[0]?.bucket || "fundo_caixa";
-    }
-
-    const amount = Math.abs(delta);
-    const description = delta > 0
-      ? "Saldo transportado e reconciliado do ciclo anterior"
-      : "Correção de reconciliação do saldo financeiro";
-
-    const { error } = await db
-      .from("finance_cash_cycle_movements")
-      .insert({
-        school_id: state.school.id,
-        cycle_id: state.cycle.id,
-        movement_type: delta > 0 ? "ajuste_credito" : "ajuste_debito",
-        source_bucket: source,
-        destination_bucket: destination,
-        amount,
-        movement_date: state.cycle.start_date,
-        description,
-        notes: `${RECONCILIATION_MARK} | Saldo antes da conferência: ${money(current)} | Saldo definido: ${money(TARGET_BALANCE)} | Considerados saldo anterior, entradas e saídas do ciclo atual.`,
-        created_by: state.user.id,
-        updated_at: new Date().toISOString(),
-      });
-
-    if (error) throw error;
-    return true;
   }
 
   function ensureStyles() {
@@ -493,7 +398,6 @@
       .finance-balance-item span { display: block; color: #61746d; font-size: .8rem; font-weight: 800; }
       .finance-balance-item strong { display: block; color: #0b5242; font-size: 1.1rem; margin-top: 4px; }
       .finance-balance-item.final { background: #e8f5ee; border-color: #acd3bd; }
-      .cash-value-line.balance-prior strong { color: #0b5242; }
       .balance-kpi-note { display:block; margin-top:4px; color:#61746d; font-size:.72rem; font-weight:700; }
       .shareholder-negative-note {
         margin-top: 10px;
@@ -525,14 +429,14 @@
     panel.id = "financeBalanceAudit";
     panel.className = "finance-balance-audit";
     panel.innerHTML = `
-      <h3>Conferência do saldo acumulado</h3>
-      <p>O saldo considera o valor transportado do ciclo anterior, as entradas e as saídas reais do ciclo atual. Transferências entre contas não reduzem o saldo geral.</p>
+      <h3>Conferência do ciclo atual</h3>
+      <p>Cada ciclo começa em R$ 0,00. Somente entradas, créditos e saídas registrados entre o dia 9 e o dia 8 entram neste saldo.</p>
       <div class="finance-balance-grid">
-        <div class="finance-balance-item"><span>Saldo anterior</span><strong id="financeAuditPrior">R$ 0,00</strong></div>
+        <div class="finance-balance-item"><span>Início do ciclo</span><strong id="financeAuditStart">R$ 0,00</strong></div>
         <div class="finance-balance-item"><span>Entradas do ciclo</span><strong id="financeAuditEntries">R$ 0,00</strong></div>
-        <div class="finance-balance-item"><span>Créditos/transportes</span><strong id="financeAuditCredits">R$ 0,00</strong></div>
+        <div class="finance-balance-item"><span>Créditos externos</span><strong id="financeAuditCredits">R$ 0,00</strong></div>
         <div class="finance-balance-item"><span>Saídas do ciclo</span><strong id="financeAuditDebits">R$ 0,00</strong></div>
-        <div class="finance-balance-item final"><span>Saldo conferido</span><strong id="financeAuditBalance">R$ 0,00</strong></div>
+        <div class="finance-balance-item final"><span>Saldo do ciclo</span><strong id="financeAuditBalance">R$ 0,00</strong></div>
       </div>
       <p id="financeAuditNote" style="margin-top:12px"></p>
     `;
@@ -548,18 +452,19 @@
     const balance = $("saldoAtual");
     const receipts = $("recibosCount");
 
-    if (entries) entries.textContent = money(state.snapshot.allEntriesTotal + state.snapshot.allExternal.credits);
-    if (expenses) expenses.textContent = money(state.snapshot.allExternal.debits);
+    if (entries) entries.textContent = money(state.snapshot.currentEntriesTotal + state.snapshot.currentExternal.credits);
+    if (expenses) expenses.textContent = money(state.snapshot.currentExternal.debits);
     if (balance) {
-      balance.textContent = money(state.snapshot.allBalance);
-      if (!balance.parentElement?.querySelector(".balance-kpi-note")) {
-        const note = document.createElement("small");
+      balance.textContent = money(state.snapshot.currentBalance);
+      let note = balance.parentElement?.querySelector(".balance-kpi-note");
+      if (!note) {
+        note = document.createElement("small");
         note.className = "balance-kpi-note";
-        note.textContent = "Inclui saldo transportado e movimentos de todos os ciclos";
         balance.insertAdjacentElement("afterend", note);
       }
+      note.textContent = "Somente o ciclo atual; cada ciclo começa em R$ 0,00";
     }
-    if (receipts) receipts.textContent = String(state.entries.length);
+    if (receipts) receipts.textContent = String(state.snapshot.currentEntriesCount);
   }
 
   function paintCycleSummary() {
@@ -576,9 +481,9 @@
 
     const balanceCard = cycleBalance?.closest("article");
     const balanceLabel = balanceCard?.querySelector("small");
-    if (balanceLabel) balanceLabel.textContent = "Saldo atual (com ciclo anterior)";
+    if (balanceLabel) balanceLabel.textContent = "Saldo do ciclo atual";
 
-    if ($("financeAuditPrior")) $("financeAuditPrior").textContent = money(state.snapshot.priorBalance);
+    if ($("financeAuditStart")) $("financeAuditStart").textContent = money(0);
     if ($("financeAuditEntries")) $("financeAuditEntries").textContent = money(state.snapshot.currentEntriesTotal);
     if ($("financeAuditCredits")) $("financeAuditCredits").textContent = money(state.snapshot.currentExternal.credits);
     if ($("financeAuditDebits")) $("financeAuditDebits").textContent = money(state.snapshot.currentExternal.debits);
@@ -603,15 +508,7 @@
       const availableLine = card.querySelector(".cash-value-line.available");
       if (!values || !availableLine) return;
 
-      let priorLine = card.querySelector(".cash-value-line.balance-prior");
-      if (!priorLine) {
-        priorLine = document.createElement("div");
-        priorLine.className = "cash-value-line balance-prior";
-        priorLine.innerHTML = "<span>Saldo anterior</span><strong>R$ 0,00</strong>";
-        values.insertBefore(priorLine, values.firstElementChild);
-      }
-
-      priorLine.querySelector("strong").textContent = money(data.prior);
+      card.querySelector(".cash-value-line.balance-prior")?.remove();
 
       const lines = values.querySelectorAll(":scope > .cash-value-line");
       lines.forEach((line) => {
@@ -636,7 +533,7 @@
           const note = document.createElement("div");
           note.className = "shareholder-negative-note";
           note.textContent =
-            `Saldo negativo de ${money(data.available)}. Esse valor será descontado automaticamente do próximo ciclo.`;
+            `Saldo negativo de ${money(data.available)} somente neste ciclo. O próximo ciclo começará em R$ 0,00.`;
           card.querySelector(".cash-bucket-actions")?.insertAdjacentElement("beforebegin", note);
         }
 
@@ -663,12 +560,9 @@
     box.className = box.id === "cashCycleMessage" ? `cash-status show ${type}` : `status ${type}`;
   }
 
-  async function refresh(options = {}) {
+  async function refresh() {
     if (state.loading) {
       state.refreshQueued = true;
-      if (options.reconcile !== false) {
-        state.reconcileQueued = true;
-      }
       return;
     }
     state.loading = true;
@@ -683,39 +577,22 @@
         );
       }
 
-      if (options.reconcile !== false) {
-        const reconciled = await reconcileCurrentCycleOnce();
-        if (reconciled) await loadData();
-      }
-
       paint();
-
-      if (Math.abs(Number(state.snapshot.currentBalance) - TARGET_BALANCE) < 0.01 && state.cycle.cycle_key === TARGET_CYCLE_KEY) {
-        showPanelMessage(`Saldo financeiro conferido e ajustado para ${money(TARGET_BALANCE)}. O ciclo atual está considerando corretamente o saldo anterior.`, "ok");
-      }
     } catch (error) {
-      console.error("INTEGRO: erro na conferência do saldo", error);
-      showPanelMessage(error.message || "Erro ao conferir o saldo financeiro.", "error");
+      console.error("INTEGRO: erro ao atualizar o ciclo financeiro", error);
+      showPanelMessage(error.message || "Erro ao atualizar o ciclo financeiro.", "error");
     } finally {
       state.loading = false;
 
       if (state.refreshQueued) {
-        const shouldReconcile = state.reconcileQueued;
         state.refreshQueued = false;
-        state.reconcileQueued = false;
-        setTimeout(() => refresh({ reconcile: shouldReconcile }), 0);
+        setTimeout(refresh, 0);
       }
     }
   }
 
   function bind() {
-    const updateFromDatabase = () => {
-      if (state.snapshot) {
-        paint();
-      }
-
-      refresh({ reconcile: false });
-    };
+    const updateFromDatabase = () => refresh();
 
     document.addEventListener("integro:cash-cycle-base-rendered", updateFromDatabase);
     document.addEventListener("integro:finance-data-changed", updateFromDatabase);
@@ -729,7 +606,7 @@
       tries += 1;
       if ($("cashCyclePanel") && $("saldoAtual")) {
         clearInterval(timer);
-        refresh({ reconcile: true });
+        refresh();
       } else if (tries >= 40) {
         clearInterval(timer);
       }

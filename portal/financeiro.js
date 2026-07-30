@@ -409,9 +409,8 @@ function renderKpis() {
     $('totalEntradas').textContent = money(entradas);
     $('totalSaidas').textContent = money(saidas);
     $('saldoAtual').textContent = money(entradas - saidas);
+    $('recibosCount').textContent = state.entries.length;
   }
-
-  $('recibosCount').textContent = state.entries.length;
 
   document.dispatchEvent(new CustomEvent('integro:finance-data-changed'));
 }
