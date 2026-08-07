@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <meta name="robots" content="noindex,nofollow" >
+  <meta http-equiv="Cache-Control" content="no-store" >
+  <meta name="theme-color" content="#073d30" >
+  <title>Apuração da Pesquisa de Satisfação | INTEGRO</title>
+  <link rel="stylesheet" href="./resultados.css?v=20260807" >
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/portal/config.js"></script>
+  <script type="module" src="./resultados.js?v=20260807"></script>
+</head>
+<body>
+  <header class="dashboard-header">
+    <a class="brand" href="/portal/dashboard.html">
+      <img src="/logo-whatsapp.png" alt="Instituto Integro" >
+      <span><small>INSTITUTO INTEGRO</small><strong>Apuração da pesquisa</strong></span>
+    </a>
+    <div class="header-actions">
+      <span id="viewerName" class="user-pill">Carregando...</span>
+      <a class="button button-light" href="/portal/gestao-escolar.html#painel-pesquisa">Área de Gestão</a>
+      <button id="logoutButton" class="button button-danger" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="dashboard-shell">
+    <section id="loadingState" class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Carregando a apuração...</h1>
+      <p>Organizando respostas, indicadores e comentários.</p>
+    </section>
+
+    <section id="loginState" class="state-card hidden" aria-live="polite">
+      <div class="state-icon" aria-hidden="true">🔒</div>
+      <h1>Acesso protegido</h1>
+      <p>Entre com uma conta de administrador, direção ou coordenação da escola.</p>
+      <a class="button button-primary" href="/portal/index.html?next=/pesquisa-satisfacao/resultados.html">Entrar para consultar</a>
+    </section>
+
+    <section id="errorState" class="state-card hidden" aria-live="polite">
+      <div class="state-icon warning" aria-hidden="true">!</div>
+      <h1 id="errorTitle">Não foi possível carregar</h1>
+      <p id="errorMessage">Tente novamente em alguns instantes.</p>
+      <button id="retryButton" class="button button-primary" type="button">Tentar novamente</button>
+    </section>
+
+    <div id="dashboard" class="hidden">
+      <section class="hero-card">
+        <div>
+          <span id="surveyStatus" class="status-pill">Pesquisa</span>
+          <h1 id="surveyTitle">Pesquisa de Satisfação das Famílias</h1>
+          <p id="schoolName">Escola Municipal Etelvina Pereira Braga</p>
+          <small id="lastUpdate">Atualizando dados...</small>
+        </div>
+        <div class="hero-actions">
+          <a class="button button-primary" href="./index.html" target="_blank" rel="noopener">Abrir formulário</a>
+          <button id="copyLinkButton" class="button button-light" type="button">Copiar link</button>
+          <button id="printButton" class="button button-light" type="button">Imprimir / PDF</button>
+        </div>
+      </section>
+
+      <section class="toolbar-card" aria-label="Filtros e ações">
+        <div class="filters">
+          <label>
+            <span>Ano do aluno</span>
+            <select id="gradeFilter"><option value="all">Todos os anos</option></select>
+          </label>
+          <label>
+            <span>Turno</span>
+            <select id="shiftFilter"><option value="all">Todos os turnos</option></select>
+          </label>
+        </div>
+        <div class="toolbar-actions">
+          <button id="refreshButton" class="button button-light" type="button">Atualizar dados</button>
+          <button id="exportButton" class="button button-light" type="button">Exportar CSV</button>
+          <button id="statusButton" class="button button-warning hidden" type="button">Encerrar pesquisa</button>
+        </div>
+      </section>
+
+      <div id="smallSampleWarning" class="sample-warning hidden" role="status">
+        Amostra pequena: interprete este recorte com cautela. Grupos muito pequenos podem não representar todas as famílias.
+      </div>
+
+      <section class="metric-grid" aria-label="Resumo da pesquisa">
+        <article class="metric-card">
+          <span>Respostas recebidas</span>
+          <strong id="totalResponses">0</strong>
+          <small>participações válidas</small>
+        </article>
+        <article class="metric-card">
+          <span>Índice geral</span>
+          <strong id="overallIndex">—</strong>
+          <small>escala convertida para 0 a 100</small>
+        </article>
+        <article class="metric-card">
+          <span>Respostas satisfeitas</span>
+          <strong id="positiveRate">—</strong>
+          <small>respostas “Satisfeito(a)”</small>
+        </article>
+        <article class="metric-card priority-card">
+          <span>Maior prioridade</span>
+          <strong id="topPriority">—</strong>
+          <small id="topPriorityDetail">conforme as famílias</small>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel panel-wide">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">COMPARAÇÃO</span>
+              <h2>Satisfação por área</h2>
+              <p>O comprimento da barra representa o índice de 0 a 100.</p>
+            </div>
+            <div class="legend" role="group" aria-label="Legenda">
+              <span><i class="legend-dot score-1"></i>Insatisfeito</span>
+              <span><i class="legend-dot score-2"></i>Parcialmente</span>
+              <span><i class="legend-dot score-3"></i>Satisfeito</span>
+              <span><i class="legend-dot score-na"></i>Não sabe</span>
+            </div>
+          </div>
+          <div id="domainChart" class="domain-chart"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">AÇÃO</span>
+              <h2>Prioridades de melhoria</h2>
+              <p>Área escolhida pelas famílias para receber atenção primeiro.</p>
+            </div>
+          </div>
+          <div id="priorityChart" class="priority-chart"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">PARTICIPAÇÃO</span>
+              <h2>Respostas por dia</h2>
+              <p>Evolução da participação durante a edição.</p>
+            </div>
+          </div>
+          <div id="trendChart" class="trend-chart"></div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker">DETALHAMENTO</span>
+            <h2>Resultado de cada pergunta</h2>
+            <p>“Não sei avaliar” é contado, mas não entra na nota.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Área e pergunta</th><th>Índice</th><th>Insatisfeito</th><th>Parcialmente</th><th>Satisfeito</th><th>Não sabe</th></tr>
+            </thead>
+            <tbody id="questionsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dashboard-grid lower-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">ESCUTA DAS FAMÍLIAS</span>
+              <h2>O que precisa melhorar</h2>
+              <p>Os comentários aparecem sem nome e sem telefone.</p>
+            </div>
+            <span id="commentsCount" class="count-pill">0 comentários</span>
+          </div>
+          <div id="commentsList" class="comments-list"></div>
+        </article>
+
+        <article class="panel share-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">DIVULGAÇÃO</span>
+              <h2>Link e QR Code</h2>
+              <p>Use em cartazes, reuniões e mensagens aos responsáveis.</p>
+            </div>
+          </div>
+          <img class="qr-code" src="/assets/pesquisa-satisfacao/qr-etelvina.svg" alt="QR Code para abrir a pesquisa de satisfação" >
+          <code id="publicLink">https://www.institutointegro.com.br/pesquisa-satisfacao/</code>
+          <div class="share-actions">
+            <button id="copyLinkSecondary" class="button button-primary" type="button">Copiar link</button>
+            <a class="button button-light" href="/assets/pesquisa-satisfacao/qr-etelvina.svg" download="QR-Pesquisa-Etelvina.svg">Baixar QR Code</a>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel participants-panel">
+        <details>
+          <summary>
+            <span><strong>Controle de participações</strong><small>Nome disponível à direção; telefone parcialmente oculto. A coordenação vê a identificação protegida.</small></span>
+            <span id="participantsCount" class="count-pill">0</span>
+          </summary>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Responsável</th><th>Telefone</th><th>Ano</th><th>Turno</th><th>Contato autorizado</th><th>Data</th><th>Ação</th></tr></thead>
+              <tbody id="participantsTable"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body>
+</html>

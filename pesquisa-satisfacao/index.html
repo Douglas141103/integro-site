@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <meta name="robots" content="noindex,nofollow" >
+  <meta name="theme-color" content="#0b5f49" >
+  <title>Pesquisa de Satisfação das Famílias | Etelvina Pereira Braga</title>
+  <link rel="stylesheet" href="./pesquisa.css?v=20260807" >
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/portal/config.js"></script>
+  <script type="module" src="./pesquisa.js?v=20260807"></script>
+</head>
+<body>
+  <a class="skip-link" href="#surveyMain">Ir para a pesquisa</a>
+
+  <header class="survey-header">
+    <div class="header-inner">
+      <div class="school-symbol" aria-hidden="true">
+        <svg viewBox="0 0 48 48" role="img">
+          <path d="M5 20.5 24 7l19 13.5-3.3 4.7L24 14 8.3 25.2 5 20.5Z" fill="currentColor"/>
+          <path d="M10 25h28v15H10z" fill="currentColor" opacity=".22"/>
+          <path d="M15 25h18v15H15zM21 30h6v10h-6z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <p class="eyebrow">ESCOLA MUNICIPAL</p>
+        <strong>Etelvina Pereira Braga</strong>
+      </div>
+    </div>
+  </header>
+
+  <main id="surveyMain" class="page-shell">
+    <section class="intro-card" aria-labelledby="pageTitle">
+      <div class="intro-copy">
+        <span class="survey-badge">Pesquisa das famílias • 2026</span>
+        <h1 id="pageTitle">Sua opinião ajuda a escola a melhorar</h1>
+        <p>
+          Avalie cinco áreas da escola. O preenchimento leva cerca de 3 minutos e será aceita
+          uma resposta por telefone nesta edição.
+        </p>
+      </div>
+      <div class="intro-facts" role="group" aria-label="Informações da pesquisa">
+        <div><strong>5</strong><span>áreas</span></div>
+        <div><strong>15</strong><span>perguntas</span></div>
+        <div><strong>3 min</strong><span>em média</span></div>
+      </div>
+    </section>
+
+    <section id="loadingState" class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h2>Preparando a pesquisa...</h2>
+      <p>Aguarde alguns segundos.</p>
+    </section>
+
+    <section id="unavailableState" class="state-card hidden" aria-live="polite">
+      <div class="state-icon" aria-hidden="true">!</div>
+      <h2 id="unavailableTitle">Pesquisa indisponível</h2>
+      <p id="unavailableMessage">Não foi possível abrir o formulário agora.</p>
+      <button id="retryButton" class="button button-secondary" type="button">Tentar novamente</button>
+    </section>
+
+    <section id="formCard" class="form-card hidden" aria-labelledby="formHeading">
+      <div class="progress-head">
+        <div>
+          <p class="step-label" id="stepLabel">Etapa 1 de 7</p>
+          <h2 id="formHeading">Identificação do responsável</h2>
+        </div>
+        <span id="progressPercent" class="progress-percent">14%</span>
+      </div>
+      <div class="progress-track" aria-hidden="true">
+        <span id="progressBar"></span>
+      </div>
+
+      <form id="surveyForm" novalidate>
+        <section class="survey-step active" data-step-title="Identificação do responsável">
+          <div class="step-intro">
+            <h3>Antes de começar</h3>
+            <p>
+              A pesquisa é confidencial, mas não é anônima. Nome e telefone serão usados para
+              impedir respostas repetidas. Nos gráficos, as avaliações aparecerão agrupadas.
+            </p>
+          </div>
+
+          <div class="field-grid">
+            <label class="field field-wide">
+              <span>Nome completo do responsável <b aria-hidden="true">*</b></span>
+              <input id="respondentName" name="respondentName" type="text" autocomplete="name" maxlength="120" required
+                placeholder="Digite seu nome completo" >
+              <small class="field-error" data-error-for="respondentName"></small>
+            </label>
+
+            <label class="field">
+              <span>Telefone com DDD <b aria-hidden="true">*</b></span>
+              <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" required
+                placeholder="(92) 99999-9999" >
+              <small>O mesmo número não poderá responder novamente.</small>
+              <small class="field-error" data-error-for="phone"></small>
+            </label>
+
+            <label class="field">
+              <span>Seu vínculo com o aluno</span>
+              <select id="relationship" name="relationship">
+                <option value="Prefiro nao informar">Prefiro não informar</option>
+                <option value="Mae">Mãe</option>
+                <option value="Pai">Pai</option>
+                <option value="Responsavel legal">Responsável legal</option>
+                <option value="Outro responsavel">Outro responsável</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Ano do aluno</span>
+              <select id="studentGrade" name="studentGrade">
+                <option value="Prefiro não informar">Prefiro não informar</option>
+                <option value="6º ano">6º ano</option>
+                <option value="7º ano">7º ano</option>
+                <option value="8º ano">8º ano</option>
+                <option value="9º ano">9º ano</option>
+                <option value="Mais de um ano">Tenho alunos em mais de um ano</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Turno</span>
+              <select id="studentShift" name="studentShift">
+                <option value="Prefiro nao informar">Prefiro não informar</option>
+                <option value="Matutino">Matutino</option>
+                <option value="Vespertino">Vespertino</option>
+                <option value="Integral">Tempo integral</option>
+                <option value="Mais de um turno">Mais de um turno</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="privacy-box">
+            <label class="check-row">
+              <input id="privacyAccepted" name="privacyAccepted" type="checkbox" required >
+              <span>Li o aviso de privacidade e estou ciente da finalidade desta pesquisa. <b aria-hidden="true">*</b></span>
+            </label>
+            <small class="field-error" data-error-for="privacyAccepted"></small>
+            <details>
+              <summary>Ler o aviso de privacidade</summary>
+              <p>
+                A Escola Municipal Etelvina Pereira Braga utilizará nome e telefone apenas para
+                validar uma participação por responsável e apurar esta pesquisa. O acesso individual
+                ficará restrito à gestão autorizada. Os dados de identificação serão mantidos por até
+                180 dias após a apuração e não serão usados para publicidade. Depois disso, permanece
+                apenas um identificador técnico não reversível para impedir repetição nesta edição.
+                Para dúvidas, correção de dados ou exercício de direitos, procure a secretaria da escola.
+              </p>
+            </details>
+          </div>
+
+          <label class="honeypot" aria-hidden="true">
+            Não preencha este campo
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" >
+          </label>
+        </section>
+
+        <div id="questionSteps"></div>
+
+        <section class="survey-step" data-step-title="Sugestões de melhoria">
+          <div class="step-intro">
+            <span class="area-number">Última etapa</span>
+            <h3>O que deve melhorar primeiro?</h3>
+            <p>Esta parte ajuda a escola a transformar as avaliações em ações concretas.</p>
+          </div>
+
+          <fieldset class="priority-fieldset">
+            <legend>Qual área deveria receber prioridade de melhoria? <b aria-hidden="true">*</b></legend>
+            <div class="priority-grid" id="priorityOptions">
+              <label><input type="radio" name="improvementPriority" value="gestao" required ><span>Gestão escolar</span></label>
+              <label><input type="radio" name="improvementPriority" value="professores" ><span>Professores</span></label>
+              <label><input type="radio" name="improvementPriority" value="infraestrutura" ><span>Infraestrutura</span></label>
+              <label><input type="radio" name="improvementPriority" value="merenda" ><span>Merenda escolar</span></label>
+              <label><input type="radio" name="improvementPriority" value="secretaria" ><span>Secretaria</span></label>
+              <label><input type="radio" name="improvementPriority" value="nenhuma" ><span>Nenhuma no momento</span></label>
+              <label><input type="radio" name="improvementPriority" value="nao_sei" ><span>Não sei responder</span></label>
+            </div>
+            <small class="field-error" data-error-for="improvementPriority"></small>
+          </fieldset>
+
+          <label class="field field-wide comment-field">
+            <span>Na sua opinião, o que a escola precisa melhorar?</span>
+            <textarea id="improvementComment" name="improvementComment" maxlength="1200" rows="6"
+              placeholder="Se possível, diga em qual área e explique sua sugestão."></textarea>
+            <small><span id="commentCount">0</span>/1200 caracteres. Não informe CPF, senhas ou dados de saúde do aluno.</small>
+          </label>
+
+          <label class="check-row contact-check">
+            <input id="contactPermission" name="contactPermission" type="checkbox" >
+            <span>Autorizo a escola a entrar em contato comigo para compreender melhor o comentário.</span>
+          </label>
+        </section>
+
+        <div id="formAlert" class="form-alert hidden" role="alert"></div>
+
+        <div class="form-actions">
+          <button id="previousButton" class="button button-secondary hidden" type="button">Voltar</button>
+          <button id="nextButton" class="button button-primary" type="button">Continuar</button>
+          <button id="submitButton" class="button button-primary hidden" type="submit">Enviar minha resposta</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="successState" class="state-card success-card hidden" aria-live="polite">
+      <div class="success-check" aria-hidden="true">✓</div>
+      <span class="survey-badge">Resposta registrada</span>
+      <h2>Obrigado por contribuir com a escola!</h2>
+      <p>Sua avaliação foi recebida e fará parte da apuração desta edição.</p>
+      <p id="successReference" class="reference"></p>
+    </section>
+  </main>
+
+  <footer class="survey-footer">
+    <p><strong>Escola Municipal Etelvina Pereira Braga</strong></p>
+    <p>Pesquisa organizada com apoio do Instituto Integro.</p>
+  </footer>
+
+  <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+</body>
+</html>
