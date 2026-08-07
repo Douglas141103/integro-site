@@ -4,10 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 const paths = {
   migration: new URL('../supabase/migrations/20260807_pesquisa_satisfacao_escolar.sql', import.meta.url),
+  aiMigration: new URL('../supabase/migrations/20260807130000_pesquisa_satisfacao_analise_ia.sql', import.meta.url),
   form: new URL('../pesquisa-satisfacao/index.html', import.meta.url),
   formScript: new URL('../pesquisa-satisfacao/pesquisa.js', import.meta.url),
   results: new URL('../pesquisa-satisfacao/resultados.html', import.meta.url),
   resultsScript: new URL('../pesquisa-satisfacao/resultados.js', import.meta.url),
+  resultsStyle: new URL('../pesquisa-satisfacao/resultados.css', import.meta.url),
   portal: new URL('../portal/gestao-escolar.html', import.meta.url),
   portalSurveyScript: new URL('../portal/gestao-pesquisa-satisfacao.js', import.meta.url),
   portalDashboard: new URL('../portal/dashboard.html', import.meta.url),
@@ -44,10 +46,11 @@ test('duplicidade é garantida no banco por edição e telefone normalizado', as
 });
 
 test('funções públicas e gerenciais possuem privilégios mínimos separados', async () => {
-  const sql = await source('migration');
+  const [sql, aiSql] = await Promise.all([source('migration'), source('aiMigration')]);
   assert.match(sql, /security definer\s+set search_path = ''/gi);
   assert.match(sql, /grant execute on function public\.get_public_school_satisfaction\(text\) to anon, authenticated/i);
-  assert.match(sql, /grant execute on function public\.submit_parent_school_satisfaction[\s\S]*to anon, authenticated/i);
+  assert.match(aiSql, /revoke all on function public\.submit_parent_school_satisfaction\([\s\S]*?from public, anon, authenticated/i);
+  assert.match(aiSql, /grant execute on function public\.submit_parent_school_satisfaction_v2\([\s\S]*?to anon, authenticated/i);
   assert.match(sql, /grant execute on function public\.get_school_satisfaction_results\(text\) to authenticated/i);
   assert.match(sql, /grant execute on function public\.get_school_satisfaction_summary\(text\) to authenticated/i);
   assert.doesNotMatch(sql, /grant\s+(select|insert|update|delete)[\s\S]*school_satisfaction/i);
@@ -68,7 +71,9 @@ test('formulário público não contém chave secreta nem instalador do portal',
   assert.match(html, /name="robots" content="noindex,nofollow"/i);
   assert.doesNotMatch(`${html}\n${script}`, /service_role|secret[_-]?key/i);
   assert.doesNotMatch(html, /pwa-install\.js/i);
-  assert.match(script, /submit_parent_school_satisfaction/i);
+  assert.match(html, /data-version="2026-08-07-ia1"/i);
+  assert.match(script, /submit_parent_school_satisfaction_v2/i);
+  assert.match(script, /p_privacy_notice_version/i);
 });
 
 test('painel separado exige sessão e usa a RPC gerencial', async () => {
@@ -80,8 +85,38 @@ test('painel separado exige sessão e usa a RPC gerencial', async () => {
   assert.match(script, /\['integro_admin', 'diretor', 'coordenacao'\]/i);
   assert.match(script, /window\.addEventListener\('pagehide'/i);
   assert.match(script, /window\.location\.replace\('\/portal\/index\.html'\)/i);
+  assert.match(script, /let dashboardLoadRevision\s*=\s*0/i);
+  assert.match(script, /const loadRevision\s*=\s*\+\+dashboardLoadRevision/i);
+  assert.match(script, /if \(loadRevision !== dashboardLoadRevision\) return;/i);
+  assert.match(script, /if \(event === 'SIGNED_OUT'\)[\s\S]*invalidateDashboardLoads\(\)/i);
   assert.match(html, /http-equiv="Cache-Control" content="no-store"/i);
   assert.doesNotMatch(`${html}\n${script}`, /service_role|secret[_-]?key/i);
+});
+
+test('relatório gerencial imprime gráficos e tabelas sem levar o controle de participantes ao PDF', async () => {
+  const [html, script, style] = await Promise.all([
+    source('results'), source('resultsScript'), source('resultsStyle')
+  ]);
+  assert.match(html, /id="managementAnalysisTitle"/i);
+  assert.match(html, /id="overallDistributionChart"/i);
+  assert.match(html, /id="analysisDomainsTable"/i);
+  assert.match(html, /id="analysisActions"/i);
+  assert.match(html, /id="aiAnalysisPanel"/i);
+  assert.match(html, /id="aiActionPlanTable"/i);
+  assert.match(script, /buildManagementAnalysis/i);
+  assert.match(script, /client\.functions\.invoke\('analyze-school-satisfaction'/i);
+  assert.match(script, /body:\s*\{\s*survey_slug:\s*SURVEY_SLUG,\s*grade,\s*shift\s*\}/i);
+  assert.match(script, /function renderMetrics\(\)[\s\S]*?clearAiAnalysis\(\)/i);
+  assert.match(script, /if \(!latestAiReport[\s\S]*?await generateAiAnalysis\(\)/i);
+  assert.match(script, /window\.requestAnimationFrame[\s\S]*window\.print\(\)/i);
+  assert.match(style, /@page\s*\{[\s\S]*size:\s*A4 portrait/i);
+  assert.match(style, /print-color-adjust:\s*exact/i);
+  assert.match(style, /\.lower-grid[\s\S]*\.participants-panel[\s\S]*display:\s*none\s*!important/i);
+  assert.match(style, /\.participants-panel[\s\S]*display:\s*none\s*!important/i);
+  assert.match(style, /thead\s*\{\s*display:\s*table-header-group/i);
+  assert.match(script, /root\.classList\.toggle\('trend-dense',\s*items\.length\s*>\s*14\)/i);
+  assert.match(style, /\.trend-chart\.trend-dense[\s\S]*visibility:\s*hidden/i);
+  assert.doesNotMatch(script, /\.innerHTML\s*=/i);
 });
 
 test('Portal Integro contém resumo sem PII e atalhos exclusivos da escola Etelvina', async () => {
