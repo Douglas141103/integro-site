@@ -33,6 +33,27 @@ const supabase = isConfigured
 
 const page = window.location.pathname.split('/').pop() || 'index.html';
 
+function safePostLoginTarget() {
+  const requested = new URLSearchParams(window.location.search).get('next');
+  const allowed = new Set([
+    '/pesquisa-satisfacao/resultados.html',
+    '/portal/dashboard.html',
+    '/portal/gestao-escolar.html'
+  ]);
+
+  if (!requested || requested.startsWith('//')) return './dashboard.html';
+
+  try {
+    const target = new URL(requested, window.location.origin);
+    if (target.origin !== window.location.origin || !allowed.has(target.pathname)) {
+      return './dashboard.html';
+    }
+    return `${target.pathname}${target.hash || ''}`;
+  } catch {
+    return './dashboard.html';
+  }
+}
+
 function translateRole(role) {
   const map = {
     integro_admin: 'Administrador INTEGRO',
@@ -179,7 +200,7 @@ async function handleLoginPage() {
 
   const { data } = await supabase.auth.getSession();
   if (data.session) {
-    window.location.href = './dashboard.html';
+    window.location.href = safePostLoginTarget();
     return;
   }
 
@@ -201,7 +222,7 @@ async function handleLoginPage() {
     }
 
     setFeedback('Login realizado. Redirecionando...', 'success');
-    window.location.href = './dashboard.html';
+    window.location.href = safePostLoginTarget();
   });
 
   forgotButton?.addEventListener('click', async () => {

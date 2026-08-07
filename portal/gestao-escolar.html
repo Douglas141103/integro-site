@@ -10,6 +10,7 @@
   <script src="./config.js"></script>
   <script defer src="./gestao-escolar.js?v=20260517-pre-matricula"></script>
   <script defer src="./gestao-empresa.js?v=20260505"></script>
+  <link rel="stylesheet" href="./gestao-pesquisa-satisfacao.css?v=20260807">
 
   <style>
     :root {
@@ -693,6 +694,12 @@
           <strong>Presença facial</strong>
           <small>Cadastre rostos autorizados e abra o terminal do tablet.</small>
         </a>
+
+        <button class="gestao-nav-button" type="button" data-etelvina-survey hidden data-gestao-tab="painel-pesquisa">
+          <span class="gestao-nav-icon">10</span>
+          <strong>Pesquisa de satisfação</strong>
+          <small>Acompanhe gráficos, prioridades e respostas das famílias.</small>
+        </button>
       </div>
     </section>
 
@@ -1098,6 +1105,59 @@
           </div>
         </form>
       </article>
+
+      <article id="painel-pesquisa" class="card gestao-panel survey-compact" data-etelvina-survey hidden>
+        <div class="survey-compact-head">
+          <div>
+            <span class="survey-compact-kicker">ESCUTA DAS FAMÍLIAS</span>
+            <h2>Apuração da pesquisa de satisfação</h2>
+            <p class="sub">Resumo atualizado da Escola Municipal Etelvina Pereira Braga. Os cálculos são os mesmos do painel completo.</p>
+          </div>
+          <div class="survey-compact-actions">
+            <button id="surveyCompactRefresh" class="btn-secondary" type="button">Atualizar</button>
+            <a class="btn btn-primary" href="../pesquisa-satisfacao/resultados.html">Abrir painel completo</a>
+          </div>
+        </div>
+
+        <div id="surveyCompactLoading" class="survey-compact-state">Carregando a apuração...</div>
+        <div id="surveyCompactError" class="survey-compact-state error hidden"></div>
+
+        <div id="surveyCompactContent" class="hidden">
+          <div class="survey-compact-status-row">
+            <span id="surveyCompactStatus" class="survey-compact-status">Pesquisa</span>
+            <span id="surveyCompactUpdated">Atualizando...</span>
+          </div>
+
+          <div class="survey-compact-metrics">
+            <div><span>Respostas</span><strong id="surveyCompactResponses">0</strong></div>
+            <div><span>Índice geral</span><strong id="surveyCompactIndex">—</strong></div>
+            <div><span>Respostas satisfeitas</span><strong id="surveyCompactPositive">—</strong></div>
+            <div><span>Maior prioridade</span><strong id="surveyCompactPriority">—</strong></div>
+          </div>
+
+          <div class="survey-compact-grid">
+            <section class="survey-compact-chart-card">
+              <div class="survey-compact-section-title">
+                <h3>Índice por área</h3>
+                <span>0 a 100</span>
+              </div>
+              <div id="surveyCompactDomains" class="survey-compact-domains"></div>
+            </section>
+
+            <section class="survey-compact-share-card">
+              <img src="../assets/pesquisa-satisfacao/qr-etelvina.svg" alt="QR Code da pesquisa de satisfação">
+              <div>
+                <h3>Compartilhe com os responsáveis</h3>
+                <p>O formulário é público e não exige acesso ao Portal Integro.</p>
+                <div class="survey-compact-actions">
+                  <button id="surveyCompactCopy" class="btn btn-primary" type="button">Copiar link</button>
+                  <a class="btn-secondary" href="../pesquisa-satisfacao/index.html" target="_blank" rel="noopener">Visualizar pesquisa</a>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
     </section>
 
     <div id="studentEditModal" class="modal-backdrop" aria-hidden="true">
@@ -1326,7 +1386,8 @@
           "painel-professores",
           "painel-alunos",
           "painel-vinculos",
-          "painel-empresa"
+          "painel-empresa",
+          "painel-pesquisa"
         ];
 
         setTimeout(function () {
@@ -1337,5 +1398,6 @@
   </script>
 
   <script src="/pwa-install.js?v=20260722-installer-v2"></script>
+  <script type="module" src="./gestao-pesquisa-satisfacao.js?v=20260807"></script>
 </body>
 </html>
