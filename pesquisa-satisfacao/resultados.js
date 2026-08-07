@@ -3,9 +3,10 @@ import {
   DOMAIN_LABELS,
   PRIORITY_LABELS,
   computeSurveyMetrics,
+  buildManagementAnalysis,
   buildSurveyCsv,
   percentage
-} from './core.mjs';
+} from './core.mjs?v=20260807-2';
 
 const PUBLIC_SURVEY_URL = 'https://www.institutointegro.com.br/pesquisa-satisfacao/';
 const TIME_ZONE = 'America/Manaus';
@@ -26,20 +27,71 @@ let rawPayload = null;
 let latestMetrics = null;
 let currentProfile = null;
 let toastTimer = null;
+let latestAiReport = null;
+let aiRequestInFlight = false;
+let aiAnalysisRevision = 0;
+let dashboardLoadRevision = 0;
+
+function invalidateDashboardLoads() {
+  dashboardLoadRevision += 1;
+}
 
 function clearNode(node) {
   while (node?.firstChild) node.removeChild(node.firstChild);
 }
 
+function clearAiAnalysis() {
+  aiAnalysisRevision += 1;
+  latestAiReport = null;
+  const panel = $('aiAnalysisPanel');
+  panel?.classList.add('hidden');
+  panel?.classList.remove('has-ai-analysis');
+  $('aiLoadingState')?.classList.add('hidden');
+  $('aiErrorState')?.classList.add('hidden');
+  $('aiAnalysisContent')?.classList.add('hidden');
+  [
+    'aiStrengths',
+    'aiAttentionPoints',
+    'aiSegmentInsights',
+    'aiActionPlanTable',
+    'aiMonitoringRecommendations',
+    'aiRisksLimitations'
+  ].forEach((id) => clearNode($(id)));
+  ['aiExecutiveSummary', 'aiConfidenceExplanation', 'aiFinalAssessment', 'aiAnalysisMeta']
+    .forEach((id) => { if ($(id)) $(id).textContent = ''; });
+  if (!aiRequestInFlight && $('aiAnalysisButton')) {
+    $('aiAnalysisButton').disabled = false;
+    $('aiAnalysisButton').textContent = 'Gerar análise com IA';
+  }
+}
+
 function clearSensitivePayload() {
+  clearAiAnalysis();
   rawPayload = null;
   latestMetrics = null;
   currentProfile = null;
-  ['commentsList', 'participantsTable', 'questionsTable', 'domainChart', 'priorityChart', 'trendChart']
+  [
+    'commentsList',
+    'participantsTable',
+    'questionsTable',
+    'domainChart',
+    'priorityChart',
+    'trendChart',
+    'analysisOverview',
+    'overallDistributionChart',
+    'analysisDomainsTable',
+    'strongestQuestions',
+    'attentionQuestions',
+    'analysisActions',
+    'gradeBreakdown',
+    'shiftBreakdown',
+    'relationshipBreakdown'
+  ]
     .forEach((id) => clearNode($(id)));
 }
 
 function clearSensitiveState() {
+  invalidateDashboardLoads();
   clearSensitivePayload();
   $('viewerName').textContent = 'Acesso protegido';
   showOnly(loadingState);
@@ -179,14 +231,19 @@ function renderTrendChart(metrics) {
   const items = [...counts.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([, item]) => [item.label, item.count]);
+  const labelStep = Math.max(1, Math.ceil(items.length / 5));
+  root.classList.toggle('trend-dense', items.length > 14);
   if (!items.length) {
     root.append(createElement('div', 'empty-state', 'O gráfico aparecerá quando as primeiras respostas forem recebidas.'));
     return;
   }
 
   const max = Math.max(...items.map(([, count]) => count), 1);
-  items.forEach(([label, count]) => {
+  items.forEach(([label, count], index) => {
     const day = createElement('div', 'trend-day');
+    if (index === 0 || index === items.length - 1 || index % labelStep === 0) {
+      day.classList.add('trend-label-key');
+    }
     const value = createElement('span', 'trend-value', count);
     const wrap = createElement('div', 'trend-bar-wrap');
     const bar = createElement('div', 'trend-bar');
@@ -284,6 +341,345 @@ function renderParticipants(metrics) {
   }
 }
 
+function renderOverallDistribution(analysis) {
+  const root = $('overallDistributionChart');
+  clearNode(root);
+
+  for (const item of analysis.overallDistribution) {
+    const row = createElement('div', 'distribution-row');
+    const track = createElement('div', 'distribution-track');
+    const fill = createElement('div', `distribution-fill score-${item.key}`);
+    fill.style.width = `${Math.max(0, Math.min(100, Number(item.rate || 0)))}%`;
+    track.append(fill);
+    row.append(
+      createElement('span', '', item.label),
+      track,
+      createElement('span', 'distribution-value', `${formatPercent(item.rate)} • ${item.count}`)
+    );
+    root.append(row);
+  }
+}
+
+function renderAnalysisDomains(analysis) {
+  const body = $('analysisDomainsTable');
+  clearNode(body);
+
+  for (const domain of analysis.rankedDomains) {
+    const row = document.createElement('tr');
+    row.append(
+      createElement('td', '', domain.label),
+      createElement('td', 'cell-index', `${Number(domain.index).toFixed(1).replace('.', ',')}/100`),
+      createElement('td', '', formatPercent(domain.satisfiedRate)),
+      createElement('td', '', formatPercent(domain.dissatisfiedRate)),
+      createElement('td', '', formatPercent(domain.notApplicableRate))
+    );
+    const bandCell = document.createElement('td');
+    bandCell.append(createElement('span', `analysis-band band-${domain.band.key}`, domain.band.label));
+    row.append(bandCell);
+    body.append(row);
+  }
+
+  if (!analysis.rankedDomains.length) {
+    const row = document.createElement('tr');
+    const cell = createElement('td', '', 'Ainda não há avaliações válidas para comparar as áreas.');
+    cell.colSpan = 6;
+    row.append(cell);
+    body.append(row);
+  }
+}
+
+function renderQuestionRanking(rootId, questions) {
+  const root = $(rootId);
+  clearNode(root);
+
+  for (const question of questions) {
+    const item = document.createElement('li');
+    item.append(
+      createElement('strong', '', `${Number(question.index).toFixed(1).replace('.', ',')}/100 • ${question.domainLabel}`),
+      createElement('span', '', question.prompt),
+      createElement(
+        'small',
+        '',
+        `Satisfeitos: ${formatPercent(question.satisfiedRate)} • Insatisfeitos: ${formatPercent(question.dissatisfiedRate)}`
+      )
+    );
+    root.append(item);
+  }
+
+  if (!questions.length) {
+    root.append(createElement('li', '', 'Sem avaliações válidas neste recorte.'));
+  }
+}
+
+function renderAnalysisActions(actions) {
+  const root = $('analysisActions');
+  clearNode(root);
+
+  for (const action of actions) {
+    const item = createElement('li', `action-${action.level}`);
+    item.append(createElement('strong', '', action.title), createElement('span', '', action.detail));
+    root.append(item);
+  }
+}
+
+function renderBreakdown(rootId, items) {
+  const root = $(rootId);
+  clearNode(root);
+
+  if (!items.length) {
+    root.append(createElement('div', 'empty-state', 'Sem participações neste recorte.'));
+    return;
+  }
+
+  for (const item of items) {
+    const row = createElement('div', 'breakdown-row');
+    const label = createElement('span', '', item.label);
+    label.title = item.label;
+    const track = createElement('div', 'breakdown-track');
+    const fill = createElement('div', 'breakdown-fill');
+    fill.style.width = `${Math.max(0, Math.min(100, Number(item.rate || 0)))}%`;
+    track.append(fill);
+    row.append(label, track, createElement('span', 'breakdown-value', `${item.count} • ${formatPercent(item.rate)}`));
+    root.append(row);
+  }
+}
+
+function renderManagementAnalysis(metrics) {
+  const includeContactPermission = ['integro_admin', 'diretor'].includes(rawPayload?.viewer_role);
+  const analysis = buildManagementAnalysis(metrics, { includeContactPermission });
+  const overviewRoot = $('analysisOverview');
+  clearNode(overviewRoot);
+
+  if (analysis.overview.length) {
+    analysis.overview.forEach((finding) => {
+      const card = document.createElement('article');
+      card.append(createElement('strong', '', finding.label), createElement('p', '', finding.text));
+      overviewRoot.append(card);
+    });
+  } else {
+    overviewRoot.append(createElement('div', 'empty-state', analysis.sample.text));
+  }
+
+  const sampleBadge = $('analysisSampleBadge');
+  sampleBadge.className = `analysis-sample-badge sample-${analysis.sample.key}`;
+  sampleBadge.textContent = analysis.sample.label;
+  sampleBadge.title = analysis.sample.text;
+  $('analysisCoverage').textContent = formatPercent(analysis.coverageRate);
+  $('analysisNotApplicable').textContent = formatPercent(analysis.notApplicableRate);
+  $('analysisCommentRate').textContent = formatPercent(analysis.commentRate);
+
+  $('analysisContactCard').classList.toggle('hidden', !analysis.canAnalyzeContactPermission);
+  $('analysisIndicatorGrid').classList.toggle('without-contact', !analysis.canAnalyzeContactPermission);
+  if (analysis.canAnalyzeContactPermission) {
+    $('analysisContactRate').textContent = formatPercent(analysis.contactRate);
+    $('analysisContactDetail').textContent = `${analysis.contactCount} família(s)`;
+  }
+
+  renderOverallDistribution(analysis);
+  renderAnalysisDomains(analysis);
+  renderQuestionRanking('strongestQuestions', analysis.strongestQuestions);
+  renderQuestionRanking('attentionQuestions', analysis.attentionQuestions);
+  renderAnalysisActions(analysis.actions);
+  renderBreakdown('gradeBreakdown', analysis.breakdowns.grades);
+  renderBreakdown('shiftBreakdown', analysis.breakdowns.shifts);
+  renderBreakdown('relationshipBreakdown', analysis.breakdowns.relationships);
+
+  $('analysisMethodNote').textContent =
+    `Metodologia: o índice geral dá o mesmo peso às cinco áreas e converte a escala de três níveis para 0 a 100; “Não sei avaliar” não entra na nota. ${analysis.sample.text} Esta é uma análise descritiva, não uma inferência estatística.`;
+}
+
+function appendAiEvidence(root, items) {
+  const evidence = Array.isArray(items) ? items.filter((item) => String(item || '').trim()) : [];
+  if (!evidence.length) return;
+  const list = createElement('ul', 'ai-evidence-list');
+  evidence.forEach((item) => list.append(createElement('li', '', item)));
+  root.append(list);
+}
+
+function renderAiFindings(rootId, items, type) {
+  const root = $(rootId);
+  clearNode(root);
+  const findings = Array.isArray(items) ? items : [];
+
+  if (!findings.length) {
+    root.append(createElement('div', 'empty-state', 'Nenhum achado foi informado nesta seção.'));
+    return;
+  }
+
+  for (const finding of findings) {
+    const card = createElement('article', 'ai-finding-card');
+
+    if (type === 'segment') {
+      card.append(
+        createElement('strong', '', finding.segment || 'Segmento'),
+        createElement('p', '', finding.finding || '')
+      );
+      if (finding.caution) card.append(createElement('small', '', `Cautela: ${finding.caution}`));
+    } else {
+      card.append(
+        createElement('strong', '', finding.title || 'Achado'),
+        createElement('p', '', finding.finding || '')
+      );
+      appendAiEvidence(card, finding.evidence);
+      if (finding.management_implication) {
+        card.append(createElement('small', '', `Implicação para a gestão: ${finding.management_implication}`));
+      }
+    }
+
+    root.append(card);
+  }
+}
+
+function renderAiStringList(rootId, values) {
+  const root = $(rootId);
+  clearNode(root);
+  const items = Array.isArray(values) ? values.filter((item) => String(item || '').trim()) : [];
+  if (!items.length) {
+    root.append(createElement('li', '', 'Nenhum item informado.'));
+    return;
+  }
+  items.forEach((item) => root.append(createElement('li', '', item)));
+}
+
+function renderAiActionPlan(actions) {
+  const body = $('aiActionPlanTable');
+  clearNode(body);
+  const rows = Array.isArray(actions) ? [...actions] : [];
+  rows.sort((left, right) => Number(left.priority || 99) - Number(right.priority || 99));
+
+  for (const action of rows) {
+    const row = document.createElement('tr');
+    const priorityCell = document.createElement('td');
+    priorityCell.append(createElement('span', 'ai-priority-number', action.priority || '—'));
+    const indicatorTarget = [action.indicator, action.target].filter(Boolean).join(' • Meta: ');
+    row.append(
+      priorityCell,
+      createElement('td', '', String(action.horizon || '').replaceAll('_', ' ')),
+      createElement('td', '', action.action || ''),
+      createElement('td', '', action.owner_suggestion || ''),
+      createElement('td', '', indicatorTarget || '—'),
+      createElement('td', '', action.rationale || '')
+    );
+    body.append(row);
+  }
+
+  if (!rows.length) {
+    const row = document.createElement('tr');
+    const cell = createElement('td', '', 'Nenhuma ação foi sugerida.');
+    cell.colSpan = 6;
+    row.append(cell);
+    body.append(row);
+  }
+}
+
+function renderAiAnalysis(payload) {
+  const analysis = payload?.analysis;
+  const meta = payload?.meta || {};
+  if (!analysis || typeof analysis.executive_summary !== 'string' || typeof analysis.final_assessment !== 'string') {
+    throw new Error('A resposta da análise veio incompleta.');
+  }
+
+  latestAiReport = payload;
+  const confidenceLevel = ['baixa', 'moderada', 'alta'].includes(analysis.confidence?.level)
+    ? analysis.confidence.level
+    : 'moderada';
+  const badge = $('aiConfidenceBadge');
+  badge.className = `ai-confidence-badge confidence-${confidenceLevel}`;
+  badge.textContent = `Confiança ${confidenceLevel}`;
+  $('aiExecutiveSummary').textContent = analysis.executive_summary;
+  $('aiConfidenceExplanation').textContent = analysis.confidence?.explanation || '';
+  $('aiFinalAssessment').textContent = analysis.final_assessment;
+
+  renderAiFindings('aiStrengths', analysis.strengths, 'finding');
+  renderAiFindings('aiAttentionPoints', analysis.attention_points, 'finding');
+  renderAiFindings('aiSegmentInsights', analysis.segment_insights, 'segment');
+  renderAiActionPlan(analysis.action_plan);
+  renderAiStringList('aiMonitoringRecommendations', analysis.monitoring_recommendations);
+  renderAiStringList('aiRisksLimitations', analysis.risks_and_limitations);
+
+  const gradeScope = !meta.grade || meta.grade === 'all' ? 'todos os anos' : meta.grade;
+  const shiftScope = !meta.shift || meta.shift === 'all' ? 'todos os turnos' : meta.shift;
+  $('aiAnalysisMeta').textContent =
+    `Análise gerada em ${formatDateTime(meta.generated_at || new Date())} • recorte: ${gradeScope} e ${shiftScope} • ${Number(meta.total_responses || 0)} participação(ões). Somente indicadores quantitativos agregados foram enviados à IA; nenhum nome, telefone ou comentário foi enviado. A narrativa é uma sugestão gerencial e não substitui os KPIs nem a decisão profissional da gestão.`;
+
+  $('aiLoadingState').classList.add('hidden');
+  $('aiErrorState').classList.add('hidden');
+  $('aiAnalysisContent').classList.remove('hidden');
+  $('aiAnalysisPanel').classList.add('has-ai-analysis');
+}
+
+async function functionErrorMessage(error, data) {
+  if (data?.error?.message) return data.error.message;
+  try {
+    const context = error?.context;
+    const body = context?.clone ? await context.clone().json() : null;
+    if (body?.error?.message) return body.error.message;
+  } catch {
+    // O corpo de erro pode já ter sido consumido pelo cliente Supabase.
+  }
+  return error?.message || 'Os indicadores e a análise local continuam disponíveis.';
+}
+
+function showAiFallback(title, message) {
+  $('aiLoadingState').classList.add('hidden');
+  $('aiAnalysisContent').classList.add('hidden');
+  $('aiErrorTitle').textContent = title;
+  $('aiErrorMessage').textContent = message;
+  $('aiErrorState').classList.remove('hidden');
+  const badge = $('aiConfidenceBadge');
+  badge.className = 'ai-confidence-badge confidence-baixa';
+  badge.textContent = 'Análise local ativa';
+}
+
+async function generateAiAnalysis() {
+  if (!client || !rawPayload || !latestMetrics || aiRequestInFlight) return false;
+  clearAiAnalysis();
+  const requestRevision = aiAnalysisRevision;
+  $('aiAnalysisPanel').classList.remove('hidden');
+
+  const filteredResponseCount = latestMetrics.totalResponses;
+  if (filteredResponseCount < 5) {
+    showAiFallback(
+      'Amostra pequena para análise por IA',
+      `O recorte atual possui ${filteredResponseCount} resposta(s). Por cautela e proteção dos dados, use a análise local até alcançar pelo menos cinco participações.`
+    );
+    return false;
+  }
+
+  aiRequestInFlight = true;
+  $('aiAnalysisButton').disabled = true;
+  $('aiAnalysisButton').textContent = 'Analisando...';
+  $('printButton').disabled = true;
+  $('aiLoadingState').classList.remove('hidden');
+  $('aiErrorState').classList.add('hidden');
+
+  try {
+    const grade = $('gradeFilter').value;
+    const shift = $('shiftFilter').value;
+    const { data, error } = await client.functions.invoke('analyze-school-satisfaction', {
+      body: { survey_slug: SURVEY_SLUG, grade, shift }
+    });
+    if (requestRevision !== aiAnalysisRevision) return false;
+    if (error || data?.error) {
+      throw Object.assign(error || new Error(data.error.message), { responseData: data });
+    }
+    renderAiAnalysis(data);
+    showToast('Análise por IA concluída e incluída no relatório PDF.');
+    return true;
+  } catch (error) {
+    if (requestRevision !== aiAnalysisRevision) return false;
+    console.error('Erro ao gerar análise por IA:', error);
+    const message = await functionErrorMessage(error, error?.responseData);
+    showAiFallback('Não foi possível gerar a análise por IA', message);
+    return false;
+  } finally {
+    aiRequestInFlight = false;
+    $('aiAnalysisButton').disabled = false;
+    $('aiAnalysisButton').textContent = latestAiReport ? 'Atualizar análise com IA' : 'Gerar análise com IA';
+    $('printButton').disabled = false;
+  }
+}
+
 async function voidResponse(response) {
   const reason = window.prompt(
     `Informe o motivo para anular a participação de ${response.respondent_name || 'este responsável'}:`
@@ -316,6 +712,7 @@ async function voidResponse(response) {
 
 function renderMetrics() {
   if (!rawPayload) return;
+  clearAiAnalysis();
   latestMetrics = computeSurveyMetrics(rawPayload, {
     grade: $('gradeFilter').value,
     shift: $('shiftFilter').value
@@ -330,6 +727,13 @@ function renderMetrics() {
     : 'aguardando respostas';
   $('smallSampleWarning').classList.toggle('hidden', latestMetrics.totalResponses === 0 || latestMetrics.totalResponses >= 5);
 
+  const gradeLabel = $('gradeFilter').value === 'all' ? 'todos os anos' : $('gradeFilter').value;
+  const shiftLabel = $('shiftFilter').value === 'all' ? 'todos os turnos' : $('shiftFilter').value;
+  $('reportFilterSummary').textContent = `Recorte analisado: ${gradeLabel} • ${shiftLabel}`;
+  $('reportFooterText').textContent = `Recorte: ${gradeLabel} • ${shiftLabel} • Gerado em ${formatDateTime(new Date())}`;
+  $('aiScopeNote').textContent = `A IA usará somente indicadores quantitativos agregados do mesmo recorte dos gráficos e do PDF: ${gradeLabel} e ${shiftLabel}. Nenhum nome, telefone ou comentário será enviado.`;
+
+  renderManagementAnalysis(latestMetrics);
   renderDomainChart(latestMetrics);
   renderPriorityChart(latestMetrics);
   renderTrendChart(latestMetrics);
@@ -378,19 +782,22 @@ function renderDashboard(payload) {
   showOnly(dashboard);
 }
 
-async function loadProfile(userId, email) {
+async function loadProfile(userId, email, expectedRevision) {
   const { data, error } = await client
     .from('profiles')
     .select('id, full_name, role, school_id')
     .eq('id', userId)
     .limit(1)
     .maybeSingle();
+  if (expectedRevision !== dashboardLoadRevision) return false;
   if (error || !data) throw new Error('Perfil de acesso não encontrado.');
   currentProfile = data;
   $('viewerName').textContent = data.full_name || email || 'Usuário';
+  return true;
 }
 
 async function loadDashboard() {
+  const loadRevision = ++dashboardLoadRevision;
   if (!client) {
     showError('Configuração indisponível', 'O painel não está conectado ao sistema da escola.');
     return;
@@ -401,6 +808,7 @@ async function loadDashboard() {
 
   try {
     const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (loadRevision !== dashboardLoadRevision) return;
     if (sessionError) throw sessionError;
     const session = sessionData?.session;
     if (!session) {
@@ -409,18 +817,21 @@ async function loadDashboard() {
       return;
     }
 
-    await loadProfile(session.user.id, session.user.email);
+    const profileLoaded = await loadProfile(session.user.id, session.user.email, loadRevision);
+    if (!profileLoaded || loadRevision !== dashboardLoadRevision) return;
     if (!['integro_admin', 'diretor', 'coordenacao'].includes(currentProfile.role)) {
       showError('Acesso não autorizado', 'Este painel é exclusivo para administrador, direção e coordenação.');
       return;
     }
 
     const { data, error } = await client.rpc('get_school_satisfaction_results', { p_slug: SURVEY_SLUG });
+    if (loadRevision !== dashboardLoadRevision) return;
     if (error) throw error;
     if (!data?.survey) throw new Error('A edição da pesquisa não foi encontrada.');
     rawPayload = data;
     renderDashboard(data);
   } catch (error) {
+    if (loadRevision !== dashboardLoadRevision) return;
     console.error('Erro ao carregar apuração:', error);
     const denied = String(error?.code || '') === '42501' || /permissão|outra escola/i.test(error?.message || '');
     showError(
@@ -460,6 +871,48 @@ function exportCsv() {
   link.remove();
   URL.revokeObjectURL(url);
   showToast('Planilha CSV gerada com os filtros atuais.');
+}
+
+const defaultDocumentTitle = document.title;
+
+async function prepareReportPrint() {
+  if (!latestMetrics) {
+    showToast('Aguarde o carregamento dos dados antes de gerar o relatório.');
+    return;
+  }
+
+  if (!latestAiReport && latestMetrics.totalResponses >= 5) {
+    $('printButton').disabled = true;
+    $('printButton').textContent = 'Preparando análise...';
+    const aiReady = await generateAiAnalysis();
+    $('printButton').disabled = false;
+    $('printButton').textContent = 'Gerar relatório PDF';
+    if (!aiReady) {
+      showToast('A IA não ficou disponível; o PDF seguirá com a análise gerencial calculada localmente.');
+    }
+  } else if (!latestAiReport && latestMetrics.totalResponses < 5) {
+    showToast('Amostra inferior a cinco respostas: o PDF usará somente a análise local com aviso de cautela.');
+  }
+
+  const gradePart = $('gradeFilter').value === 'all' ? 'todos-os-anos' : $('gradeFilter').value;
+  const shiftPart = $('shiftFilter').value === 'all' ? 'todos-os-turnos' : $('shiftFilter').value;
+  document.title = `relatorio-pesquisa-etelvina-${gradePart}-${shiftPart}-${new Date().toISOString().slice(0, 10)}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+  document.body.classList.add('report-printing');
+  $('reportFooterText').textContent = `${$('reportFilterSummary').textContent} • Gerado em ${formatDateTime(new Date())}`;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => window.print());
+  });
+}
+
+function finishReportPrint() {
+  document.body.classList.remove('report-printing');
+  document.title = defaultDocumentTitle;
 }
 
 async function toggleSurveyStatus() {
@@ -503,8 +956,9 @@ $('refreshButton').addEventListener('click', loadDashboard);
 $('retryButton').addEventListener('click', loadDashboard);
 $('copyLinkButton').addEventListener('click', copyPublicLink);
 $('copyLinkSecondary').addEventListener('click', copyPublicLink);
-$('printButton').addEventListener('click', () => window.print());
+$('printButton').addEventListener('click', prepareReportPrint);
 $('exportButton').addEventListener('click', exportCsv);
+$('aiAnalysisButton').addEventListener('click', generateAiAnalysis);
 $('statusButton').addEventListener('click', toggleSurveyStatus);
 $('logoutButton').addEventListener('click', async () => {
   clearSensitiveState();
@@ -517,6 +971,7 @@ $('logoutButton').addEventListener('click', async () => {
 
 client?.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
+    invalidateDashboardLoads();
     clearSensitivePayload();
     $('viewerName').textContent = 'Acesso protegido';
     showOnly(loginState);
@@ -524,6 +979,7 @@ client?.auth.onAuthStateChange((event) => {
 });
 
 window.addEventListener('pagehide', clearSensitiveState);
+window.addEventListener('afterprint', finishReportPrint);
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) loadDashboard();
 });

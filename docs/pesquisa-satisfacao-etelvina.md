@@ -76,12 +76,19 @@ Esse controle e o campo invisível antirrobô evitam repetição e automações 
 - Direção e administrador veem o nome para controle e o telefone parcialmente oculto; a coordenação recebe a identificação protegida.
 - O resumo incorporado no Portal Gestão usa uma RPC sem nome, telefone, comentário ou autorização de contato.
 - Comentários são apresentados sem nome e telefone.
+- A análise automatizada recebe somente indicadores quantitativos agregados; nome, telefone,
+  comentário, vínculo, autorização de contato, nome da escola e identificadores internos não são enviados ao modelo.
+- O comentário bruto permanece somente no painel protegido da gestão autorizada e não é analisado pela IA nesta versão.
+  O formulário também orienta a família a não escrever nomes nem dados sensíveis no campo livre.
+- A análise por IA é apenas apoio à decisão da gestão e não pode ser usada para decisões automáticas
+  contra alunos, familiares ou profissionais.
 - O CSV neutraliza conteúdo que poderia ser interpretado como fórmula por programas de planilha.
 - Nenhuma chave secreta do Supabase fica no navegador ou no GitHub.
 - A versão do aviso de privacidade e o momento da concordância são registrados.
+- O envio valida no servidor que a versão do aviso aceita é exatamente a versão exibida; páginas antigas não conseguem registrar respostas sob uma versão nova.
 - Dúvidas, correções e solicitações das famílias são direcionadas à secretaria da escola.
 
-O prazo configurado para retenção da identificação é de 180 dias após o encerramento. Um job horário do Supabase Cron remove automaticamente nome, telefone e comentário quando o prazo vence; a consulta gerencial também executa a rotina como contingência. A edição é arquivada, não pode ser reaberta, e ficam somente as notas anônimas e o fingerprint não reversível necessário à deduplicação. A ação é registrada na auditoria.
+O prazo configurado para retenção da identificação é de 180 dias após o encerramento. Um job horário do Supabase Cron remove automaticamente nome, telefone e comentário quando o prazo vence. A edição é arquivada, não pode ser reaberta, e ficam somente as notas anônimas e o fingerprint não reversível necessário à deduplicação. A ação é registrada na auditoria.
 
 ## Divulgação
 
@@ -98,6 +105,8 @@ O painel permite:
 - acompanhar respostas por dia;
 - exportar CSV com os filtros atuais;
 - imprimir ou salvar a apuração em PDF;
+- incluir no PDF os gráficos, a leitura estatística, as limitações metodológicas e, quando disponível,
+  a análise gerencial produzida por IA;
 - copiar o link e baixar o QR Code;
 - encerrar ou reabrir a edição com motivo, para direção e administrador;
 - anular uma participação incorreta com justificativa, liberando o telefone para um novo envio sem apagar o histórico.
