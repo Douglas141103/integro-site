@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="./pesquisa.css?v=20260807" >
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/portal/config.js"></script>
-  <script type="module" src="./pesquisa.js?v=20260807"></script>
+  <script type="module" src="./pesquisa.js?v=20260807130000"></script>
 </head>
 <body>
   <a class="skip-link" href="#surveyMain">Ir para a pesquisa</a>
@@ -147,7 +147,16 @@
                 ficará restrito à gestão autorizada. Os dados de identificação serão mantidos por até
                 180 dias após a apuração e não serão usados para publicidade. Depois disso, permanece
                 apenas um identificador técnico não reversível para impedir repetição nesta edição.
+                Somente as notas e os indicadores quantitativos agregados poderão ser processados
+                por uma ferramenta de inteligência artificial para produzir uma síntese gerencial.
+                Nenhum nome, telefone ou comentário será enviado à ferramenta. Os comentários
+                permanecerão disponíveis apenas no painel protegido da gestão autorizada.
+                Essa síntese servirá somente como apoio à gestão e não será usada para tomar decisões
+                automáticas contra alunos, familiares ou profissionais da escola.
                 Para dúvidas, correção de dados ou exercício de direitos, procure a secretaria da escola.
+              </p>
+              <p id="privacyNoticeVersion" data-version="2026-08-07-ia1">
+                <small>Aviso de privacidade — versão 2026-08-07-ia1.</small>
               </p>
             </details>
           </div>
@@ -185,7 +194,7 @@
             <span>Na sua opinião, o que a escola precisa melhorar?</span>
             <textarea id="improvementComment" name="improvementComment" maxlength="1200" rows="6"
               placeholder="Se possível, diga em qual área e explique sua sugestão."></textarea>
-            <small><span id="commentCount">0</span>/1200 caracteres. Não informe CPF, senhas ou dados de saúde do aluno.</small>
+            <small><span id="commentCount">0</span>/1200 caracteres. Não informe nomes de pessoas, CPF, telefone, e-mail, senhas ou dados de saúde.</small>
           </label>
 
           <label class="check-row contact-check">
