@@ -8,6 +8,7 @@ import {
   clampText
 } from './core.mjs';
 
+const PRIVACY_NOTICE_VERSION = '2026-08-07-ia1';
 const cfg = window.INTEGRO_SUPABASE || {};
 const supabaseGlobal = window.supabase;
 const client = cfg.url && cfg.anonKey && supabaseGlobal?.createClient
@@ -28,6 +29,7 @@ const nextButton = $('nextButton');
 const submitButton = $('submitButton');
 const formAlert = $('formAlert');
 const liveRegion = $('liveRegion');
+const privacyNoticeVersionElement = $('privacyNoticeVersion');
 
 let surveyPayload = null;
 let steps = [];
@@ -290,6 +292,7 @@ function serverMessage(status) {
     closed: 'Esta edição da pesquisa já foi encerrada.',
     not_found: 'Esta pesquisa não foi encontrada.',
     privacy_required: 'Confirme a leitura do aviso de privacidade.',
+    privacy_version_mismatch: 'O aviso de privacidade foi atualizado. Recarregue a página e leia a versão atual antes de enviar.',
     invalid_name: 'Confira o nome completo do responsável.',
     invalid_phone: 'Confira o telefone e o DDD informados.',
     incomplete_answers: 'Todas as perguntas precisam ser respondidas.',
@@ -303,6 +306,13 @@ function serverMessage(status) {
 async function submitSurvey(event) {
   event.preventDefault();
   if (submitting || !client || !surveyPayload) return;
+
+  const displayedPrivacyNoticeVersion = privacyNoticeVersionElement?.dataset.version || '';
+  if (displayedPrivacyNoticeVersion !== PRIVACY_NOTICE_VERSION
+      || surveyPayload.survey?.privacy_notice_version !== PRIVACY_NOTICE_VERSION) {
+    setFormAlert('O aviso de privacidade foi atualizado. Recarregue a página antes de responder.');
+    return;
+  }
 
   if (!validateFinalStep()) {
     announce('Escolha a área que deveria receber prioridade de melhoria.');
@@ -322,7 +332,7 @@ async function submitSurvey(event) {
 
   try {
     const priority = surveyForm.querySelector('input[name="improvementPriority"]:checked')?.value;
-    const { data, error } = await client.rpc('submit_parent_school_satisfaction', {
+    const { data, error } = await client.rpc('submit_parent_school_satisfaction_v2', {
       p_survey_slug: SURVEY_SLUG,
       p_respondent_name: clampText($('respondentName').value, 120),
       p_phone: $('phone').value,
@@ -333,6 +343,7 @@ async function submitSurvey(event) {
       p_improvement_comment: $('improvementComment').value.trim(),
       p_contact_permission: $('contactPermission').checked,
       p_privacy_accepted: $('privacyAccepted').checked,
+      p_privacy_notice_version: displayedPrivacyNoticeVersion,
       p_answers: answers,
       p_client_submission_id: submissionId,
       p_honeypot: $('website').value,
@@ -386,6 +397,15 @@ async function loadSurvey() {
   unavailableState.classList.add('hidden');
   formCard.classList.add('hidden');
 
+  if (privacyNoticeVersionElement?.dataset.version !== PRIVACY_NOTICE_VERSION) {
+    showUnavailable(
+      'Atualização necessária',
+      'Esta página está desatualizada. Atualize o navegador para ler o aviso de privacidade vigente.',
+      false
+    );
+    return;
+  }
+
   if (!client) {
     showUnavailable('Configuração indisponível', 'O formulário ainda não foi conectado ao sistema da escola.', false);
     return;
@@ -396,6 +416,14 @@ async function loadSurvey() {
     if (error) throw error;
     if (!data?.survey) {
       showUnavailable('Pesquisa não encontrada', 'A edição solicitada ainda não está disponível.', false);
+      return;
+    }
+    if (data.survey.privacy_notice_version !== PRIVACY_NOTICE_VERSION) {
+      showUnavailable(
+        'Aviso de privacidade em atualização',
+        'A pesquisa será liberada assim que a versão atual do aviso estiver disponível.',
+        false
+      );
       return;
     }
     if (!data.survey.is_open) {
