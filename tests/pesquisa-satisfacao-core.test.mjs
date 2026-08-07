@@ -6,6 +6,7 @@ import {
   formatBrazilPhone,
   scoreIndex,
   computeSurveyMetrics,
+  buildManagementAnalysis,
   buildSurveyCsv,
   safeCsvCell
 } from '../pesquisa-satisfacao/core.mjs';
@@ -76,6 +77,20 @@ test('não inclui Não sei avaliar na média e mantém a contagem separada', () 
   assert.equal(metrics.totalResponses, 2);
 });
 
+test('ignora respostas de perguntas que não fazem parte da edição ativa', () => {
+  const withInactiveAnswer = structuredClone(payload);
+  withInactiveAnswer.answers.push({
+    response_id: 'r1',
+    question_id: 'pergunta-inativa',
+    score: 1,
+    not_applicable: false
+  });
+  const metrics = computeSurveyMetrics(withInactiveAnswer);
+  assert.equal(metrics.allSummary.ratedCount, 5);
+  assert.equal(metrics.allSummary.distribution['1'], 1);
+  assert.equal(metrics.positiveRate, 40);
+});
+
 test('filtros por ano e turno recalculam todos os indicadores', () => {
   const metrics = computeSurveyMetrics(payload, { grade: '6º ano', shift: 'Matutino' });
   assert.equal(metrics.totalResponses, 1);
@@ -98,6 +113,45 @@ test('não exibe zero por cento quando ainda não há avaliações válidas', ()
   const metrics = computeSurveyMetrics(empty);
   assert.equal(metrics.positiveRate, null);
   assert.equal(metrics.overallIndex, null);
+});
+
+test('análise gerencial não transforma índices nulos em zero e limita conclusões em amostra muito pequena', () => {
+  const metrics = computeSurveyMetrics(payload);
+  const analysis = buildManagementAnalysis(metrics);
+  assert.equal(analysis.rankedDomains.length, 2);
+  assert.equal(analysis.rankedDomains.some((domain) => domain.domain === 'infraestrutura'), false);
+  assert.equal(analysis.sample.key, 'muito_pequena');
+  assert.deepEqual(analysis.actions.map((action) => action.title), ['Ampliar a participação antes de decidir']);
+  assert.match(analysis.overview[0].text, /marcações válidas/i);
+  assert.doesNotMatch(analysis.overview[0].text, /famílias satisfeitas/i);
+});
+
+test('análise gerencial identifica pergunta com cem por cento de Não sei avaliar mesmo sem índice', () => {
+  const onlyNotApplicable = structuredClone(payload);
+  onlyNotApplicable.answers = onlyNotApplicable.answers.map((answer) => ({
+    ...answer,
+    score: null,
+    not_applicable: true
+  }));
+  const metrics = computeSurveyMetrics(onlyNotApplicable);
+  const analysis = buildManagementAnalysis(metrics);
+  assert.equal(metrics.overallIndex, null);
+  assert.equal(analysis.rankedDomains.length, 0);
+  assert.equal(analysis.highestNotApplicableQuestion.notApplicableRate, 100);
+  assert.match(analysis.overview[0].text, /não há avaliações válidas/i);
+});
+
+test('autorização de contato só entra na análise quando o perfil pode consultá-la', () => {
+  const withPermission = structuredClone(payload);
+  withPermission.responses[0].contact_permission = true;
+  withPermission.responses[1].contact_permission = false;
+  const metrics = computeSurveyMetrics(withPermission);
+  const protectedAnalysis = buildManagementAnalysis(metrics);
+  const directorAnalysis = buildManagementAnalysis(metrics, { includeContactPermission: true });
+  assert.equal(protectedAnalysis.contactRate, null);
+  assert.equal(protectedAnalysis.contactCount, null);
+  assert.equal(directorAnalysis.contactCount, 1);
+  assert.equal(directorAnalysis.contactRate, 50);
 });
 
 test('CSV neutraliza fórmulas e preserva as respostas por pergunta', () => {
