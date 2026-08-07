@@ -7,10 +7,10 @@
   <meta http-equiv="Cache-Control" content="no-store" >
   <meta name="theme-color" content="#073d30" >
   <title>Apuração da Pesquisa de Satisfação | INTEGRO</title>
-  <link rel="stylesheet" href="./resultados.css?v=20260807" >
+  <link rel="stylesheet" href="./resultados.css?v=20260807-2" >
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/portal/config.js"></script>
-  <script type="module" src="./resultados.js?v=20260807"></script>
+  <script type="module" src="./resultados.js?v=20260807-2"></script>
 </head>
 <body>
   <header class="dashboard-header">
@@ -47,17 +47,27 @@
     </section>
 
     <div id="dashboard" class="hidden">
+      <section class="report-heading print-only" aria-label="Identificação do relatório">
+        <img src="/logo-whatsapp.png" alt="" >
+        <div>
+          <span>INSTITUTO INTEGRO</span>
+          <strong>Relatório analítico da pesquisa de satisfação</strong>
+          <small>Documento gerencial confidencial - uso interno da escola</small>
+        </div>
+      </section>
+
       <section class="hero-card">
         <div>
           <span id="surveyStatus" class="status-pill">Pesquisa</span>
           <h1 id="surveyTitle">Pesquisa de Satisfação das Famílias</h1>
           <p id="schoolName">Escola Municipal Etelvina Pereira Braga</p>
           <small id="lastUpdate">Atualizando dados...</small>
+          <small id="reportFilterSummary" class="report-filter-summary">Recorte: todos os anos e todos os turnos</small>
         </div>
         <div class="hero-actions">
           <a class="button button-primary" href="./index.html" target="_blank" rel="noopener">Abrir formulário</a>
           <button id="copyLinkButton" class="button button-light" type="button">Copiar link</button>
-          <button id="printButton" class="button button-light" type="button">Imprimir / PDF</button>
+          <button id="printButton" class="button button-light" type="button">Gerar relatório PDF</button>
         </div>
       </section>
 
@@ -75,6 +85,7 @@
         <div class="toolbar-actions">
           <button id="refreshButton" class="button button-light" type="button">Atualizar dados</button>
           <button id="exportButton" class="button button-light" type="button">Exportar CSV</button>
+          <button id="aiAnalysisButton" class="button button-primary" type="button">Gerar análise com IA</button>
           <button id="statusButton" class="button button-warning hidden" type="button">Encerrar pesquisa</button>
         </div>
       </section>
@@ -104,6 +115,175 @@
           <strong id="topPriority">—</strong>
           <small id="topPriorityDetail">conforme as famílias</small>
         </article>
+      </section>
+
+      <section class="panel management-analysis" aria-labelledby="managementAnalysisTitle">
+        <div class="panel-head analysis-head">
+          <div>
+            <span class="panel-kicker">LEITURA GERENCIAL</span>
+            <h2 id="managementAnalysisTitle">Análise analítica para a gestão</h2>
+            <p>Leitura explicável calculada com o mesmo recorte dos filtros. Os achados devem ser combinados com a escuta da comunidade escolar.</p>
+          </div>
+          <span id="analysisSampleBadge" class="analysis-sample-badge">Aguardando dados</span>
+        </div>
+
+        <div id="analysisOverview" class="analysis-overview" aria-live="polite"></div>
+
+        <div id="analysisIndicatorGrid" class="analysis-indicator-grid" aria-label="Qualidade e participação dos dados">
+          <article>
+            <span>Avaliações válidas</span>
+            <strong id="analysisCoverage">—</strong>
+            <small>das marcações possíveis</small>
+          </article>
+          <article>
+            <span>Não sei avaliar</span>
+            <strong id="analysisNotApplicable">—</strong>
+            <small>das marcações recebidas</small>
+          </article>
+          <article>
+            <span>Famílias com comentário</span>
+            <strong id="analysisCommentRate">—</strong>
+            <small>participações com relato escrito</small>
+          </article>
+          <article id="analysisContactCard">
+            <span>Contato autorizado</span>
+            <strong id="analysisContactRate">—</strong>
+            <small id="analysisContactDetail">0 família(s)</small>
+          </article>
+        </div>
+
+        <div class="analysis-chart-grid">
+          <article class="analysis-block">
+            <h3>Distribuição geral das avaliações</h3>
+            <p>Percentuais das avaliações válidas; “Não sei avaliar” usa o total de marcações recebidas.</p>
+            <div id="overallDistributionChart" class="distribution-chart"></div>
+          </article>
+
+          <article class="analysis-block">
+            <h3>Comparativo gerencial por área</h3>
+            <p>Índice, satisfação, insatisfação e respostas sem avaliação.</p>
+            <div class="table-wrap analysis-table-wrap">
+              <table class="analysis-table">
+                <thead>
+                  <tr><th>Área</th><th>Índice</th><th>Satisfeitos</th><th>Insatisfeitos</th><th>Não sabe</th><th>Leitura</th></tr>
+                </thead>
+                <tbody id="analysisDomainsTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <div class="analysis-chart-grid">
+          <article class="analysis-block">
+            <h3>Pontos fortes e pontos de atenção</h3>
+            <div class="question-highlight-grid">
+              <div>
+                <h4>Maiores índices</h4>
+                <ol id="strongestQuestions" class="analysis-ranking"></ol>
+              </div>
+              <div>
+                <h4>Menores índices</h4>
+                <ol id="attentionQuestions" class="analysis-ranking attention-ranking"></ol>
+              </div>
+            </div>
+          </article>
+
+          <article class="analysis-block">
+            <h3>Encaminhamentos sugeridos</h3>
+            <p>Sugestões objetivas derivadas dos indicadores; a decisão final pertence à gestão.</p>
+            <ol id="analysisActions" class="analysis-actions"></ol>
+          </article>
+        </div>
+
+        <article class="analysis-block participation-profile">
+          <h3>Perfil das participações</h3>
+          <p>A distribuição ajuda a identificar recortes pouco ou muito representados na coleta.</p>
+          <div class="breakdown-grid">
+            <div><h4>Por ano do aluno</h4><div id="gradeBreakdown" class="breakdown-list"></div></div>
+            <div><h4>Por turno</h4><div id="shiftBreakdown" class="breakdown-list"></div></div>
+            <div><h4>Por vínculo do responsável</h4><div id="relationshipBreakdown" class="breakdown-list"></div></div>
+          </div>
+        </article>
+
+        <p id="analysisMethodNote" class="analysis-method-note">
+          Metodologia: índice de 0 a 100 calculado a partir da escala de três níveis; “Não sei avaliar” não entra na nota. Esta é uma análise descritiva, não uma inferência estatística.
+        </p>
+      </section>
+
+      <section id="aiAnalysisPanel" class="panel ai-analysis-panel hidden" aria-labelledby="aiAnalysisTitle">
+        <div class="panel-head analysis-head">
+          <div>
+            <span class="panel-kicker">ANÁLISE AVANÇADA</span>
+            <h2 id="aiAnalysisTitle">Relatório analítico por inteligência artificial</h2>
+            <p>A IA recebe somente indicadores quantitativos agregados; nenhum nome, telefone, comentário ou identificação da escola é enviado.</p>
+          </div>
+          <span id="aiConfidenceBadge" class="ai-confidence-badge">Processando</span>
+        </div>
+
+        <p id="aiScopeNote" class="ai-scope-note">A IA usará somente indicadores quantitativos agregados do mesmo recorte dos gráficos e do PDF. Nenhum nome, telefone ou comentário será enviado.</p>
+
+        <div id="aiLoadingState" class="ai-loading-state" role="status" aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <div><strong>Analisando os indicadores...</strong><small>A leitura pode levar alguns segundos.</small></div>
+        </div>
+
+        <div id="aiErrorState" class="ai-error-state hidden" role="alert">
+          <strong id="aiErrorTitle">Não foi possível gerar a análise por IA.</strong>
+          <span id="aiErrorMessage">Os indicadores locais continuam disponíveis.</span>
+        </div>
+
+        <div id="aiAnalysisContent" class="hidden">
+          <article class="ai-executive-summary">
+            <h3>Resumo executivo</h3>
+            <p id="aiExecutiveSummary"></p>
+            <small id="aiConfidenceExplanation"></small>
+          </article>
+
+          <div class="ai-two-column-grid">
+            <article class="analysis-block">
+              <h3>Pontos fortes</h3>
+              <div id="aiStrengths" class="ai-finding-list"></div>
+            </article>
+            <article class="analysis-block">
+              <h3>Pontos de atenção</h3>
+              <div id="aiAttentionPoints" class="ai-finding-list attention-list"></div>
+            </article>
+          </div>
+
+          <article class="analysis-block">
+            <h3>Leituras por segmento</h3>
+            <div id="aiSegmentInsights" class="ai-finding-list"></div>
+          </article>
+
+          <article class="analysis-block ai-action-plan">
+            <h3>Plano de ação recomendado</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Prioridade</th><th>Prazo</th><th>Ação</th><th>Responsável sugerido</th><th>Indicador e meta</th><th>Justificativa</th></tr>
+                </thead>
+                <tbody id="aiActionPlanTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <div class="ai-two-column-grid">
+            <article class="analysis-block">
+              <h3>Monitoramento recomendado</h3>
+              <ul id="aiMonitoringRecommendations" class="ai-simple-list"></ul>
+            </article>
+            <article class="analysis-block">
+              <h3>Riscos e limitações</h3>
+              <ul id="aiRisksLimitations" class="ai-simple-list"></ul>
+            </article>
+          </div>
+
+          <article class="ai-final-assessment">
+            <h3>Avaliação final</h3>
+            <p id="aiFinalAssessment"></p>
+          </article>
+          <p id="aiAnalysisMeta" class="analysis-method-note"></p>
+        </div>
       </section>
 
       <section class="dashboard-grid">
@@ -166,7 +346,7 @@
       </section>
 
       <section class="dashboard-grid lower-grid">
-        <article class="panel">
+        <article class="panel comments-panel">
           <div class="panel-head">
             <div>
               <span class="panel-kicker">ESCUTA DAS FAMÍLIAS</span>
@@ -209,6 +389,11 @@
           </div>
         </details>
       </section>
+
+      <footer class="report-footer print-only">
+        <strong>Documento gerencial confidencial</strong>
+        <span id="reportFooterText">Relatório gerado pelo Portal Integro.</span>
+      </footer>
     </div>
   </main>
 
