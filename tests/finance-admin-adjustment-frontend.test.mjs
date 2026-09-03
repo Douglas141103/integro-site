@@ -455,3 +455,15 @@ test("active point of sale uses Manaus date and blocks the transition gap", asyn
   assert.match(loader, /financeiro-frente-caixa-v3\.js\?v=20260903-cycle-guard-v1/);
   assert.match(page, /financeiro-frente-caixa\.js\?v=20260903-cycle-guard-v1/);
 });
+
+test("historical entries and expenses are rendered as read-only", async () => {
+  const director = await source("director");
+
+  assert.match(director, /function canModifyFinanceRecord\(recordType, record\)/);
+  assert.match(director, /recordDate >= cycle\.start_date/);
+  assert.match(director, /recordDate <= cycle\.end_date/);
+  assert.match(director, /!range\?\.isClosingWindow/);
+  assert.match(director, /Histórico financeiro — somente leitura/);
+  assert.match(director, /if \(!canModifyFinanceRecord\(recordType, record\)\)/);
+  assert.match(director, /integro:cash-cycle-base-rendered/);
+});

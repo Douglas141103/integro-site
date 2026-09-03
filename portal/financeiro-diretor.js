@@ -280,6 +280,32 @@ function createFinanceRequestId() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+function canModifyFinanceRecord(recordType, record) {
+  const cycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
+  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date());
+  const recordDate = recordType === 'entry' ? record?.entry_date : record?.expense_date;
+
+  return Boolean(
+    cycle?.id &&
+    String(cycle.status || '').toLowerCase() === 'aberto' &&
+    !range?.isClosingWindow &&
+    recordDate &&
+    recordDate >= cycle.start_date &&
+    recordDate <= cycle.end_date &&
+    (!record?.cash_cycle_id || record.cash_cycle_id === cycle.id)
+  );
+}
+
+function financeRecordActions(recordType, record) {
+  if (!canModifyFinanceRecord(recordType, record)) {
+    return '<small class="director-note">Histórico financeiro — somente leitura.</small>';
+  }
+
+  return `
+    <button class="linkbtn" type="button" onclick="openFinanceEdit('${recordType}','${record.id}')">Editar</button>
+    <button class="linkbtn danger-text" type="button" onclick="openFinanceDelete('${recordType}','${record.id}')">Excluir</button>`;
+}
+
 async function handleDirectorActionSubmit(event) {
   event.preventDefault();
   if (!state.directorAction) return;
@@ -368,10 +394,9 @@ function renderEntries() {
       <p>${escapeHtml(e.description || e.package_name_snapshot || 'Pagamento registrado.')}</p>
       <div class="record-actions">
         <button class="linkbtn" type="button" onclick='printExistingReceipt(${JSON.stringify(e).replace(/'/g, "&#039;")})'>Imprimir recibo</button>
-        <button class="linkbtn" type="button" onclick="openFinanceEdit('entry','${e.id}')">Editar</button>
-        <button class="linkbtn danger-text" type="button" onclick="openFinanceDelete('entry','${e.id}')">Excluir</button>
+        ${financeRecordActions('entry', e)}
       </div>
-      <small class="director-note">Editar/excluir exige credenciais de diretor.</small>
+      ${canModifyFinanceRecord('entry', e) ? '<small class="director-note">Editar/excluir exige credenciais de diretor.</small>' : ''}
     </article>`).join('') : '<p class="muted">Nenhuma entrada registrada ainda.</p>';
 }
 
@@ -387,10 +412,9 @@ function renderExpenses() {
       <p><strong>Saiu de:</strong> ${escapeHtml(e.paid_by_name)}</p>
       <p>${escapeHtml(e.notes || '')}</p>
       <div class="record-actions">
-        <button class="linkbtn" type="button" onclick="openFinanceEdit('expense','${e.id}')">Editar</button>
-        <button class="linkbtn danger-text" type="button" onclick="openFinanceDelete('expense','${e.id}')">Excluir</button>
+        ${financeRecordActions('expense', e)}
       </div>
-      <small class="director-note">Editar/excluir exige credenciais de diretor.</small>
+      ${canModifyFinanceRecord('expense', e) ? '<small class="director-note">Editar/excluir exige credenciais de diretor.</small>' : ''}
     </article>`).join('') : '<p class="muted">Nenhuma saída registrada ainda.</p>';
 }
 
@@ -398,6 +422,10 @@ window.openFinanceEdit = function(recordType, recordId) {
   const source = recordType === 'entry' ? state.entries : state.expenses;
   const record = source.find((item) => item.id === recordId);
   if (!record) { showStatus('Lançamento não encontrado.', 'error'); return; }
+  if (!canModifyFinanceRecord(recordType, record)) {
+    showStatus('Este lançamento pertence ao histórico e está disponível somente para consulta.', 'error');
+    return;
+  }
   openDirectorModal({ mode: 'edit', recordType, record });
 };
 
@@ -405,6 +433,10 @@ window.openFinanceDelete = function(recordType, recordId) {
   const source = recordType === 'entry' ? state.entries : state.expenses;
   const record = source.find((item) => item.id === recordId);
   if (!record) { showStatus('Lançamento não encontrado.', 'error'); return; }
+  if (!canModifyFinanceRecord(recordType, record)) {
+    showStatus('Este lançamento pertence ao histórico e está disponível somente para consulta.', 'error');
+    return;
+  }
   openDirectorModal({ mode: 'delete', recordType, record });
 };
 
@@ -435,6 +467,10 @@ function bindDirectorPatchEvents() {
   $('directorCancelBtn')?.addEventListener('click', closeDirectorModal);
   $('directorModalClose')?.addEventListener('click', closeDirectorModal);
   document.querySelectorAll('[data-close-director-modal]').forEach((el) => el.addEventListener('click', closeDirectorModal));
+  document.addEventListener?.('integro:cash-cycle-base-rendered', () => {
+    renderEntries();
+    renderExpenses();
+  });
 }
 
 bindDirectorPatchEvents();
