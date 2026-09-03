@@ -7,7 +7,8 @@
   if (!cfg || !supabaseGlobal?.createClient) return;
 
   const db = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
-  const CYCLE_DAY = 9;
+  const cyclePolicy = window.INTEGRO_FINANCE_CYCLE_POLICY;
+  if (!cyclePolicy?.getCurrentCycleRange) return;
   const NEGATIVE_LIMIT = -1000;
   const SHAREHOLDERS = ["acionista_1", "acionista_2", "acionista_3"];
   const BUCKET_ORDER = ["operacoes", "fundo_caixa", ...SHAREHOLDERS];
@@ -36,34 +37,26 @@
     });
   }
 
-  function pad2(value) {
-    return String(value).padStart(2, "0");
-  }
-
-  function dateISO(date) {
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-  }
-
-  function addMonths(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, date.getDate());
-  }
-
-  function addDays(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
-  }
-
   function currentCycleRange(reference = new Date()) {
-    let start = new Date(reference.getFullYear(), reference.getMonth(), CYCLE_DAY);
-    if (reference.getDate() < CYCLE_DAY) {
-      start = new Date(reference.getFullYear(), reference.getMonth() - 1, CYCLE_DAY);
-    }
+    return cyclePolicy.getCurrentCycleRange(reference);
+  }
 
-    const end = addDays(addMonths(start, 1), -1);
-    return {
-      start: dateISO(start),
-      end: dateISO(end),
-      key: dateISO(start).slice(0, 7),
-    };
+  function currentCycleDefaultDate(cycle) {
+    const today = cyclePolicy.referenceISO(new Date());
+    if (!cycle) return today;
+    if (today < cycle.start_date) return cycle.start_date;
+    if (today > cycle.end_date) return cycle.end_date;
+    return today;
+  }
+
+  function ordinaryActivityBlockReason(cycle = window.INTEGRO_FINANCE_CURRENT_CYCLE) {
+    if (String(cycle?.status || "").toLowerCase() === "fechado") {
+      return "Este ciclo já foi fechado. Nenhuma movimentação comum pode ser registrada nele.";
+    }
+    if (currentCycleRange().isClosingWindow) {
+      return "Dias 9 e 10/09 são reservados ao fechamento. Movimentações comuns voltam em 11/09.";
+    }
+    return "";
   }
 
   function isAdministrative(movement) {
@@ -196,6 +189,8 @@
       .select("*")
       .eq("school_id", schoolResult.data.id)
       .eq("cycle_key", range.key)
+      .eq("start_date", range.start)
+      .eq("end_date", range.end)
       .maybeSingle();
 
     const existingCycleResult = await findCycle();
@@ -203,6 +198,10 @@
 
     let cycle = existingCycleResult.data;
     if (!cycle) {
+      if (range.isClosingWindow) {
+        throw new Error("O ciclo de transição não foi encontrado e não pode ser criado durante a janela de fechamento.");
+      }
+
       const insertCycleResult = await db
         .from("finance_cash_cycles")
         .insert({
@@ -349,6 +348,8 @@
   }
 
   async function saveShareholderMovement(event) {
+    if ($("cashMovementModal")?.dataset.action === "manual-adjust") return;
+
     const source = $("cashModalSource")?.value || null;
     if (!isShareholder(source)) return;
 
@@ -356,10 +357,16 @@
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const immediateBlockReason = ordinaryActivityBlockReason();
+    if (immediateBlockReason) {
+      modalMessage(immediateBlockReason, "error");
+      return;
+    }
+
     const button = $("cashModalSaveBtn");
     const destination = $("cashModalDestination")?.value || null;
     const amount = Number($("cashModalAmount")?.value || 0);
-    const movementDate = $("cashModalDate")?.value || dateISO(new Date());
+    const movementDate = $("cashModalDate")?.value || cyclePolicy.referenceISO(new Date());
     const description = $("cashModalDescriptionInput")?.value.trim() || "";
     const notes = $("cashModalNotes")?.value.trim() || null;
 
@@ -376,6 +383,11 @@
       if (button) button.disabled = true;
 
       const snapshot = await currentCycleSnapshot();
+      const blockReason = ordinaryActivityBlockReason(snapshot.cycle);
+      if (blockReason) {
+        modalMessage(blockReason, "error");
+        return;
+      }
       if (!isDateInCurrentCycle(movementDate, snapshot.cycle)) {
         modalMessage(
           `Use uma data entre ${snapshot.cycle.start_date} e ${snapshot.cycle.end_date}, que é o ciclo atual.`,
@@ -416,7 +428,6 @@
           .filter(Boolean)
           .join(" | ") || null,
         created_by: snapshot.user.id,
-        updated_at: new Date().toISOString(),
       });
 
       if (result.error) throw result.error;
@@ -445,8 +456,14 @@
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const immediateBlockReason = ordinaryActivityBlockReason();
+    if (immediateBlockReason) {
+      alert(immediateBlockReason);
+      return;
+    }
+
     const amount = Number($("expenseAmount")?.value || 0);
-    const expenseDate = $("expenseDate")?.value || dateISO(new Date());
+    const expenseDate = $("expenseDate")?.value || cyclePolicy.referenceISO(new Date());
     const description = $("expenseDescription")?.value?.trim() || "";
     const paidTo = $("paidTo")?.value?.trim() || "";
     const paidBy = $("paidByName")?.value?.trim() || "";
@@ -464,6 +481,11 @@
 
     try {
       const snapshot = await currentCycleSnapshot();
+      const blockReason = ordinaryActivityBlockReason(snapshot.cycle);
+      if (blockReason) {
+        alert(blockReason);
+        return;
+      }
       if (!isDateInCurrentCycle(expenseDate, snapshot.cycle)) {
         alert(
           `Use uma data entre ${snapshot.cycle.start_date} e ${snapshot.cycle.end_date}, que é o ciclo atual.`
@@ -527,7 +549,6 @@
             .join(" | "),
           related_expense_id: expenseResult.data?.id || null,
           created_by: snapshot.user.id,
-          updated_at: new Date().toISOString(),
         })
         .select("*")
         .single();
@@ -537,11 +558,13 @@
       if (expenseResult.data?.id && movementResult.data?.id) {
         await db
           .from("finance_expenses")
-          .update({ cash_movement_id: movementResult.data.id })
+          .update({ related_cash_movement_id: movementResult.data.id })
           .eq("id", expenseResult.data.id);
       }
 
       event.target.reset();
+      const expenseDateInput = $("expenseDate");
+      if (expenseDateInput) expenseDateInput.value = currentCycleDefaultDate(snapshot.cycle);
       panelMessage(
         limit.projected < 0
           ? `Saída registrada. ${LABELS[bucket]} ficou com ${money(limit.projected)} somente neste ciclo.`

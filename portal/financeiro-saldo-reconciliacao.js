@@ -9,7 +9,8 @@
 
   const db = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
 
-  const CYCLE_DAY = 9;
+  const cyclePolicy = window.INTEGRO_FINANCE_CYCLE_POLICY;
+  if (!cyclePolicy?.getCurrentCycleRange) return;
 
   const ORDER = ["operacoes", "fundo_caixa", "acionista_1", "acionista_2", "acionista_3"];
   const BUCKETS = {
@@ -52,40 +53,13 @@
       .replaceAll("'", "&#039;");
   }
 
-  function pad2(value) {
-    return String(value).padStart(2, "0");
-  }
-
-  function dateISO(date) {
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-  }
-
   function parseLocal(iso) {
     const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
     return new Date(year, month - 1, day);
   }
 
-  function addMonths(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, date.getDate());
-  }
-
-  function addDays(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
-  }
-
   function currentCycleRange(reference = new Date()) {
-    let start = new Date(reference.getFullYear(), reference.getMonth(), CYCLE_DAY);
-
-    if (reference.getDate() < CYCLE_DAY) {
-      start = new Date(reference.getFullYear(), reference.getMonth() - 1, CYCLE_DAY);
-    }
-
-    const end = addDays(addMonths(start, 1), -1);
-    return {
-      startISO: dateISO(start),
-      endISO: dateISO(end),
-      cycleKey: dateISO(start).slice(0, 7),
-    };
+    return cyclePolicy.getCurrentCycleRange(reference);
   }
 
   function formatDateBR(value) {
@@ -306,6 +280,8 @@
       .select("*")
       .eq("school_id", state.school.id)
       .eq("cycle_key", range.cycleKey)
+      .eq("start_date", range.startISO)
+      .eq("end_date", range.endISO)
       .maybeSingle();
 
     const existingResult = await findCycle();
@@ -314,6 +290,10 @@
     if (existingResult.data) {
       state.cycle = existingResult.data;
       return;
+    }
+
+    if (range.isClosingWindow) {
+      throw new Error("O ciclo de transição não foi encontrado e não pode ser criado durante a janela de fechamento.");
     }
 
     const { data, error } = await db
@@ -430,7 +410,7 @@
     panel.className = "finance-balance-audit";
     panel.innerHTML = `
       <h3>Conferência do ciclo atual</h3>
-      <p>Cada ciclo começa em R$ 0,00. Somente entradas, créditos e saídas registrados entre o dia 9 e o dia 8 entram neste saldo.</p>
+      <p>Cada ciclo começa em R$ 0,00. O ciclo atual mantém as datas já iniciadas; os próximos funcionarão do dia 11 ao dia 10.</p>
       <div class="finance-balance-grid">
         <div class="finance-balance-item"><span>Início do ciclo</span><strong id="financeAuditStart">R$ 0,00</strong></div>
         <div class="finance-balance-item"><span>Entradas do ciclo</span><strong id="financeAuditEntries">R$ 0,00</strong></div>

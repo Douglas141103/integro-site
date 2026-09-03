@@ -1,4 +1,4 @@
-const CACHE_NAME = "integro-pwa-v20260730-current-cycle";
+const CACHE_NAME = "integro-pwa-v20260903-cycle-11";
 
 const SAFE_STATIC_ASSETS = [
   "/",

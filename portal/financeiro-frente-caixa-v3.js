@@ -5,6 +5,7 @@
   const cfg = window.INTEGRO_SUPABASE || {};
   const supabaseGlobal = window.supabase;
   const db = typeof client !== "undefined" ? client : supabaseGlobal?.createClient?.(cfg.url, cfg.anonKey);
+  const cyclePolicy = window.INTEGRO_FINANCE_CYCLE_POLICY;
 
   const sale = { customer: null, items: [] };
   const dataStore = { user: null, profile: null, school: null, students: [], packages: [], discounts: [] };
@@ -28,8 +29,9 @@
     }[m]));
   }
 
-  function today() {
-    return new Date().toISOString().slice(0, 10);
+  function today(referenceDate = new Date()) {
+    if (!cyclePolicy?.referenceISO) throw new Error("Política do ciclo financeiro indisponível. Atualize a página e tente novamente.");
+    return cyclePolicy.referenceISO(referenceDate);
   }
 
   function showMsg(text, type = "ok") {
@@ -335,6 +337,22 @@
   async function finish() {
     try {
       if (!db || !dataStore.school?.id || !dataStore.user?.id) throw new Error("Sistema ainda carregando. Aguarde e tente novamente.");
+      if (!cyclePolicy?.getCurrentCycleRange) throw new Error("Política do ciclo financeiro indisponível. Atualize a página e tente novamente.");
+      const transactionMoment = new Date();
+      const range = cyclePolicy.getCurrentCycleRange(transactionMoment);
+      const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
+      if (range.isClosingWindow) throw new Error("O caixa está em fechamento nos dias 9 e 10. O novo ciclo será aberto no dia 11.");
+      if (!liveCycle?.id) throw new Error("O ciclo financeiro ainda está carregando. Aguarde e tente novamente.");
+      if (String(liveCycle.status || "").trim().toLowerCase() === "fechado") {
+        throw new Error("Este ciclo financeiro está fechado. Não é possível registrar novas entradas.");
+      }
+      if (
+        liveCycle.cycle_key !== range.cycleKey ||
+        liveCycle.start_date !== range.startISO ||
+        liveCycle.end_date !== range.endISO
+      ) {
+        throw new Error("O ciclo exibido não corresponde ao período atual. Atualize a página antes de finalizar a venda.");
+      }
       if (!sale.customer || !sale.items.length) throw new Error("Adicione pelo menos um item ao carrinho.");
       const total = totals();
       let received = n($("pdv2Received").value);
@@ -346,7 +364,7 @@
       const rows = sale.items.map((item, index) => ({
         school_id: dataStore.school.id,
         entry_type: item.type,
-        entry_date: today(),
+        entry_date: today(transactionMoment),
         student_id: sale.customer.studentId,
         student_name_snapshot: sale.customer.studentName,
         payer_name: sale.customer.payerName,
