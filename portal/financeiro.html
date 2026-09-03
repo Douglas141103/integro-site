@@ -267,7 +267,7 @@
                 <option value="acionista_1">Quota do Acionista 1 — 20%</option>
                 <option value="acionista_2">Quota do Acionista 2 — 20%</option>
                 <option value="acionista_3">Quota do Acionista 3 — 20%</option>
-                <option value="ajuste_administrativo">Ajuste administrativo</option>
+                <option value="ajuste_administrativo">Ajuste administrativo — exige diretor/ADM</option>
               </select>
             </label>
 
@@ -308,7 +308,7 @@
           </div>
 
           <div class="actions">
-            <button class="btn primary" type="submit">Registrar saída</button>
+            <button class="btn primary" type="submit" id="expenseSubmitBtn" disabled>Carregando controle seguro...</button>
           </div>
         </form>
 
@@ -467,7 +467,7 @@
               <input id="directorPassword" type="password" required placeholder="Senha do diretor" autocomplete="current-password" />
             </label>
 
-            <label class="full">
+            <label class="full" id="directorReasonLabel">
               Justificativa da alteração/exclusão *
               <textarea id="directorReason" rows="2" required placeholder="Ex.: Correção de valor lançado incorretamente."></textarea>
             </label>
@@ -486,14 +486,15 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
+  <script id="financeCyclePolicyScript" src="./financeiro-cycle-policy.js?v=20260903-cycle-11-v1"></script>
   <script>window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true;</script>
-  <script src="./financeiro.js?v=20260730-current-cycle-v1"></script>
+  <script src="./financeiro.js?v=20260903-cycle-11-v1"></script>
   <script src="./financeiro-auto-responsavel.js?v=20260505"></script>
-  <script src="./financeiro-frente-caixa.js?v=20260629-pdv-carrinho-v1"></script>
+  <script src="./financeiro-frente-caixa.js?v=20260903-cycle-guard-v1"></script>
   <script src="./financeiro-mensalidades.js?v=20260521-baixa-painel"></script>
-  <script src="./financeiro-recolho.js?v=20260730-current-cycle-v1"></script>
-  <script src="./financeiro-diretor.js"></script>
+  <script src="./financeiro-recolho.js?v=20260903-cycle-11-v1"></script>
+  <script src="./financeiro-diretor.js?v=20260903-admin-auth-v1"></script>
 
-  <script src="/pwa-install.js?v=20260730-current-cycle-v1"></script>
+  <script src="/pwa-install.js?v=20260903-cycle-11-v1"></script>
 </body>
 </html>

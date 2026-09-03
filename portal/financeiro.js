@@ -14,6 +14,11 @@ const state = {
   lastReport: null,
 };
 
+function isAdministrativeExpense(record) {
+  const bucket = String(record?.allocation_bucket || '').trim().toLowerCase();
+  return bucket === 'ajuste_administrativo';
+}
+
 const $ = (id) => document.getElementById(id);
 
 function money(value) {
@@ -24,7 +29,45 @@ function money(value) {
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return window.INTEGRO_FINANCE_CYCLE_POLICY?.referenceISO?.(new Date()) ||
+    new Date().toISOString().slice(0, 10);
+}
+
+function currentCycleDefaultDate() {
+  const today = todayISO();
+  const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
+  const policyCycle = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date());
+  const start = liveCycle?.start_date || policyCycle?.startISO;
+  const end = liveCycle?.end_date || policyCycle?.endISO;
+
+  if (start && today < start) return start;
+  if (end && today > end) return end;
+  return today;
+}
+
+function ordinaryFinanceActivityBlockReason(reference = new Date()) {
+  const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
+  if (!liveCycle?.id) {
+    return 'O ciclo financeiro ainda está carregando. Aguarde e tente novamente.';
+  }
+  if (String(liveCycle?.status || '').toLowerCase() === 'fechado') {
+    return 'Este ciclo já foi fechado. Nenhum lançamento comum pode ser registrado nele.';
+  }
+
+  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(reference);
+  if (range?.isClosingWindow) {
+    return 'Dias 9 e 10/09 são reservados ao fechamento do ciclo. Novas entradas e saídas comuns voltam em 11/09.';
+  }
+
+  if (range && (
+    liveCycle.start_date !== range.startISO ||
+    liveCycle.end_date !== range.endISO ||
+    liveCycle.cycle_key !== range.cycleKey
+  )) {
+    return 'O ciclo exibido não corresponde ao período atual. Atualize a página antes de registrar o lançamento.';
+  }
+
+  return '';
 }
 
 function escapeHtml(str) {
@@ -249,7 +292,7 @@ async function init() {
   state.school = school;
 
   $('schoolName').textContent = school.name || 'Escola';
-  $('expenseDate').value = todayISO();
+  $('expenseDate').value = currentCycleDefaultDate();
   $('reportDate').value = todayISO();
 
   await loadCompanySettings();
@@ -367,7 +410,9 @@ async function loadExpenses() {
     throw new Error(error.message);
   }
 
-  state.expenses = data || [];
+  // Ajustes administrativos pertencem ao livro interno protegido. Eles nunca
+  // devem aparecer como saídas comuns, mesmo antes da limpeza dos legados.
+  state.expenses = (data || []).filter((record) => !isAdministrativeExpense(record));
 }
 
 function renderAll() {
@@ -567,6 +612,58 @@ async function saveDiscount(event) {
 async function saveExpense(event) {
   event.preventDefault();
 
+  const allocationBucket = $('expenseAllocationBucket')?.value || '';
+  const isAdministrativeAdjustment = allocationBucket === 'ajuste_administrativo';
+  const closedCycle = String(window.INTEGRO_FINANCE_CURRENT_CYCLE?.status || '').toLowerCase() === 'fechado';
+
+  if (closedCycle) {
+    showStatus('Este ciclo já foi fechado. Nenhum lançamento pode ser registrado nele.', 'error');
+    return;
+  }
+
+  if (!isAdministrativeAdjustment) {
+    const blockReason = ordinaryFinanceActivityBlockReason();
+    if (blockReason) {
+      showStatus(blockReason, 'error');
+      return;
+    }
+  }
+
+  if (isAdministrativeAdjustment) {
+    if (typeof window.openFinanceAdminAdjustmentAuthorization !== 'function') {
+      showStatus('A autorização de diretor/administrador ainda está carregando. Aguarde e tente novamente.', 'error');
+      return;
+    }
+
+    window.openFinanceAdminAdjustmentAuthorization({
+      source: 'expense-form',
+      adjustment: {
+        source_bucket: 'ajuste_administrativo',
+        destination_bucket: null,
+        amount: normalizeNumber($('expenseAmount').value),
+        movement_date: $('expenseDate').value || todayISO(),
+        description: $('expenseDescription').value.trim(),
+        notes: [
+          $('expenseNotes').value.trim(),
+          $('paidTo').value.trim() ? `Destino: ${$('paidTo').value.trim()}.` : '',
+          $('paidByName').value.trim() ? `Origem informada: ${$('paidByName').value.trim()}.` : '',
+          $('expenseCategory').value.trim() ? `Categoria: ${$('expenseCategory').value.trim()}.` : '',
+        ].filter(Boolean).join(' '),
+      },
+      onSuccess: async () => {
+        event.target.reset();
+        $('expenseDate').value = currentCycleDefaultDate();
+        await reloadAll();
+      },
+    });
+    return;
+  }
+
+  if (!window.__INTEGRO_FINANCE_EXPENSE_HANDLER_READY__) {
+    showStatus('O controle seguro de saídas ainda está carregando. Aguarde e tente novamente.', 'error');
+    return;
+  }
+
   const payload = {
     school_id: state.school.id,
     description: $('expenseDescription').value.trim(),
@@ -589,7 +686,7 @@ async function saveExpense(event) {
   }
 
   event.target.reset();
-  $('expenseDate').value = todayISO();
+  $('expenseDate').value = currentCycleDefaultDate();
 
   showStatus('Saída registrada com sucesso.');
 
@@ -652,6 +749,12 @@ function recalcAmountPaid() {
 
 async function saveEntryAndPrint(event) {
   event.preventDefault();
+
+  const blockReason = ordinaryFinanceActivityBlockReason();
+  if (blockReason) {
+    showStatus(blockReason, 'error');
+    return;
+  }
 
   const selectedStudent = state.students.find((s) => s.id === $('entryStudentId').value);
   const manualStudent = $('entryStudentManual').value.trim();
@@ -1022,7 +1125,8 @@ async function getReportData() {
   }
 
   const totalEntries = (entries || []).reduce((acc, e) => acc + Number(e.amount_paid || 0), 0);
-  const totalExpenses = (expenses || []).reduce((acc, e) => acc + Number(e.amount || 0), 0);
+  const visibleExpenses = (expenses || []).filter((record) => !isAdministrativeExpense(record));
+  const totalExpenses = visibleExpenses.reduce((acc, e) => acc + Number(e.amount || 0), 0);
 
   return {
     period,
@@ -1030,7 +1134,7 @@ async function getReportData() {
     start,
     end,
     entries: entries || [],
-    expenses: expenses || [],
+    expenses: visibleExpenses,
     totalEntries,
     totalExpenses,
     balance: totalEntries - totalExpenses,

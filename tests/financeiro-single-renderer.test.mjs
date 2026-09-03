@@ -4,6 +4,7 @@ import test from "node:test";
 import vm from "node:vm";
 
 const files = {
+  cyclePolicy: new URL("../portal/financeiro-cycle-policy.js", import.meta.url),
   reconciliation: new URL("../portal/financeiro-saldo-reconciliacao.js", import.meta.url),
   shareholder: new URL("../portal/financeiro-recolho-acionista.js", import.meta.url),
   cashCycle: new URL("../portal/financeiro-recolho.js", import.meta.url),
@@ -19,6 +20,7 @@ async function source(name) {
 }
 
 async function loadFinanceCore() {
+  const policyCode = await source("cyclePolicy");
   const code = await source("reconciliation");
   const browserWindow = {
     INTEGRO_SUPABASE: { url: "https://example.invalid", anonKey: "test" },
@@ -38,9 +40,57 @@ async function loadFinanceCore() {
     setTimeout() {},
   });
 
+  vm.runInContext(policyCode, context);
   vm.runInContext(code, context);
   return browserWindow.INTEGRO_FINANCE_CYCLE_CORE;
 }
+
+async function loadCyclePolicy() {
+  const code = await source("cyclePolicy");
+  const browserWindow = {};
+  const context = vm.createContext({ window: browserWindow, Date, Intl, Object });
+  vm.runInContext(code, context);
+  return browserWindow.INTEGRO_FINANCE_CYCLE_POLICY;
+}
+
+test("cycle transition preserves the active 9-to-8 period and starts the 11-to-10 regime", async () => {
+  const policy = await loadCyclePolicy();
+
+  const current = policy.getCurrentCycleRange("2026-09-08");
+  assert.equal(current.startISO, "2026-08-09");
+  assert.equal(current.endISO, "2026-09-08");
+  assert.equal(current.cycleKey, "2026-08");
+  assert.equal(current.isClosingWindow, false);
+
+  const closingDayOne = policy.getCurrentCycleRange("2026-09-09");
+  const closingDayTwo = policy.getCurrentCycleRange("2026-09-10");
+  assert.equal(closingDayOne.cycleKey, "2026-08");
+  assert.equal(closingDayTwo.endISO, "2026-09-08");
+  assert.equal(closingDayOne.isClosingWindow, true);
+  assert.equal(closingDayTwo.isClosingWindow, true);
+
+  const firstNewCycle = policy.getCurrentCycleRange("2026-09-11");
+  assert.equal(firstNewCycle.startISO, "2026-09-11");
+  assert.equal(firstNewCycle.endISO, "2026-10-10");
+  assert.equal(firstNewCycle.cycleKey, "2026-09");
+});
+
+test("11-to-10 cycle policy handles month, year, and leap-year boundaries", async () => {
+  const policy = await loadCyclePolicy();
+
+  assert.deepEqual(
+    { ...policy.getCurrentCycleRange("2026-10-10") },
+    {
+      startISO: "2026-09-11", endISO: "2026-10-10", cycleKey: "2026-09",
+      start: "2026-09-11", end: "2026-10-10", key: "2026-09",
+      isTransitionCycle: false, isClosingWindow: false,
+    }
+  );
+  assert.equal(policy.getCurrentCycleRange("2026-10-11").startISO, "2026-10-11");
+  assert.equal(policy.getCurrentCycleRange("2027-01-10").startISO, "2026-12-11");
+  assert.equal(policy.getCurrentCycleRange("2028-03-10").startISO, "2028-02-11");
+  assert.equal(policy.getCurrentCycleRange("2028-03-10").endISO, "2028-03-10");
+});
 
 test("numeric snapshot ignores prior cycles and old reconciliation", async () => {
   const core = await loadFinanceCore();
@@ -257,15 +307,16 @@ test("finance page loader activates the single renderer before add-on scripts", 
 
   assert.ok(flagPosition >= 0);
   assert.ok(reconciliationPosition > flagPosition);
-  assert.match(installer, /20260730-current-cycle-v1/);
+  assert.match(installer, /financeCyclePolicyScript/);
+  assert.match(installer, /20260903-cycle-11-v1/);
 
   const inlineFlagPosition = page.indexOf(
     "window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true"
   );
   const financeScriptPosition = page.indexOf(
-    "financeiro.js?v=20260730-current-cycle-v1"
+    "financeiro.js?v=20260903-cycle-11-v1"
   );
   assert.ok(inlineFlagPosition >= 0);
   assert.ok(financeScriptPosition > inlineFlagPosition);
-  assert.match(serviceWorker, /integro-pwa-v20260730-current-cycle/);
+  assert.match(serviceWorker, /integro-pwa-v20260903-cycle-11/);
 });

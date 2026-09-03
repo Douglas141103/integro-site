@@ -1,7 +1,8 @@
 /*
   INTEGRO — Recolho do Caixa
   Ciclo empresarial mensal:
-  - Início: todo dia 9
+  - Regra nova: dia 11 ao dia 10
+  - Ciclo em andamento preservado: 09/08/2026 a 08/09/2026
   - Cada ciclo é independente e começa em R$ 0,00
 
   Regra de distribuição:
@@ -12,7 +13,8 @@
   - 20% Acionista 3
 
   Ajuste importante:
-  - Ajustes administrativos continuam existindo no banco.
+  - Ajustes administrativos exigem autorização de diretor/administrador.
+  - Ajustes administrativos não criam linhas em finance_expenses.
   - Ajustes administrativos NÃO aparecem nas movimentações internas visíveis.
   - Ajustes administrativos NÃO aparecem no espelho/relatório de recolho.
 */
@@ -27,8 +29,12 @@
   }
 
   const client = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
+  const cyclePolicy = window.INTEGRO_FINANCE_CYCLE_POLICY;
 
-  const CYCLE_DAY = 9;
+  if (!cyclePolicy?.getCurrentCycleRange) {
+    console.error("INTEGRO: política dos ciclos financeiros não foi carregada.");
+    return;
+  }
 
   const BUCKETS = {
     operacoes: {
@@ -109,29 +115,13 @@
     });
   }
 
-  function pad2(value) {
-    return String(value).padStart(2, "0");
-  }
-
-  function dateISO(date) {
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-  }
-
   function todayISO() {
-    return dateISO(new Date());
+    return cyclePolicy.referenceISO(new Date());
   }
 
   function parseDateLocal(iso) {
     const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
     return new Date(year, month - 1, day);
-  }
-
-  function addMonths(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, date.getDate());
-  }
-
-  function addDays(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
   }
 
   function formatDateBR(value) {
@@ -143,21 +133,32 @@
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
-    let start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), CYCLE_DAY);
+    return cyclePolicy.getCurrentCycleRange(referenceDate);
+  }
 
-    if (referenceDate.getDate() < CYCLE_DAY) {
-      start = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, CYCLE_DAY);
+  function isCycleClosed() {
+    return String(state.cycle?.status || "").toLowerCase() === "fechado";
+  }
+
+  function ordinaryActivityBlockReason(referenceDate = new Date()) {
+    if (isCycleClosed()) {
+      return "Este ciclo já foi fechado. Nenhuma movimentação comum pode ser registrada nele.";
     }
 
-    const end = addDays(addMonths(start, 1), -1);
+    const range = getCurrentCycleRange(referenceDate);
+    if (range.isClosingWindow) {
+      return "Dias 9 e 10/09 são reservados ao fechamento. Nesse período, somente ajustes administrativos protegidos podem ser registrados.";
+    }
 
-    return {
-      start,
-      end,
-      startISO: dateISO(start),
-      endISO: dateISO(end),
-      cycleKey: dateISO(start).slice(0, 7)
-    };
+    if (state.cycle && (
+      state.cycle.cycle_key !== range.cycleKey ||
+      state.cycle.start_date !== range.startISO ||
+      state.cycle.end_date !== range.endISO
+    )) {
+      return "O ciclo exibido não corresponde ao período atual. Atualize o painel antes de registrar a movimentação.";
+    }
+
+    return "";
   }
 
   function setMessage(message, type) {
@@ -189,8 +190,25 @@
   }
 
   function closeModal() {
-    $("cashMovementModal")?.classList.remove("show");
+    const modal = $("cashMovementModal");
+    modal?.classList.remove("show");
+    if (modal) delete modal.dataset.action;
     state.modalAction = null;
+  }
+
+  function currentCycleDefaultDate() {
+    const today = todayISO();
+    if (!state.cycle) return today;
+    if (today < state.cycle.start_date) return state.cycle.start_date;
+    if (today > state.cycle.end_date) return state.cycle.end_date;
+    return today;
+  }
+
+  function earliestCycleCloseDate() {
+    const range = getCurrentCycleRange(new Date());
+    return range.isTransitionCycle
+      ? cyclePolicy.TRANSITION_LOOKUP_END
+      : state.cycle?.end_date;
   }
 
   function bucketLabel(bucket) {
@@ -300,13 +318,20 @@
       .select("*")
       .eq("school_id", state.school.id)
       .eq("cycle_key", range.cycleKey)
+      .eq("start_date", range.startISO)
+      .eq("end_date", range.endISO)
       .maybeSingle();
 
     const existingResult = await findCycle();
     if (existingResult.error) throw existingResult.error;
     if (existingResult.data) {
       state.cycle = existingResult.data;
+      window.INTEGRO_FINANCE_CURRENT_CYCLE = state.cycle;
       return;
+    }
+
+    if (range.isClosingWindow) {
+      throw new Error("O ciclo de 09/08/2026 a 08/09/2026 não foi encontrado. Na janela de fechamento não é permitido criar um ciclo retroativo.");
     }
 
     const insertResult = await client
@@ -329,11 +354,13 @@
         throw retryResult.error || insertResult.error;
       }
       state.cycle = retryResult.data;
+      window.INTEGRO_FINANCE_CURRENT_CYCLE = state.cycle;
       return;
     }
 
     if (insertResult.error) throw insertResult.error;
     state.cycle = insertResult.data;
+    window.INTEGRO_FINANCE_CURRENT_CYCLE = state.cycle;
   }
 
   async function loadCycleData() {
@@ -465,7 +492,9 @@
             <p class="eyebrow">CICLO EMPRESARIAL MENSAL</p>
             <h2>Recolho do caixa</h2>
             <p class="muted">
-              O ciclo do INTEGRO começa todo dia 9. O painel distribui automaticamente o valor recebido:
+              A nova regra dos ciclos é do dia 11 ao dia 10. Na transição, o ciclo de 09/08/2026
+              permanece encerrando em 08/09/2026; os dias 9 e 10 ficam reservados ao fechamento.
+              O painel distribui automaticamente o valor recebido:
               30% para contas e operações, 10% para fundo de caixa e 20% para cada acionista.
             </p>
           </div>
@@ -619,10 +648,16 @@
       $("cashCycleBalance").textContent = money(state.totals.cycleBalance);
     }
 
-    $("cashCycleStatus").textContent = state.cycle.status === "fechado" ? "Fechado" : "Aberto";
+    const range = getCurrentCycleRange(new Date());
+    $("cashCycleStatus").textContent = isCycleClosed()
+      ? "Fechado"
+      : range.isClosingWindow
+        ? "Em fechamento"
+        : "Aberto";
 
     renderBuckets();
     renderMovements();
+    applyCycleActionState(range);
 
     document.dispatchEvent(new CustomEvent("integro:cash-cycle-base-rendered", {
       detail: {
@@ -630,6 +665,60 @@
         cycleKey: state.cycle.cycle_key
       }
     }));
+  }
+
+  function applyCycleActionState(range = getCurrentCycleRange(new Date())) {
+    const closed = isCycleClosed();
+    const closing = Boolean(range.isClosingWindow);
+    const blockOrdinary = closed || closing;
+    const today = todayISO();
+
+    document.querySelectorAll("[data-cash-action]").forEach((button) => {
+      button.disabled = blockOrdinary;
+      button.title = closed
+        ? "O ciclo está fechado."
+        : closing
+          ? "Operações comuns ficam bloqueadas durante a janela de fechamento."
+          : "";
+    });
+
+    const manualAdjustButton = $("cashManualAdjustBtn");
+    if (manualAdjustButton) {
+      manualAdjustButton.disabled = closed;
+      manualAdjustButton.title = closed ? "O ciclo está fechado." : "";
+    }
+
+    const closeButton = $("cashCloseCycleBtn");
+    if (closeButton) {
+      const closeDate = earliestCycleCloseDate();
+      const beforeCloseDate = Boolean(closeDate && today < closeDate);
+      closeButton.disabled = closed || beforeCloseDate;
+      closeButton.title = closed
+        ? "Este ciclo já foi fechado."
+        : beforeCloseDate
+          ? `O fechamento estará disponível em ${formatDateBR(closeDate)}.`
+          : "";
+    }
+
+    const entrySubmitButton = document.querySelector('#entryForm button[type="submit"]');
+    if (entrySubmitButton) {
+      entrySubmitButton.disabled = blockOrdinary;
+      entrySubmitButton.title = closed
+        ? "O ciclo está fechado."
+        : closing
+          ? "Novas entradas voltam em 11/09."
+          : "";
+    }
+
+    const pointOfSaleButton = $("pdv2Finish");
+    if (pointOfSaleButton) {
+      pointOfSaleButton.disabled = blockOrdinary;
+      pointOfSaleButton.title = closed
+        ? "O ciclo está fechado."
+        : closing
+          ? "Novas vendas voltam em 11/09."
+          : "";
+    }
   }
 
   function renderBuckets() {
@@ -793,7 +882,7 @@
     setModalMessage("");
 
     $("cashModalAmount").value = "";
-    $("cashModalDate").value = todayISO();
+    $("cashModalDate").value = currentCycleDefaultDate();
     $("cashModalDescriptionInput").value = "";
     $("cashModalNotes").value = "";
 
@@ -846,6 +935,9 @@
       $("cashModalDescriptionInput").value = "Ajuste administrativo do ciclo";
     }
 
+    const modal = $("cashMovementModal");
+    if (modal) modal.dataset.action = action;
+
     showModal();
   }
 
@@ -853,6 +945,19 @@
     if (!state.modalAction) {
       setModalMessage("Nenhuma ação selecionada.", "error");
       return;
+    }
+
+    if (isCycleClosed()) {
+      setModalMessage("Este ciclo já foi fechado. Nenhuma movimentação pode ser registrada nele.", "error");
+      return;
+    }
+
+    if (state.modalAction.action !== "manual-adjust") {
+      const blockReason = ordinaryActivityBlockReason();
+      if (blockReason) {
+        setModalMessage(blockReason, "error");
+        return;
+      }
     }
 
     const source = $("cashModalSource").value || null;
@@ -892,16 +997,40 @@
       return;
     }
 
+    if (state.modalAction.action === "manual-adjust") {
+      if (typeof window.openFinanceAdminAdjustmentAuthorization !== "function") {
+        setModalMessage("A autorização de diretor/administrador ainda está carregando. Aguarde e tente novamente.", "error");
+        return;
+      }
+
+      const adjustment = {
+        cycle_id: state.cycle.id,
+        source_bucket: source,
+        destination_bucket: destination,
+        amount,
+        movement_date: movementDate,
+        description,
+        notes,
+      };
+
+      closeModal();
+      window.openFinanceAdminAdjustmentAuthorization({
+        source: "cash-cycle-modal",
+        adjustment,
+        onSuccess: async () => {
+          await reloadCashCycle();
+          if (typeof reloadAll === "function") await reloadAll();
+        },
+      });
+      return;
+    }
+
     let movementType = "saida";
 
     if (state.modalAction.action === "pay-bill") movementType = "conta_paga";
     if (state.modalAction.action === "fund-expense") movementType = "saida";
     if (state.modalAction.action === "pay-shareholder-full") movementType = "pagamento_acionista";
     if (state.modalAction.action === "pay-shareholder-partial") movementType = "pagamento_acionista";
-
-    if (state.modalAction.action === "manual-adjust") {
-      movementType = source && destination ? "transferencia" : destination ? "ajuste_credito" : "ajuste_debito";
-    }
 
     try {
       const payload = {
@@ -914,8 +1043,7 @@
         movement_date: movementDate,
         description,
         notes,
-        created_by: state.user.id,
-        updated_at: new Date().toISOString()
+        created_by: state.user.id
       };
 
       const { error } = await client
@@ -937,6 +1065,12 @@
   }
 
   async function transferOperationsRestToFund() {
+    const blockReason = ordinaryActivityBlockReason();
+    if (blockReason) {
+      setMessage(blockReason, "warn");
+      return;
+    }
+
     const available = availableForBucket("operacoes");
 
     if (available <= 0) {
@@ -961,11 +1095,10 @@
         source_bucket: "operacoes",
         destination_bucket: "fundo_caixa",
         amount: available,
-        movement_date: todayISO(),
+        movement_date: currentCycleDefaultDate(),
         description: "Transferência do restante de Contas e operações para o Fundo de caixa",
         notes: "Transferência realizada após pagamento das contas do ciclo.",
-        created_by: state.user.id,
-        updated_at: new Date().toISOString()
+        created_by: state.user.id
       };
 
       const { error } = await client
@@ -993,6 +1126,12 @@
 
     if (state.cycle.status === "fechado") {
       alert("Este ciclo já está fechado.");
+      return;
+    }
+
+    const closeDate = earliestCycleCloseDate();
+    if (closeDate && todayISO() < closeDate) {
+      alert(`O fechamento definitivo deste ciclo estará disponível em ${formatDateBR(closeDate)}.`);
       return;
     }
 
@@ -1233,7 +1372,14 @@
       await loadCycleData();
       renderPanel();
 
-      setMessage("Ciclo empresarial atualizado com sucesso.", "ok");
+      const range = getCurrentCycleRange(new Date());
+      if (isCycleClosed()) {
+        setMessage("Ciclo fechado. Os lançamentos deste período estão bloqueados.", "warn");
+      } else if (range.isClosingWindow) {
+        setMessage("Janela de fechamento: nos dias 9 e 10/09 somente ajustes administrativos protegidos ficam disponíveis.", "warn");
+      } else {
+        setMessage("Ciclo empresarial atualizado com sucesso.", "ok");
+      }
     } catch (error) {
       console.error(error);
       setMessage(error.message || "Erro ao carregar Recolho do Caixa.", "error");
@@ -1261,6 +1407,19 @@
         if (!bucket) {
           alert("Selecione de onde essa saída vai sair.");
           return;
+        }
+
+        if (isCycleClosed()) {
+          alert("Este ciclo já foi fechado. Nenhuma saída pode ser registrada nele.");
+          return;
+        }
+
+        if (bucket !== "ajuste_administrativo") {
+          const blockReason = ordinaryActivityBlockReason();
+          if (blockReason) {
+            alert(blockReason);
+            return;
+          }
         }
 
         const amount = Number($("expenseAmount")?.value || 0);
@@ -1301,6 +1460,38 @@
           return;
         }
 
+        if (bucket === "ajuste_administrativo") {
+          if (typeof window.openFinanceAdminAdjustmentAuthorization !== "function") {
+            alert("A autorização de diretor/administrador ainda está carregando. Aguarde e tente novamente.");
+            return;
+          }
+
+          window.openFinanceAdminAdjustmentAuthorization({
+            source: "expense-form",
+            adjustment: {
+              cycle_id: state.cycle.id,
+              source_bucket: "ajuste_administrativo",
+              destination_bucket: null,
+              amount,
+              movement_date: expenseDate,
+              description,
+              notes: [
+                notes,
+                `Destino: ${paidTo}.`,
+                `Origem informada: ${paidByName}.`,
+                category ? `Categoria: ${category}.` : "",
+              ].filter(Boolean).join(" "),
+            },
+            onSuccess: async () => {
+              form.reset();
+              $("expenseDate").value = currentCycleDefaultDate();
+              await reloadCashCycle();
+              if (typeof reloadAll === "function") await reloadAll();
+            },
+          });
+          return;
+        }
+
         const expensePayload = {
           school_id: state.school.id,
           description,
@@ -1336,8 +1527,7 @@
           description: `Saída registrada: ${description}`,
           notes: notes || `Destino: ${paidTo}. Lançado por: ${paidByName}.`,
           related_expense_id: expense?.id || null,
-          created_by: state.user.id,
-          updated_at: new Date().toISOString()
+          created_by: state.user.id
         };
 
         const { data: movement, error: movementError } = await client
@@ -1362,6 +1552,7 @@
         alert("Saída registrada e vinculada ao Recolho do Caixa com sucesso.");
 
         form.reset();
+        $("expenseDate").value = currentCycleDefaultDate();
 
         await reloadCashCycle();
       } catch (error) {
@@ -1369,6 +1560,20 @@
         alert(error.message || "Erro ao registrar saída no Recolho do Caixa.");
       }
     }, true);
+
+    window.__INTEGRO_FINANCE_EXPENSE_HANDLER_READY__ = true;
+    const submitButton = $("expenseSubmitBtn");
+    const expenseDateInput = $("expenseDate");
+    if (expenseDateInput && state.cycle && (
+      expenseDateInput.value < state.cycle.start_date ||
+      expenseDateInput.value > state.cycle.end_date
+    )) {
+      expenseDateInput.value = currentCycleDefaultDate();
+    }
+    if (submitButton) {
+      submitButton.disabled = isCycleClosed();
+      submitButton.textContent = isCycleClosed() ? "Ciclo fechado" : "Registrar saída";
+    }
   }
 
   async function init() {
@@ -1384,6 +1589,8 @@
       setMessage(error.message || "Erro ao iniciar Recolho do Caixa.", "error");
     }
   }
+
+  window.INTEGRO_FINANCE_RELOAD_CYCLE = reloadCashCycle;
 
   window.addEventListener("DOMContentLoaded", init);
 })();

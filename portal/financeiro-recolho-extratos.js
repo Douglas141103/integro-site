@@ -8,7 +8,8 @@
   if (!cfg || !cfg.url || !cfg.anonKey || !supabaseGlobal?.createClient) return;
 
   const client = supabaseGlobal.createClient(cfg.url, cfg.anonKey);
-  const CYCLE_DAY = 9;
+  const cyclePolicy = window.INTEGRO_FINANCE_CYCLE_POLICY;
+  if (!cyclePolicy?.getCurrentCycleRange) return;
 
   const BUCKETS = {
     operacoes: { label: "Contas e operações", percent: 0.30, percentLabel: "30%" },
@@ -35,25 +36,9 @@
     return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
 
-  function pad2(value) {
-    return String(value).padStart(2, "0");
-  }
-
-  function dateISO(date) {
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-  }
-
   function parseDateLocal(iso) {
     const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
     return new Date(year, month - 1, day);
-  }
-
-  function addMonths(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, date.getDate());
-  }
-
-  function addDays(date, amount) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
   }
 
   function formatDateBR(value) {
@@ -63,10 +48,7 @@
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
-    let start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), CYCLE_DAY);
-    if (referenceDate.getDate() < CYCLE_DAY) start = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, CYCLE_DAY);
-    const end = addDays(addMonths(start, 1), -1);
-    return { startISO: dateISO(start), endISO: dateISO(end), cycleKey: dateISO(start).slice(0, 7) };
+    return cyclePolicy.getCurrentCycleRange(referenceDate);
   }
 
   function movementTypeLabel(type) {
@@ -126,6 +108,8 @@
       .select("*")
       .eq("school_id", school.id)
       .eq("cycle_key", range.cycleKey)
+      .eq("start_date", range.startISO)
+      .eq("end_date", range.endISO)
       .maybeSingle();
 
     const existingCycleResult = await findCycle();
@@ -133,6 +117,10 @@
 
     let cycle = existingCycleResult.data;
     if (!cycle) {
+      if (range.isClosingWindow) {
+        throw new Error("O ciclo de transição não foi encontrado e não pode ser criado durante a janela de fechamento.");
+      }
+
       const insertCycleResult = await client
         .from("finance_cash_cycles")
         .insert({
