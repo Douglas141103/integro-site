@@ -261,7 +261,7 @@
         if (deferredPrompt) runNativeInstall().catch(() => openInstallGuide());
         else openInstallGuide();
       });
-      document.body.appendChild(installButton);
+      (document.getElementById("home-install-slot") || document.body).appendChild(installButton);
     }
 
     installGuide = document.getElementById("installAppGuide");
@@ -318,7 +318,7 @@
 
   function loadHomeScript(id, src) {
     const isHome = location.pathname === "/" || location.pathname === "/index.html";
-    if (!isHome) return;
+    if (!isHome || document.body?.dataset.homeDesign === "2026") return;
     loadScript(id, src);
   }
 
