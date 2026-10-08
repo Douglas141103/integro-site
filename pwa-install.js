@@ -317,7 +317,7 @@
   }
 
   function loadHomeScript(id, src) {
-    const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
+    const isHome = location.pathname === "/" || location.pathname === "/index.html";
     if (!isHome) return;
     loadScript(id, src);
   }

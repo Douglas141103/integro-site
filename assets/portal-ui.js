@@ -37,7 +37,7 @@
         const reveal = password.type === 'password'; password.type = reveal ? 'text' : 'password';
         toggle.querySelector('span').textContent = reveal ? 'Ocultar senha' : 'Mostrar senha'; toggle.setAttribute('aria-pressed', String(reveal));
       });
-      password.insertAdjacentElement('afterend', toggle);
+      (password.closest('label') || password).insertAdjacentElement('afterend', toggle);
       password.autocomplete = 'current-password';
       const email = document.querySelector('input[type="email"]'); if (email) email.autocomplete = 'username';
     }
@@ -177,6 +177,9 @@
     input.value = ''; renderSearch(); if (mobile.matches) setSidebar(false); search.showModal(); input.focus();
   }
   dismiss.addEventListener('click', () => search.close());
+  search.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); search.close(); }
+  });
   search.addEventListener('click', event => { if (event.target === search) { const r = search.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) search.close(); } });
   input.addEventListener('input', renderSearch);
   input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); results.querySelector('button')?.click(); } });
