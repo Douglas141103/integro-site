@@ -54,6 +54,8 @@ test('search excludes hidden survey links and personal records, supports accents
   input.value = 'ZZZ_not_found'; input.dispatchEvent(new w.Event('input'));
   assert.equal(d.querySelectorAll('.portal-command-result').length, 0);
   assert.match(d.querySelector('.portal-command-count').textContent, /Nenhum atalho/);
+  input.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  assert.equal(d.querySelector('.portal-command-dialog').open, false, 'Escape closes even a non-empty search');
   dom.window.close();
 });
 test('context shortcuts delegate exactly once to existing navigation and preserve field values', async () => {
@@ -94,6 +96,7 @@ test('password visibility does not submit forms or modify the password', () => {
     input.value = 'only-a-local-test'; let submits = 0;
     input.form.addEventListener('submit', e => { e.preventDefault(); submits++; });
     const toggle = d.querySelector('.portal-password-toggle');
+    assert.equal(toggle.closest('label'), null, 'visibility control is outside the password label');
     toggle.click(); assert.equal(input.type, 'text'); toggle.click(); assert.equal(input.type, 'password');
     assert.equal(input.value, 'only-a-local-test'); assert.equal(submits, 0); dom.window.close();
   }
@@ -106,5 +109,8 @@ test('all new destinations resolve to repo pages; presentation has no data/netwo
   assert.doesNotMatch(script, /fetch\(|\.from\(|auth\.|innerHTML|eval\(/);
   const css = readFileSync(new URL('assets/portal-ui.css', root), 'utf8');
   assert.match(css, /@media screen/); assert.match(css, /@media print/); assert.match(css, /prefers-reduced-motion/);
+  const loader = readFileSync(new URL('pwa-install.js', root), 'utf8');
+  assert.match(loader, /location.pathname === "\/index.html"/);
+  assert.doesNotMatch(loader, /location.pathname.endsWith\("\/index.html"\)/, 'public-site styles must not load on portal sign-in pages');
   dom.window.close();
 });

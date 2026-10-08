@@ -19,7 +19,7 @@
   body[data-portal-ui] :is(.btn-light,.btn-secondary,.btn.ghost) { background: #f0f2ed; color: #344439; border: 1px solid #dde2da; }
   body[data-portal-ui] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea) { border-radius: 10px; border: 1px solid #d4dbd2; color: #26372c; background: #fff; min-height: 44px; padding: 11px 13px; max-width: 100%; }
   body[data-portal-ui] label { font-weight: 500; }
-  body[data-portal-ui] :is(.card,.content-card,.panel-card,.module-card,.stat-card,.quick-area,.toolbar-card,.gestao-menu-card,.family-menu-card,.summary-card,.selector-card,.report-preview,.status-card,.metric,.kpis article) { box-shadow: none; border: 1px solid #e1e5dc; border-radius: 15px; background: #fff; }
+  body[data-portal-ui] :is(.card,.content-card,.panel-card,.module-card,.stat-card,.quick-area,.toolbar-card,.gestao-menu-card,.family-menu-card,.summary-card,.selector-card,.report-preview,.status-card,.metric), body[data-portal-ui] .kpis article { box-shadow: none; border: 1px solid #e1e5dc; border-radius: 15px; background: #fff; }
   body[data-portal-ui] :is(.hero,.hero-card,.hero-banner) { background: transparent; box-shadow: none; border: 0; border-radius: 0; color: #26372c; }
   body[data-portal-ui] :is(.hero,.hero-card,.hero-banner) p { color: #626962; }
   body[data-portal-ui] .hero-card::after { display: none; }
@@ -110,7 +110,7 @@
   body[data-portal-ui="login"] :is(.auth-shell,.login-shell) { width: min(1040px,100%); display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #fff; border: 1px solid #e1e5db; border-radius: 22px; overflow: hidden; }
   body[data-portal-ui="login"] :is(.auth-card,.login-card) { padding: 46px; border: 0; box-shadow: none; border-radius: 0; background: #fff; }
   body[data-portal-ui="login"] :is(.auth-panel,.info-card) { padding: 46px; background: #edf1e5; border: 0; box-shadow: none; border-radius: 0; display: flex; flex-direction: column; justify-content: center; }
-  body[data-portal-ui="login"] .panel-card { background: transparent; border: 0; box-shadow: none; padding: 0; color: #3e5134; }
+  body[data-portal-ui="login"] .auth-panel .panel-card { background: transparent; border: 0; box-shadow: none; padding: 0; color: #3e5134; }
   body[data-portal-ui="login"] :is(.info-card,.panel-card) h2 { font-size: 27px; font-weight: 500; line-height: 1.3; margin-bottom: 24px; color: #354a2b; }
   body[data-portal-ui="login"] :is(.info-card,.panel-card) li { color: #55634a; line-height: 1.7; margin-bottom: 16px; }
   body[data-portal-ui="login"] .brand-row img { width: 50px; height: 50px; object-fit: contain; background: transparent; }
