@@ -12,6 +12,7 @@
     motion.setAttribute('aria-pressed', String(off));
     motion.textContent = reduced.matches ? 'Movimento reduzido no dispositivo' : off ? 'Ativar animações' : 'Pausar animações';
     motion.disabled = reduced.matches;
+    document.dispatchEvent(new CustomEvent('integro-motion-change', { detail: { paused: off } }));
   }
   motion.addEventListener('click', () => { paused = !paused; updateMotion(); });
   reduced.addEventListener('change', updateMotion);
