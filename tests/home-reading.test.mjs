@@ -9,6 +9,7 @@ function setup(reduced = false, observer = true) {
   const w = dom.window;
   const media = { matches: reduced, addEventListener() {} };
   w.matchMedia = () => media;
+  w.requestAnimationFrame = () => 1;
   let callback;
   const watched = [], completed = [];
   if (observer) w.IntersectionObserver = class {
@@ -17,16 +18,21 @@ function setup(reduced = false, observer = true) {
     unobserve(el) { completed.push(el); }
   };
   w.eval(script);
-  return { dom, w, d: w.document, enter: el => callback([{ isIntersecting: true, target: el }]), watched, completed };
+  return { dom, w, d: w.document, enter: el => callback([{ isIntersecting: true, target: el }]), leave: el => callback([{ isIntersecting: false, target: el }]), watched, completed };
 }
-test('illustrations appear on entry once, with no content hidden before enhancement', () => {
+test('each visible card animates independently, stops outside and restarts on re-entry', () => {
   const plain = new JSDOM(html).window.document;
   assert.equal(plain.querySelectorAll('.reading-panel:not([hidden])').length, 3);
-  const { d, enter, watched, completed } = setup();
-  assert.equal(watched.length, 6);
-  const scene = d.querySelector('.reading-demo');
+  const { d, enter, leave, watched, completed } = setup();
+  assert.equal(watched.length, 18);
+  const scene = d.querySelector('.reading-paper');
   assert.ok(!scene.classList.contains('reading-in-view'));
-  enter(scene); assert.ok(scene.classList.contains('reading-in-view')); assert.deepEqual(completed, [scene]);
+  enter(scene); assert.ok(scene.classList.contains('reading-in-view'));
+  leave(scene); assert.ok(!scene.classList.contains('reading-in-view'));
+  enter(scene); assert.ok(scene.classList.contains('reading-in-view'));
+  assert.deepEqual(completed, []);
+  assert.equal(d.querySelectorAll('.reading-card-icon').length, 10);
+  assert.ok([...d.querySelectorAll('.reading-trace')].every(el => el.getAttribute('pathLength') === '1'));
 });
 test('reading demonstration joins and separates syllables and selects only one panel', () => {
   const { d } = setup();

@@ -1,4 +1,4 @@
-/* Finite, viewport-triggered illustrations; content stays readable without JS. */
+/* Each visible card animates its own artwork; text remains stable and readable. */
 .reading-section { background:#edf1e6; }
 .reading-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
 .reading-tabs { display:flex; flex-wrap:wrap; gap:8px; }.reading-tabs button { padding:11px 18px; min-height:44px; border:1px solid #b9c5ac; border-radius:28px; background:transparent; color:#34402e; font-size:14px; }.reading-tabs button[aria-pressed=true] { background:#253e2e; color:#fff; border-color:#253e2e; }
@@ -26,3 +26,34 @@
 @media(max-width:700px) { .reading-panel { grid-template-columns:1fr; padding:26px 20px; gap:28px; }.reading-paper { min-height:300px; padding:20px; }.reading-house { height:145px; }.reading-explanation>p { font-size:14px; }.reading-toolbar { gap:6px; }.reading-tabs { gap:6px; }.reading-tabs button { font-size:12px; padding:10px 12px; }.reading-step-art { height:100px; }.reading-syllables span { font-size:30px; } #reading-groups { min-height:170px; }.reading-group { padding:14px 8px; gap:5px; } }
 @media(prefers-reduced-motion:reduce) { .reading-section *, .reading-step-art, .reading-draw { animation:none!important; transition:none!important; } }
 @media print { .reading-toolbar,.reading-action,.reading-counter { display:none!important; }.reading-ready .reading-panel[hidden] { display:grid!important; }.reading-panel { break-inside:avoid; }.reading-demo { overflow:visible; } }
+
+/* Illustrated cards rebuild on re-entry and move only while in the viewport. */
+.reading-motion-card { position:relative; transform:translateY(var(--reading-drift,0px)); }
+.reading-card-icon { display:block; width:76px; height:76px; flex-shrink:0; margin:0 0 22px; overflow:visible; }
+.reading-card-icon :is(path,circle,rect) { fill:none; stroke:#67824e; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.home-services .reading-card-icon { margin:2px 0 24px; }.home-services .home-card-number { position:absolute; top:30px; right:28px; margin:0; }
+.home-portal .reading-card-icon { width:66px; height:66px; margin-bottom:26px; }.home-diagnostic .reading-card-icon { margin-bottom:24px; }
+.reading-in-view .reading-trace { stroke-dasharray:1; animation:reading-build 6s ease-in-out var(--trace-delay,0s) infinite both; }
+.reading-in-view .reading-solid { stroke-dasharray:none; animation:reading-seed 4s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+.reading-in-view .reading-card-icon { animation:reading-float 4.6s ease-in-out infinite; }
+.reading-in-view .reading-step-art { animation:reading-arrive .7s ease both; }
+.reading-in-view.reading-paper { animation:reading-arrive .8s ease both; }
+.reading-in-view .reading-sun { stroke-dasharray:none; animation:reading-sunrise 5s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+.reading-in-view .reading-syllables span { animation:reading-letter 4.2s ease-in-out infinite; }.reading-in-view .reading-syllables span:nth-child(2) { animation-delay:.25s; }
+.reading-in-view .reading-group i { animation:reading-piece 3.6s ease-in-out infinite; }.reading-in-view .reading-group i:nth-child(2) { animation-delay:.18s; }.reading-in-view .reading-group i:nth-child(3) { animation-delay:.36s; }.reading-in-view .reading-group i:nth-child(4) { animation-delay:.54s; }
+.reading-in-view .reading-checklist label { border-radius:8px; animation:reading-guide 6s ease-in-out infinite; }.reading-in-view .reading-checklist label:nth-child(2) { animation-delay:2s; }.reading-in-view .reading-checklist label:nth-child(3) { animation-delay:4s; }
+.reading-in-view.home-diagnostic li { animation:reading-guide 6s ease-in-out infinite; border-radius:4px; }.reading-in-view.home-diagnostic li:nth-child(2) { animation-delay:2s; }.reading-in-view.home-diagnostic li:nth-child(3) { animation-delay:4s; }
+.reading-in-view[data-home-service],.reading-in-view.home-portal { animation:reading-card-arrive .8s ease both; }
+@keyframes reading-build { 0% { stroke-dashoffset:1; opacity:.45; } 28%,82% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:1; opacity:.45; } }
+@keyframes reading-float { 0%,100% { transform:translateY(0) rotate(-2deg); } 50% { transform:translateY(-7px) rotate(2deg); } }
+@keyframes reading-letter { 0%,25%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+@keyframes reading-seed { 0%,100% { transform:scale(.88); } 50% { transform:scale(1.06); } }
+@keyframes reading-sunrise { 0%,100% { transform:translateY(3px) scale(.92); } 50% { transform:translateY(-5px) scale(1.08); } }
+@keyframes reading-piece { 0%,65%,100% { transform:scale(1); } 22% { transform:translateY(-5px) scale(1.12); background:#9bad69; } }
+@keyframes reading-guide { 0%,36%,100% { background:transparent; } 14%,25% { background:#dfe9cd; } }
+@keyframes reading-card-arrive { from { opacity:.65; translate:0 18px; } to { opacity:1; translate:0 0; } }
+.reading-paused .reading-motion-card { transform:none!important; animation:none!important; translate:none!important; }
+.reading-paused .reading-motion-card * { animation:none!important; transition:none!important; stroke-dashoffset:0!important; }
+.reading-page-hidden .reading-motion-card,.reading-page-hidden .reading-motion-card * { animation-play-state:paused!important; }
+@media(prefers-reduced-motion:reduce) { .reading-motion-card,.reading-motion-card * { animation:none!important; transition:none!important; transform:none!important; translate:none!important; stroke-dashoffset:0!important; } }
+@media print { .reading-motion-card,.reading-motion-card * { animation:none!important; transform:none!important; translate:none!important; stroke-dashoffset:0!important; } }
