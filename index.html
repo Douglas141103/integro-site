@@ -524,6 +524,8 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/assets/resultados-2026.css?v=20261008" />
+  <script defer src="/assets/resultados-2026.js?v=20261008"></script>
   <!-- PWA INTEGRO -->
 <link rel="manifest" href="/manifest.webmanifest" />
 <meta name="theme-color" content="#004d3a" />
@@ -549,6 +551,7 @@
       </a>
 
       <nav class="nav-links">
+        <a href="#resultados-2026" class="results-nav">Resultados 2026</a>
         <a href="#servicos">Serviços</a>
         <a href="#como-funciona">Como funciona</a>
         <a href="#diferenciais">Diferenciais</a>
@@ -560,6 +563,72 @@
   </header>
 
   <main>
+    <section id="resultados-2026" class="results" aria-labelledby="results-heading">
+      <div class="container">
+        <div class="results-intro">
+          <div>
+            <p class="results-kicker">INSTITUTO INTEGRO · RESULTADOS PARCIAIS DE 2026</p>
+            <h2 id="results-heading">Cada avanço conta.</h2>
+            <p>Conheça os indicadores de aprendizagem e participação informados pelo Instituto. Do 1º ano do Ensino Fundamental ao 3º ano do Ensino Médio, em diferentes modalidades de atendimento.</p>
+          </div>
+          <a class="results-contact" href="#portais">Acompanhe seu filho <span aria-hidden="true">↗</span></a>
+        </div>
+        <dl class="results-numbers">
+          <div><dt>Alunos atendidos</dt><dd>42</dd></div>
+          <div><dt>Turmas</dt><dd>3</dd></div>
+          <div><dt>Taxa de melhora escolar informada</dt><dd>86<span>%</span></dd></div>
+        </dl>
+        <div class="results-dashboard">
+          <div class="results-chart-top">
+            <div><p class="results-kicker">EXPLORE OS INDICADORES</p><h3>Aprendizagem e presença</h3></div>
+            <span class="results-period">2026 · Parcial</span>
+          </div>
+          <div class="results-filters" role="group" aria-label="Escolha os indicadores" hidden>
+            <button type="button" data-results-view="ef1" aria-pressed="true">Fundamental I</button>
+            <button type="button" data-results-view="ef2" aria-pressed="false">Fundamental II</button>
+            <button type="button" data-results-view="em" aria-pressed="false">Ensino Médio</button>
+            <button type="button" data-results-view="frequencia" aria-pressed="false">Frequência</button>
+          </div>
+          <div id="results-interactive" hidden>
+            <div class="results-chart-caption"><h4 id="results-chart-title"></h4><label>Exibir <select id="results-order"><option value="original">Ordem original</option><option value="descending">Maior percentual</option></select></label></div>
+            <p id="results-chart-description" class="results-description"></p>
+            <div class="results-scale" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+            <div id="results-bars" aria-labelledby="results-chart-title" aria-describedby="results-chart-description"></div>
+            <p id="results-detail" class="results-detail" role="status" aria-live="polite" aria-atomic="true">Selecione uma barra para ver o detalhe.</p>
+          </div>
+          <details class="results-data" open>
+            <summary>Consultar todos os dados</summary>
+            <div class="results-table-wrap"><table>
+              <caption>Percentuais informados pelo Instituto Integro em 07/10/2026</caption>
+              <thead><tr><th scope="col">Etapa</th><th scope="col">Indicador</th><th scope="col">Percentual</th></tr></thead>
+              <tbody>
+                <tr data-stage="ef1"><th scope="row">Fundamental I</th><td>Leitura e escrita</td><td>89%</td></tr>
+                <tr data-stage="ef1"><th scope="row">Fundamental I</th><td>Matemática</td><td>92%</td></tr>
+                <tr data-stage="ef2"><th scope="row">Fundamental II</th><td>Língua Portuguesa</td><td>82%</td></tr>
+                <tr data-stage="ef2"><th scope="row">Fundamental II</th><td>Matemática</td><td>93%</td></tr>
+                <tr data-stage="ef2"><th scope="row">Fundamental II</th><td>Outras disciplinas</td><td>86%</td></tr>
+                <tr data-stage="em"><th scope="row">Ensino Médio</th><td>Língua Portuguesa</td><td>87%</td></tr>
+                <tr data-stage="em"><th scope="row">Ensino Médio</th><td>Matemática</td><td>85%</td></tr>
+                <tr data-stage="em"><th scope="row">Ensino Médio</th><td>Física</td><td>86%</td></tr>
+                <tr data-stage="em"><th scope="row">Ensino Médio</th><td>Química</td><td>80%</td></tr>
+                <tr data-stage="em"><th scope="row">Ensino Médio</th><td>Outras disciplinas</td><td>93%</td></tr>
+                <tr data-stage="frequencia"><th scope="row">Fundamental I</th><td>Frequência escolar</td><td>95%</td></tr>
+                <tr data-stage="frequencia"><th scope="row">Fundamental II</th><td>Frequência escolar</td><td>93%</td></tr>
+                <tr data-stage="frequencia"><th scope="row">Ensino Médio</th><td>Frequência escolar</td><td>97%</td></tr>
+                <tr><th scope="row">Geral</th><td>Taxa de melhora escolar informada</td><td>86%</td></tr>
+              </tbody>
+            </table></div>
+          </details>
+        </div>
+        <details class="results-method">
+          <summary>Como interpretar estes resultados</summary>
+          <p>Fonte: dados fornecidos pela gestão do Instituto Integro em 07/10/2026. São resultados parciais, não um fechamento anual. Os percentuais de aprendizagem foram apresentados pela gestão como melhora em relação à avaliação de entrada; não representam notas nem garantia de resultados individuais.</p>
+          <p>A fórmula de cálculo, as datas das avaliações e o número de alunos avaliados por indicador não foram disponibilizados nesta publicação. Os 42 alunos representam o total atendido, não necessariamente a base de cada percentual. Não calculamos médias entre etapas ou disciplinas.</p>
+          <p>No Fundamental I, o indicador de 89% corresponde à melhora em leitura e escrita. A taxa geral de melhora escolar de 86% é um indicador separado, informado pela gestão. Frequência escolar é apresentada separadamente dos indicadores de aprendizagem.</p>
+        </details>
+        <!-- Depoimentos: incluir somente relatos reais autorizados; assinatura pública "Responsável". -->
+      </div>
+    </section>
     <section class="hero" id="inicio">
       <div class="container hero-grid">
         <div>
