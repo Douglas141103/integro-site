@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="/assets/home-public.css?v=20261008-home1" />
   <script defer src="/assets/resultados-2026.js?v=20261008"></script>
   <script defer src="/assets/home-public.js?v=20261008-home1"></script>
+  <link rel="stylesheet" href="/assets/home-reading.css?v=20261008-motion1" />
+  <script defer src="/assets/home-reading.js?v=20261008-motion1"></script>
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#f8f9f5" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -135,6 +137,27 @@
         </aside>
       </div>
     </section>
+    <section id="aprendizagem-em-movimento" class="home-section reading-section" aria-labelledby="reading-title">
+      <div class="container">
+        <div class="home-section-head"><div><p class="home-eyebrow">DO TEXTO À PRÁTICA</p><h2 id="reading-title">Veja a aprendizagem<br />ganhar forma.</h2></div><p>Explore exemplos simples de como uma atividade pode ser apresentada. Toque, experimente e acompanhe cada passo.</p></div>
+        <div class="reading-toolbar" hidden><div class="reading-tabs" role="group" aria-label="Escolher exemplo de atividade"><button type="button" data-reading-tab="leitura" aria-pressed="true" aria-controls="reading-leitura">Leitura e escrita</button><button type="button" data-reading-tab="matematica" aria-pressed="false" aria-controls="reading-matematica">Matemática</button><button type="button" data-reading-tab="rotina" aria-pressed="false" aria-controls="reading-rotina">Organização</button></div><button type="button" id="reading-motion" aria-pressed="false">Pausar animações</button></div>
+        <div class="reading-demo" data-reading-scene>
+          <section id="reading-leitura" class="reading-panel" aria-labelledby="reading-leitura-title">
+            <div class="reading-explanation"><span class="reading-label">01 / CONSTRUIR A LEITURA</span><h3 id="reading-leitura-title">Das partes<br />à palavra inteira.</h3><p>Separar uma palavra em sílabas ajuda a observar como ela se organiza. Neste exemplo, juntamos <strong>CA</strong> e <strong>SA</strong> para formar <strong>CASA</strong>.</p><p class="reading-hint">Toque em “Juntar sílabas” para experimentar.</p><button type="button" class="reading-action" id="reading-join" hidden>Juntar sílabas →</button><p class="reading-feedback" id="reading-word-status" role="status">CA + SA = CASA</p></div>
+            <div class="reading-paper reading-word-art" aria-label="Ilustração de uma casa e da palavra CASA"><span class="reading-paper-tag">EXEMPLO DE ATIVIDADE</span><svg viewBox="0 0 320 190" aria-hidden="true" class="reading-house"><path class="reading-draw" d="M74 92 160 24 246 92M95 80v94h130V80"/><path class="reading-draw reading-delay" d="M142 174v-58h36v58M110 100h22v25h-22zM190 100h22v25h-22z"/><path class="reading-ground" d="M60 176h200"/><circle cx="262" cy="36" r="15" class="reading-sun"/></svg><div class="reading-syllables" aria-hidden="true"><span>CA</span><span>SA</span></div><span class="reading-paper-foot">Observar · separar · juntar</span></div>
+          </section>
+          <section id="reading-matematica" class="reading-panel" aria-labelledby="reading-math-title">
+            <div class="reading-explanation"><span class="reading-label">02 / TORNAR A CONTA VISÍVEL</span><h3 id="reading-math-title">Multiplicar é<br />formar grupos.</h3><p>Cada grupo tem quatro peças. Acrescente um grupo e veja como a quantidade total muda.</p><p class="reading-hint">Conte as peças e compare com a multiplicação.</p><div class="reading-counter" hidden><button type="button" id="reading-minus" aria-label="Retirar um grupo">−</button><output id="reading-group-count">3 grupos</output><button type="button" id="reading-plus" aria-label="Adicionar um grupo">+</button></div><p class="reading-feedback" id="reading-math-status" role="status">3 × 4 = 12 peças</p></div>
+            <div class="reading-paper reading-math-art" aria-label="Três grupos com quatro peças em cada"><span class="reading-paper-tag">4 PEÇAS EM CADA GRUPO</span><div id="reading-groups" aria-hidden="true"><div class="reading-group"><i></i><i></i><i></i><i></i></div><div class="reading-group"><i></i><i></i><i></i><i></i></div><div class="reading-group"><i></i><i></i><i></i><i></i></div></div><span class="reading-paper-foot">Agrupar · contar · compreender</span></div>
+          </section>
+          <section id="reading-rotina" class="reading-panel" aria-labelledby="reading-routine-title">
+            <div class="reading-explanation"><span class="reading-label">03 / UM PASSO DE CADA VEZ</span><h3 id="reading-routine-title">Uma tarefa grande.<br />Pequenos passos.</h3><p>Uma sequência clara ajuda o estudante a saber por onde começar e o que fazer depois. Marque os passos para ver a organização acontecer.</p><p class="reading-feedback" id="reading-routine-status" role="status">0 de 3 passos marcados neste exemplo.</p><button type="button" class="reading-action" id="reading-reset" hidden>Recomeçar exemplo ↺</button></div>
+            <div class="reading-paper reading-routine-art"><span class="reading-paper-tag">MEU ROTEIRO DE ESTUDO</span><div class="reading-checklist"><label><input type="checkbox" data-reading-check /> <span><b>01</b> Separar o material</span></label><label><input type="checkbox" data-reading-check /> <span><b>02</b> Fazer a atividade</span></label><label><input type="checkbox" data-reading-check /> <span><b>03</b> Revisar com atenção</span></label></div><div class="reading-progress" role="progressbar" aria-label="Passos marcados no exemplo" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><span></span></div><span class="reading-paper-foot">Preparar · praticar · revisar</span></div>
+          </section>
+        </div>
+        <p class="reading-disclaimer">Demonstrações ilustrativas. As atividades reais são planejadas conforme a avaliação e as necessidades de cada estudante. As escolhas aqui não são salvas nem enviadas.</p>
+      </div>
+    </section>
     <section id="servicos" class="home-section">
       <div class="container">
         <div class="home-section-head"><div><p class="home-eyebrow">NOSSAS FORMAS DE APOIAR</p><h2>Encontre o apoio certo.</h2></div><p>Conheça os atendimentos e converse com a equipe sobre as necessidades do estudante.</p></div>
@@ -154,10 +177,10 @@
       <div class="container">
         <div class="home-section-head"><div><p class="home-eyebrow">DO PRIMEIRO CONTATO À EVOLUÇÃO</p><h2>Próximos passos,<br />bem definidos.</h2></div><p>Um acompanhamento próximo, com atividades que fazem sentido para a realidade do aluno.</p></div>
         <ol class="home-steps">
-          <li><span aria-hidden="true">01</span><h3>Vamos conversar</h3><p>A família conta as dificuldades, necessidades e objetivos do estudante.</p></li>
-          <li><span aria-hidden="true">02</span><h3>Conhecer o aluno</h3><p>O diagnóstico pedagógico ajuda a compreender o momento da aprendizagem.</p></li>
-          <li><span aria-hidden="true">03</span><h3>Personalizar o material</h3><p>As atividades são produzidas, impressas e organizadas no caderno conforme cada dificuldade.</p></li>
-          <li><span aria-hidden="true">04</span><h3>Acompanhar os avanços</h3><p>O plano recebe ajustes, com mediação pedagógica e devolutivas para a família.</p></li>
+          <li><span aria-hidden="true">01</span><h3>Vamos conversar</h3><p>A família conta as dificuldades, necessidades e objetivos do estudante.</p><svg class="reading-step-art" viewBox="0 0 170 120" aria-hidden="true"><path class="reading-draw" d="M24 22h92v49H65L48 86V71H24zM77 71v18h50l15 12V49h-26M42 40h55M42 52h36"/></svg></li>
+          <li><span aria-hidden="true">02</span><h3>Conhecer o aluno</h3><p>O diagnóstico pedagógico ajuda a compreender o momento da aprendizagem.</p><svg class="reading-step-art" viewBox="0 0 170 120" aria-hidden="true"><rect x="46" y="14" width="79" height="92" rx="7"/><path class="reading-draw" d="m60 36 5 5 9-10M83 36h26m-49 22 5 5 9-10M83 58h26m-49 22 5 5 9-10M83 80h26"/></svg></li>
+          <li><span aria-hidden="true">03</span><h3>Personalizar o material</h3><p>As atividades são produzidas, impressas e organizadas no caderno conforme cada dificuldade.</p><svg class="reading-step-art" viewBox="0 0 170 120" aria-hidden="true"><path class="reading-draw" d="M85 29Q56 12 25 25v76q32-13 60 2 28-15 60-2V25q-31-13-60 4v74M39 43h29M39 57h29M39 71h20M102 43h27M102 57h27M102 71h17"/></svg></li>
+          <li><span aria-hidden="true">04</span><h3>Acompanhar os avanços</h3><p>O plano recebe ajustes, com mediação pedagógica e devolutivas para a família.</p><svg class="reading-step-art" viewBox="0 0 170 120" aria-hidden="true"><circle class="reading-solid" cx="85" cy="56" r="27"/><path class="reading-draw" d="m70 56 10 10 20-23M45 80l-13 25M125 80l13 25M62 93l-7 17M108 93l7 17"/><circle cx="85" cy="56" r="40"/></svg></li>
         </ol>
       </div>
     </section>
