@@ -1,0 +1,69 @@
+.results { padding: 48px 0 40px; background: #f3f7f1; scroll-margin-top: 140px; }
+.results [hidden] { display: none !important; }
+.results-nav { color: #17563f !important; border-bottom: 2px solid #17563f; }
+.results-intro { display: flex; gap: 28px; justify-content: space-between; align-items: center; }
+.results-intro > div { max-width: 790px; }
+.results-kicker { font-size: .73rem; font-weight: 800; letter-spacing: .13em; color: #34614c; }
+.results h2 { font-size: clamp(2.4rem, 5vw, 4rem); letter-spacing: -.05em; color: #123e30; line-height: 1.1; margin: 12px 0 16px; }
+.results-intro p:not(.results-kicker) { color: #526258; font-size: 1rem; max-width: 720px; }
+.results-contact { flex-shrink: 0; font-weight: 700; color: #17563f; border-bottom: 1px solid #9daf9c; padding: 8px 0; }
+.results-contact span { margin-left: 12px; }
+.results-numbers { display: grid; grid-template-columns: repeat(3, 1fr); margin: 30px 0; gap: 1px; background: #d7e1d4; border: 1px solid #d7e1d4; border-radius: 18px; overflow: hidden; }
+.results-numbers div { background: #fff; padding: 20px 26px; display: flex; flex-direction: column; }
+.results-numbers dt { font-size: .87rem; color: #526258; }
+.results-numbers dd { font-size: 2.6rem; font-weight: 800; line-height: 1.2; letter-spacing: -.04em; color: #17563f; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.results-numbers dd span { font-size: 1.5rem; margin-left: 3px; }
+.results-dashboard { background: #fff; border: 1px solid #d7e1d4; border-radius: 22px; padding: 28px 32px 20px; box-shadow: 0 14px 38px #123e3008; }
+.results-chart-top, .results-chart-caption { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.results h3 { font-size: 1.45rem; color: #123e30; margin-top: 4px; }
+.results-period { font-size: .8rem; color: #31553a; background: #eef4e9; padding: 6px 12px; border-radius: 30px; white-space: nowrap; }
+.results-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0; }
+.results-filters button { font: inherit; font-size: .9rem; cursor: pointer; border: 1px solid #cbd7ca; color: #3e5548; background: #fff; border-radius: 30px; padding: 10px 18px; }
+.results-filters button[aria-pressed="true"] { background: #17563f; border-color: #17563f; color: #fff; }
+.results :is(button, select, summary, a):focus-visible { outline: 3px solid #bf741e; outline-offset: 4px; }
+.results h4 { font-size: 1rem; color: #244534; }
+.results-chart-caption label { font-size: .78rem; color: #526258; }
+.results select { font: inherit; padding: 6px; border: 1px solid #b8c7b7; border-radius: 8px; background: #fff; color: #244534; }
+.results-description { color: #526258; font-size: .83rem; margin: 7px 0 18px; }
+.results-scale { display: flex; justify-content: space-between; color: #637064; font-size: .7rem; margin: 0 48px 7px 195px; }
+#results-bars { display: grid; gap: 12px; }
+.results-bar { display: grid; grid-template-columns: 180px minmax(0, 1fr) 38px; align-items: center; gap: 15px; text-align: left; width: 100%; border: 0; background: transparent; cursor: pointer; font: inherit; color: #244534; border-radius: 8px; padding: 4px 0; }
+.results-bar-label { font-size: .88rem; }
+.results-bar-track { height: 28px; border-radius: 6px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(25% - 1px), #dce5dc calc(25% - 1px), #dce5dc 25%), #f1f5ee; overflow: hidden; }
+.results-bar-fill { display: block; width: var(--result-value); height: 100%; background: #267b59; border-radius: 6px; animation: results-grow .65s cubic-bezier(.16,1,.3,1); transform-origin: left; }
+.results-bar:nth-child(even) .results-bar-fill { background: #427b8a; }
+.results-bar:hover .results-bar-fill, .results-bar[aria-pressed="true"] .results-bar-fill { background: #124532; }
+.results-bar strong { font-size: .95rem; font-variant-numeric: tabular-nums; }
+.results-detail { min-height: 48px; margin-top: 18px; padding: 12px 14px; font-size: .86rem; border-radius: 10px; background: #f3f7f1; color: #31553a; }
+.results summary { cursor: pointer; color: #31553a; font-weight: 600; font-size: .88rem; padding: 15px 0; }
+.results-table-wrap { overflow-x: auto; }
+.results table { width: 100%; border-collapse: collapse; font-size: .85rem; text-align: left; }
+.results caption { text-align: left; padding: 8px 0 14px; color: #526258; }
+.results td, .results th { padding: 10px 12px; border-bottom: 1px solid #e0e7dc; }
+.results thead { background: #edf4e9; }
+.results-method { margin-top: 10px; }
+.results-method p { font-size: .85rem; color: #526258; max-width: 950px; margin: 0 0 12px; }
+@keyframes results-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (max-width: 980px) { .results-intro { display: block; } .results-contact { display: inline-block; margin-top: 14px; } }
+@media (max-width: 700px) {
+  .results { padding: 30px 0; scroll-margin-top: 245px; }
+  .results-numbers { gap: 0; margin: 22px 0; }
+  .results-numbers div { padding: 14px 10px; }
+  .results-numbers dt { font-size: .7rem; min-height: 45px; }
+  .results-numbers dd { font-size: 2rem; }
+  .results-dashboard { padding: 20px 16px 12px; }
+  .results-chart-top { align-items: flex-start; }
+  .results h3 { font-size: 1.2rem; }
+  .results-period { font-size: .7rem; padding: 5px 8px; }
+  .results-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .results-filters button { padding: 10px 6px; font-size: .8rem; }
+  .results-chart-caption { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .results-scale { margin: 0 44px 6px 0; }
+  .results-bar { grid-template-columns: minmax(0, 1fr) 34px; gap: 5px 10px; }
+  .results-bar-label { grid-column: 1 / -1; }
+  .results-bar-track { height: 24px; }
+  .results-bar strong { font-size: .87rem; }
+  .results-detail { min-height: 80px; }
+}
+@media (prefers-reduced-motion: reduce) { .results-bar-fill { animation: none; } html { scroll-behavior: auto; } }
+@media print { .results-filters, #results-interactive { display: none !important; } .results-data > * { display: block !important; } .results { background: #fff; } }
