@@ -584,7 +584,7 @@
               <option value="acionista_1">Acionista 1</option>
               <option value="acionista_2">Acionista 2</option>
               <option value="acionista_3">Acionista 3</option>
-              <option value="ajuste_administrativo">Ajuste administrativo</option>
+              <option value="ajuste_administrativo">Ajuste administrativo — exige diretor/ADM</option>
             </select>
           </label>
 
@@ -597,7 +597,7 @@
               <option value="acionista_1">Acionista 1</option>
               <option value="acionista_2">Acionista 2</option>
               <option value="acionista_3">Acionista 3</option>
-              <option value="ajuste_administrativo">Ajuste administrativo</option>
+              <option value="ajuste_administrativo">Ajuste administrativo — exige diretor/ADM</option>
             </select>
           </label>
 
@@ -952,7 +952,13 @@
       return;
     }
 
-    if (state.modalAction.action !== "manual-adjust") {
+    const source = $("cashModalSource").value || null;
+    const destination = $("cashModalDestination").value || null;
+    const isAdministrativeAdjustment = state.modalAction.action === "manual-adjust"
+      || source === "ajuste_administrativo"
+      || destination === "ajuste_administrativo";
+
+    if (!isAdministrativeAdjustment) {
       const blockReason = ordinaryActivityBlockReason();
       if (blockReason) {
         setModalMessage(blockReason, "error");
@@ -960,8 +966,6 @@
       }
     }
 
-    const source = $("cashModalSource").value || null;
-    const destination = $("cashModalDestination").value || null;
     const amount = Number($("cashModalAmount").value || 0);
     const movementDate = $("cashModalDate").value || todayISO();
     const description = $("cashModalDescriptionInput").value.trim();
@@ -997,13 +1001,14 @@
       return;
     }
 
-    if (state.modalAction.action === "manual-adjust") {
+    if (isAdministrativeAdjustment) {
       if (typeof window.openFinanceAdminAdjustmentAuthorization !== "function") {
         setModalMessage("A autorização de diretor/administrador ainda está carregando. Aguarde e tente novamente.", "error");
         return;
       }
 
       const adjustment = {
+        school_id: state.school.id,
         cycle_id: state.cycle.id,
         source_bucket: source,
         destination_bucket: destination,
