@@ -351,6 +351,10 @@
     if ($("cashMovementModal")?.dataset.action === "manual-adjust") return;
 
     const source = $("cashModalSource")?.value || null;
+    const destination = $("cashModalDestination")?.value || null;
+    // Any administrative endpoint must reach the base authorization handler,
+    // even when this dialog was opened through a shareholder payment button.
+    if (source === "ajuste_administrativo" || destination === "ajuste_administrativo") return;
     if (!isShareholder(source)) return;
 
     event.preventDefault();
@@ -364,7 +368,6 @@
     }
 
     const button = $("cashModalSaveBtn");
-    const destination = $("cashModalDestination")?.value || null;
     const amount = Number($("cashModalAmount")?.value || 0);
     const movementDate = $("cashModalDate")?.value || cyclePolicy.referenceISO(new Date());
     const description = $("cashModalDescriptionInput")?.value.trim() || "";

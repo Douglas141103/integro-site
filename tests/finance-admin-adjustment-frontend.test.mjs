@@ -182,7 +182,7 @@ test("manual adjustment uses protected authorization and never follows the ordin
   assert.ok(saveStart >= 0);
   const protectedBranch = sliceBetween(
     cashCycle,
-    'if (state.modalAction.action === "manual-adjust")',
+    'if (isAdministrativeAdjustment)',
     'let movementType = "saida"',
     saveStart,
   );
@@ -351,7 +351,7 @@ test("ordinary entries and expenses are blocked in the closing window while prot
   );
   assert.match(
     manualMovement,
-    /state\.modalAction\.action !== "manual-adjust"[\s\S]*?ordinaryActivityBlockReason\(\)/,
+    /if \(!isAdministrativeAdjustment\)[\s\S]*?ordinaryActivityBlockReason\(\)/,
   );
   assert.match(manualMovement, /state\.modalAction\.action === "manual-adjust"[\s\S]*?openFinanceAdminAdjustmentAuthorization/);
 
