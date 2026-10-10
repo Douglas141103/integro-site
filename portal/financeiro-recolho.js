@@ -238,6 +238,13 @@
     return Number(state.totals?.buckets?.[bucket]?.available || 0);
   }
 
+  // Ajustes da RPC segura afetam o saldo; detalhes continuam ocultos.
+  // Reconciliações legadas, já arquivadas, não voltam a compor o caixa.
+  function affectsBalance(movement) {
+    return !isAdministrativeAdjustment(movement)
+      || movement?.description === "[AJUSTE ADMINISTRATIVO] Ajuste autorizado";
+  }
+
   function isAdministrativeAdjustment(movement) {
     const type = String(movement?.movement_type || "").toLowerCase();
     const source = String(movement?.source_bucket || "").toLowerCase();
@@ -436,16 +443,16 @@
     state.movements.forEach((movement) => {
       const amount = Number(movement.amount || 0);
       const hiddenAdmin = isAdministrativeAdjustment(movement);
-      if (hiddenAdmin) return;
+      if (!affectsBalance(movement)) return;
 
       if (movement.source_bucket && buckets[movement.source_bucket]) {
         buckets[movement.source_bucket].debits += amount;
-        buckets[movement.source_bucket].visibleDebits += amount;
+        if (!hiddenAdmin) buckets[movement.source_bucket].visibleDebits += amount;
       }
 
       if (movement.destination_bucket && buckets[movement.destination_bucket]) {
         buckets[movement.destination_bucket].credits += amount;
-        buckets[movement.destination_bucket].visibleCredits += amount;
+        if (!hiddenAdmin) buckets[movement.destination_bucket].visibleCredits += amount;
       }
     });
 
@@ -469,7 +476,7 @@
       totalEntries,
       totalDebits,
       totalCredits,
-      cycleBalance: totalEntries - totalDebits,
+      cycleBalance: Object.values(buckets).filter((item) => item.bucket !== "ajuste_administrativo").reduce((sum, item) => sum + item.available, 0),
       buckets
     };
   }

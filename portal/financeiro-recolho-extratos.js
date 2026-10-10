@@ -63,6 +63,13 @@
     return labels[type] || type || "Movimento";
   }
 
+  // Ajustes da RPC segura afetam o saldo; detalhes continuam ocultos.
+  // Reconciliações legadas, já arquivadas, não voltam a compor o caixa.
+  function affectsBalance(movement) {
+    return !isAdministrativeAdjustment(movement)
+      || movement?.description === "[AJUSTE ADMINISTRATIVO] Ajuste autorizado";
+  }
+
   function isAdministrativeAdjustment(movement) {
     const type = String(movement?.movement_type || "").toLowerCase();
     const source = String(movement?.source_bucket || "").toLowerCase();
@@ -169,9 +176,9 @@
     if (movementsRes.error) throw movementsRes.error;
 
     const entries = entriesRes.data || [];
-    const movements = dedupeMovementsByExpense(movementsRes.data || [])
-      .filter((item) => !isAdministrativeAdjustment(item));
-    const totals = calculateTotals(entries, movements);
+    const balanceMovements = dedupeMovementsByExpense(movementsRes.data || []).filter(affectsBalance);
+    const movements = balanceMovements.filter((item) => !isAdministrativeAdjustment(item));
+    const totals = calculateTotals(entries, balanceMovements);
 
     return { user: userData.user, profile, school, cycle, entries, movements, totals };
   }
@@ -357,7 +364,7 @@
           </tbody>
         </table>
 
-        <p class="note">Ajustes administrativos internos não aparecem neste extrato.</p>
+        <p class="note">O saldo disponível considera ajustes administrativos autorizados. Seus detalhes não aparecem neste extrato.</p>
         <div class="signatures"><div>Responsável financeiro</div><div>Direção / Administração</div></div>
       </section>
     `;
