@@ -67,6 +67,13 @@
     return parseLocal(String(value).slice(0, 10)).toLocaleDateString("pt-BR");
   }
 
+  // Ajustes da RPC segura afetam o saldo; detalhes continuam ocultos.
+  // Reconciliações legadas, já arquivadas, não voltam a compor o caixa.
+  function affectsBalance(movement) {
+    return !isAdministrative(movement)
+      || movement?.description === "[AJUSTE ADMINISTRATIVO] Ajuste autorizado";
+  }
+
   function isAdministrative(movement) {
     const type = String(movement?.movement_type || "").toLowerCase();
     const source = String(movement?.source_bucket || "").toLowerCase();
@@ -211,19 +218,19 @@
   function calculateCurrentCycleSnapshot({ cycle, entries = [], expenses = [], movements = [] }) {
     const start = cycle.start_date;
     const end = cycle.end_date;
-    const visibleMovements = movements.filter((movement) => !isAdministrative(movement));
-    const unlinkedExpenses = unrepresentedExpenses(expenses, visibleMovements);
+    const balanceMovements = dedupeMovements(movements.filter(affectsBalance)).kept;
+    const unlinkedExpenses = unrepresentedExpenses(expenses, balanceMovements);
 
     const currentEntries = entries.filter((entry) => entryDate(entry) >= start && entryDate(entry) <= end);
-    const currentMovements = visibleMovements.filter((movement) => {
+    const currentMovements = balanceMovements.filter((movement) => {
       const date = movementDate(movement);
       return movement.cycle_id === cycle.id && date >= start && date <= end;
     });
     const currentExpenses = unlinkedExpenses.filter((expense) => expenseDate(expense) >= start && expenseDate(expense) <= end);
 
-    const currentExternal = externalTotals(currentMovements, currentExpenses);
+    const visibleMovements = currentMovements.filter((movement) => !isAdministrative(movement));
+    const currentExternal = externalTotals(visibleMovements, currentExpenses);
     const currentEntriesTotal = currentEntries.reduce((sum, entry) => sum + Number(entry.amount_paid || 0), 0);
-    const currentBalance = currentEntriesTotal + currentExternal.credits - currentExternal.debits;
 
     const buckets = emptyBuckets();
     addEntriesToBuckets(buckets, currentEntries);
@@ -234,13 +241,15 @@
       buckets[bucket].available = buckets[bucket].base + buckets[bucket].credits - buckets[bucket].debits;
     });
 
+    const currentBalance = ORDER.reduce((sum, bucket) => sum + buckets[bucket].available, 0);
+
     return {
       currentEntriesTotal,
       currentExternal,
       currentBalance,
       buckets,
       currentEntriesCount: currentEntries.length,
-      currentMovementsCount: currentMovements.length,
+      currentMovementsCount: visibleMovements.length,
       unlinkedExpensesCount: currentExpenses.length,
     };
   }
@@ -442,7 +451,7 @@
         note.className = "balance-kpi-note";
         balance.insertAdjacentElement("afterend", note);
       }
-      note.textContent = "Somente o ciclo atual; cada ciclo começa em R$ 0,00";
+      note.textContent = "Ciclo atual; saldo inclui ajustes autorizados";
     }
     if (receipts) receipts.textContent = String(state.snapshot.currentEntriesCount);
   }

@@ -190,7 +190,7 @@ test("current cycle starts at zero and has no automatic target reconciliation", 
 
   assert.match(
     code,
-    /const currentBalance = currentEntriesTotal \+ currentExternal\.credits - currentExternal\.debits/
+    /const currentBalance = ORDER\.reduce/
   );
   assert.match(code, /Cada ciclo começa em R\$ 0,00/);
   assert.doesNotMatch(code, /TARGET_BALANCE|TARGET_CYCLE_KEY|RECONCILIATION_MARK/);
@@ -219,7 +219,7 @@ test("financial reads are restricted to the active cycle dates and id", async ()
   assert.doesNotMatch(code, /allEntriesTotal|allExternal|allBalance|FIRST_CYCLE_START/);
 });
 
-test("historical rows are preserved while administrative adjustments stay out of totals", async () => {
+test("historical rows are preserved while legacy administrative adjustments stay out of totals", async () => {
   const code = await source("reconciliation");
 
   assert.doesNotMatch(
@@ -319,4 +319,60 @@ test("finance page loader activates the single renderer before add-on scripts", 
   assert.ok(inlineFlagPosition >= 0);
   assert.ok(financeScriptPosition > inlineFlagPosition);
   assert.match(serviceWorker, /integro-pwa-v20260903-cycle-11/);
+});
+
+const paidAdjustmentFixture = () => {
+  const entries = [{ entry_date: '2026-10-10', amount_paid: 6000 }];
+  const remaining = { acionista_1:333.50, acionista_2:433.50, acionista_3:1167.50, fundo_caixa:171.93 };
+  const movements = Object.entries(remaining).flatMap(([bucket,amount],i) => [
+    { id:`ordinary-${i}`,cycle_id:'current',movement_date:'2026-10-10',source_bucket:bucket,amount:(bucket==='fundo_caixa'?600:1200)-amount,movement_type:'saida' },
+    { id:`admin-${i}`,cycle_id:'current',movement_date:'2026-10-10',source_bucket:bucket,destination_bucket:'ajuste_administrativo',amount,movement_type:'transferencia',description:'[AJUSTE ADMINISTRATIVO] Ajuste autorizado' },
+  ]);
+  return { entries, movements, remaining };
+};
+
+test('os quatro ajustes autorizados zeram os valores restantes sem aparecer em Saídas', async () => {
+  const core=await loadFinanceCore();
+  const {entries,movements,remaining}=paidAdjustmentFixture();
+  const snapshot=core.calculateCurrentCycleSnapshot({cycle:{id:'current',start_date:'2026-09-11',end_date:'2026-10-10'},entries,movements});
+  for(const bucket of Object.keys(remaining)) assert.ok(Math.abs(snapshot.buckets[bucket].available)<0.001,bucket);
+  assert.equal(snapshot.currentMovementsCount,4);
+  assert.ok(Math.abs(snapshot.currentBalance-1800)<0.001);
+  assert.ok(Math.abs(snapshot.currentExternal.debits-2093.57)<0.001);
+  // Créditos administrativos e transferências entre contas também afetam o saldo correto.
+  const credit=core.calculateCurrentCycleSnapshot({cycle:{id:'current',start_date:'2026-09-11',end_date:'2026-10-10'},entries,movements:[...movements,
+    {id:'credit',cycle_id:'current',movement_date:'2026-10-10',source_bucket:'ajuste_administrativo',destination_bucket:'operacoes',amount:50,description:'[AJUSTE ADMINISTRATIVO] Ajuste autorizado'},
+    {id:'transfer',cycle_id:'current',movement_date:'2026-10-10',source_bucket:'operacoes',destination_bucket:'fundo_caixa',amount:20,description:'[AJUSTE ADMINISTRATIVO] Ajuste autorizado'},
+    {id:'old',cycle_id:'prior',movement_date:'2026-09-10',source_bucket:'operacoes',amount:900,description:'[AJUSTE ADMINISTRATIVO] Ajuste autorizado'},
+  ]});
+  assert.ok(Math.abs(credit.currentBalance-1850)<0.001);
+  assert.equal(credit.buckets.operacoes.available,1830);
+  assert.ok(Math.abs(credit.buckets.fundo_caixa.available-20)<0.001);
+  assert.equal(credit.currentExternal.credits,0);
+});
+
+// Executa as funções reais dos três consumidores com o mesmo cenário, sem I/O.
+function functionSource(code,name) {
+  const start=code.indexOf(`  function ${name}(`);
+  assert.ok(start>=0,name);
+  return code.slice(start,code.indexOf('\n  }',start)+4);
+}
+test('limites, painel base e extrato usam ajustes autorizados no saldo e ocultam detalhes',async()=>{
+  const {entries,movements,remaining}=paidAdjustmentFixture();
+  const PERCENTAGES={operacoes:.3,fundo_caixa:.1,acionista_1:.2,acionista_2:.2,acionista_3:.2};
+  const ORDER=Object.keys(PERCENTAGES);
+  const BUCKETS=Object.fromEntries(ORDER.map(bucket=>[bucket,{percent:PERCENTAGES[bucket]}]));
+  for(const kind of ['shareholder','cashCycle','extracts']) {
+    const code=await source(kind);
+    const classifier=kind==='shareholder'?'isAdministrative':'isAdministrativeAdjustment';
+    const funcs=['affectsBalance',classifier,'dedupeMovementsByExpense'];
+    if(kind==='shareholder') funcs.push('unrepresentedExpenses','calculateBuckets');
+    else if(kind==='cashCycle') funcs.push('getVisibleCycleMovements','calculateTotals');
+    else funcs.push('calculateTotals');
+    const context=vm.createContext({PERCENTAGES,BUCKET_ORDER:ORDER,ORDER,BUCKETS,state:{entries,movements}});
+    vm.runInContext(funcs.map(name=>functionSource(code,name)).join('\n'),context);
+    const buckets=vm.runInContext(kind==='shareholder'?'calculateBuckets(state.entries,state.movements,[])':kind==='cashCycle'?'calculateTotals().buckets':'calculateTotals(state.entries,state.movements.filter(affectsBalance)).buckets',context);
+    for(const bucket of Object.keys(remaining)) assert.ok(Math.abs(buckets[bucket].available)<0.001,`${kind}: ${bucket}`);
+    assert.equal(vm.runInContext(`state.movements.filter(m=>!${classifier}(m)).length`,context),4);
+  }
 });

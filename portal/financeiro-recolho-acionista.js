@@ -59,6 +59,13 @@
     return "";
   }
 
+  // Ajustes da RPC segura afetam o saldo; detalhes continuam ocultos.
+  // Reconciliações legadas, já arquivadas, não voltam a compor o caixa.
+  function affectsBalance(movement) {
+    return !isAdministrative(movement)
+      || movement?.description === "[AJUSTE ADMINISTRATIVO] Ajuste autorizado";
+  }
+
   function isAdministrative(movement) {
     const type = String(movement?.movement_type || "").toLowerCase();
     const source = String(movement?.source_bucket || "").toLowerCase();
@@ -116,10 +123,8 @@
       (sum, entry) => sum + Number(entry.amount_paid || 0),
       0
     );
-    const visibleMovements = dedupeMovementsByExpense(movements).filter(
-      (movement) => !isAdministrative(movement)
-    );
-    const unlinkedExpenses = unrepresentedExpenses(expenses || [], visibleMovements);
+    const balanceMovements = dedupeMovementsByExpense(movements).filter(affectsBalance);
+    const unlinkedExpenses = unrepresentedExpenses(expenses || [], balanceMovements);
     const buckets = {};
 
     BUCKET_ORDER.forEach((bucket) => {
@@ -131,7 +136,7 @@
       };
     });
 
-    visibleMovements.forEach((movement) => {
+    balanceMovements.forEach((movement) => {
       const amount = Number(movement.amount || 0);
       if (movement.source_bucket && buckets[movement.source_bucket]) {
         buckets[movement.source_bucket].debits += amount;
