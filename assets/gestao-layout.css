@@ -1,0 +1,105 @@
+/* Page-specific layout: keep the shared portal shell and existing controls. */
+@media screen {
+  body[data-portal-page="gestao"] > header.topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-content: stretch;
+    gap: 12px 20px;
+  }
+
+  body[data-portal-page="gestao"] > header .brand {
+    min-width: 0;
+    justify-self: start;
+  }
+
+  body[data-portal-page="gestao"] > header .brand img { flex-shrink: 0; }
+  body[data-portal-page="gestao"] > header .brand strong { line-height: 1.25; }
+
+  body[data-portal-page="gestao"] > header > .actions {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid #e7e9e2;
+  }
+
+  body[data-portal-page="gestao"] #userBadge {
+    margin-right: auto;
+    min-width: 0;
+    max-width: 100%;
+    padding-left: 0;
+    overflow-wrap: anywhere;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  body[data-portal-page="gestao"] .gestao-buttons {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  body[data-portal-page="gestao"] .gestao-nav-button {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    align-items: start;
+    justify-content: stretch;
+    justify-items: start;
+    gap: 6px 12px;
+    min-width: 0;
+    min-height: 112px;
+    padding: 18px;
+    text-align: left;
+  }
+
+  body[data-portal-page="gestao"] .gestao-nav-icon { grid-row: 1 / 3; }
+  body[data-portal-page="gestao"] .gestao-nav-button strong {
+    grid-column: 2;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  body[data-portal-page="gestao"] .gestao-nav-button small {
+    grid-column: 2;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 1400px) {
+    body[data-portal-page="gestao"] > header.topbar {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    body[data-portal-page="gestao"] > header > .actions {
+      grid-column: auto;
+      width: auto;
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+
+  @media (max-width: 560px) {
+    body[data-portal-page="gestao"] > header.topbar { gap: 12px; }
+    body[data-portal-page="gestao"] .portal-header-tools { gap: 0; }
+    body[data-portal-page="gestao"] .portal-header-tools .portal-ui-button {
+      width: 40px;
+      padding: 9px;
+    }
+    body[data-portal-page="gestao"] .portal-header-tools .portal-ui-button span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    body[data-portal-page="gestao"] #userBadge { flex-basis: 100%; padding-bottom: 0; }
+    body[data-portal-page="gestao"] > header > .actions { justify-content: flex-start; }
+    body[data-portal-page="gestao"] .gestao-buttons { grid-template-columns: 1fr; }
+    body[data-portal-page="gestao"] .gestao-nav-button { min-height: 96px; padding: 16px; }
+  }
+}
