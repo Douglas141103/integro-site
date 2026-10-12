@@ -1,5 +1,47 @@
 # Integro Box
 
+## Gestão de uso
+
+`/portal/integro-box.html` é a área de acompanhamento. O cartão aparece no
+Portal de Gestão apenas para `integro_admin` e `diretor`. O servidor repete a
+verificação em todas as consultas: administradores consultam perfis autorizados;
+diretores consultam perfis de sua escola e responsáveis com alunos vinculados a ela.
+Sem escola atribuída, o diretor não acessa o relatório. Não altera cargos existentes.
+
+Ativar primeiro `20261012233000_box_usage_management.sql`, depois publicar o
+frontend. A migração cria três tabelas privadas com RLS e duas RPCs, sem acesso
+direto às tabelas para anon/authenticated. Não apagar nem modificar o histórico
+escolar/financeiro. Depois da publicação, conferir a versão dos scripts e liberar
+uma nova versão do manifesto de atualização para as abas já abertas.
+
+O registro começa após a autenticação no jogo e coleta apenas perfil, jogo,
+entrada/último sinal/saída, classe do aparelho (computador/celular/tablet), sala
+validada no servidor e tempos estimados. Um aviso visível informa as famílias.
+Não registra teclas, mensagens, imagens, IPs, localização ou senhas. Não envia
+informações para IA ou serviço analítico externo. A conta de família não identifica
+qual criança joga. Não existe reconstrução retroativa de jogos anteriores.
+
+Sinais a cada 30 segundos e nas mudanças de jogo/visibilidade. O relógio do banco
+calcula no máximo 35 segundos por sinal, sem crédito após lacunas acima de 70 s;
+um relógio por perfil evita somar tempo de abas concorrentes. Atividade exige
+página visível, interação recente (2 minutos), jogo aberto e ausência da manutenção.
+Tempos são estimativas operacionais; não servem como evidência disciplinar ou
+medida de aprendizagem. Último login vem de `auth.users.last_sign_in_at`, enquanto
+uma sessão Box é uma abertura/recarga, não um novo login de autenticação.
+
+Filtros: até 93 dias, perfil, jogo e modo. Os totais usam todos os dados do recorte;
+histórico paginado em 50 sessões e até 100 salas recentes. Partes de sessões que
+atravessam a meia-noite são agrupadas pela data de início do intervalo medido
+(America/Manaus), com aproximação de até um sinal de 35 s na virada do dia.
+Histórico de sala persiste mesmo após expirar a sala temporária; não armazena
+código de convite. Não há exclusão automática dos registros nesta versão.
+
+Verificação: `node --test tests/box-usage.test.mjs` executa a migração duas vezes
+em PostgreSQL isolado, testa escopo por escola, acesso negado, contagem concorrente,
+inatividade, pausa, encerramento e validação de sala. `node scripts/check-box-management.mjs`
+testa o painel no Chromium com contas sintéticas, filtros, celular, histórico,
+registro de jogo e resposta atrasada após logout. Não altera dados de produção.
+
 Entrada pública: `/integro-box/`. Jogos: `/integro-box/jogar.html`.
 A página inicial e o Portal da Família apontam para essa área. Não há preço,
 assinatura, cobrança ou integração de pagamento nesta versão.

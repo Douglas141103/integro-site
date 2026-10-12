@@ -310,6 +310,7 @@
       </div>
 
       <div class="grid">
+        <article class="module-card" id="boxManagementCard" hidden><div class="module-top"><div class="icon" aria-hidden="true">↗</div><span>INTEGRO BOX</span></div><h3>Gestão dos jogos</h3><p>Acessos, tempo de uso, jogos e salas multiplayer por perfil.</p><a class="btn" href="./integro-box.html">Abrir gestão do Integro Box</a></article>
         <article class="module-card">
           <div class="module-top">
             <div class="icon" aria-hidden="true">
@@ -645,6 +646,7 @@
           return;
         }
 
+        document.getElementById('boxManagementCard').hidden=!['integro_admin','diretor'].includes(profile.role);
         userNameEl.textContent = profile.full_name || session.user.email || 'Usuário';
         userRoleEl.textContent = roleLabel(profile.role);
 
