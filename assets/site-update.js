@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261012-box2';
+  const VERSION = '20261012-box3';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
@@ -53,12 +53,22 @@
     reloading = true;
     await saveGames();
     try {
-      if (sessionStorage.getItem(storageKey) === version) {
+      const retryKey = storageKey + ':attempts';
+      const previous = JSON.parse(sessionStorage.getItem(retryKey) || 'null');
+      const attempts = previous?.version === version ? previous.count : 0;
+      if (attempts >= 3) {
         reloading = false;
-        message.textContent = 'A nova versão ainda está chegando a este aparelho. Tente recarregar em alguns instantes.';
+        message.textContent = 'A atualização está demorando a chegar. Você pode continuar nesta tela e tentar novamente mais tarde.';
+        overlay.dataset.compact = 'true';
+        return;
+      }
+      if (attempts && Date.now() - previous.at < 30000) {
+        reloading = false;
+        message.textContent = 'Aguardando os arquivos novos. Vamos tentar atualizar novamente automaticamente…';
         return;
       }
       sessionStorage.setItem(storageKey, version);
+      sessionStorage.setItem(retryKey, JSON.stringify({version, count:attempts + 1, at:Date.now()}));
     } catch { /* Reload remains possible if storage is disabled. */ }
     setTimeout(() => {
       const url = new URL(location.href); url.searchParams.set('_integro_update', version);
