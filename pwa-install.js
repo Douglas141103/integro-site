@@ -1,5 +1,5 @@
 // Shared maintenance notice and release checks; no credentials are collected.
-(function(){if(!document.querySelector('script[data-integro-updates]')){const s=document.createElement('script');s.src='/assets/site-update.js?v=20261012-box2';s.dataset.integroUpdates='true';document.head.append(s);}})();
+(function(){if(!document.querySelector('script[data-integro-updates]')){const s=document.createElement('script');s.src='/assets/site-update.js?v=20261012-box3';s.dataset.integroUpdates='true';document.head.append(s);}})();
 (function () {
   let deferredPrompt = null;
   let installButton = null;
