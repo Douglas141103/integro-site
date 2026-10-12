@@ -7,8 +7,8 @@ function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function feedback(t,good=true){$('#feedback').textContent=t;$('#feedback').className='feedback '+(good?'good':'bad')}
-function start(type){epoch++;game=type;level=0;$('#lobby').classList.add('hidden');$('#play').classList.remove('hidden');$('#footer').classList.add('hidden');$('#gameTitle').textContent=titles[type][0];$('#gameDesc').textContent=titles[type][1];resetGame();$('#gameTitle').focus();window.scrollTo(0,0)}
-function lobby(){epoch++;game='';$('#lobby').classList.remove('hidden');$('#play').classList.add('hidden');$('#footer').classList.remove('hidden');window.scrollTo(0,0)}
+function start(type){epoch++;game=type;window.BoxUsageGame=type;level=0;$('#lobby').classList.add('hidden');$('#play').classList.remove('hidden');$('#footer').classList.add('hidden');$('#gameTitle').textContent=titles[type][0];$('#gameDesc').textContent=titles[type][1];resetGame();$('#gameTitle').focus();window.scrollTo(0,0)}
+function lobby(){epoch++;game='';window.BoxUsageGame='lobby';$('#lobby').classList.remove('hidden');$('#play').classList.add('hidden');$('#footer').classList.remove('hidden');window.scrollTo(0,0)}
 function setup(options,stat){return `<div class="setup"><label>${game==='memory'?'Tema':'Nível'} <select id="level">${options.map((t,i)=>`<option value="${i}" ${level===i?'selected':''}>${t}</option>`).join('')}</select></label><span class="badge">${stat}</span></div>`}
 function bindLevel(){ $('#level').onchange=e=>{epoch++;level=Number(e.target.value);resetGame()}}
 function resetGame(){round=0;correct=0;answered=false;if(game==='math'){mathItems=Array.from({length:8},()=>makeMath(level));renderMath()}if(game==='words'){wordItems=shuffle(wordBanks[level]).slice(0,5).map(w=>({word:w[0],clue:w[1],letters:shuffle([...w[0].toUpperCase()])}));renderWord()}if(game==='robot')resetRobot();if(game==='memory')resetMemory()}

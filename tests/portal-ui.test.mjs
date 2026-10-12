@@ -17,8 +17,8 @@ function setup(path, mobile = false) {
   w.eval(script);
   return { dom, w, d: w.document, originalControls };
 }
-test('all 16 pages initialize with one shell; existing forms, controls and inline scripts stay intact', () => {
-  assert.equal(pages.length, 16);
+test('all 17 pages initialize with one shell; existing forms, controls and inline scripts stay intact', () => {
+  assert.equal(pages.length, 17);
   for (const page of pages) {
     const { dom, d, w, originalControls } = setup(page);
     const ids = [...d.querySelectorAll('[id]')].map(el => el.id);

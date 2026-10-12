@@ -62,7 +62,7 @@ async function connect(action,extras){
   if(token!==version)return;
   room=data;await openGame(data.game);
   if(token!==version)return;
-  window.BoxAdapters[data.game].enter?.(data.world||{});started=true;display(data);failures=0;
+  window.BoxAdapters[data.game].enter?.(data.world||{});started=true;display(data);window.dispatchEvent(new Event('box-room-change'));failures=0;
   status('Sala conectada. Convide uma família para jogar junto.');
   schedule(20);
  }catch(e){status(e.message);if(room)await disconnect(false);}
@@ -89,7 +89,7 @@ async function sync(){
  if(token===version)schedule(failures?2000:500);
 }
 async function disconnect(notify=true){
- const previous=room;++version;clearTimeout(timer);timer=null;room=null;editQueue=[];failures=0;
+ const previous=room;++version;clearTimeout(timer);timer=null;room=null;editQueue=[];failures=0;window.dispatchEvent(new Event('box-room-change'));
  if(previous){const adapter=window.BoxAdapters[previous.game];adapter.clearPeers();if(started)adapter.leave?.();started=false;
   if(notify)try{await rpc('leave',{p_room:previous.id});}catch{}
  }
@@ -102,4 +102,4 @@ $('boxReturn').onclick=async()=>{if(room)try{await openGame(room.game);toggle(fa
 $('boxCopy').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);status('Código copiado. Compartilhe apenas com famílias conhecidas.');}catch{status('Copie o código exibido acima.');}};
 $('boxWave').onclick=()=>{gesture='wave';gestureUntil=Date.now()+2200;toggle(false);};
 $('boxCheer').onclick=()=>{gesture='cheer';gestureUntil=Date.now()+2200;toggle(false);};
-window.BoxMultiplayer={disconnect,edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get connected(){return !!room;}};
+window.BoxMultiplayer={disconnect,edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get connected(){return !!room;}};

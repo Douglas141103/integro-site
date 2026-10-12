@@ -76,6 +76,7 @@
     ['/portal/cursos.html', 'Cursos e turmas', 'book'], ['/portal/presenca-facial.html', 'Presença facial', 'scan'],
     ['/portal/documentos-memorandos.html', 'Documentos', 'file'], ['/portal/mapeamento-ia.html', 'Mapeamento com IA', 'spark'],
     ['/portal/analise-mapeamento-ia.html', 'Análise pedagógica', 'spark']);
+  if(page==='/portal/integro-box.html')routes.push(['/portal/integro-box.html','Gestão do Integro Box','grid']);
   const commands = [];
   routes.forEach(([href, label, glyph]) => {
     const link = create('a', 'portal-nav-link'); link.href = href; link.append(icon(glyph), create('span', '', label));
