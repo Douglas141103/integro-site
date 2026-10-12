@@ -4,6 +4,39 @@ Entrada pública: `/integro-box/`. Jogos: `/integro-box/jogar.html`.
 A página inicial e o Portal da Família apontam para essa área. Não há preço,
 assinatura, cobrança ou integração de pagamento nesta versão.
 
+## Atualização de 12/10/2026
+
+O arquivo `Integro_Box_12_Pistas.html` (SHA-256
+`b6fbe118bea1d2dc2e071055328eab519d5ee824d519b50a5acb32ddfbe4e9d0`)
+acrescenta ao mundo individual do IntegroCraft escadas, portas, móveis,
+fornalha, marketplace com moeda virtual, animais e baldes de água/lava.
+Salvamentos anteriores continuam usando a mesma chave individual; a expansão
+migra o inventário sem apagar as construções. O multiplayer mantém avatares,
+movimento e os dez blocos básicos sincronizados. Móveis, animais, economia,
+líquidos e interações da expansão ficam no mundo individual; a interface
+informa isso e impede alterações locais não sincronizadas dentro de uma sala.
+
+## Aviso de manutenção
+
+`assets/site-update.js` consulta `site-release.json` a cada dez segundos,
+ao recuperar conexão e ao voltar à aba. `maintenance:true` apresenta o aviso
+animado; `maintenance:false` com uma versão diferente da versão do cliente
+salva o progresso individual, sai da sala e recarrega a mesma rota automaticamente.
+Não recarrega formulários em edição nem envia dados automaticamente. Campos
+em edição permanecem no navegador, sem cópia em armazenamento; o usuário pode
+voltar à edição para concluir o salvamento. Formulários que executam `reset`
+liberam a recarga; os demais seguem para a nova versão ao navegar/recarregar.
+
+O aviso respeita movimento reduzido, funciona em tela cheia e mantém a espera
+quando a conexão cai. A recarga tem proteção contra repetição por versão.
+Publicar primeiro o cliente de atualização e o estado de manutenção, depois
+os jogos e o cliente com nova versão e `maintenance:false`. Não ligar
+manutenção antes de testar e preparar todos os arquivos da versão seguinte.
+Abas anteriores à instalação deste mecanismo não podem receber código novo
+retroativamente: precisam de uma primeira recarga; dispositivos suspensos ou
+offline verificam o estado ao voltar. Nenhuma afirmação de controle instantâneo
+de todos os dispositivos deve ser feita.
+
 O HTML enviado pelo usuário foi incorporado como código e imagens separados.
 `worlds.js` preserva o pacote Three.js e suas licenças, além dos jogos originais.
 Os adaptadores `registerBoxAdapter` acrescentam avatares remotos nos três mundos.
