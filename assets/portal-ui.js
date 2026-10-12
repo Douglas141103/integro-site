@@ -1,3 +1,5 @@
+// Shared maintenance notice and release checks; no credentials are collected.
+(function(){if(!document.querySelector('script[data-integro-updates]')){const s=document.createElement('script');s.src='/assets/site-update.js?v=20261012-box1';s.dataset.integroUpdates='true';document.head.append(s);}})();
 /* Shared presentation layer. Authentication and business rules belong to each module. */
 (() => {
   'use strict';
