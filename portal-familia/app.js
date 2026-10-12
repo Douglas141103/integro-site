@@ -779,6 +779,11 @@ async function sendMessage(event) {
   }
 }
 
+function familyLoginDestination() {
+  return new URLSearchParams(location.search).get('next') === 'integro-box'
+    ? '/integro-box/jogar.html' : './dashboard.html';
+}
+
 async function handleLoginPage() {
   const form = document.getElementById('login-form');
   const forgotButton = document.getElementById('forgot-password');
@@ -789,7 +794,7 @@ async function handleLoginPage() {
   const { data } = await supabase.auth.getSession();
 
   if (data.session) {
-    window.location.href = './dashboard.html';
+    window.location.href = familyLoginDestination();
     return;
   }
 
@@ -813,7 +818,7 @@ async function handleLoginPage() {
     }
 
     setFeedback('Login realizado. Redirecionando...', 'success');
-    window.location.href = './dashboard.html';
+    window.location.href = familyLoginDestination();
   });
 
   forgotButton?.addEventListener('click', async () => {
