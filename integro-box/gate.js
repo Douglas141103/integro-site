@@ -14,9 +14,9 @@ try {
   window.BoxStorage={getItem:k=>localStorage.getItem('box:'+user.id+':'+k),setItem:(k,v)=>localStorage.setItem('box:'+user.id+':'+k,v),removeItem:k=>localStorage.removeItem('box:'+user.id+':'+k)};
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
   message.textContent='Preparando os jogos…';
-  await script('./classic-games.js?v=20261012-1');
-  await script('./worlds.js?v=20261012-1');
-  await import('./multiplayer.js?v=20261012-1');
+  await script('./classic-games.js?v=20261012-2');
+  await script('./worlds.js?v=20261012-2');
+  await import('./multiplayer.js?v=20261012-2');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }

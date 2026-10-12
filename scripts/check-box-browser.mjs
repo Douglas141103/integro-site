@@ -10,8 +10,11 @@ const {boxDatabase}=await import(root+'/tests/box-db-fixture.mjs');
 const {db,call}=await boxDatabase();
 const errors=[];
 let queue=Promise.resolve();
+let release={version:'20261012-box2',maintenance:false};
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://local');const route=url.pathname;
+ if(route==='/site-release.json'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(release));return;}
+ if(route==='/assets/site-update.js'){res.setHeader('Content-Type','text/javascript');res.end(fs.readFileSync(path.join(root,route),'utf8').replace("const VERSION = '20261012-box2'",`const VERSION = '${release.version}'`));return;}
  if(route==='/integro-box/access.js'){
   const user=Number(req.headers['x-box-test-user']||1);
   res.setHeader('Content-Type','text/javascript');res.end(`export const requireFamily=async()=>({id:'test-family-${user}'});export const supabase={auth:{onAuthStateChange(){},async signOut(){}},async rpc(name,args){return fetch('/test-rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:${user},args})}).then(r=>r.json())}};`);return;
@@ -76,6 +79,25 @@ try {
   await a.locator('#boxOnlineToggle').click();await a.locator('#boxLeave').click();await a.locator('#boxOnlineClose').click();
   await b.waitForFunction(()=>!window.BoxMultiplayer.connected,{timeout:10000});
  }
+ // Expansion, virtual purchase and automatic-update persistence after leaving the shared world.
+ const individual=await a.evaluate(()=>window.IntegroCraft.getState());
+ if(individual.expansion!==1 || individual.animals.length<3 || !individual.inventory[12] || !individual.inventory[19] || !individual.inventory[24]) throw Error('Craft expansion missing');
+ await a.locator('#craftMarket').click();await a.locator('[data-buy="12"]').click();
+ const purchased=await a.evaluate(()=>window.IntegroCraft.getState());
+ if(purchased.coins>=individual.coins || purchased.inventory[12]<=individual.inventory[12])throw Error('Virtual purchase failed');
+ await a.screenshot({path:'/tmp/box-craft-market.png'});
+ release.maintenance=true;
+ await Promise.all(pages.map(p=>p.evaluate(()=>window.IntegroUpdates.check())));
+ for(const p of pages)await p.locator('#integroUpdate').waitFor({state:'visible'});
+ await a.screenshot({path:'/tmp/box-maintenance.png'});
+ release={version:'20261012-box3',maintenance:false};
+ await Promise.all(pages.map(p=>p.evaluate(()=>window.IntegroUpdates.check())));
+ for(const p of pages)await p.waitForURL(/_integro_update=20261012-box3/);
+ await a.waitForFunction(()=>window.BoxMultiplayer);await a.locator('#playCraft').click();
+ await a.waitForFunction(()=>window.IntegroCraft?.getState().initialized);
+ const restored=await a.evaluate(()=>window.IntegroCraft.getState());
+ if(restored.coins!==purchased.coins || restored.inventory[12]!==purchased.inventory[12])throw Error('Update lost individual progress');
+ console.log('EXPANSION_AND_AUTO_UPDATE',JSON.stringify({animals:restored.animals.length,inventory:restored.inventory[12],coins:restored.coins,devices:2}));
  console.log('ERRORS',JSON.stringify(errors));if(errors.length)throw new Error('JS errors');
  const publicPage=await browser.newPage({viewport:{width:390,height:844}});
  await publicPage.goto(base+'/integro-box/');await publicPage.screenshot({path:'/tmp/box-landing-mobile.png',fullPage:true});
