@@ -92,6 +92,28 @@ As salas repetem a autorização no servidor. Arquivos estáticos não são DRM.
 O progresso local é separado por usuário e navegador; não é sincronizado entre
 aparelhos. Sair da conta ou trocar a sessão bloqueia o jogo.
 
+## Salas públicas
+
+Aplicar `20261013010000_box_public_rooms.sql` antes de publicar o novo cliente.
+A coluna `is_public` nasce falsa; salas já existentes continuam privadas.
+No botão **Salas**, escolha Pegue o Ovo, Meu Bairro ou IntegroCraft. A lista
+atualiza a cada 10 segundos enquanto o painel está aberto; mostra até 20 salas
+com presença recente, ocupação e botão Entrar. Salas cheias continuam visíveis
+com botão desativado. Sem salas, o usuário pode criar uma sala pública.
+
+Somente contas autenticadas autorizadas no Box consultam e entram. O aviso
+informa que desconhecidos autenticados podem participar; não se promete que
+os participantes sejam alunos ou crianças. A listagem não inclui código de
+convite, nomes, e-mails ou identificadores de perfis. Apelidos automáticos,
+limite de quatro jogadores, remoção pelo criador, bloqueio de reentrada,
+validadores do mundo e ausência de chat/voz permanecem. Ao sair, o criador
+encerra a sala; todas expiram em quatro horas. Não há mudança retroativa de
+visibilidade, criação automática de contas nem alteração de permissões escolares.
+
+Verificação: `node --test tests/box-public.test.mjs tests/integro-box.test.mjs tests/box-usage.test.mjs`;
+`node scripts/check-box-public.mjs` testa duas sessões, listagem, entrada,
+remoção, filtro de mundo, convite privado e tela móvel em banco isolado.
+
 ## Salas por convite
 
 Aplicar uma vez `supabase/migrations/20261012210000_integro_box.sql` no projeto

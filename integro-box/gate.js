@@ -17,7 +17,7 @@ try {
   message.textContent='Preparando os jogos…';
   await script('./classic-games.js?v=20261012-usage1');
   await script('./worlds.js?v=20261012-2');
-  await import('./multiplayer.js?v=20261012-usage1');
+  await import('./multiplayer.js?v=20261013-public1');
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261012-usage1');startUsage();}
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxUsage?.stop();
