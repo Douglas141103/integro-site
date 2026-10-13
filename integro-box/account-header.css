@@ -1,0 +1,10 @@
+.header-actions[hidden]{display:none!important}
+body>header .head{gap:24px;min-height:100px;padding-top:16px;padding-bottom:16px}
+.box-player{display:flex;flex:1;align-items:center;justify-content:space-between;gap:24px;min-width:0}
+.box-player-name{min-width:0;display:flex;flex-direction:column;gap:3px}
+.box-player-name small{font-size:11px;letter-spacing:1.7px;text-transform:uppercase;color:#b4bdd3}
+#boxUserName{font-size:clamp(18px,2.2vw,25px);line-height:1.25;font-weight:700;overflow-wrap:anywhere}
+.box-presence{display:flex;align-items:center;gap:10px;flex-shrink:0;color:#ddecda;font-size:14px;border:1px solid #3c504c;border-radius:999px;background:#182b29;padding:10px 16px}
+.box-presence-dot{width:8px;height:8px;border-radius:50%;background:#83948f;flex:none}
+.box-presence[data-state=online] .box-presence-dot{background:#b8e67a;box-shadow:0 0 0 4px #b8e67a12}
+@media(max-width:650px){body>header .head{padding:14px 18px;gap:16px}body>header .brand-logo{max-width:80px;height:auto}.box-player{flex-direction:column;align-items:flex-start;gap:10px}.box-presence{font-size:12px;padding:7px 11px}.box-player-name small{font-size:10px;letter-spacing:1px}}

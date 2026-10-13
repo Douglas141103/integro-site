@@ -1,5 +1,15 @@
 # Integro Box
 
+## Cabeçalho da conta e presença — 13/10/2026 (box9)
+
+A faixa superior de atalhos foi retirada da apresentação. O catálogo continua oferecendo todos os jogos. O cabeçalho exibe o `full_name` do próprio perfil autorizado e a quantidade de contas com o Integro Box aberto e visível. Uma conta equivale a uma presença, mesmo com várias abas/dispositivos. A conta familiar não permite identificar quantas pessoas físicas a utilizam.
+
+`presence.js` usa Supabase Realtime Presence no canal `integro-box-online-v1`, iniciado somente após a autorização do gate. A chave é um digest SHA-256 do identificador da conta com prefixo específico do Box; o payload contém apenas `{online:true}`. Nome, e-mail, ID bruto, jogo e histórico não são publicados no canal. O nome é renderizado como texto somente no próprio navegador. Este canal de presença é público e efêmero; o contador é informativo e não é usado para autorização, cobrança ou auditoria. Não substitui os relatórios autorizados da gestão.
+
+As abas ocultas deixam de se anunciar e voltam quando visíveis; desconexão/saída remove a presença, sujeita ao tempo de detecção do serviço. Falha de conexão mostra indisponibilidade, nunca um número inventado ou antigo. Logout remove o canal; os demais dados e permissões continuam iguais.
+
+Verificação: três testes em `tests/box-presence.test.mjs` cobrem nome seguro, deduplicação, entrada/saída, ocultação, reconexão e logout. Teste real em um canal temporário isolado confirmou três conexões representando duas contas e atualização para uma conta após saída. Nenhum dado real de usuário foi usado no teste. Sem conferência visual em navegador nesta sessão.
+
 ## IntegroCraft — atualização de 13/10/2026 (box8)
 
 Integrado da versão 28 do Integro Box (fonte `b1ccf639f0a0401d611ae17a7746a21bfbb40774`): terreno individual 96×96, capivaras e reprodução, plantio/colheita, vila e trocas, minérios/picaretas/encantamentos, barcos/carrinhos, circuitos, fome e vida.

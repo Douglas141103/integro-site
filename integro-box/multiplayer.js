@@ -1,4 +1,4 @@
-import {supabase} from './access.js';
+import {supabase} from './access.js?v=20261013-account1';
 const $=id=>document.getElementById(id);
 const titles={egg:'Pegue o Ovo',bairro:'Meu Bairro',craft:'IntegroCraft'};
 const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
