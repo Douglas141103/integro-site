@@ -5,6 +5,7 @@ function lock(){
  if(unloaded)return;unloaded=true;
  document.body.classList.add('box-locked');
  window.BoxGoSnake?.stop();
+ window.BoxCraft?.stop?.();
  window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();
  location.replace('/portal-familia/index.html?next=integro-box');
@@ -17,7 +18,9 @@ try {
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
   message.textContent='Preparando os jogos…';
   await script('./classic-games.js?v=20261012-usage1');
-  await script('./worlds.js?v=20261012-2');
+  await script('./craft.js?v=20261013-craft2');
+  if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
+  await script('./worlds.js?v=20261013-craft2');
   await import('./multiplayer.js?v=20261013-snake1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261013-snake1');startUsage();}

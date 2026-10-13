@@ -1,5 +1,17 @@
 # Integro Box
 
+## IntegroCraft — atualização de 13/10/2026 (box8)
+
+Integrado da versão 28 do Integro Box (fonte `b1ccf639f0a0401d611ae17a7746a21bfbb40774`): terreno individual 96×96, capivaras e reprodução, plantio/colheita, vila e trocas, minérios/picaretas/encantamentos, barcos/carrinhos, circuitos, fome e vida.
+
+A chave do mundo continua `integrocraft-world-v1`, dentro do escopo `box:<perfil>:`. O salvamento v1 é migrado para v2 preservando coordenadas, construções, inventário e metadados; a primeira gravação guarda também uma cópia v1 na chave `-backup` do mesmo perfil. O registro de uso continua `craft`.
+
+As salas preservam o terreno original 48×48 e os dez blocos básicos, com as mesmas validações de servidor. O mapa ampliado e os novos recursos são individuais. Ao entrar, o mundo individual fica preservado em memória; nenhuma gravação do mundo compartilhado pode substituí-lo. Ao sair, o mundo individual é restaurado. Não há migração de banco nesta atualização.
+
+Fontes em `integro-box/craft-src/`. Reconstrução: `cd integro-box/craft-src && npm ci && npm run build`. O gate autenticado carrega o bundle antes de montar os mundos. A licença do Three.js permanece no bundle. O HTML e CSS do jogo usam a versão atual; os demais jogos mantêm seus adaptadores.
+
+Validação: `node tests/box-craft-adventure.cjs`, `node tests/box-craft-hud.cjs` e as suítes `integro-box`, `box-public`, `box-usage`, `box-gosnake` e `site-update`. O teste do HUD executa montagem, viagem ao rio, seleção de capivara, entrada/edições/saída de sala e preservação do mundo individual com renderizador substituído. A conferência visual/WebGL em navegador não está disponível nesta sessão.
+
 ## GoSnake — catálogo de 13/10/2026
 
 Integrado a partir do HTML enviado (SHA-256 `c64b5f1f712ebfc49691285f32fedf82a375defdfe603949562afe4433424238`), idêntico ao build local de origem. O novo jogo individual mantém as 15 arenas, frutas, poderes, túneis e o direcional por bolinha da versão enviada. A arte original foi convertida para WebP para reduzir o download, sem redesenho.
