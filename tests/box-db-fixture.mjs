@@ -13,6 +13,7 @@ export async function boxDatabase(){
  insert into public.profiles select id,'responsavel' from auth.users;
  update public.profiles set role='aluno' where id='${uid(8)}';`);
  await db.exec(await readFile(new URL('../supabase/migrations/20261012210000_integro_box.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../supabase/migrations/20261013010000_box_public_rooms.sql',import.meta.url),'utf8'));
  const call=(n,action,options={})=>db.transaction(async tx=>{
   await tx.exec('set local role authenticated');
   await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);
