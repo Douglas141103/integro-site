@@ -8,6 +8,7 @@ function lock(){
  window.BoxGoSnake?.stop();
  window.BoxInterDance?.stop();
  window.BoxCraft?.stop?.();
+ window.BoxEggCloud?.stop();
  window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();
  location.replace('/portal-familia/index.html?next=integro-box');
@@ -24,13 +25,15 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261013-craft2');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
-  await script('./worlds.js?v=20261013-craft2');
-  await import('./multiplayer.js?v=20261013-dance1');
+  await script('./egg.js?v=20261013-egg1');
+  await script('./worlds.js?v=20261013-egg1');
+  await import('./multiplayer.js?v=20261013-egg1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261013-egg1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261013-dance1');startUsage();}
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
-  document.getElementById('boxLogout').onclick=async()=>{await window.BoxUsage?.stop();
+  document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }
 } catch(error){message.textContent=error.message||'Não foi possível verificar o acesso. Tente novamente.';document.getElementById('boxRetry').hidden=false;}

@@ -191,3 +191,15 @@ A prova de dois clientes pode ser repetida com Playwright instalado no ambiente:
 `node scripts/check-box-browser.mjs`. Opcionalmente, defina `BOX_CHROMIUM_PATH`
 para o executável Chromium. O script só serve localhost, injeta contas fictícias
 nesse servidor isolado e salva capturas em `/tmp`; não altera dados de produção.
+
+### Pegue o Ovo — expansão de 13/10/2026
+
+O jogo agora usa `egg.js`, compilado dos arquivos em `egg-src`, mantendo os demais jogos do portal. Inclui produção do curral durante jogo ativo, 5 raridades, 4 mutações, rotação persistente dos ninhos, companheiro com habilidade, missões, desafio diário, álbum, 23 espaços, 4 decorações e obstáculos por mundo. Os preços anteriores foram preservados; novos temas custam integros.
+
+A integração `egg-cloud.js` reutiliza a autenticação familiar e as salas existentes. Aplique **depois** das migrações de salas `supabase/migrations/20261013210000_box_egg_expansion.sql` no SQL Editor do projeto oficial. Até a aplicação, a interface informa que a integração aguarda ativação; o jogo individual continua salvando por conta neste navegador.
+
+O RPC `box_egg` guarda versões por perfil, limita visitas aos membros presentes na mesma sala e expõe somente criaturas/decoração. Trocas exigem proposta, aceite do destinatário e confirmação final do proponente. Enquanto a troca está pendente, o jogo aguarda; as duas revisões são verificadas e atualizadas em uma transação. Identificadores transferidos não podem ser reimportados pelo antigo dono. As propostas expiram após 2 minutos ou perda de presença. O salvamento utiliza comparação de versão e guarda uma cópia local de recuperação antes de carregar mudanças de outro aparelho. A conta familiar compartilha um progresso, não um progresso por aluno.
+
+Corridas usam início e resultados do servidor, ida ao ninho escolhido e volta à base, velocidade 22 para todos e duração de até 2 minutos. Não dão prêmios monetários. A posição e o progresso individual continuam originados no cliente; isto não é um sistema de economia competitiva com prevenção completa de trapaças.
+
+Validação: `node --test tests/egg-online.test.mjs`, testes existentes de salas, GoSnake e InterDance; testes de regras no projeto original. Inspeção estrutural do HUD e construção dos modelos 3D realizadas sem navegador gráfico.

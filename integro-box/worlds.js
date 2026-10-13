@@ -44058,7 +44058,7 @@ Pr\xF3xima fase: ` + (QQ[M.level + 1] || ""),
   FA("closePoster").onclick = () => {
     (FA("posterView").classList.add("hidden"), qB());
   };
-  var yC = Xi({ onExit: qB }),
+  var yC = window.BoxEgg.mountEggGame({ onExit: qB, registerAdapter: registerBoxAdapter }),
     bC = Pi({ onExit: qB }),
     rC = Ki({ onExit: qB }),
     TC = yi({ onExit: qB }),

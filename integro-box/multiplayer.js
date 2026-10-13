@@ -126,4 +126,4 @@ $('boxReturn').onclick=async()=>{if(room)try{await openGame(room.game);toggle(fa
 $('boxCopy').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);status('Código copiado. Compartilhe apenas com famílias conhecidas.');}catch{status('Copie o código exibido acima.');}};
 $('boxWave').onclick=()=>{gesture='wave';gestureUntil=Date.now()+2200;toggle(false);};
 $('boxCheer').onclick=()=>{gesture='cheer';gestureUntil=Date.now()+2200;toggle(false);};
-window.BoxMultiplayer={disconnect,edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get connected(){return !!room;}};
+window.BoxMultiplayer={disconnect,get roomInfo(){return room;},edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get connected(){return !!room;}};
