@@ -4,6 +4,7 @@ let unloaded=false;
 function lock(){
  if(unloaded)return;unloaded=true;
  document.body.classList.add('box-locked');
+ window.BoxGoSnake?.stop();
  window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();
  location.replace('/portal-familia/index.html?next=integro-box');
@@ -17,8 +18,9 @@ try {
   message.textContent='Preparando os jogos…';
   await script('./classic-games.js?v=20261012-usage1');
   await script('./worlds.js?v=20261012-2');
-  await import('./multiplayer.js?v=20261013-public1');
-  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261012-usage1');startUsage();}
+  await import('./multiplayer.js?v=20261013-snake1');
+  if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
+  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261013-snake1');startUsage();}
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

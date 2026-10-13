@@ -33,6 +33,7 @@ async function rpc(action,extras={}){
  return data;
 }
 async function openGame(game){
+ window.BoxGoSnake?.hide();
  if(!window.BoxAdapters[game].active()){
   await $(buttons[game]).onclick();
   if(!window.BoxAdapters[game].active())throw new Error('Não foi possível abrir o mundo 3D neste aparelho.');
