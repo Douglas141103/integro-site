@@ -1,5 +1,17 @@
 # Integro Box
 
+## GoSnake — catálogo de 13/10/2026
+
+Integrado a partir do HTML enviado (SHA-256 `c64b5f1f712ebfc49691285f32fedf82a375defdfe603949562afe4433424238`), idêntico ao build local de origem. O novo jogo individual mantém as 15 arenas, frutas, poderes, túneis e o direcional por bolinha da versão enviada. A arte original foi convertida para WebP para reduzir o download, sem redesenho.
+
+O módulo `gosnake.js` é carregado somente após o gate autenticar a família. Usa `BoxStorage` para separar fases/recordes por conta. Ao abrir, sai da sala multiplayer e fecha os outros jogos; ao sair da conta, interrompe o jogo. A manutenção salva o progresso antes da recarga. O GoSnake não adiciona um modo multiplayer.
+
+`gosnake-src/` preserva as fontes e dependências fixadas. Para reconstruir: `cd integro-box/gosnake-src && npm ci && npm run build`. O pacote Three.js mantém os avisos de licença no bundle.
+
+Aplicar `20261013110000_box_gosnake_usage.sql` antes do novo cliente: apenas acrescenta `gosnake` à lista de jogos do registro de uso já autorizado. A migração preserva permissões, históricos e escopo por escola; pode ser reaplicada.
+
+Verificação: testes de regras nas 15 arenas (inclusive conclusão das 15 fases no modelo, 1.766 movimentos), modelos 3D, joystick, integração do menu/logout, uso no banco isolado, salas existentes e manutenção. A infraestrutura de prévia local não oferece o controle de navegador exigido nesta sessão, portanto não houve QA visual/WebGL local. Conferir a apresentação publicada no navegador. Nenhum arquivo de cadastro, assinatura ou cobrança é incluído nesta versão.
+
 ## Gestão de uso
 
 `/portal/integro-box.html` é a área de acompanhamento. O cartão aparece no

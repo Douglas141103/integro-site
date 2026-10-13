@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261013-box6';
+  const VERSION = '20261013-box7';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
@@ -31,6 +31,7 @@
       // Disconnect restores the individual Craft world before saving progress.
       await Promise.race([window.BoxMultiplayer?.disconnect(), new Promise(resolve => setTimeout(resolve, 4000))]);
       for (const adapter of Object.values(window.BoxAdapters || {})) adapter.persist?.();
+      window.BoxGoSnake?.persist();
       window.dispatchEvent(new Event('pagehide'));
     })();
     return savePromise;
