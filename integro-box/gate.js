@@ -25,7 +25,7 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261013-craft2');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
-  await script('./egg.js?v=20261014-income1');
+  await script('./egg.js?v=20261014-smooth1');
   await script('./worlds.js?v=20261013-egg1');
   await import('./multiplayer.js?v=20261013-egg1');
   if(!unloaded)await import('./egg-cloud.js?v=20261013-egg1');
