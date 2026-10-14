@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 const titles={egg:'Pegue o Ovo',bairro:'Meu Bairro',craft:'IntegroCraft'};
 const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
 const messages={room_unavailable:'Sala encerrada, expirada ou código incorreto.',not_member:'Você saiu desta sala. Peça um novo convite.',room_full:'Esta sala já tem quatro jogadores.',rate_limit:'Aguarde um pouco antes de tentar novamente.',not_owner:'Somente quem criou a sala pode fazer isso.',invalid_edit:'Este bloco está fora do alcance.',occupied:'Há um jogador neste espaço. Escolha outro bloco.',world_limit:'A sala atingiu o limite de alterações. Criem uma nova sala para continuar.'};
-let room=null,timer=null,busy=false,version=0,gesture='',gestureUntil=0,listVersion=0,listBusy=false,editQueue=[],lastWorld={},started=false,failures=0;
+let room=null,timer=null,busy=false,version=0,gesture='',gestureUntil=0,listVersion=0,listBusy=false,editQueue=[],lastWorld={},started=false,failures=0,lastSyncAt=0;
 const panel=document.createElement('aside');panel.id='boxOnline';panel.setAttribute('aria-label','Salas multiplayer');
 panel.innerHTML=`<button id="boxOnlineToggle" aria-expanded="false" aria-controls="boxOnlinePanel">Salas <span aria-hidden="true">↗</span></button>
 <section id="boxOnlinePanel" hidden><header><h2>Juntos na aventura</h2><button id="boxOnlineClose" aria-label="Fechar painel">×</button></header>
@@ -45,7 +45,7 @@ function display(data){
  $('boxRoomSetup').hidden=true;$('boxRoomActive').hidden=false;
  $('boxRoomTitle').textContent=titles[data.game];$('boxAlias').textContent='Explorador '+data.slot;$('boxInvite').textContent=data.code||'';$('boxInviteSection').hidden=!!data.public;$('boxRoomVisibility').textContent=data.public?'Pública · outros usuários autenticados podem entrar.':'Privada · entrada somente por convite.';
  const peers=data.players.filter(p=>p.slot!==data.slot);
- const adapter=window.BoxAdapters[data.game];adapter.setPeers(peers);
+ const adapter=window.BoxAdapters[data.game];adapter.setPeers(data.game==='egg'?(window.BoxEggPush?.peers(peers)||peers):peers);
  if(data.world){lastWorld=data.world;adapter.applyWorld?.(data.world);}
  const signature=JSON.stringify(data.players.map(p=>p.slot));
  if($('boxPlayers').dataset.signature!==signature){
@@ -81,7 +81,7 @@ async function sync(){
  try{
   const data=await rpc('sync',{p_state:state,p_revision:room.revision,p_edit:edit});
   if(token!==version)return;
-  if(edit)editQueue.shift();failures=0;display(data);
+  if(edit)editQueue.shift();failures=0;lastSyncAt=Date.now();display(data);
   status(data.edit_error?(messages[data.edit_error]||'Não foi possível alterar esse bloco.'):'Conectado · '+data.players.length+' de 4 jogadores');
  }catch(e){
   if(token!==version)return;status(e.message);
@@ -126,4 +126,4 @@ $('boxReturn').onclick=async()=>{if(room)try{await openGame(room.game);toggle(fa
 $('boxCopy').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);status('Código copiado. Compartilhe apenas com famílias conhecidas.');}catch{status('Copie o código exibido acima.');}};
 $('boxWave').onclick=()=>{gesture='wave';gestureUntil=Date.now()+2200;toggle(false);};
 $('boxCheer').onclick=()=>{gesture='cheer';gestureUntil=Date.now()+2200;toggle(false);};
-window.BoxMultiplayer={disconnect,get roomInfo(){return room;},edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get connected(){return !!room;}};
+window.BoxMultiplayer={disconnect,get roomInfo(){return room;},edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get healthy(){return !!room&&!failures&&Date.now()-lastSyncAt<3000;},get connected(){return !!room;}};

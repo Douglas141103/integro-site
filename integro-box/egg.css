@@ -180,3 +180,14 @@
 .egg-app.egg-immersive .egg-training-gain small{font-size:11px;font-weight:700}
 @media(max-height:540px) and (orientation:landscape){.egg-app.egg-immersive .egg-training{top:61px;left:max(12px,env(safe-area-inset-left));gap:6px}.egg-app.egg-immersive .egg-training-clock{width:28px;height:28px}.egg-app.egg-immersive #eggTrainText{font-size:15px}.egg-app.egg-immersive .egg-training-gain{font-size:14px}}
 @media(max-width:520px) and (orientation:portrait){.egg-app.egg-immersive .egg-training{top:68px;left:12px;gap:6px}.egg-app.egg-immersive .egg-training-clock{width:28px;height:28px}.egg-app.egg-immersive #eggTrainText{font-size:15px}.egg-app.egg-immersive .egg-training-gain{font-size:14px}}
+
+/* The shove takes the existing action row only during a room race. */
+.egg-immersive .egg-racing #eggInteract{display:none}
+.egg-immersive .egg-push{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:6px;border:1px solid #fff2bd;border-radius:22px;background:linear-gradient(90deg,#ffd878 calc(var(--push-ready,1)*100%),#b8a276 0);color:#493913;font:800 13px system-ui;touch-action:manipulation;box-shadow:0 2px 6px #17364133}
+.egg-immersive .egg-push[hidden]{display:none}
+.egg-immersive .egg-push:disabled{filter:saturate(.4);color:#514936}
+.egg-immersive .egg-push:not(:disabled):active{transform:scale(.96)}
+.egg-immersive .egg-push svg{width:25px;height:25px;flex-shrink:0}
+.egg-immersive .egg-push span{display:grid;gap:1px}
+.egg-immersive .egg-push small{font-size:9px;font-weight:650}
+@media(max-height:540px) and (orientation:landscape){.egg-immersive .egg-push{min-height:44px;gap:4px;font-size:11px}.egg-immersive .egg-push svg{width:21px;height:21px}.egg-immersive .egg-push small{font-size:8px}}

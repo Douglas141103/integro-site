@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {JSDOM} from 'jsdom';
+import {createEggPush} from '../integro-box/egg-push.js';
+
+test('online HUD mounts, follows the live race and removes the action when leaving',async()=>{
+ const html=readFileSync(new URL('../integro-box/jogar.html',import.meta.url),'utf8');
+ const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true});
+ const w=dom.window,timers=new Map();let stopped=false,removed=0;
+ w.setInterval=(fn,delay)=>{timers.set(delay,fn);return delay};
+ w.clearInterval=id=>timers.delete(id);
+ const race={id:'test-race',world:12,starts:new Date(Date.now()-2000).toISOString(),results:{}};
+ w.BoxMultiplayer={healthy:true,roomInfo:{id:'test-room',game:'egg',slot:1,players:[{slot:1},{slot:2}]}};
+ w.BoxAdapters={egg:{state:()=>({x:0,y:0,z:-10,yaw:0,zone:'world'}),setPeers(){}}};
+ w.BoxEggRuntime={save:()=>({creatures:[]}),apply(){},active:()=>true,playing:()=>true,frozen:()=>false,raceMode(){},raceStart(){},stop(){stopped=true}};
+ const client={async rpc(_,args){return {data:args.p_action==='load'?{save:{creatures:[]},revision:1}:{race,revision:1,now:new Date().toISOString(),trades:[]}}},channel(){return {on(){return this},subscribe(fn){fn('SUBSCRIBED');return this},async send(){return 'ok'}}},removeChannel(){removed++}};
+ const source=readFileSync(new URL('../integro-box/egg-cloud.js',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
+ const AsyncFunction=w.eval('(async function(){}).constructor');
+ await new AsyncFunction('supabase','createEggPush',source)(client,createEggPush);
+ const button=w.document.getElementById('eggPush'),stage=w.document.getElementById('eggStage');
+ assert.ok(button.closest('.egg-action-pad'),'action remains inside game controls');
+ assert.equal(button.hidden,true,'solo exploration has no push control');
+ timers.get(750)();await new Promise(resolve=>setImmediate(resolve));timers.get(150)();
+ assert.equal(button.hidden,false);assert.equal(button.disabled,true,'no nearby peer, no active action');
+ assert.ok(stage.classList.contains('egg-racing'));assert.match(button.getAttribute('aria-label'),/Aproxime-se/);
+ w.BoxMultiplayer.roomInfo=null;w.dispatchEvent(new w.Event('box-room-change'));
+ assert.equal(button.hidden,true);assert.equal(stage.classList.contains('egg-racing'),false);assert.equal(removed,1);
+ w.BoxEggCloud.stop();assert.equal(timers.size,0);assert.equal(stopped,true);dom.window.close();
+});

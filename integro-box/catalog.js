@@ -4,7 +4,7 @@ const lobby=document.getElementById('lobby');
 if(!lobby||lobby.dataset.catalogReady)return;
 const games=[
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
- ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','Corra, cuide dos bichinhos e evolua seu curral.'],
+ ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','13 pistas, ovos raros e 22 acessórios para colecionar.'],
  ['meu-bairro','Meu Bairro','#playDollGame','Criatividade','Uma casa, lojas e muitas histórias para viver.'],
  ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore ilhas e descubra frutas escondidas.'],
  ['integrocraft','IntegroCraft','#playCraft','Criatividade','Explore, fabrique e construa o seu mundo.'],

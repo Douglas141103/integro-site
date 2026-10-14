@@ -203,3 +203,11 @@ O RPC `box_egg` guarda versões por perfil, limita visitas aos membros presentes
 Corridas usam início e resultados do servidor, ida ao ninho escolhido e volta à base, velocidade 22 para todos e duração de até 2 minutos. Não dão prêmios monetários. A posição e o progresso individual continuam originados no cliente; isto não é um sistema de economia competitiva com prevenção completa de trapaças.
 
 Validação: `node --test tests/egg-online.test.mjs`, testes existentes de salas, GoSnake e InterDance; testes de regras no projeto original. Inspeção estrutural do HUD e construção dos modelos 3D realizadas sem navegador gráfico.
+
+### Pegue o Ovo — tempestades e acessórios (14/10/2026)
+
+São 13 pistas e 22 acessórios (16 novos, de 850 a 150.000 integros), com modelos próprios, três posições de equipamento e persistência compatível com os saves anteriores. O Santuário das Tempestades tem três ovos, relâmpagos e a Fênix Relâmpago. A migração `20261014220000_box_egg_storm.sql` precisa ser aplicada antes de liberar essa pista no portal: amplia os limites de coordenadas, os mundos permitidos no salvamento/corridas e anuncia as capacidades do servidor. Não altera preços antigos nem tabelas de contas.
+
+Nas corridas online, Empurrar (F) usa alcance curto, recarga de 3 segundos, proteção de 1,25 segundo após impacto e base segura. O botão ocupa o lugar da interação no HUD durante a corrida. `egg-push.js` usa um canal Realtime por corrida com posições de slots anônimos; confirmações, prazo, distância, presença e estado do jogo são checados no cliente. Desconexão, pausa, saída de sala e fim da corrida desativam o contato. Esta mecânica casual mantém a autoridade de movimento no cliente, sem novos prêmios monetários.
+
+Verificação: `node --test tests/egg-push.test.mjs tests/egg-push-ui.test.mjs tests/egg-storm.test.mjs tests/egg-online.test.mjs`. Inclui transporte simulado entre jogadores, física, isolamento, migração idempotente em PGlite, salvamento, compras e integração do HUD em jsdom. Modelos e geometrias inspecionados estruturalmente; não substitui uma partida real em dois aparelhos. Migração aplicada no Supabase oficial em 14/10/2026. Conferência no SQL Editor confirmou limites de posição, salvamento da pista 13 e capacidades atualizadas (três resultados verdadeiros).
