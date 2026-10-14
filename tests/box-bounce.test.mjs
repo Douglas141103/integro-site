@@ -13,7 +13,33 @@ test('all 20 authored routes can be finished using ordinary controls',()=>{
    r.update(1/120,{left:back,right:!back,jump:jump>0});jump-=1/120;r.events=[];
   }
   assert.equal(r.status,'won','level '+(n+1));
+  assert.equal(r.deaths,0,'clear takeoff and landing space in level '+(n+1));
  }
+});
+test('all routes are at least triple length and spikes avoid levers and return points',()=>{
+ for(let i=0;i<20;i++){
+  const l=C.makeLevel(i),originalSections=C.specs[i][1].split(',').length;
+  assert.ok(l.width>=3*(940+originalSections*400));
+  assert.ok(l.goal.x-l.spawn.x>=3*(740+originalSections*400-95));
+  const spikes=l.hazards.filter(h=>h.kind==='spike');assert.ok(spikes.length>=6);
+  assert.ok(l.checks.length>=4);
+  for(const s of spikes){
+   assert.ok(Number.isFinite(C.terrainY(l,s.x+s.w/2)));
+   assert.ok(s.y<C.terrainY(l,s.x+s.w/2)-20,'tips stand above the ground');
+   for(const g of l.gates)assert.ok(Math.abs(s.x+s.w/2-g.switchX)>170);
+   for(const c of l.checks)assert.ok(Math.abs(s.x+s.w/2-c.x)>120);
+  }
+ }
+});
+test('a lever needs ball contact, opens only its linked gate, and stays pressed after respawn',()=>{
+ const r=new C.Run(0),g=r.level.gates[0],second=r.level.gates[1];
+ Object.assign(r.p,{x:g.switchX,y:g.switchY-60,vx:0,vy:0});r.update(1/120,{});
+ assert.equal(g.open,false,'passing nearby must not press the lever');
+ Object.assign(r.p,{x:g.leverX-25,y:g.leverY,vx:0,vy:0});r.update(1/120,{});
+ assert.equal(g.open,true);assert.equal(second.open,false);assert.ok(g.lift>0&&g.lift<1);
+ r.respawn();for(let i=0;i<60;i++)r.update(1/120,{});assert.equal(g.open,true);assert.equal(g.lift,1);
+ Object.assign(r.p,{x:g.x-30,y:C.terrainY(r.level,g.x)-17,vx:0,vy:0});
+ for(let i=0;i<45;i++)r.update(1/120,{right:true});assert.ok(r.p.x>g.x+g.w,'raised gate allows passage');
 });
 test('holding jump is higher than a tap, falling respawns and preserves collectibles',()=>{
  function leap(hold){const r=new C.Run(0);for(let i=0;i<60;i++)r.update(1/120,{});let top=r.p.y;for(let i=0;i<120;i++){r.update(1/120,{jump:i<hold});top=Math.min(top,r.p.y);}return top;}

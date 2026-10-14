@@ -33,7 +33,17 @@ const specs=[
  ['O grande salto Tegro','hill,gap,spikes,gate,lift,spring,patrol,tunnel,steps,crystal,gap,lift']
 ];
 function makeLevel(index){
- index=clamp(index|0,0,19);const [name,pattern]=specs[index];const theme=themes[Math.floor(index/4)],seq=pattern.split(',');
+ index=clamp(index|0,0,19);const [name,pattern]=specs[index];const theme=themes[Math.floor(index/4)],original=pattern.split(',');
+ // Two distinct extensions add real terrain and challenges while preserving jump distances.
+ const extensions=[
+  ['meadow','spikes','hill','lift','gate','gap','steps','spikes','meadow','spring','hill','spikes'],
+  ['hill','spikes','gate','meadow','steps','gap','spikes','lift','meadow','spring','patrol','spikes'],
+  ['crystal','spikes','meadow','gate','lift','gap','hill','spikes','steps','crystal','meadow','spikes'],
+  ['meadow','spikes','lift','gate','hill','gap','steps','spikes','meadow','spring','lift','spikes'],
+  ['hill','spikes','gate','meadow','lift','gap','spikes','steps','meadow','spring','patrol','spikes']
+ ];
+ const route=extensions[Math.floor(index/4)],extraA=original.map((_,k)=>route[(k+index%4)%route.length]),extraB=original.map((_,k)=>route[(k+5+index%4)%route.length]);
+ const seq=[...original,'meadow','gate',...extraA,'hill','meadow',...extraB,'gate'];
  const level={index,name,theme,width:420+seq.length*400+520,height:950,terrain:[],platforms:[],gaps:[],hazards:[],springs:[],gates:[],checks:[],drops:[],stars:[],signs:[],spawn:{x:95,y:390},goal:null};
  const base=430,addDrop=(x,y)=>level.drops.push({x,y,taken:false});
  // Smooth height fields give hills their curved silhouette and collision surface.
@@ -42,7 +52,10 @@ function makeLevel(index){
   const x=420+k*400,amp=kind==='hill'?60:kind==='meadow'?26:kind==='steps'?15:9;
   level.terrain.push({x,w:400,y:base,amp,kind});
   if(kind==='gap'){level.gaps.push({x:x+150,w:110+(index%4)*9});}
-  if(kind==='spikes')level.hazards.push({kind:'spike',x:x+190,y:base-9,w:54,h:25});
+  if(['spikes','meadow','hill'].includes(kind)&&!(index===0&&k<2)){
+   const w=index<4?54:index<12?72:90;
+   level.hazards.push({kind:'spike',x:x+185,y:0,w,h:26});
+  }
   if(kind==='patrol')level.hazards.push({kind:'beetle',x:x+230,y:base-25,w:40,h:30,origin:x+230,range:56,speed:1.1});
   if(kind==='spring'){level.springs.push({x:x+130,y:base-7});level.platforms.push({x:x+220,y:base-155,w:130,h:20,kind:'leaf'});}
   if(kind==='steps'){for(let n=0;n<3;n++)level.platforms.push({x:x+80+n*83,y:base-65-n*49,w:95,h:22,kind:'leaf'});}
@@ -50,14 +63,19 @@ function makeLevel(index){
    level.platforms.push({x:x+110,y:base-80,w:128,h:24,kind:'moving',originX:x+110,originY:base-80,rangeX:28,rangeY:45,phase:k*.9});
    level.platforms.push({x:x+265,y:base-170,w:100,h:24,kind:'leaf'});
   }
-  if(kind==='gate'){level.gates.push({x:x+302,y:base-156,w:24,h:180,open:false,switchX:x+110,switchY:base-4});}
+  if(kind==='gate'){
+   const switchX=x+110,switchY=base-amp*Math.sin(110/400*Math.PI)**2;
+   level.gates.push({id:level.gates.length+1,x:x+302,y:base-156,w:46,h:180,open:false,lift:0,switchX,switchY,leverX:switchX-16,leverY:switchY-34});
+  }
   if(kind==='tunnel'){level.platforms.push({x:x+115,y:base-84,w:210,h:28,kind:'stone'});}
   if(kind==='crystal'){level.platforms.push({x:x+100,y:base-84,w:100,h:24,kind:'crystal'},{x:x+220,y:base-152,w:100,h:24,kind:'crystal'});}
-  if(k===Math.floor(seq.length/2))level.checks.push({x:x+30,y:base,active:false});
+  if(k>0&&k%5===0)level.checks.push({x:x+30,y:base,active:false});
   for(let n=0;n<4;n++){let dx=x+45+n*90;const gap=level.gaps.find(g=>dx>g.x-20&&dx<g.x+g.w+20);addDrop(dx,base-55-(gap?40:Math.sin(n/3*Math.PI)*35)-amp);}
   if(['steps','lift','spring','crystal'].includes(kind)){const p=level.platforms.at(-1);addDrop(p.x+p.w*.5,p.y-38);}
  });
  const end=420+seq.length*400;level.terrain.push({x:end,w:520,y:base,amp:0,kind:'end'});level.goal={x:end+320,y:base-55};
+ // Anchor every spike tip above the curved surface; leave switches and landings clear.
+ for(const a of level.hazards)if(a.kind==='spike')a.y=Math.min(terrainY(level,a.x),terrainY(level,a.x+a.w))-a.h;
  // Three optional crystals reward exploration on upper ledges.
  const platforms=level.platforms.filter(p=>p.kind!=='stone');
  for(let n=0;n<3;n++){const p=platforms[Math.floor((platforms.length-1)*n/2)];let x=p?p.x+p.w*.5:800+n*800,y=p?p.y-40:340;if(level.stars.some(s=>Math.abs(s.x-x)<10)){x+=70;y-=10;}level.stars.push({x,y,taken:false});}
@@ -66,6 +84,21 @@ function makeLevel(index){
 }
 function terrainY(level,x){const t=level.terrain.find(t=>x>=t.x&&x<=t.x+t.w);if(!t||level.gaps.some(g=>x>g.x&&x<g.x+g.w))return Infinity;return t.y-t.amp*Math.sin((x-t.x)/t.w*Math.PI)**2;}
 const circleRect=(p,r)=>{const x=clamp(p.x,r.x,r.x+r.w),y=clamp(p.y,r.y,r.y+r.h);return (p.x-x)**2+(p.y-y)**2<p.r*p.r;};
+function touchesSpikes(p,a){
+ // Test the visible triangles, with a small inset for forgiving tip contacts.
+ const radius=p.r-2;
+ for(let x=a.x;x<a.x+a.w;x+=18){
+  const v=[[x,a.y+a.h],[x+9,a.y],[x+18,a.y+a.h]];
+  let positive=false,negative=false;
+  for(let i=0;i<3;i++){const [ax,ay]=v[i],[bx,by]=v[(i+1)%3],dx=bx-ax,dy=by-ay;
+   const cross=dx*(p.y-ay)-dy*(p.x-ax);positive ||= cross>0;negative ||= cross<0;
+   const t=clamp(((p.x-ax)*dx+(p.y-ay)*dy)/(dx*dx+dy*dy),0,1);
+   if((p.x-ax-t*dx)**2+(p.y-ay-t*dy)**2<radius*radius)return true;
+  }
+  if(!(positive&&negative))return true;
+ }
+ return false;
+}
 class Run{
  constructor(index){this.level=makeLevel(index);this.p={...this.level.spawn,vx:0,vy:0,r:17,grounded:false,angle:0,coyote:0};this.time=0;this.ticks=0;this.deaths=0;this.collected=0;this.crystals=0;this.status='playing';this.check={...this.level.spawn};this.invulnerable=0;this.jumpBuffer=0;this.jumpHeld=false;this.springCooldown=0;this.events=[];this.finished=false;}
  event(type,x=this.p.x,y=this.p.y){this.events.push({type,x,y});}
@@ -81,11 +114,17 @@ class Run{
   // Releasing the jump shortens the arc; holding gives the full leap.
   if(!jump&&this.springCooldown<=0&&p.vy< -280)p.vy+=1500*dt;
   const prevY=p.y,prevX=p.x;p.vy=Math.min(850,p.vy+1370*dt);p.x=clamp(p.x+p.vx*dt,p.r,l.width-p.r);p.y+=p.vy*dt;p.angle+=(p.x-prevX)/p.r;p.grounded=false;p.platform=null;
-  for(const gate of l.gates){if(!gate.open&&Math.abs(p.x-gate.switchX)<35&&Math.abs(p.y-gate.switchY)<65){gate.open=true;this.event('switch',gate.switchX,gate.switchY);}if(!gate.open&&circleRect(p,gate)){p.x=prevX<gate.x?gate.x-p.r:gate.x+gate.w+p.r;p.vx=0;}}
+  for(const gate of l.gates){
+   // Only physical contact with the handle presses the lever, never proximity or a UI click.
+   if(!gate.open&&Math.hypot(p.x-gate.leverX,p.y-gate.leverY)<p.r+10){gate.open=true;this.event('switch',gate.switchX,gate.switchY);}
+   gate.lift=Math.min(1,gate.lift+(gate.open?dt*2.7:0));
+   const barrier={x:gate.x,y:gate.y,w:gate.w,h:gate.h*(1-gate.lift)};
+   if(barrier.h>0&&circleRect(p,barrier)){p.x=prevX<gate.x?gate.x-p.r:gate.x+gate.w+p.r;p.vx=0;}
+  }
   for(const a of l.platforms){if(p.x+p.r>a.x&&p.x-p.r<a.x+a.w){if(p.vy>=0&&prevY+p.r<=a.y-(a.dy||0)+7&&p.y+p.r>=a.y){p.y=a.y-p.r;p.vy=0;p.grounded=true;p.platform=a;}else if(p.vy<0&&prevY-p.r>=a.y+a.h-3&&p.y-p.r<a.y+a.h){p.y=a.y+a.h+p.r;p.vy=30;}}}
   const ground=terrainY(l,p.x);if(Number.isFinite(ground)&&p.y+p.r>=ground&&prevY-p.r<ground+24&&p.vy>=0){p.y=ground-p.r;p.vy=0;p.grounded=true;p.platform=null;}
   for(const a of l.springs)if(this.springCooldown<=0&&Math.abs(p.x-a.x)<37&&p.y+p.r>=a.y-16&&p.y<a.y+25&&p.vy>=0){p.vy=-900;p.grounded=false;p.coyote=0;this.springCooldown=.55;this.event('spring',a.x,a.y);}
-  for(const a of l.hazards){if(a.kind==='beetle'){a.x=a.origin+Math.sin(this.time*a.speed)*a.range;a.y=terrainY(l,a.x)-a.h;}if(this.invulnerable<=0&&circleRect(p,a)){this.event('poof');this.respawn();return;}}
+  for(const a of l.hazards){if(a.kind==='beetle'){a.x=a.origin+Math.sin(this.time*a.speed)*a.range;a.y=terrainY(l,a.x)-a.h;}if(this.invulnerable<=0&&(a.kind==='spike'?touchesSpikes(p,a):circleRect(p,a))){this.event('poof');this.respawn();return;}}
   if(p.y>l.height){this.event('poof');this.respawn();return;}
   for(const c of l.checks)if(!c.active&&Math.abs(p.x-c.x)<40&&Math.abs(p.y-c.y)<100){c.active=true;this.check={x:c.x+25,y:terrainY(l,c.x+25)-p.r-2};this.event('checkpoint',c.x,c.y);}
   for(const d of l.drops)if(!d.taken&&Math.hypot(p.x-d.x,p.y-d.y)<p.r+15){d.taken=true;this.collected++;this.event('drop',d.x,d.y);}
