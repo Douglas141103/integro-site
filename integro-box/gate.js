@@ -26,17 +26,17 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261013-craft2');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
-  await script('./egg.js?v=20261014-push1');
+  await script('./egg.js?v=20261014-egg14-powers1');
   await script('./worlds.js?v=20261013-egg1');
-  await import('./multiplayer.js?v=20261014-push1');
-  if(!unloaded)await import('./egg-cloud.js?v=20261014-push1');
+  await import('./multiplayer.js?v=20261014-egg14-powers1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261014-egg14-powers1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce.js?v=20261014-bounce3');
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261013-dance1');startUsage();}
-  if(!unloaded)await script('./catalog.js?v=20261014-egg13-refresh1');
+  if(!unloaded)await script('./catalog.js?v=20261014-egg14-powers1');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

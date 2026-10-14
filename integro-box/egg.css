@@ -191,3 +191,11 @@
 .egg-immersive .egg-push span{display:grid;gap:1px}
 .egg-immersive .egg-push small{font-size:9px;font-weight:650}
 @media(max-height:540px) and (orientation:landscape){.egg-immersive .egg-push{min-height:44px;gap:4px;font-size:11px}.egg-immersive .egg-push svg{width:21px;height:21px}.egg-immersive .egg-push small{font-size:8px}}
+
+/* Two compact consumable slots; the scenery remains visible. */
+.egg-ability-dock{position:absolute;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:10px;z-index:8;pointer-events:auto}
+.egg-ability-button{position:relative;display:grid;place-items:center;width:58px;height:58px;padding:9px;border:1px solid #ffffff70;border-radius:50%;background:#132d49cf;color:var(--ability-color,#a3e5ee);box-shadow:0 3px 10px #061b2833;touch-action:manipulation}
+.egg-ability-button svg{width:28px;height:28px}.egg-ability-button span{position:absolute;right:-5px;bottom:-4px;min-width:26px;border-radius:12px;background:#173149;color:#fff;padding:1px 5px;font-size:12px;font-weight:800}.egg-ability-button small{position:absolute;left:2px;top:0;font-size:10px;color:#fff}.egg-ability-button.active{opacity:1!important;background:conic-gradient(from 0deg,#467368 var(--ability-progress),#173149 0);box-shadow:0 0 12px #a3e5ee44}.egg-ability-button:disabled:not(.active){opacity:.45}.egg-ability-card .egg-secondary{width:100%;margin-top:7px}
+#eggApp:has(.egg-sheet:not([hidden])) .egg-ability-dock{pointer-events:none}
+@media(max-width:600px) and (orientation:portrait){.egg-ability-dock{bottom:158px}.egg-ability-button{width:48px;height:48px}}
+@media(max-height:450px){.egg-ability-dock{bottom:14px;gap:8px}.egg-ability-button{width:48px;height:48px}}

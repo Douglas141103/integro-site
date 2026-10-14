@@ -213,3 +213,13 @@ Nas corridas online, Empurrar (F) usa alcance curto, recarga de 3 segundos, prot
 Verificação: `node --test tests/egg-push.test.mjs tests/egg-push-ui.test.mjs tests/egg-storm.test.mjs tests/egg-online.test.mjs`. Inclui transporte simulado entre jogadores, física, isolamento, migração idempotente em PGlite, salvamento, compras e integração do HUD em jsdom. Modelos e geometrias inspecionados estruturalmente; não substitui uma partida real em dois aparelhos. Migração aplicada no Supabase oficial em 14/10/2026. Conferência no SQL Editor confirmou limites de posição, salvamento da pista 13 e capacidades atualizadas (três resultados verdadeiros).
 
 Atualização geral acionada em 14/10/2026 com `20261014-egg13-refresh1`, depois da publicação dos acessórios, pista 13 e empurrões. O cliente novo aguarda também a sincronização do Pegue o Ovo após o salvamento local. A recarga é solicitada às abas pelo manifesto existente; não há confirmação individual de cada dispositivo.
+
+### Pegue o Ovo — Cidadela do Tempo (14/10/2026)
+
+A expansão soma 30 acessórios com modelos próprios (52 no total, até 500.000 integros) e oito consumíveis: bolha protetora, pulso congelante, salto duplo, fôlego infinito, velocidade +25%, treino 2×, incubação 2× e produção do curral 2×. A loja tem 76 tipos de itens. Um poder e um boost podem ficar ativos; estoque máximo de dez por item. Os atalhos Q/B e os dois ícones no HUD mostram estoque e segundos restantes. Ativações sem estoque, sem requisito ou com um efeito da categoria em andamento não consomem cargas. As durações avançam só no jogo ativo e são preservadas no save v4, compatível com versões anteriores.
+
+A 14ª pista, Cidadela do Tempo, acrescenta a Coruja Cronos, relógios, ampulhetas e pêndulos. São 42 ovos simultâneos nos 14 ninhos. A velocidade dos guardiões continua no multiplicador de 2× já estabelecido. Poderes/boosts ficam suspensos nas corridas online, incluindo seus relógios; velocidade de corrida permanece 22, e os empurrões alcançam a nova área.
+
+Migração `20261014230000_box_egg_time.sql` aplicada no Supabase oficial em 14/10/2026, depois da pista Tempestade. Expande posições até -676, permite mundo 13 no salvamento e corridas, e anuncia 14 mundos / 52 acessórios / 8 habilidades. O SQL Editor confirmou posições, salvamento da pista 14 e poderes ativados (três resultados verdadeiros).
+
+Validação: 32 testes passaram (19 de regras, inventário, física, HUD, corridas e migrações, cinco de atualização do portal e oito de regressão da expansão), além da inspeção estrutural dos 38 novos modelos e dos 42 ovos. Sem verificação gráfica em aparelhos reais nesta sessão. O manifesto `20261014-egg14-powers1` solicita a atualização automática das abas conectadas após a publicação.

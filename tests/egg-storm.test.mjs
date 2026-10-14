@@ -2,14 +2,14 @@ import test from 'node:test';import assert from 'node:assert/strict';import {rea
 import {boxDatabase,uid} from './box-db-fixture.mjs';
 import {EggAdventure,ACCESSORIES,WORLDS,NESTS,CORRAL,cleanSave,freshSave} from '../integro-box/egg-src/egg-rules.js';
 test('sixteen new accessories have prices, purchase checks, visual slots and persistent equipment',()=>{
- const legacy=['crown','headphones','halo','goggles','wings','cape'];const items=Object.entries(ACCESSORIES).filter(([id])=>!legacy.includes(id));assert.equal(items.length,16);assert.ok(items.filter(([,v])=>v.price>=20000).length>=4);assert.ok(items.some(([,v])=>v.price>=100000));
+ const legacy=['crown','headphones','halo','goggles','wings','cape'];const ids=['pilotCap','safariHat','iceTiara','stormHelm','solarCrown','starGlasses','cyberVisor','butterflyMask','royalMask','explorerPack','beeWings','jetpack','phoenixWings','auroraCape','cometPack','infinityWings'];const items=Object.entries(ACCESSORIES).filter(([id])=>ids.includes(id));assert.equal(items.length,16);assert.ok(items.filter(([,v])=>v.price>=20000).length>=4);assert.ok(items.some(([,v])=>v.price>=100000));
  const g=new EggAdventure();assert.equal(g.buy('infinityWings'),false);g.save.coins=1000000;
  for(const [id,item] of items){const before=g.save.coins;assert.ok(g.buy(id));assert.equal(g.save.coins,before-item.price);assert.equal(g.save.equipped[item.slot],id);assert.equal(g.buy(id),false);const reloaded=new EggAdventure(g.save);assert.ok(reloaded.save.accessories.includes(id));assert.equal(reloaded.save.equipped[item.slot],id);assert.equal(reloaded.save.coins,g.save.coins);}
  g.player.z=-100;assert.equal(g.buy('crown'),false,'purchases still require the base');
 });
 test('the thirteenth nest yields a persistent phoenix, income and a higher training recommendation',()=>{
- assert.equal(WORLDS.length,13);assert.equal(NESTS.length,13);const g=new EggAdventure();assert.equal(g.nestEggs[12].length,3);assert.ok(g.recommendedTraining(12)>g.recommendedTraining(11));Object.assign(g.player,NESTS[12]);assert.equal(g.zone(),12);assert.equal(g.steal(0),true);Object.assign(g.player,CORRAL);assert.equal(g.interact(),'deposit');for(let i=0;i<170;i++)g.update(.05);assert.equal(g.save.creatures[0].world,12);assert.equal(WORLDS[12].kind,'phoenix');assert.ok(g.saleValue(12)>=9500);const copy=cleanSave(g.save);assert.equal(copy.creatures[0].world,12);assert.ok(copy.seen[12]);
- const old=freshSave();old.seen=old.seen.slice(0,12);old.visited=old.visited.slice(0,12);old.coins=8721;assert.equal(cleanSave(old).coins,8721);assert.equal(cleanSave(old).seen.length,13);
+ assert.ok(WORLDS.length>=13);assert.equal(NESTS.length,WORLDS.length);const g=new EggAdventure();assert.equal(g.nestEggs[12].length,3);assert.ok(g.recommendedTraining(12)>g.recommendedTraining(11));Object.assign(g.player,NESTS[12]);assert.equal(g.zone(),12);assert.equal(g.steal(0),true);Object.assign(g.player,CORRAL);assert.equal(g.interact(),'deposit');for(let i=0;i<170;i++)g.update(.05);assert.equal(g.save.creatures[0].world,12);assert.equal(WORLDS[12].kind,'phoenix');assert.ok(g.saleValue(12)>=9500);const copy=cleanSave(g.save);assert.equal(copy.creatures[0].world,12);assert.ok(copy.seen[12]);
+ const old=freshSave();old.seen=old.seen.slice(0,12);old.visited=old.visited.slice(0,12);old.coins=8721;assert.equal(cleanSave(old).coins,8721);assert.equal(cleanSave(old).seen.length,WORLDS.length);
 });
 test('migration is repeatable, preserves room authorization, and allows storm races and saved pets',async()=>{
  const {db,call}=await boxDatabase();try{

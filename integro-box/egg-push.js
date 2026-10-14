@@ -1,7 +1,7 @@
 // Ephemeral race interactions. Only anonymous slots and bounded game coordinates are sent.
 // As with movement, this casual race uses client validation; it awards no currency.
 export const PUSH_RULES=Object.freeze({range:3.6,cooldown:3000,protection:1250,poseAge:700,eventAge:850});
-const finitePose=s=>s&&['x','y','z','yaw'].every(k=>Number.isFinite(s[k]))&&Math.abs(s.x)<=9.5&&s.y>=0&&s.y<=15&&s.z>=-628&&s.z<=25;
+const finitePose=s=>s&&['x','y','z','yaw'].every(k=>Number.isFinite(s[k]))&&Math.abs(s.x)<=9.5&&s.y>=0&&s.y<=15&&s.z>=-676&&s.z<=25;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export function createEggPush({client,getRoom,getRace,getRuntime,getAdapter,healthy=()=>true,now=Date.now,id=()=>crypto.randomUUID(),onState=()=>{},onEffect=()=>{}}){
  let channel=null,key='',connected=false,stopped=false,sequence=0,nextPush=0,protectedUntil=0,lastPose=0;
@@ -10,7 +10,7 @@ export function createEggPush({client,getRoom,getRace,getRuntime,getAdapter,heal
  function member(c,slot){return Number.isInteger(slot)&&slot>=1&&slot<=4&&c.room.players.some(p=>p.slot===slot);}
  function racing(c,slot){return c&&c.clock>=c.start&&!c.race.results?.[slot]?.finished;}
  function playing(c){return racing(c,c.room.slot)&&c.runtime.playing()&&!c.runtime.frozen?.();}
- function poseFor(slot,c){const entry=poses.get(slot);if(!entry||c.clock-entry.received>=PUSH_RULES.poseAge||!entry.playing)return null;const dt=Math.min(.18,Math.max(0,(c.clock-entry.at)/1000));return{...entry,x:Math.max(-9,Math.min(9,entry.x+entry.vx*dt)),z:Math.max(-623.2,Math.min(25,entry.z+entry.vz*dt))};}
+ function poseFor(slot,c){const entry=poses.get(slot);if(!entry||c.clock-entry.received>=PUSH_RULES.poseAge||!entry.playing)return null;const dt=Math.min(.18,Math.max(0,(c.clock-entry.at)/1000));return{...entry,x:Math.max(-9,Math.min(9,entry.x+entry.vx*dt)),z:Math.max(-671.2,Math.min(25,entry.z+entry.vz*dt))};}
  function target(c){if(!c||!playing(c))return null;const own=getAdapter()?.state();if(!finitePose(own)||own.z>3)return null;return c.room.players.filter(p=>p.slot!==c.room.slot&&racing(c,p.slot)).map(p=>({slot:p.slot,state:poseFor(p.slot,c)})).filter(p=>p.state&&p.state.z<=3&&Math.abs(p.state.y-own.y)<1.6&&distance(own,p.state)<=PUSH_RULES.range).sort((a,b)=>distance(own,a.state)-distance(own,b.state))[0]||null;}
  function state(){const c=context(),visible=!!c&&racing(c,c.room.slot)&&c.runtime.active(),other=target(c),remaining=Math.max(0,nextPush-now());return{visible,ready:visible&&connected&&!!other&&remaining===0&&playing(c),connected,target:other?.slot||null,remaining};}
  function refresh(){onState(state());}
