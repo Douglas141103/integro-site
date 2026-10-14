@@ -169,3 +169,14 @@
 @keyframes egg-income-coin{50%{transform:scale(1.24)}100%{transform:scale(1)}}
 @media(max-height:540px){.egg-immersive .egg-income-float>span{font-size:16px}.egg-immersive .egg-income-float svg{width:15px;height:15px}.egg-immersive .egg-wallet-gain{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.egg-immersive .egg-income-float>span{animation:none}.egg-immersive .egg-money.earning>svg{animation:none}}
+
+
+/* Training stays inside the HUD as one clock and a speed gain. */
+.egg-app.egg-immersive .egg-training{display:flex;align-items:center;gap:8px;top:70px;left:max(16px,env(safe-area-inset-left));right:auto;bottom:auto;transform:none;width:auto;max-width:calc(100% - 32px);padding:0;background:none;border:0;border-radius:0;box-shadow:none;pointer-events:none;color:#fff4b5;text-shadow:var(--hud-shadow);z-index:2}
+.egg-app.egg-immersive .egg-training-clock{width:34px;height:34px;filter:drop-shadow(0 1px 2px #15333c99);flex-shrink:0}
+.egg-app.egg-immersive #eggTrainFill{transition:stroke-dashoffset .1s linear}
+.egg-app.egg-immersive #eggTrainText{display:inline;margin:0;color:#fffdf1;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.egg-app.egg-immersive .egg-training-gain{display:inline;margin:0 0 0 5px;color:#d9ffaf;font-size:17px;font-weight:800;white-space:nowrap}
+.egg-app.egg-immersive .egg-training-gain small{font-size:11px;font-weight:700}
+@media(max-height:540px) and (orientation:landscape){.egg-app.egg-immersive .egg-training{top:61px;left:max(12px,env(safe-area-inset-left));gap:6px}.egg-app.egg-immersive .egg-training-clock{width:28px;height:28px}.egg-app.egg-immersive #eggTrainText{font-size:15px}.egg-app.egg-immersive .egg-training-gain{font-size:14px}}
+@media(max-width:520px) and (orientation:portrait){.egg-app.egg-immersive .egg-training{top:68px;left:12px;gap:6px}.egg-app.egg-immersive .egg-training-clock{width:28px;height:28px}.egg-app.egg-immersive #eggTrainText{font-size:15px}.egg-app.egg-immersive .egg-training-gain{font-size:14px}}
