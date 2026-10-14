@@ -156,3 +156,16 @@
  .egg-immersive .egg-training{bottom:222px;width:260px}
  .egg-immersive .egg-menu-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* Automatic creature income: floating numbers, no modal or text box. */
+.egg-immersive .egg-income-effects{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.egg-immersive .egg-income-float{position:absolute;pointer-events:none;transform:translate(-50%,-100%);white-space:nowrap}
+.egg-immersive .egg-income-float>span{display:flex;align-items:center;gap:3px;font-size:20px;font-weight:900;color:#fff2a0;text-shadow:0 2px 1px #694716,1px 0 2px #694716,-1px 0 2px #694716;animation:egg-income-rise 1.8s ease-out both}
+.egg-immersive .egg-income-float svg{width:19px;height:19px;fill:#e5ae42;stroke:#fff2a0;filter:drop-shadow(0 1px 1px #694716)}
+.egg-immersive .egg-money{position:relative}
+.egg-immersive .egg-wallet-gain{position:absolute;right:3px;top:100%;font-size:14px;font-weight:900;color:#d7ffad;text-shadow:var(--hud-shadow);pointer-events:none;white-space:nowrap}
+.egg-immersive .egg-money.earning>svg{animation:egg-income-coin .45s ease-out}
+@keyframes egg-income-rise{0%{opacity:0;transform:translateY(8px) scale(.8)}15%{opacity:1;transform:translateY(0) scale(1.05)}65%{opacity:1}100%{opacity:0;transform:translateY(-50px) scale(1)}}
+@keyframes egg-income-coin{50%{transform:scale(1.24)}100%{transform:scale(1)}}
+@media(max-height:540px){.egg-immersive .egg-income-float>span{font-size:16px}.egg-immersive .egg-income-float svg{width:15px;height:15px}.egg-immersive .egg-wallet-gain{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.egg-immersive .egg-income-float>span{animation:none}.egg-immersive .egg-money.earning>svg{animation:none}}
