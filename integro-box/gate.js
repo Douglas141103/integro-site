@@ -32,11 +32,11 @@ try {
   if(!unloaded)await import('./egg-cloud.js?v=20261013-egg1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}
-  if(!unloaded)await script('./bounce-core.js?v=20261014-bounce2');
-  if(!unloaded)await script('./bounce-render.js?v=20261014-bounce2');
-  if(!unloaded)await script('./bounce.js?v=20261014-bounce2');
+  if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
+  if(!unloaded)await script('./bounce-render.js?v=20261014-bounce3');
+  if(!unloaded)await script('./bounce.js?v=20261014-bounce3');
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261013-dance1');startUsage();}
-  if(!unloaded)await script('./catalog.js?v=20261014-bounce2');
+  if(!unloaded)await script('./catalog.js?v=20261014-bounce3');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

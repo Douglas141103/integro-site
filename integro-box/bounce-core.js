@@ -44,12 +44,34 @@ function makeLevel(index){
  ];
  const route=extensions[Math.floor(index/4)],extraA=original.map((_,k)=>route[(k+index%4)%route.length]),extraB=original.map((_,k)=>route[(k+5+index%4)%route.length]);
  const seq=[...original,'meadow','gate',...extraA,'hill','meadow',...extraB,'gate'];
- const level={index,name,theme,width:420+seq.length*400+520,height:950,terrain:[],platforms:[],gaps:[],hazards:[],springs:[],gates:[],checks:[],drops:[],stars:[],signs:[],spawn:{x:95,y:390},goal:null};
+ seq.splice(4,0,'mountain');if(index>=8)seq.splice(Math.floor(seq.length*.7),0,'mountain');
+ const level={index,name,theme,width:420+seq.length*400+520,height:950,top:-80,mountains:[],blocks:[],terrain:[],platforms:[],gaps:[],hazards:[],springs:[],gates:[],checks:[],drops:[],stars:[],signs:[],spawn:{x:95,y:390},goal:null};
  const base=430,addDrop=(x,y)=>level.drops.push({x,y,taken:false});
  // Smooth height fields give hills their curved silhouette and collision surface.
  level.terrain.push({x:0,w:420,y:base,amp:0,kind:'start'});
+ let cursor=420;
  seq.forEach((kind,k)=>{
-  const x=420+k*400,amp=kind==='hill'?60:kind==='meadow'?26:kind==='steps'?15:9;
+  const x=cursor;cursor+=kind==='mountain'?1200:400;
+  if(kind==='mountain'){
+   const id=level.mountains.length,steps=index<4?3:index<12?4:5,rise=index<4?180:190,height=steps*rise;
+   const block={x:x+400,y:base-height,w:230,h:height+500,kind:'mountain'};
+   const mountain={id,x,w:1200,steps,rise,block,leaves:[]};
+   level.mountains.push(mountain);level.blocks.push(block);level.top=Math.min(level.top,block.y-160);
+   level.terrain.push({x,w:1200,y:base,amp:0,kind:'mountain'});
+   level.checks.push({x:x+35,y:base,active:false});
+   for(let j=0;j<steps;j++){
+    const sx=x+(j===steps-1?250:130+(j%2)*120),sy=base-j*rise;
+    const leaf={x:sx,y:sy,surface:true,width:62,boost:940,mountainId:id,step:j,pulse:0};
+    mountain.leaves.push(leaf);level.springs.push(leaf);
+    if(j>0)level.platforms.push({x:sx-62,y:sy,w:124,h:14,kind:'spring-leaf',oneWay:true});
+    addDrop(sx-20,sy-48);addDrop(sx+20,sy-68);
+   }
+   level.checks.push({x:block.x+100,y:block.y,active:false,spawn:{x:block.x+125,y:block.y-19}});
+   level.signs.push({x:x+50,y:base,text:'↑ FOLHAS'},{x:block.x+155,y:block.y,text:'CUME →'});
+   for(let j=0;j<4;j++)addDrop(block.x+25+j*49,block.y-52);
+   return;
+  }
+  const amp=kind==='hill'?60:kind==='meadow'?26:kind==='steps'?15:9;
   level.terrain.push({x,w:400,y:base,amp,kind});
   if(kind==='gap'){level.gaps.push({x:x+150,w:110+(index%4)*9});}
   if(['spikes','meadow','hill'].includes(kind)&&!(index===0&&k<2)){
@@ -73,12 +95,13 @@ function makeLevel(index){
   for(let n=0;n<4;n++){let dx=x+45+n*90;const gap=level.gaps.find(g=>dx>g.x-20&&dx<g.x+g.w+20);addDrop(dx,base-55-(gap?40:Math.sin(n/3*Math.PI)*35)-amp);}
   if(['steps','lift','spring','crystal'].includes(kind)){const p=level.platforms.at(-1);addDrop(p.x+p.w*.5,p.y-38);}
  });
- const end=420+seq.length*400;level.terrain.push({x:end,w:520,y:base,amp:0,kind:'end'});level.goal={x:end+320,y:base-55};
+ const end=cursor;level.width=end+520;level.terrain.push({x:end,w:520,y:base,amp:0,kind:'end'});level.goal={x:end+320,y:base-55};
  // Anchor every spike tip above the curved surface; leave switches and landings clear.
  for(const a of level.hazards)if(a.kind==='spike')a.y=Math.min(terrainY(level,a.x),terrainY(level,a.x+a.w))-a.h;
  // Three optional crystals reward exploration on upper ledges.
  const platforms=level.platforms.filter(p=>p.kind!=='stone');
  for(let n=0;n<3;n++){const p=platforms[Math.floor((platforms.length-1)*n/2)];let x=p?p.x+p.w*.5:800+n*800,y=p?p.y-40:340;if(level.stars.some(s=>Math.abs(s.x-x)<10)){x+=70;y-=10;}level.stars.push({x,y,taken:false});}
+ if(level.mountains.length){const m=level.mountains[0];level.stars[1]={x:m.block.x+65,y:m.block.y-45,taken:false};}
  level.signs.push({x:220,y:base,text:index===0?'→  SALTE E EXPLORE':'→'},{x:end+160,y:base,text:'CHEGADA'});
  return level;
 }
@@ -100,10 +123,11 @@ function touchesSpikes(p,a){
  return false;
 }
 class Run{
- constructor(index){this.level=makeLevel(index);this.p={...this.level.spawn,vx:0,vy:0,r:17,grounded:false,angle:0,coyote:0};this.time=0;this.ticks=0;this.deaths=0;this.collected=0;this.crystals=0;this.status='playing';this.check={...this.level.spawn};this.invulnerable=0;this.jumpBuffer=0;this.jumpHeld=false;this.springCooldown=0;this.events=[];this.finished=false;}
- event(type,x=this.p.x,y=this.p.y){this.events.push({type,x,y});}
- respawn(){this.deaths++;Object.assign(this.p,this.check,{vx:0,vy:0,grounded:false,coyote:0});this.invulnerable=1.3;this.jumpBuffer=0;this.event('respawn');}
- update(dt,input={}){if(this.status!=='playing')return;dt=clamp(dt,0,1/30);this.time+=dt;this.ticks++;this.invulnerable=Math.max(0,this.invulnerable-dt);this.springCooldown=Math.max(0,this.springCooldown-dt);const l=this.level,p=this.p;
+ constructor(index){this.level=makeLevel(index);this.p={...this.level.spawn,vx:0,vy:0,r:17,grounded:false,angle:0,coyote:0};this.time=0;this.ticks=0;this.deaths=0;this.collected=0;this.crystals=0;this.status='playing';this.check={...this.level.spawn};this.invulnerable=0;this.jumpBuffer=0;this.jumpHeld=false;this.springCooldown=0;this.events=[];this.finished=false;this.pop=null;}
+ event(type,x=this.p.x,y=this.p.y,detail={}){this.events.push({type,x,y,...detail});}
+ popBall(){if(this.status!=='playing')return;this.status='popping';this.pop={x:this.p.x,y:this.p.y,elapsed:0,duration:.72};this.p.vx=0;this.p.vy=0;this.jumpBuffer=0;this.event('pop');}
+ respawn(){this.deaths++;this.status='playing';this.pop=null;Object.assign(this.p,this.check,{vx:0,vy:0,grounded:false,coyote:0,platform:null});this.invulnerable=1.3;this.jumpBuffer=0;this.springCooldown=0;this.event('respawn');}
+ update(dt,input={}){dt=clamp(dt,0,1/30);if(this.status==='popping'){this.pop.elapsed+=dt;if(this.pop.elapsed>=this.pop.duration)this.respawn();return;}if(this.status!=='playing')return;this.time+=dt;this.ticks++;this.invulnerable=Math.max(0,this.invulnerable-dt);this.springCooldown=Math.max(0,this.springCooldown-dt);const l=this.level,p=this.p;
   const jump=!!input.jump;if(jump&&!this.jumpHeld)this.jumpBuffer=.14;this.jumpHeld=jump;this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);
   for(const a of l.platforms){const oldX=a.x,oldY=a.y;if(a.kind==='moving'){a.x=a.originX+Math.sin(this.time*1.3+a.phase)*a.rangeX;a.y=a.originY+Math.sin(this.time*1.3+a.phase)*a.rangeY;}a.dx=a.x-oldX;a.dy=a.y-oldY;}
   if(p.platform&&p.grounded){p.x+=p.platform.dx||0;p.y+=p.platform.dy||0;}
@@ -114,6 +138,15 @@ class Run{
   // Releasing the jump shortens the arc; holding gives the full leap.
   if(!jump&&this.springCooldown<=0&&p.vy< -280)p.vy+=1500*dt;
   const prevY=p.y,prevX=p.x;p.vy=Math.min(850,p.vy+1370*dt);p.x=clamp(p.x+p.vx*dt,p.r,l.width-p.r);p.y+=p.vy*dt;p.angle+=(p.x-prevX)/p.r;p.grounded=false;p.platform=null;
+  // Solid cliff faces require the leaf route; there is no passage through the mountain.
+  for(const b of l.blocks){
+   if(p.x+p.r>b.x&&p.x-p.r<b.x+b.w&&p.y+p.r>b.y&&p.y-p.r<b.y+b.h){
+    if(p.vy>=0&&prevY+p.r<=b.y+5){p.y=b.y-p.r;p.vy=0;p.grounded=true;}
+    else if(prevX<=b.x){p.x=b.x-p.r;p.vx=0;}
+    else if(prevX>=b.x+b.w){p.x=b.x+b.w+p.r;p.vx=0;}
+    else if(p.vy<0&&prevY-p.r>=b.y+b.h){p.y=b.y+b.h+p.r;p.vy=0;}
+   }
+  }
   for(const gate of l.gates){
    // Only physical contact with the handle presses the lever, never proximity or a UI click.
    if(!gate.open&&Math.hypot(p.x-gate.leverX,p.y-gate.leverY)<p.r+10){gate.open=true;this.event('switch',gate.switchX,gate.switchY);}
@@ -121,12 +154,15 @@ class Run{
    const barrier={x:gate.x,y:gate.y,w:gate.w,h:gate.h*(1-gate.lift)};
    if(barrier.h>0&&circleRect(p,barrier)){p.x=prevX<gate.x?gate.x-p.r:gate.x+gate.w+p.r;p.vx=0;}
   }
-  for(const a of l.platforms){if(p.x+p.r>a.x&&p.x-p.r<a.x+a.w){if(p.vy>=0&&prevY+p.r<=a.y-(a.dy||0)+7&&p.y+p.r>=a.y){p.y=a.y-p.r;p.vy=0;p.grounded=true;p.platform=a;}else if(p.vy<0&&prevY-p.r>=a.y+a.h-3&&p.y-p.r<a.y+a.h){p.y=a.y+a.h+p.r;p.vy=30;}}}
+  for(const a of l.platforms){if(p.x+p.r>a.x&&p.x-p.r<a.x+a.w){if(p.vy>=0&&prevY+p.r<=a.y-(a.dy||0)+7&&p.y+p.r>=a.y){p.y=a.y-p.r;p.vy=0;p.grounded=true;p.platform=a;}else if(!a.oneWay&&p.vy<0&&prevY-p.r>=a.y+a.h-3&&p.y-p.r<a.y+a.h){p.y=a.y+a.h+p.r;p.vy=30;}}}
   const ground=terrainY(l,p.x);if(Number.isFinite(ground)&&p.y+p.r>=ground&&prevY-p.r<ground+24&&p.vy>=0){p.y=ground-p.r;p.vy=0;p.grounded=true;p.platform=null;}
-  for(const a of l.springs)if(this.springCooldown<=0&&Math.abs(p.x-a.x)<37&&p.y+p.r>=a.y-16&&p.y<a.y+25&&p.vy>=0){p.vy=-900;p.grounded=false;p.coyote=0;this.springCooldown=.55;this.event('spring',a.x,a.y);}
-  for(const a of l.hazards){if(a.kind==='beetle'){a.x=a.origin+Math.sin(this.time*a.speed)*a.range;a.y=terrainY(l,a.x)-a.h;}if(this.invulnerable<=0&&(a.kind==='spike'?touchesSpikes(p,a):circleRect(p,a))){this.event('poof');this.respawn();return;}}
-  if(p.y>l.height){this.event('poof');this.respawn();return;}
-  for(const c of l.checks)if(!c.active&&Math.abs(p.x-c.x)<40&&Math.abs(p.y-c.y)<100){c.active=true;this.check={x:c.x+25,y:terrainY(l,c.x+25)-p.r-2};this.event('checkpoint',c.x,c.y);}
+  for(const a of l.springs){a.pulse=Math.max(0,(a.pulse||0)-dt);
+   const contact=a.surface?prevY+p.r<=a.y+9&&p.y+p.r>=a.y-3&&p.y<a.y: p.y+p.r>=a.y-16&&p.y<a.y+25;
+   if(this.springCooldown<=0&&Math.abs(p.x-a.x)<(a.width||37)&&contact&&p.vy>=0){p.y=a.surface?a.y-p.r:p.y;p.vy=-(a.boost||900);p.grounded=false;p.coyote=0;this.springCooldown=.55;a.pulse=.4;this.event('spring',a.x,a.y,{mountainId:a.mountainId,step:a.step});}
+  }
+  for(const a of l.hazards){if(a.kind==='beetle'){a.x=a.origin+Math.sin(this.time*a.speed)*a.range;a.y=terrainY(l,a.x)-a.h;}if(this.invulnerable<=0&&(a.kind==='spike'?touchesSpikes(p,a):circleRect(p,a))){this.popBall();return;}}
+  if((p.y>620&&l.gaps.some(g=>p.x>g.x&&p.x<g.x+g.w))||p.y>l.height){this.popBall();return;}
+  for(const c of l.checks)if(!c.active&&Math.abs(p.x-c.x)<40&&Math.abs(p.y-c.y)<100){c.active=true;this.check=c.spawn?{...c.spawn}:{x:c.x+25,y:terrainY(l,c.x+25)-p.r-2};this.event('checkpoint',c.x,c.y);}
   for(const d of l.drops)if(!d.taken&&Math.hypot(p.x-d.x,p.y-d.y)<p.r+15){d.taken=true;this.collected++;this.event('drop',d.x,d.y);}
   for(const s of l.stars)if(!s.taken&&Math.hypot(p.x-s.x,p.y-s.y)<p.r+19){s.taken=true;this.crystals++;this.event('star',s.x,s.y);}
   if(Math.hypot(p.x-l.goal.x,p.y-l.goal.y)<62){this.status='won';this.finished=true;this.event('win');}
