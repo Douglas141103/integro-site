@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261013-box10';
+  const VERSION = '20261014-egg13-refresh1';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
@@ -34,6 +34,8 @@
       window.BoxGoSnake?.persist();
       window.BoxInterDance?.persist();
       window.dispatchEvent(new Event('pagehide'));
+      // Local game hooks persist first; then synchronize the family profile.
+      await Promise.race([window.BoxEggCloud?.flush(), new Promise(resolve => setTimeout(resolve, 4000))]);
     })();
     return savePromise;
   }
