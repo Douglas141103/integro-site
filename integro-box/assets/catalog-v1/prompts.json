@@ -68,5 +68,11 @@
     "id": "memoria-em-ingles",
     "name": "Memória em Inglês",
     "prompt": "Use case: logo-brand. Create ONE polished original children's browser game catalog logo asset. Exact large readable title in Brazilian Portuguese: \"Memória em Inglês\". Subject: two matching playful flashcards with a cute cat and the word CAT, with a little friendly speech bubble. Cohesive premium playful cartoon / soft 3D toy illustration, bold friendly dimensional lettering with a dark navy outline and gentle highlights. Palette: cyan, blue and yellow. Transparent background, no rectangle, no scenery filling the background. Wide horizontal emblem centered, roughly 3:2 composition, generous transparent margin, title occupies lower half and is readable at thumbnail size; long titles can use two neatly stacked lines. All shapes fully inside frame. Only the exact title text apart from educational letters described; no slogan, no brand references, no mockup, no watermark. It belongs to the Integro Box family of educational games. Preserve Portuguese accents exactly."
+  },
+  {
+    "id": "bounce-tegro",
+    "name": "Bounce Tegro",
+    "tool": "Criar imagem (built-in)",
+    "prompt": "Use case: logo-brand. Create the official game logo and 3:2 cover for \"Bounce Tegro\", exact spelling, in the same polished toy-like cartoon logo family as the supplied Integro Box Pegue o Ovo reference. Brand new original emblem: a glossy cheerful round red bouncing ball with small expressive eyes, springing above a grassy floating island, a large bright flower and three little golden teardrop collectibles, blue sky glow. Bold huge dimensional rounded letters \"Bounce\" on top and \"Tegro\" underneath, golden yellow and fresh lime with thick navy outlines, clean highlights, legible at thumbnail size. Composition centered and compact, no clipping, no other words, no watermark. Deep navy vignette background matching the catalogue cover family. This is the logo; the actual gameplay is colorful illustrated side-scrolling 2D."
   }
 ]
