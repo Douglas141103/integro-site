@@ -1,9 +1,10 @@
-import {supabase,requireFamily} from './access.js?v=20261013-account1';
+import {supabase,requireFamily} from './access.js?v=20261015-chat1';
 const message=document.getElementById('boxGateMessage');
 let unloaded=false;
 function lock(){
  if(unloaded)return;unloaded=true;
  document.body.classList.add('box-locked');
+ window.BoxChat?.stop();
  window.BoxPresence?.stop();
  window.BoxGoSnake?.stop();
  window.BoxBounce?.stop();
@@ -21,14 +22,17 @@ try {
   window.BoxStorage={getItem:k=>localStorage.getItem('box:'+user.id+':'+k),setItem:(k,v)=>localStorage.setItem('box:'+user.id+':'+k,v),removeItem:k=>localStorage.removeItem('box:'+user.id+':'+k)};
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
   message.textContent='Preparando os jogos…';
-  const {startPresence}=await import('./presence.js?v=20261013-account1');
+  const {mountPlayerProfile}=await import('./player-profile.js?v=20261015-chat1');
+  mountPlayerProfile(user);
+  const {startPresence}=await import('./presence.js?v=20261015-chat1');
   if(!unloaded)startPresence(user);
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261013-craft2');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   await script('./egg.js?v=20261014-egg14-powers1');
   await script('./worlds.js?v=20261013-egg1');
-  await import('./multiplayer.js?v=20261014-egg14-powers1');
+  await import('./multiplayer.js?v=20261015-chat1');
+  if(!unloaded)await import('./chat.js?v=20261015-chat1');
   if(!unloaded)await import('./egg-cloud.js?v=20261014-egg14-powers1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}

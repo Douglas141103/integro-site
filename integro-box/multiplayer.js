@@ -1,4 +1,4 @@
-import {supabase} from './access.js?v=20261013-account1';
+import {supabase} from './access.js?v=20261015-chat1';
 const $=id=>document.getElementById(id);
 const titles={egg:'Pegue o Ovo',bairro:'Meu Bairro',craft:'IntegroCraft'};
 const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
@@ -7,7 +7,7 @@ let room=null,timer=null,busy=false,version=0,gesture='',gestureUntil=0,listVers
 const panel=document.createElement('aside');panel.id='boxOnline';panel.setAttribute('aria-label','Salas multiplayer');
 panel.innerHTML=`<button id="boxOnlineToggle" aria-expanded="false" aria-controls="boxOnlinePanel">Salas <span aria-hidden="true">↗</span></button>
 <section id="boxOnlinePanel" hidden><header><h2>Juntos na aventura</h2><button id="boxOnlineClose" aria-label="Fechar painel">×</button></header>
-<p>Salas públicas ou por convite · até 4 jogadores · sem chat livre</p>
+<p>Salas públicas ou por convite · até 4 jogadores · chat com revisão por IA</p>
 <div id="boxRoomSetup"><label for="boxGame">Escolha o mundo</label><select id="boxGame"><option value="egg">Pegue o Ovo</option><option value="bairro">Meu Bairro</option><option value="craft">IntegroCraft</option></select><section class="boxPublic"><h3>Salas públicas</h3><p>Encontre outros jogadores com login da família. Pessoas que você não conhece podem entrar.</p><div class="boxRoomActions"><button id="boxBrowse">Atualizar salas</button><button id="boxCreatePublic">Criar sala pública</button></div><div id="boxPublicList" aria-live="polite"></div></section><details class="boxPrivate"><summary>Sala privada por convite</summary><button id="boxCreate">Criar sala privada</button>
 <form id="boxJoinForm"><label for="boxCode">Código do convite</label><input id="boxCode" maxlength="14" autocomplete="off" autocapitalize="characters" placeholder="12 letras e números" required><button>Entrar com convite</button></form><small>O responsável compartilha o código apenas com famílias conhecidas. Cada jogador entra com uma conta de família diferente.</small></details></div>
 <div id="boxRoomActive" hidden><strong id="boxRoomTitle"></strong><p>Seu apelido: <b id="boxAlias"></b></p><p id="boxRoomVisibility"></p><div id="boxInviteSection"><label>Código da sala <output id="boxInvite"></output></label><button id="boxCopy">Copiar código</button></div><ul id="boxPlayers"></ul><div class="boxGestures"><button id="boxWave">👋 Acenar</button><button id="boxCheer">🙌 Comemorar</button></div><button id="boxReturn">Voltar ao mundo da sala</button><button id="boxLeave">Sair da sala</button><small>Ao sair, quem criou a sala a encerra para todos. A sala dura até 4 horas. As construções do grupo ficam apenas nesta sala; conquistas e desafios individuais continuam separados.</small></div>

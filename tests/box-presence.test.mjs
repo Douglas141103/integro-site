@@ -13,6 +13,7 @@ async function setup(){
  const client={channel(topic,opts){calls.push(['channel',topic,opts]);return channel},async removeChannel(){calls.push(['remove'])}};
  const context=vm.createContext({window:dom.window,document:doc,crypto:webcrypto,TextEncoder,Uint8Array,supabase:client});
  vm.runInContext((await read('integro-box/presence.js')).replace(/^import .*;\n/gm,'').replace(/export /g,''),context);
+ doc.getElementById('boxUserName').textContent='Ana <img src=x onerror=alert(1)>';
  const api=context.startPresence({id:'synthetic-user-a',boxProfile:{full_name:'Ana <img src=x onerror=alert(1)>'}},{client,doc,win:dom.window});await api.ready;
  const settle=()=>new Promise(r=>setImmediate(r));
  return {dom,doc,context,api,calls,async status(s){callback(s);await settle()},sync(s){state=s;events.sync()},async hide(value){hidden=value;doc.dispatchEvent(new dom.window.Event('visibilitychange'));await settle()},settle};

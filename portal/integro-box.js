@@ -10,7 +10,7 @@ function date(value){return value?new Intl.DateTimeFormat('pt-BR',{timeZone:'Ame
 function day(value){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Manaus',year:'numeric',month:'2-digit',day:'2-digit'}).format(value);}
 function empty(el,text){el.replaceChildren(node('p',text,'empty'));}
 function feedback(text,error=false){$('feedback').textContent=text;$('feedback').classList.toggle('error',error);}
-function clear(){generation++;people=[];$('management').hidden=true;$('managerName').textContent='';$('profile').replaceChildren(new Option('Todos os perfis',''));$('search').value='';for(const id of ['people','sessions','rooms','gamesChart','daysChart'])$(id).replaceChildren();}
+function clear(){generation++;people=[];$('management').hidden=true;$('managerName').textContent='';$('profile').replaceChildren(new Option('Todos os perfis',''));$('search').value='';$('chatReviewList').replaceChildren();$('chatReviewStatus').textContent='';for(const id of ['people','sessions','rooms','gamesChart','daysChart'])$(id).replaceChildren();}
 function renderPeople(){
  const q=$('search').value.toLocaleLowerCase('pt-BR');const list=people.filter(p=>(p.full_name+' '+p.email).toLocaleLowerCase('pt-BR').includes(q));$('people').replaceChildren();
  for(const p of list){const tr=node('tr');const identity=node('td');identity.append(node('strong',p.full_name||'Perfil sem nome'),node('small',p.email||''),node('small',roleNames[p.role]||p.role));tr.append(identity);
@@ -65,3 +65,16 @@ try{
  $('management').hidden=false;await load();
  setInterval(()=>{if(!document.hidden&&!loading&&userId&&!document.querySelector('#sessions details[open]'))void load();},30000);
 }catch(e){feedback(e.message,true);}
+
+let chatReviewGeneration=0;
+async function reviewChat(hide=null){
+ const stamp=++chatReviewGeneration,uid=userId;if(!uid)return;
+ $('chatReviewStatus').textContent='Carregando a supervisão…';
+ const {data,error}=await supabase.rpc('box_chat_review',{p_hide:hide});
+ if(stamp!==chatReviewGeneration||userId!==uid)return;
+ if(error){$('chatReviewStatus').textContent='Supervisão indisponível. A ativação do chat no banco ainda pode estar pendente.';return;}
+ $('chatReviewList').replaceChildren();
+ for(const m of data.messages){const article=node('article'),title=node('strong',m.code+' · '+(m.student_name||'Jogador')+' · '+date(m.created_at)),body=node('p',m.body),info=node('small',({approved:'Aprovada',blocked:'Bloqueada',pending:'Em análise',error:'Não publicada'}[m.status]||m.status)+' · '+m.reports+' denúncia(s)');article.append(title,body,info);if(m.status==='approved'){const button=node('button','Ocultar mensagem');button.type='button';button.onclick=()=>void reviewChat(m.id);article.append(button);}article.style.cssText='padding:12px;border-bottom:1px solid #ddd;overflow-wrap:anywhere';$('chatReviewList').append(article);}
+ $('chatReviewStatus').textContent=data.messages.length?'Mensagens dos últimos 7 dias.':'Nenhuma mensagem neste período.';
+}
+$('chatReviewRefresh').onclick=()=>void reviewChat();

@@ -223,3 +223,24 @@ A 14ª pista, Cidadela do Tempo, acrescenta a Coruja Cronos, relógios, ampulhet
 Migração `20261014230000_box_egg_time.sql` aplicada no Supabase oficial em 14/10/2026, depois da pista Tempestade. Expande posições até -676, permite mundo 13 no salvamento e corridas, e anuncia 14 mundos / 52 acessórios / 8 habilidades. O SQL Editor confirmou posições, salvamento da pista 14 e poderes ativados (três resultados verdadeiros).
 
 Validação: 32 testes passaram (19 de regras, inventário, física, HUD, corridas e migrações, cinco de atualização do portal e oito de regressão da expansão), além da inspeção estrutural dos 38 novos modelos e dos 42 ovos. Sem verificação gráfica em aparelhos reais nesta sessão. O manifesto `20261014-egg14-powers1` solicita a atualização automática das abas conectadas após a publicação.
+
+## Aluno no perfil e chat moderado — 15/10/2026
+
+`player-profile.js` usa apenas alunos vinculados em `student_guardians` ao usuário autenticado. Com um vínculo, exibe esse aluno; com vários, pede seleção (persistida neste navegador). Sem vínculo, exibe “Jogador”. Não usa o nome do responsável como fallback. A troca de aluno sai da sala. O progresso continua associado à conta familiar, preservando os saves existentes; esta mudança não cria saves individuais por aluno. A presença global continua enviando apenas seu payload anônimo.
+
+O botão Chat abre um painel recolhível nas salas existentes. A identificação é inicial do nome validado pelo banco + sequência única, persistente por conta/aluno (exemplo A10001). A consulta dos colegas retorna somente código, texto aprovado, ID da mensagem e horário; nomes/IDs escolares não são enviados. A gestão autorizada pode consultar até 100 registros recentes e ocultar mensagens. Diretores consultam somente alunos da sua escola; administradores têm visão geral. A troca de perfil/saída/logout limpa o painel. O texto é renderizado via `textContent`.
+
+### Ativação pendente em produção
+
+1. Aplicar `supabase/migrations/20261015010000_box_moderated_chat.sql` no projeto `kvdfnmwuxmpalsyuytwt` depois das migrações existentes. É idempotente; não altera cadastros, vínculos ou saldos.
+2. Publicar a Edge Function `box-chat` com `index.ts` e `moderation.mjs`. Manter verificação JWT habilitada. A função também verifica `auth.getUser()`.
+3. Confirmar o segredo existente `OPENAI_API_KEY` no Supabase (sem expor/copiar seu valor). `BOX_CHAT_MODEL` é opcional, padrão `gpt-4.1-mini`. Chaves de serviço/API nunca chegam ao cliente.
+4. Validar duas contas de teste na mesma sala: mensagem respeitosa aprovada, telefone/ofensa bloqueados, terceiros sem acesso, erro da API sem entrega. Confirmar análise real antes de anunciar o chat ativo.
+
+Cada tentativa válida reservada é enviada à Moderation API (`omni-moderation-latest`). Se não bloqueada por ela ou pelo filtro de contatos, passa à Responses API com saída estrita e as seis mensagens aprovadas mais recentes da sala. Respostas incompletas, recusas, timeout, chave ausente ou erro de conexão não publicam. `store:false` na Responses API; sem nomes/IDs escolares no contexto enviado. O código não usa recursos de chat/completion no navegador. Referências oficiais: https://developers.openai.com/api/docs/guides/moderation e https://developers.openai.com/api/docs/guides/structured-outputs.
+
+Somente a função com papel de serviço reserva e conclui mensagens, sob bloqueio por usuário. Limite de uma tentativa a cada 3 segundos e dez/minuto; UUID de requisição evita nova análise/publicação da mesma tentativa. A finalização revalida presença/sala e expira após 60 segundos. Tabelas privadas sem acesso direto a anon/authenticated; o RPC público só lê aprovadas ou registra denúncia. Não há mensagens privadas. A moderação automática não garante detecção perfeita e denúncias exigem acompanhamento humano.
+
+Histórico consultável: últimos sete dias, com limpeza de registros antigos nas consultas do chat/painel. Sem tráfego, não há promessa de eliminação no instante exato do vencimento; configurar tarefa de limpeza periódica para uma política de eliminação com prazo estrito. O encerramento/limpeza das salas existentes também remove mensagens por cascata.
+
+Testes sintéticos: `node --test tests/box-chat.test.mjs tests/box-chat-ui.test.mjs tests/box-player-profile.test.mjs tests/box-presence.test.mjs`. Conferem permissões reais em PGlite, isolamento, associação aluno/responsável, envio idempotente, revogação, denúncia, escopo da direção, saídas da API simuladas e UI em jsdom. Não substituem validação da API real nem teste visual em aparelho.

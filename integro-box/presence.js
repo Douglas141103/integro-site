@@ -1,4 +1,4 @@
-import {supabase} from './access.js?v=20261013-account1';
+import {supabase} from './access.js?v=20261015-chat1';
 
 // One ephemeral key per account; names, emails and profile IDs never enter the channel.
 export async function accountPresenceKey(id,webCrypto=crypto){
@@ -10,7 +10,8 @@ export function countOnline(state){
 }
 export function startPresence(user,{client=supabase,doc=document,win=window,makeKey=accountPresenceKey}={}){
  const name=doc.getElementById('boxUserName'),label=doc.getElementById('boxOnlineCount'),badge=doc.getElementById('boxPresence');
- name.textContent=user.boxProfile?.full_name?.trim()||user.user_metadata?.full_name?.trim()||user.user_metadata?.name?.trim()||'Minha conta';
+ // The player-profile module owns the private student label.
+ if(!name.textContent.trim())name.textContent='Jogador';
  let channel,stopped=false,connected=false,synced=false,operation=Promise.resolve();
  function unavailable(message='Conectando…'){label.textContent=message;badge.dataset.state='pending';}
  function render(){if(stopped||!connected||!synced)return;const n=countOnline(channel.presenceState());label.textContent=n+' '+(n===1?'pessoa online':'pessoas online');badge.dataset.state='online';}
