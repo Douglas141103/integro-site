@@ -57,6 +57,7 @@ test('catalog, controls, pause, account storage, returning home and logout work 
   const key=k=>f.w.document.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));key('ArrowRight');assert.equal(f.api.getState().run.lane,1);key('ArrowUp');assert(f.api.getState().run.jump>0);f.frame(100);key('Escape');const time=f.api.getState().run.time;f.frame(10000);assert.equal(f.api.getState().run.time,time,'pause freezes simulation');
   f.click('[data-resume]');f.w.dispatchEvent(new f.w.Event('blur'));assert.equal(f.api.getState().mode,'pause');f.click('[data-resume]');f.w.document.getElementById('rushCanvas').setPointerCapture=()=>{};
   const pointer=(type,x,y)=>{const event=new f.w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{pointerId:1,clientX:x,clientY:y});f.w.document.getElementById('rushCanvas').dispatchEvent(event);};pointer('pointerdown',100,100);pointer('pointermove',40,102);assert.equal(f.api.getState().run.lane,0);
+  key('Escape');f.click('[data-panel="shop"]');assert.equal(f.w.document.getElementById('rushCanvas').parentElement.id,'rushPreviewStage');assert.equal(f.w.document.querySelectorAll('[data-rush-thumbnail]').length,24);f.click('[data-slot="head"]');assert.equal(f.w.document.querySelectorAll('[data-rush-thumbnail]').length,6);f.click('[data-resume]');assert.equal(f.w.document.getElementById('rushCanvas').parentElement.id,'rushApp');assert.equal(f.api.getState().mode,'');
   f.api.persist();assert(f.storage.get('integro-rush-v1'));f.click('#brandHome');assert(!f.api.getState().active);assert(!f.w.document.getElementById('lobby').classList.contains('hidden'));
   const ids=[...f.w.document.querySelectorAll('[id]')].map(x=>x.id);assert.equal(new Set(ids).size,ids.length);
   await f.api.open();f.api.stop();await f.api.open();assert(!f.api.getState().active);
@@ -70,7 +71,7 @@ test('logout while opening cannot reopen the game; WebGL failure gives a usable 
 });
 
 test('all five 3D environments and 24 equipped items build with finite transforms and bounded object counts',()=>{
- const scene=Object.create(RushScene.prototype);Object.assign(scene,{geometries:new Map(),materials:new Map(),scene:new T.Scene(),world:new T.Group(),objects:new Map(),scenery:[],particles:[],quality:'low',camera:new T.PerspectiveCamera(59,1,.1,270),renderer:{render(){},dispose(){}}});scene.scene.add(scene.world);
+ const renderer={shadowMap:{},setPixelRatio(){},setSize(){},render(){},dispose(){}};const scene=new RushScene({clientWidth:900,clientHeight:600},'low',{rendererFactory:()=>renderer});
  const p=clean(null);p.coins=999999;
  for(const item of SHOP){purchase(p,item.id);const run=new Run((SHOP.indexOf(item)%5)*3);scene.setLevel(run,p);for(const time of[0,12,62,122,182,239]){run.time=time;scene.draw(run,time);scene.scene.updateMatrixWorld(true);let objects=0;scene.world.traverse(o=>{objects++;assert(o.position.toArray().every(Number.isFinite));assert(o.scale.toArray().every(Number.isFinite));});assert(objects<700);assert(scene.objects.size<100);assert.equal(scene.scenery.length,12);}}
  scene.dispose();

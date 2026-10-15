@@ -1,5 +1,18 @@
 # Integro Box
 
+## Integro Rush — acabamento cartoon (rush-art2)
+
+Personagem remodelado com superfícies de perfil, seis malhas com skinning e esqueleto de 17 ossos. Cinco animações (corrida, repouso, salto, deslize e impacto) usam AnimationMixer e transições; articulações de joelho/cotovelo, ajuste dos pés ao chão, inclinação nas curvas, elasticidade no salto e compressão ao aterrissar. O modelo inclui rosto, cabelo, capuz, bolso, cordões, costuras, tênis e acessórios. São modelos e texturas originais construídos em código; não são arquivos do Subway Surfers nem ativos extraídos de terceiros.
+
+Atlas de textura 512×512 compartilhado com detalhes de tecido, jeans, pele, cabelo, pedra, madeira, telhados, areia, neve e vegetação. Os cinco ambientes agora alternam construções, mercados, coqueiros, templos, cabanas, pinheiros, rochas vulcânicas e arcos celestes. Cada conjunto decorativo é mesclado com cores por vértice e uma única chamada de desenho. A pista continua instanciada; obstáculos usam reaproveitamento de objetos. O modo automático reduz resolução e distância decorativa após queda sustentada de quadros. A detecção de colisões e a duração das fases permanecem iguais.
+
+Iluminação com preenchimento, luz de contorno, sombra de contato suave e sombra dinâmica no modo automático/detalhado. Curvatura visual apenas após 28 unidades de distância, sem alterar o espaço de colisão. Câmera suavizada, pequenos efeitos de aterrissagem e partículas para moedas, poeira, escudo, ímã e pontos de retorno. A preferência por movimento reduzido diminui os efeitos e desativa os balanços.
+
+A loja mostra miniaturas renderizadas dos 24 acessórios e o personagem equipado em uma prévia 3D giratória. Reutiliza o mesmo contexto WebGL do jogo; sair da loja devolve o canvas à corrida. Modelos, geometrias mescladas e render targets temporários têm descarte explícito. Moedas, fases e equipamentos existentes permanecem no mesmo salvamento por conta.
+
+Validação: 20 testes nas suítes `box-rush-art`, `box-rush`, `box-gosnake` e `site-update`: regras das 15 fases, pesos do esqueleto, orientação das superfícies, poses, passagem sob obstáculo, cenários agrupados, ajuste gráfico, descarte de recursos, loja, retorno ao jogo, salvamentos e autenticação. Uma renderização offline das malhas permitiu conferir as poses; não substitui o teste visual WebGL e de desempenho em aparelho real, indisponível nesta sessão. A migração pendente do relatório de uso continua independente desta atualização visual.
+
+
 ## Integro Rush — 15/10/2026 (rush1)
 
 Concluído o início de `rush-src/rules.mjs` encontrado na branch local `codex/integro-rush`. Jogo original de corrida em três faixas, com 15 fases de quatro minutos: Caribe, ruínas, neve, lava e ilhas do céu. Há saltos, deslizes, três vidas, pontos de retorno a cada minuto, ímã, escudo, estrelas e 24 acessórios visuais comprados apenas com moedas virtuais. O mapa desbloqueia as fases em sequência. Uma tentativa conserva moedas coletadas ao voltar ao ponto de retorno, sem permitir recolher a mesma moeda duas vezes.
