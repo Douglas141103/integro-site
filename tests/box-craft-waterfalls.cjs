@@ -25,5 +25,26 @@ wall.selected=2;wall.inventory[2]=5;assert(wall.placeSmall({...edge,y:44}));wall
 const blocked=channel();blocked.selected=25;blocked.inventory[25]=1;assert(!blocked.bucket({placeSmall:{x:25,y:45,z:20}}));assert.equal(blocked.inventory[25],1);assert(!blocked.bucket({placeSmall:{x:170,y:45,z:170}}));assert(!blocked.bucket({placeSmall:{x:24.5,y:45,z:20}}));
 const mix=channel(),p={x:24,y:45,z:20};mix.selected=26;mix.inventory[26]=1;assert(mix.bucket({placeSmall:p}));mix.selected=25;mix.inventory[25]=1;assert(mix.bucket({fluidSmall:p}));assert.equal(mix.smallAt(p),3);assert.equal(mix.fineFluidAt(p),0);assert.equal(mix.fineSources.size,0);
 const malformed=new CraftWorld({version:2,fineSources:[[-1,22],[999999999,23],[fluidKey(p),5],['x',22]]});assert.equal(malformed.fineSources.size,0);
-assert(wall.fineFlow.size<=2048);
-console.log('PASS waterfalls: water/lava, half-cell trench, banks intact, unsupported wall source, gravity, raycast, save/reload, scoop/drain, topology, inventory, reach, mixing, malformed saves and bounded flow.');
+
+console.log('PASS waterfalls: water/lava, half-cell trench, banks intact, unsupported wall source, gravity, raycast, save/reload, scoop/drain, topology, inventory, reach, mixing, malformed saves and finite terrain flow.');
+
+// A closed reservoir exceeds the former 2,048-cell cutoff. Solid banks stop it.
+const basin=new CraftWorld();basin.cells.fill(3);basin.smallCells.clear();basin.fluidSources.clear();basin.flowCells.clear();
+for(let x=10;x<40;x++)for(let z=10;z<40;z++)basin.cells[index(x,22,z)]=0;
+const start={x:20,y:44,z:20};basin.fineSources.set(fluidKey(start),22);basin.spreadFineFluids();
+assert.equal(basin.fineFlow.size,3600,'all 3,600 half cells fill without a count or distance cap');
+assert.equal(basin.fineFluidAt({x:79,y:44,z:79}),22,'far corner reached');
+assert.equal(basin.fineFluidAt({x:80,y:44,z:79}),0,'solid bank stops flow');
+// Opening the bank lets the same source continue down a long channel and waterfall.
+for(let x=40;x<65;x++)basin.set(x,22,39,0);
+basin.set(64,21,39,0);basin.spreadFineFluids();
+assert.equal(basin.fineFluidAt({x:128,y:42,z:78}),22,'flows beyond opened bank and falls');
+basin.set(45,22,39,3);basin.spreadFineFluids();
+assert.equal(basin.fineFluidAt({x:128,y:42,z:78}),0,'closing the channel drains disconnected water');
+basin.fineSources.clear();basin.spreadFineFluids();assert.equal(basin.fineFlow.size,0);
+// Old full-block sources also cross long channels and stop at a solid wall.
+const legacy=new CraftWorld();legacy.cells.fill(3);legacy.smallCells.clear();legacy.fluidSources.clear();legacy.flowCells.clear();
+for(let x=10;x<=70;x++)legacy.cells[index(x,22,10)]=0;
+legacy.cells[index(10,22,10)]=22;legacy.fluidSources.set(index(10,22,10),22);legacy.spreadFluids();
+assert.equal(legacy.get(70,22,10),22);assert.equal(legacy.get(71,22,10),3);
+console.log('PASS continuous water: large basin, distant banks, reopened channel, waterfall, blocked channel drainage and legacy sources.');

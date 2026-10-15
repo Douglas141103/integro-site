@@ -123,14 +123,14 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   const p=target?.place;if([25,26].includes(id)&&this.fluidSources.size>=64){this.notice='Recolha uma fonte de líquido antes de colocar outra.';return false}if([25,26].includes(id)&&p&&this.nearby(p)&&!this.overlaps(p.x,p.y,p.z)&&(this.creative||this.inventory[id]>0)){const existing=this.get(p.x,p.y,p.z),opposite=id===25?23:22;if(existing===opposite){this.set(p.x,p.y,p.z,3);for(const [dx,,dz]of directions.slice(0,4))if(this.get(p.x+dx,p.y,p.z+dz)===opposite)this.set(p.x+dx,p.y,p.z+dz,3);if(!this.creative){this.inventory[id]--;this.inventory[24]++}this.spreadFluids();return true}}
   const ok=original.bucket.call(this,target);if(ok){if(id===24&&!target.lake){this.fluidSources.delete(index(target.x,target.y,target.z));}else if(id!==24&&target.place){const p=target.place,n=index(p.x,p.y,p.z),v=this.get(p.x,p.y,p.z);if([22,23].includes(v))this.fluidSources.set(n,v)}this.spreadFluids();}return ok;},
  spreadFluids(){
-  // Recalculate a bounded flow from sources; removing a source drains its stream.
+  // Follow water to terrain barriers; each finite world cell is visited once.
   const desired=new Map(),queue=[];for(const [n,id]of this.fluidSources){if(this.cells[n]!==id){this.fluidSources.delete(n);continue}queue.push([n,id,0]);desired.set(n,id)}
   const pass=n=>!this.smallCells.has(n)&&!this.fineFluidCells?.has(n)&&(!this.cells[n]||this.flowCells.has(n)||[22,23].includes(this.cells[n]));
-  let cursor=0;while(cursor<queue.length&&desired.size<400){const [n,id,depth]=queue[cursor++],p=pos(n);if(p.y<=1)continue;const down=index(p.x,p.y-1,p.z);const below=this.cells[down];
+  let cursor=0;while(cursor<queue.length){const [n,id,depth]=queue[cursor++],p=pos(n);if(p.y<=1)continue;const down=index(p.x,p.y-1,p.z);const below=this.cells[down];
    if(below&&[22,23].includes(below)&&below!==id){this.set(p.x,p.y-1,p.z,3);this.fluidSources.delete(down);continue}
-   if(pass(down)&&!desired.has(down)){desired.set(down,id);queue.push([down,id,depth]);continue}
-   if(depth>=(id===22?4:2))continue;
-   for(const [dx,,dz]of directions.slice(0,4)){const x=p.x+dx,z=p.z+dz;if(x<1||z<1||x>=SIZE-1||z>=SIZE-1)continue;const next=index(x,p.y,z),other=this.cells[next];if([22,23].includes(other)&&other!==id){this.set(x,p.y,z,3);this.fluidSources.delete(next);continue}if(pass(next)&&!desired.has(next)&&desired.size<400){desired.set(next,id);queue.push([next,id,depth+1]);}}
+   if(pass(down)){if(!desired.has(down)){desired.set(down,id);queue.push([down,id,0]);}continue}
+   if(id===23&&depth>=2)continue;
+   for(const [dx,,dz]of directions.slice(0,4)){const x=p.x+dx,z=p.z+dz;if(x<1||z<1||x>=SIZE-1||z>=SIZE-1)continue;const next=index(x,p.y,z),other=this.cells[next];if([22,23].includes(other)&&other!==id){this.set(x,p.y,z,3);this.fluidSources.delete(next);continue}if(pass(next)&&!desired.has(next)){desired.set(next,id);queue.push([next,id,depth+1]);}}
   }
   for(const n of [...this.flowCells])if(!desired.has(n)){const p=pos(n);if([22,23].includes(this.cells[n]))this.set(p.x,p.y,p.z,0)}this.flowCells.clear();
   for(const [n,id]of desired){if(this.fluidSources.has(n))continue;const p=pos(n);if(this.cells[n]!==id)this.set(p.x,p.y,p.z,id);this.flowCells.add(n)}

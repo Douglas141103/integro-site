@@ -1,5 +1,5 @@
 import {SIZE,HEIGHT,index} from './craft-config.js';
-const N=SIZE*2,LIMIT=2048,MAX_SOURCES=64;
+const N=SIZE*2,MAX_SOURCES=64;
 export const fluidKey=p=>p.x+N*(p.z+N*p.y);
 export const fluidPosition=n=>({x:n%N,y:Math.floor(n/(N*N)),z:Math.floor(n/N)%N});
 const valid=p=>p&&[p.x,p.y,p.z].every(Number.isInteger)&&p.x>=0&&p.x<N&&p.z>=0&&p.z<N&&p.y>=2&&p.y<HEIGHT*2;
@@ -51,18 +51,20 @@ export function fineFluidMethods(proto){const original={bucket:proto.bucket,spre
    const other=existing?.id||(fluid(old)?old:0);
    if(other&&other!==entry.id){if(this.solidifyFine(p)){next.delete(k);return false}return false;}
    if(fluid(old))return false;
-   if(!next.has(k)&&next.size<LIMIT){next.set(k,entry);queue.push([p,entry,depth])}return true;
+   if(!next.has(k)){next.set(k,entry);queue.push([p,entry,depth])}return true;
   };
-  for(let cursor=0;cursor<queue.length&&cursor<LIMIT;cursor++){
+  for(let cursor=0;cursor<queue.length;cursor++){
    const [p,entry,depth]=queue[cursor],k=fluidKey(p);if(!next.has(k)||this.smallAt(p))continue;
    const down={x:p.x,y:p.y-1,z:p.z};
    if(pass(down)){visit(down,entry,0);continue;}
-   if(depth>=(entry.id===22?8:4))continue;
+   // Water has no distance/cell cutoff: terrain and the finite world bound the search.
+   if(entry.id===23&&depth>=4)continue;
    for(const [dx,dz] of sides)visit({x:p.x+dx,y:p.y,z:p.z+dz},entry,depth+1);
   }
   for(const [k,entry] of next)if(this.smallAt(fluidPosition(k))||!this.fineSources.has(entry.source))next.delete(k);
   for(const k of new Set([...previous.keys(),...next.keys()]))if(previous.get(k)?.id!==next.get(k)?.id)this.dirtyDetail(cell(fluidPosition(k)));
-  this.fineFlow=next;this.fineFluidCells=new Set([...next.keys()].map(k=>{const p=cell(fluidPosition(k));return index(p.x,p.y,p.z)}));
+  this.fineFlow=next;this.fineFlowChunks=new Map();for(const [k,e] of next){const p=fluidPosition(k),chunk=Math.floor(p.x/16)+','+Math.floor(p.z/16);if(!this.fineFlowChunks.has(chunk))this.fineFlowChunks.set(chunk,[]);this.fineFlowChunks.get(chunk).push([k,e]);}
+  this.fineFluidCells=new Set([...next.keys()].map(k=>{const p=cell(fluidPosition(k));return index(p.x,p.y,p.z)}));
  },
  spreadFluids(){original.spreadFluids.call(this);this.spreadFineFluids();},
  waterSurface(){const p=this.player;for(let y=Math.floor((p.y+1)*2);y>=Math.floor(p.y*2);y--){const at={x:Math.floor(p.x*2),y,z:Math.floor(p.z*2)};if(this.fineFluidAt(at)===22)return y*.5+.48}return original.waterSurface.call(this);},

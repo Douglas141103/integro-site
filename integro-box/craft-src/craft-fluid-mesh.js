@@ -9,7 +9,7 @@ export function makeFlowMaterials(){
 }
 const faces=[{n:[1,0,0],p:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]},{n:[-1,0,0],p:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]},{n:[0,1,0],p:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]},{n:[0,-1,0],p:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]},{n:[0,0,1],p:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]},{n:[0,0,-1],p:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]}];
 export function flowGeometry(world,cx,cz,id){const positions=[],normals=[],uv=[],indices=[];
- for(const [k,e] of world.fineFlow||[]){if(e.id!==id)continue;const p=fluidPosition(k);if(Math.floor(p.x/16)!==cx||Math.floor(p.z/16)!==cz)continue;
+ for(const [k,e] of world.fineFlowChunks?.get(cx+','+cz)||[]){if(e.id!==id)continue;const p=fluidPosition(k);if(Math.floor(p.x/16)!==cx||Math.floor(p.z/16)!==cz)continue;
   const above=world.fineFluidAt({...p,y:p.y+1})===id,height=above?.5:.48;
   for(const f of faces){const next={x:p.x+f.n[0],y:p.y+f.n[1],z:p.z+f.n[2]};if(world.fineFluidAt(next)===id||world.smallAt(next)&&![22,23].includes(world.smallAt(next)))continue;
    const off=positions.length/3;for(const q of f.p){const x=p.x*.5+q[0]*.5,y=p.y*.5+q[1]*height,z=p.z*.5+q[2]*.5;positions.push(x,y,z);normals.push(...f.n);uv.push(f.n[0]?z*2:x*2,f.n[1]?z*2:y*2)}indices.push(off,off+1,off+2,off,off+2,off+3);

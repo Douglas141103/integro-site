@@ -294,3 +294,10 @@ Versão `20261015-craft5`: baldes usam a face da mira na grade de meia unidade, 
 Fontes novas são salvas em `fineSources`, separadas dos sólidos; a corrente é derivada novamente ao carregar. O balde vazio recolhe a fonte associada à corrente na mira e drena sua queda, devolvendo um balde cheio uma única vez. Água e lava em contato solidificam em pedra. A malha por chunk une os segmentos verticais, com textura de movimento para água e lava; a mira reconhece o fluxo. Água pequena participa da irrigação/nado e lava mantém o retorno seguro ao início. Recursos disponíveis no mundo individual.
 
 Validação: `node tests/box-craft-waterfalls.cjs` cobre os dois líquidos, canais de 0,5 unidade, queda sem apoio, preservação dos sólidos, mira, salvamento, coleta/drenagem, alteração de caminho, inventário, alcance, mistura, entradas inválidas e limites. Suítes anteriores de blocos pequenos, aventura e HUD mantidas. Conferência visual/WebGL no navegador não disponível nesta sessão.
+
+
+### Água contínua até as barreiras do terreno
+
+Versão `20261015-craft6`: removidos os limites de distância e quantidade de células que interrompiam a água, tanto na grade de meia unidade quanto nas fontes antigas. A busca visita cada posição acessível uma vez e termina nas barreiras ou nos limites físicos do mapa. Continua priorizando quedas, não sobe paredes, recalcula caminhos quando o terreno muda e drena trechos desconectados da fonte. A lava mantém seu alcance horizontal anterior. O desenho do fluxo consulta apenas as células do próprio trecho do mapa, evitando varrer toda a corrente para cada malha.
+
+Validação: reservatório com 3.600 células (acima do limite antigo de 2.048), canto distante, barreiras sólidas, abertura de canal longo com queda, bloqueio com drenagem, retirada da fonte e compatibilidade com fontes antigas. Testes anteriores de cachoeiras, blocos pequenos, aventura e HUD. Sem conferência visual WebGL nesta sessão.
