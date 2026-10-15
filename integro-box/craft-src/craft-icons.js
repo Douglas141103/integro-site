@@ -28,6 +28,7 @@ export function itemIcon(id){const color='#'+BLOCKS[id].color.toString(16).padSt
  if(id===58)s=rect(5,22,23,8,'#829791')+rect(14,7,5,18,'#ad8052')+rect(11,3,11,9,color);
  if(id===59)s=rect(2,12,18,18,color)+rect(18,16,9,7,'#bd9159')+rect(26,11,5,16,'#e0bd83');
  if(id===60)s=rect(4,15,24,15,'#595574')+rect(2,12,28,5,color)+rect(7,4,18,9,'#f6e6b7')+rect(15,4,2,10,'#bb9c61');
+ if(id===64||id===65)s='<path d="M8 7C15 2 29 5 28 16S18 29 9 26 1 13 8 7Z" fill="'+color+'" stroke="#f5d6a8" stroke-width="2"/><path d="M10 11L21 16M9 17L17 21" stroke="'+(id===65?'#67452e':'#f4b7a2')+'" stroke-width="3" stroke-linecap="round"/>';
  if(!s)s=rect(6,6,20,20,color);
  return `<svg class="craft-item-icon" viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges">${s}</svg>`;
 }

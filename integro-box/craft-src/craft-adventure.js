@@ -78,7 +78,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   const result=original.mine.call(this,p);if(result){this.mineProgress=null;if(!this.creative){this.xp+=id>=39&&id<=42?4:1;this.wear(this.selected);if(id===39||id===42){this.inventory[id]--;const out=id===39?43:46;this.inventory[out]=Math.min(9999,this.inventory[out]+1+(this.enchants[this.selected]>=2?1:0))}}this.solveCircuits();}return result;
  },
  place(p){const ok=original.place.call(this,p);if(ok)this.solveCircuits();return ok;},
- eat(){const id=this.selected;if(![32,36,30].includes(id)||!this.inventory[id])return false;if(this.vitals.hunger>=100&&this.vitals.health>=100){this.notice='Você já está alimentado e descansado.';return true}this.inventory[id]--;if(id===30)this.inventory[24]++;this.vitals.hunger=clamp(this.vitals.hunger+(id===32?35:id===36?20:25),0,100);this.vitals.health=clamp(this.vitals.health+12,0,100);this.notice='Que delícia! Fome e energia recuperadas.';return true;},
+ eat(){const id=this.selected;if(id===64&&this.inventory[id]){this.notice='Asse a carne na fornalha antes de comer.';return true}if(![32,36,30,65].includes(id)||!this.inventory[id])return false;if(this.vitals.hunger>=100&&this.vitals.health>=100){this.notice='Você já está alimentado e descansado.';return true}this.inventory[id]--;if(id===30)this.inventory[24]++;this.vitals.hunger=clamp(this.vitals.hunger+(id===65?55:id===32?35:id===36?20:25),0,100);this.vitals.health=clamp(this.vitals.health+(id===65?20:12),0,100);this.notice='Que delícia! Fome e energia recuperadas.';return true;},
  farm(target){if(!target||!this.nearby(target))return null;const id=this.selected,soil=this.get(target.x,target.y,target.z);
   if(id===52){if(!this.creative&&!this.inventory[52])return 'Pegue a enxada na mochila.';if(![1,2,33].includes(soil)||this.get(target.x,target.y+1,target.z))return 'Use a enxada em terra ou grama com espaço livre acima.';this.set(target.x,target.y,target.z,33);this.wear(52);return 'Terra preparada! Selecione sementes e toque em Usar.';}
   if(id===34||id===35){if(!this.creative&&!this.inventory[id])return 'Suas sementes acabaram. Compre ou colha mais.';const p={x:target.x,y:target.y+1,z:target.z};if(soil!==33||this.occupied(p.x,p.y,p.z)||this.overlaps(p.x,p.y,p.z))return 'Plante em terra preparada com a enxada.';if(!this.set(p.x,p.y,p.z,id===34?37:38))return 'Não há espaço para plantar.';this.setMeta(p,{growth:0,stage:0,planted:this.lifeTime});if(!this.creative)this.inventory[id]--;return 'Plantado! Cresce em 2 min perto da água ou 3 min sem irrigação.';}
@@ -92,6 +92,18 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   if(id===15){const s=original.use.call(this,p);this.vitals.health=100;this.respawn={x:this.player.x,y:this.player.y,z:this.player.z};return s+' Seu retorno foi marcado aqui.'}
   if(id===57)return 'Fio de energia. Ligue uma alavanca à porta, luminária ou pistão com fios encostados.';
   return original.use.call(this,p);
+ },
+ huntAnimal(i){
+  const a=Number.isInteger(i)?this.animals[i]:null;
+  if(!a||Math.hypot(a.x-this.player.x,a.y-this.player.y,a.z-this.player.z)>4)return 'Aproxime-se do animal para caçar.';
+  if(this.baby(a))return 'Este animal ainda é filhote. Deixe crescer.';
+  const amount={cow:3,ox:4,pig:3,sheep:2,capybara:2}[a.type];
+  if(!amount)return 'Este animal não pode ser coletado.';
+  if((this.inventory[64]||0)+amount>9999)return 'Sua mochila está cheia. Guarde a carne no baú.';
+  // Remove and award together; subsequent actions must acquire a fresh ray target.
+  this.animals.splice(i,1);this.inventory[64]=(this.inventory[64]||0)+amount;
+  this.xp=Math.min(999999,this.xp+3);this.lifeDirty=true;
+  return '+'+amount+' carne crua na mochila. Asse na fornalha para comer!';
  },
  baby(a){return this.lifeTime-(a.bornAt??-300)<240;},
  useAnimal(i){const a=this.animals[i];if(!a||Math.hypot(a.x-this.player.x,a.y-this.player.y,a.z-this.player.z)>7)return 'Aproxime-se do animal.';

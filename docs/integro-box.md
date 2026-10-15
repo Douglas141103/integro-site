@@ -265,3 +265,12 @@ Após relato de passagem da palavra “Ku”, a função `box-chat` recebeu uma 
 A instrução contextual passou a proibir explicitamente gírias vulgares isoladas e variantes fonéticas, mesmo sem alvo, preservando nomes/palavras comuns como cubo, cuidado e Kuromi. O texto original e uma representação normalizada são enviados juntos ao classificador; nenhum deles é tratado como instrução. Modelos mantidos: `omni-moderation-latest` e `gpt-4.1-mini` (padrão do parâmetro `BOX_CHAT_MODEL`). Falhas continuam sem publicação.
 
 A atualização foi publicada diretamente na Edge Function, sem mudança do frontend. Testes automatizados cobrem variantes, palavras comuns e um fornecedor simulado permissivo. Teste real em sala privada confirmou o bloqueio de “Ku” e “k.u” sem entrega no histórico; “Vamos montar um cubo!” foi aprovada. A consulta corretiva por variantes isoladas já aprovadas encontrou zero ocorrências; não houve alteração de mensagens antigas por essa consulta.
+
+
+## IntegroCraft — HUD e alimentos (15/10/2026)
+
+Versão `20261015-craft3`: controles circulares translúcidos, barra de seis atalhos sem molduras pesadas (o item selecionado sempre aparece), minimapa circular e dimensões próprias para retrato/paisagem. Campo de visão vertical 100° em retrato e 78° em paisagem: blocos visualmente menores, sem alterar a grade, construções ou colisões dos mundos salvos. Texturas de 32 px com contraste suave, filtragem e antialiasing; pixel ratio limitado a 2.
+
+No mundo individual, mirar em animal adulto transforma Quebrar em Caçar (tecla E): vaca/porco dão 3 carnes, boi 4, ovelha/capivara 2. O animal sai do mundo e a carne vai diretamente à mochila, sem sangue. Filhotes, alcance acima de 4 blocos e mochila cheia não permitem coleta. Carne crua (64) exige fornalha: 1 carne + 1 madeira, 12 s, produz 1 carne assada (65). Usar carne assada recupera 55 de alimento e 20 de vida. Animais removidos, carne e cozimento persistem no salvamento. Salas compartilhadas continuam no protocolo de blocos básicos, sem animais.
+
+Validação: `node tests/box-craft-food.cjs`, `node tests/box-craft-adventure.cjs`, `node tests/box-craft-hud.cjs` e bundle esbuild. O teste de HUD usa Three/raycast real com renderizador substituído; não houve conferência visual/WebGL em navegador nesta sessão.

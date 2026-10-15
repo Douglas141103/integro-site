@@ -27,7 +27,7 @@ try {
   const {startPresence}=await import('./presence.js?v=20261015-chat1');
   if(!unloaded)startPresence(user);
   await script('./classic-games.js?v=20261012-usage1');
-  await script('./craft.js?v=20261013-craft2');
+  await script('./craft.js?v=20261015-craft3');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   await script('./egg.js?v=20261014-egg14-powers1');
   await script('./worlds.js?v=20261013-egg1');

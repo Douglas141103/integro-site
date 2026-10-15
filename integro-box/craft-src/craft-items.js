@@ -51,7 +51,9 @@ export const BLOCKS=[null,
 {name:'Mesa de encantamentos',color:0x7f7cc6,prop:true,group:'Mineração',price:100},
 {name:'Lã',color:0xf5f0df,cube:true,group:'Construção',price:12,pack:3},
 {name:'Ovelha',color:0xfff2d6,animal:'sheep',group:'Animais',price:45},
-{name:'Haste do pistão',color:0xc7b087,prop:true,hidden:true}];
+{name:'Haste do pistão',color:0xc7b087,prop:true,hidden:true},
+{name:'Carne crua',color:0xd78b79,tool:true,group:'Alimentos',price:10},
+{name:'Carne assada',color:0xa76c3e,tool:true,group:'Alimentos',price:20}];
 export const ITEM_IDS=BLOCKS.map((b,id)=>id).filter(id=>id&&id!==11&&!BLOCKS[id].fluid&&!BLOCKS[id].hidden);
 export const RECIPES=[{id:'planks',name:'Tábuas',cost:{4:1},out:9,count:4},{id:'bricks',name:'Tijolos',cost:{3:4},out:7,count:4},{id:'glass',name:'Vidro',cost:{6:3},out:8,count:2},{id:'stairs',name:'Escadas',cost:{9:3},out:12,count:4},{id:'door',name:'Porta',cost:{9:4},out:13,count:1},{id:'fence',name:'Cercas',cost:{9:2},out:14,count:4},{id:'bed',name:'Cama',cost:{9:4,5:3},out:15,count:1},{id:'table',name:'Mesa',cost:{9:3},out:16,count:1},{id:'chair',name:'Cadeira',cost:{9:2},out:17,count:1},{id:'chest',name:'Baú',cost:{9:5},out:18,count:1},{id:'furnace',name:'Fornalha',cost:{3:8},out:19,count:1},{id:'lamp',name:'Luminária',cost:{4:1,8:2},out:20,count:1}];
 export const SMELTS=[{id:'glass',name:'Fundir vidro',cost:{6:3,4:1},out:8,count:3,seconds:12},{id:'brick',name:'Assar tijolos',cost:{2:4,4:1},out:7,count:4,seconds:15},{id:'bread',name:'Assar pão',cost:{31:3,4:1},out:32,count:2,seconds:10}];
@@ -89,3 +91,5 @@ RECIPES.push(
 {id:'piston',name:'Pistão',cost:{44:2,9:3},out:59,count:1},
 {id:'enchant',name:'Mesa de encantamentos',cost:{46:2,9:4,3:4},out:60,count:1});
 SMELTS.push({id:'iron',name:'Fundir ferro',cost:{40:2,43:1},out:44,count:2,seconds:18},{id:'gold',name:'Fundir ouro',cost:{41:2,43:1},out:45,count:2,seconds:22});
+
+SMELTS.push({id:'roast',name:'Assar carne',cost:{64:1,4:1},out:65,count:1,seconds:12});
