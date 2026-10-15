@@ -104,7 +104,8 @@ function dragEnd(e){
  try{drag.handle.releasePointerCapture(e.pointerId);}catch{}drag=null;delete root.dataset.dragging;
 }
 for(const handle of [$('boxChatToggle'),$('boxChatDrag')])handle.addEventListener('pointerdown',dragStart);
-window.addEventListener('pointermove',dragMove,{passive:false});window.addEventListener('pointerup',dragEnd);window.addEventListener('pointercancel',dragEnd);
+window.addEventListener('pointermove',dragMove,{passive:false,capture:true});window.addEventListener('pointerup',dragEnd);window.addEventListener('pointercancel',dragEnd);
+root.addEventListener('dragstart',e=>e.preventDefault());
 root.addEventListener('click',e=>{if(suppressClick){suppressClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
 $('boxChatToggle').addEventListener('keydown',e=>{if(e.altKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const r=root.getBoundingClientRect();clampPosition(viewportWidth()-r.right+(e.key==='ArrowLeft'?20:e.key==='ArrowRight'?-20:0),window.innerHeight-r.bottom+(e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0));savePosition();}});
 try{const saved=JSON.parse(window.localStorage.getItem(positionKey));if(saved&&Number.isFinite(saved.right)&&Number.isFinite(saved.bottom))clampPosition(saved.right,saved.bottom);}catch{}
@@ -113,4 +114,4 @@ const fullscreen=()=>{(document.fullscreenElement||document.body).append(root);c
 document.addEventListener('fullscreenchange',fullscreen);window.addEventListener('box-room-change',reset);window.addEventListener('box-player-change',reset);
 const visibility=()=>{if(!document.hidden){markRead();void refresh();}};document.addEventListener('visibilitychange',visibility);
 timer=setInterval(()=>void refresh(),4000);reset();
-window.BoxChat={stop(){stopped=true;generation++;clearInterval(timer);window.removeEventListener('box-room-change',reset);window.removeEventListener('box-player-change',reset);document.removeEventListener('fullscreenchange',fullscreen);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resize);window.removeEventListener('pointermove',dragMove);window.removeEventListener('pointerup',dragEnd);window.removeEventListener('pointercancel',dragEnd);drag=null;unread.clear();reacting.clear();root.remove();style.remove();}};
+window.BoxChat={stop(){stopped=true;generation++;clearInterval(timer);window.removeEventListener('box-room-change',reset);window.removeEventListener('box-player-change',reset);document.removeEventListener('fullscreenchange',fullscreen);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resize);window.removeEventListener('pointermove',dragMove,true);window.removeEventListener('pointerup',dragEnd);window.removeEventListener('pointercancel',dragEnd);drag=null;unread.clear();reacting.clear();root.remove();style.remove();}};
