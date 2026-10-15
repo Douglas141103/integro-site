@@ -100,6 +100,7 @@ function dragMove(e){
 }
 function dragEnd(e){
  if(!drag||e.pointerId!==drag.id)return;
+ if(e.type==='pointerup'&&drag.moved)clampPosition(drag.right-(e.clientX-drag.x),drag.bottom-(e.clientY-drag.y));
  suppressClick=drag.moved;if(drag.moved)savePosition();
  try{drag.handle.releasePointerCapture(e.pointerId);}catch{}drag=null;delete root.dataset.dragging;
 }
