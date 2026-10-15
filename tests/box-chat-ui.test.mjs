@@ -47,7 +47,7 @@ test('chat dragging stays within the viewport, remembers its position and does n
  win.HTMLElement.prototype.getBoundingClientRect=function(){const width=this.id==='boxChat'?(doc.getElementById('boxChatPanel')?.hidden?90:370):90,height=100;const right=400-(parseFloat(this.style.right)||14),bottom=800-(parseFloat(this.style.bottom)||82);return {width,height,right,bottom,left:right-width,top:bottom-height};};
  const context=vm.createContext({window:win,document:doc,supabase:{},crypto:webcrypto,setInterval:()=>1,clearInterval(){}});vm.runInContext(source,context);
  const root=doc.getElementById('boxChat'),button=doc.getElementById('boxChatToggle'),panel=doc.getElementById('boxChatPanel');
- const pointer=(type,x,y)=>{const e=new win.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,button:0,clientX:x,clientY:y});button.dispatchEvent(e);};
+ const pointer=(type,x,y)=>{const e=new win.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,button:0,clientX:x,clientY:y});(type==='pointerdown'?button:win).dispatchEvent(e);};
  pointer('pointerdown',350,680);pointer('pointermove',-200,-200);pointer('pointerup',-200,-200);button.click();assert.equal(panel.hidden,true);assert.equal(root.style.right,'302px');assert.equal(root.style.bottom,'692px');
  const saved=JSON.parse(win.localStorage.getItem('integro-box-chat-position-v1'));assert.equal(saved.right,302);assert.equal(saved.bottom,692);
  pointer('pointerdown',50,50);pointer('pointerup',50,50);button.click();assert.equal(panel.hidden,false);assert.equal(root.style.right,'22px');

@@ -7,7 +7,7 @@ const source=readFileSync(new URL('../assets/site-update.js',import.meta.url),'u
 async function setup(path='/portal/gestao-escolar.html'){
  const dom=new JSDOM('<html><head></head><body><form><input name="value"><button>Salvar</button></form></body></html>',{url:'https://example.test'+path});
  const w=dom.window,timers=[],navigations=[];
- let response={version:'20261015-chat3',maintenance:false},offline=false;
+ let response={version:'20261015-chat4',maintenance:false},offline=false;
  const context={window:w,document:w.document,location:{pathname:path,href:'https://example.test'+path+'?next=integro-box#jogos',replace:u=>navigations.push(u)},sessionStorage:w.sessionStorage,Event:w.Event,URL,AbortController,console,
   setInterval(){},setTimeout(fn,ms){timers.push({fn,ms});return timers.length},clearTimeout(){},
   async fetch(){if(offline)throw Error('offline');return {ok:true,json:async()=>response}}};
@@ -17,7 +17,7 @@ async function setup(path='/portal/gestao-escolar.html'){
 test('maintenance animation remains on connection loss, then reloads once to the published version',async()=>{
  const t=await setup();try{
  assert.equal(t.w.document.getElementById('integroUpdate'),null);
- t.set({version:'20261015-chat3',maintenance:true});await t.check();
+ t.set({version:'20261015-chat4',maintenance:true});await t.check();
  assert.equal(t.w.document.getElementById('integroUpdate').hidden,false);
  assert.match(t.w.document.querySelector('#integroUpdate h2').textContent,/Aguarde/);
  t.set({version:'20261014-egg14-powers2',maintenance:false});await t.check();t.reload();
@@ -36,7 +36,7 @@ test('in-progress form input is preserved and does not trigger automatic submiss
 test('offline and invalid release data cannot force a reload',async()=>{
  const t=await setup();try{
  t.set({version:'https://other.example',maintenance:true});await t.check();assert.equal(t.w.document.getElementById('integroUpdate'),null);
- t.set({version:'20261015-chat3',maintenance:true});await t.check();t.offline();await t.check();t.reload();
+ t.set({version:'20261015-chat4',maintenance:true});await t.check();t.offline();await t.check();t.reload();
  assert.equal(t.navigations.length,0);assert.match(t.w.document.querySelector('#integroUpdate p').textContent,/conexão/);
  }finally{t.dom.window.close()}
 });
@@ -46,7 +46,7 @@ test('game progress is saved after leaving the shared world; keyboard cannot mov
  t.w.BoxGoSnake={persist(){order.push('snake-save')}};
  t.w.addEventListener('pagehide',()=>order.push('local-save'));
  t.w.BoxEggCloud={async flush(){order.push('profile-save')}};
- t.set({version:'20261015-chat3',maintenance:true});await t.check();assert.deepEqual(order,['restore','save','snake-save','local-save','profile-save']);
+ t.set({version:'20261015-chat4',maintenance:true});await t.check();assert.deepEqual(order,['restore','save','snake-save','local-save','profile-save']);
  let pressed=false;t.w.document.addEventListener('keydown',()=>pressed=true);
  t.w.document.body.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'w',bubbles:true,cancelable:true}));assert.equal(pressed,false);
  }finally{t.dom.window.close()}

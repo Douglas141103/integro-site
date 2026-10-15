@@ -13,7 +13,7 @@ const student=()=>window.BoxPlayer?.studentId||null;
 function controls(){input.disabled=send.disabled=!available||pending||!roomId;}
 function badge(){const count=unread.size,el=$('boxChatUnread');el.hidden=!count;el.textContent=count>99?'99+':String(count);$('boxChatToggle').setAttribute('aria-label',count?`Chat, ${count} ${count===1?'mensagem não lida':'mensagens não lidas'}`:'Chat');}
 function markRead(){if(!panel.hidden&&!document.hidden){unread.clear();badge();}}
-function toggle(open){panel.hidden=!open;$('boxChatToggle').setAttribute('aria-expanded',String(open));markRead();clampPosition();if(open)void refresh();}
+function toggle(open){panel.hidden=!open;$('boxChatToggle').setAttribute('aria-expanded',String(open));markRead();clampPosition();if(open){const list=$('boxChatMessages');list.scrollTop=list.scrollHeight;void refresh();}}
 function reset(){generation++;roomId=room();available=false;pending=false;known=null;unread.clear();reacting.clear();badge();$('boxChatMessages').replaceChildren();$('boxChatMessages').dataset.signature='';input.value='';$('boxChatIdentity').textContent=roomId?'Conectando ao chat…':'Entre em uma sala para conversar.';status('');controls();void refresh();}
 async function refresh(){
  if(stopped||reading||document.hidden||!roomId)return;
@@ -77,9 +77,10 @@ $('boxChatForm').onsubmit=async e=>{
 $('boxChatToggle').onclick=()=>toggle(panel.hidden);$('boxChatClose').onclick=()=>toggle(false);
 root.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')toggle(false);});root.addEventListener('keyup',e=>e.stopPropagation());
 const positionKey='integro-box-chat-position-v1';let drag=null,suppressClick=false;
+const viewportWidth=()=>document.documentElement.clientWidth||window.innerWidth;
 function clampPosition(right,bottom){
  const rect=root.getBoundingClientRect();if(!rect.width||!rect.height)return;
- const width=window.innerWidth,height=window.innerHeight;
+ const width=viewportWidth(),height=window.innerHeight;
  right=Number.isFinite(right)?right:width-rect.right;bottom=Number.isFinite(bottom)?bottom:height-rect.bottom;
  root.style.right=Math.max(8,Math.min(right,Math.max(8,width-rect.width-8)))+'px';
  root.style.bottom=Math.max(8,Math.min(bottom,Math.max(8,height-rect.height-8)))+'px';
@@ -87,8 +88,8 @@ function clampPosition(right,bottom){
 function savePosition(){try{window.localStorage.setItem(positionKey,JSON.stringify({right:parseFloat(root.style.right),bottom:parseFloat(root.style.bottom)}));}catch{}}
 function dragStart(e){
  if(drag||e.button!==0||e.target.closest('#boxChatClose'))return;
- suppressClick=false;const rect=root.getBoundingClientRect();
- drag={id:e.pointerId,x:e.clientX,y:e.clientY,right:window.innerWidth-rect.right,bottom:window.innerHeight-rect.bottom,moved:false,handle:e.currentTarget};
+ e.stopPropagation();suppressClick=false;const rect=root.getBoundingClientRect();
+ drag={id:e.pointerId,x:e.clientX,y:e.clientY,right:viewportWidth()-rect.right,bottom:window.innerHeight-rect.bottom,moved:false,handle:e.currentTarget};
  try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
 }
 function dragMove(e){
@@ -102,13 +103,14 @@ function dragEnd(e){
  suppressClick=drag.moved;if(drag.moved)savePosition();
  try{drag.handle.releasePointerCapture(e.pointerId);}catch{}drag=null;delete root.dataset.dragging;
 }
-for(const handle of [$('boxChatToggle'),$('boxChatDrag')]){handle.addEventListener('pointerdown',dragStart);handle.addEventListener('pointermove',dragMove);handle.addEventListener('pointerup',dragEnd);handle.addEventListener('pointercancel',dragEnd);}
+for(const handle of [$('boxChatToggle'),$('boxChatDrag')])handle.addEventListener('pointerdown',dragStart);
+window.addEventListener('pointermove',dragMove,{passive:false});window.addEventListener('pointerup',dragEnd);window.addEventListener('pointercancel',dragEnd);
 root.addEventListener('click',e=>{if(suppressClick){suppressClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
-$('boxChatToggle').addEventListener('keydown',e=>{if(e.altKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const r=root.getBoundingClientRect();clampPosition(window.innerWidth-r.right+(e.key==='ArrowLeft'?20:e.key==='ArrowRight'?-20:0),window.innerHeight-r.bottom+(e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0));savePosition();}});
+$('boxChatToggle').addEventListener('keydown',e=>{if(e.altKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const r=root.getBoundingClientRect();clampPosition(viewportWidth()-r.right+(e.key==='ArrowLeft'?20:e.key==='ArrowRight'?-20:0),window.innerHeight-r.bottom+(e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0));savePosition();}});
 try{const saved=JSON.parse(window.localStorage.getItem(positionKey));if(saved&&Number.isFinite(saved.right)&&Number.isFinite(saved.bottom))clampPosition(saved.right,saved.bottom);}catch{}
 const resize=()=>clampPosition();window.addEventListener('resize',resize);
 const fullscreen=()=>{(document.fullscreenElement||document.body).append(root);clampPosition();};
 document.addEventListener('fullscreenchange',fullscreen);window.addEventListener('box-room-change',reset);window.addEventListener('box-player-change',reset);
 const visibility=()=>{if(!document.hidden){markRead();void refresh();}};document.addEventListener('visibilitychange',visibility);
 timer=setInterval(()=>void refresh(),4000);reset();
-window.BoxChat={stop(){stopped=true;generation++;clearInterval(timer);window.removeEventListener('box-room-change',reset);window.removeEventListener('box-player-change',reset);document.removeEventListener('fullscreenchange',fullscreen);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resize);drag=null;unread.clear();reacting.clear();root.remove();style.remove();}};
+window.BoxChat={stop(){stopped=true;generation++;clearInterval(timer);window.removeEventListener('box-room-change',reset);window.removeEventListener('box-player-change',reset);document.removeEventListener('fullscreenchange',fullscreen);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resize);window.removeEventListener('pointermove',dragMove);window.removeEventListener('pointerup',dragEnd);window.removeEventListener('pointercancel',dragEnd);drag=null;unread.clear();reacting.clear();root.remove();style.remove();}};
