@@ -230,12 +230,13 @@ Validação: 32 testes passaram (19 de regras, inventário, física, HUD, corrid
 
 O botão Chat abre um painel recolhível nas salas existentes. A identificação é inicial do nome validado pelo banco + sequência única, persistente por conta/aluno (exemplo A10001). A consulta dos colegas retorna somente código, texto aprovado, ID da mensagem e horário; nomes/IDs escolares não são enviados. A gestão autorizada pode consultar até 100 registros recentes e ocultar mensagens. Diretores consultam somente alunos da sua escola; administradores têm visão geral. A troca de perfil/saída/logout limpa o painel. O texto é renderizado via `textContent`.
 
-### Ativação pendente em produção
+### Ativado em produção
 
-1. Aplicar `supabase/migrations/20261015010000_box_moderated_chat.sql` no projeto `kvdfnmwuxmpalsyuytwt` depois das migrações existentes. É idempotente; não altera cadastros, vínculos ou saldos.
-2. Publicar a Edge Function `box-chat` com `index.ts` e `moderation.mjs`. Manter verificação JWT habilitada. A função também verifica `auth.getUser()`.
-3. Confirmar o segredo existente `OPENAI_API_KEY` no Supabase (sem expor/copiar seu valor). `BOX_CHAT_MODEL` é opcional, padrão `gpt-4.1-mini`. Chaves de serviço/API nunca chegam ao cliente.
-4. Validar duas contas de teste na mesma sala: mensagem respeitosa aprovada, telefone/ofensa bloqueados, terceiros sem acesso, erro da API sem entrega. Confirmar análise real antes de anunciar o chat ativo.
+Migração aplicada no projeto `kvdfnmwuxmpalsyuytwt`; Edge Function `box-chat` publicada com `index.ts` e `moderation.mjs`, mantendo verificação JWT habilitada e validação adicional de `auth.getUser()`. Confirmada a presença do segredo `OPENAI_API_KEY` sem consultar seu valor. Modelo contextual padrão: `gpt-4.1-mini`.
+
+Validação real em sala privada com uma conta autenticada: “Vamos jogar juntos!” foi aprovada e exibida como `J10000`; pedido de telefone para conversar fora do jogo foi bloqueado e não apareceu no histórico. A conta usada não tinha aluno vinculado, portanto exibiu “Jogador”, sem nome do responsável. Isolamento entre contas, vínculos de alunos e falhas da API foram validados por testes automatizados; não houve teste real com duas contas simultâneas. O navegador remoto não disponibilizou WebGL, limitando a validação visual do jogo 3D, mas presença, sala e chat funcionaram.
+
+Release `20261015-chat2` corrige também o aviso de privacidade atualizado por `usage.js`, para informar moderação e histórico de sete dias em vez de afirmar que conversas não são gravadas.
 
 Cada tentativa válida reservada é enviada à Moderation API (`omni-moderation-latest`). Se não bloqueada por ela ou pelo filtro de contatos, passa à Responses API com saída estrita e as seis mensagens aprovadas mais recentes da sala. Respostas incompletas, recusas, timeout, chave ausente ou erro de conexão não publicam. `store:false` na Responses API; sem nomes/IDs escolares no contexto enviado. O código não usa recursos de chat/completion no navegador. Referências oficiais: https://developers.openai.com/api/docs/guides/moderation e https://developers.openai.com/api/docs/guides/structured-outputs.
 

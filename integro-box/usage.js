@@ -1,4 +1,4 @@
-import {supabase} from './access.js?v=20261013-account1';
+import {supabase} from './access.js?v=20261015-chat1';
 const screens={danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
 export function currentGame(doc=document){
  for(const [id,game] of Object.entries(screens)){const el=doc.getElementById(id);if(el&&!el.hidden&&!el.classList.contains('hidden'))return game;}
@@ -10,7 +10,7 @@ export function startUsage({client=supabase}={}){
  const device=matchMedia('(pointer:coarse)').matches?(Math.min(screen.width,screen.height)<600?'mobile':'tablet'):'desktop';
  let lastInput=Date.now(),busy=false,stopped=false,lastState='',timer,queued=false;
  const notice=document.getElementById('boxUsageNotice');
- const normal='A gestão acompanha os jogos acessados, as salas e os tempos de uso desta conta. Não gravamos conversas, teclas digitadas ou imagens.';
+ const normal='A gestão acompanha os jogos acessados, as salas e os tempos de uso desta conta. O chat envia cada mensagem à API de moderação antes de publicá-la. A gestão pode consultar o histórico dos últimos 7 dias; não gravamos teclas ou imagens.';
  function activity(){lastInput=Date.now();}
  for(const type of ['pointerdown','keydown','touchstart'])document.addEventListener(type,activity,{passive:true,capture:true});
  function state(){
