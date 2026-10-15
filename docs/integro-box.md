@@ -245,3 +245,14 @@ Somente a função com papel de serviço reserva e conclui mensagens, sob bloque
 Histórico consultável: últimos sete dias, com limpeza de registros antigos nas consultas do chat/painel. Sem tráfego, não há promessa de eliminação no instante exato do vencimento; configurar tarefa de limpeza periódica para uma política de eliminação com prazo estrito. O encerramento/limpeza das salas existentes também remove mensagens por cascata.
 
 Testes sintéticos: `node --test tests/box-chat.test.mjs tests/box-chat-ui.test.mjs tests/box-player-profile.test.mjs tests/box-presence.test.mjs`. Conferem permissões reais em PGlite, isolamento, associação aluno/responsável, envio idempotente, revogação, denúncia, escopo da direção, saídas da API simuladas e UI em jsdom. Não substituem validação da API real nem teste visual em aparelho.
+
+
+## Contador, reações e posição do chat — 15/10/2026
+
+Release `20261015-chat3`: o balão mostra um contador vermelho com números brancos das novas mensagens aprovadas de colegas recebidas enquanto o painel está fechado. Abrir o chat zera o contador. O histórico existente na entrada, mensagens próprias e mudanças nas reações não aumentam o contador; sair/trocar de sala ou aluno limpa seu estado. A consulta a cada quatro segundos agora ocorre também com o painel recolhido, somente com a página visível e dentro de uma sala.
+
+Cada mensagem aprovada tem 👍, ⭐, 🎆 e 😊, com contagem por reação e destaque das escolhas do aluno. Tocar novamente retira a escolha. As quatro opções são fixas, sem texto livre nem chamada adicional à IA. A migração `20261015033000_box_chat_reactions.sql` foi aplicada em produção: tabela privada com RLS, chave única por mensagem/aluno/reação e RPC autenticado que revalida vínculo e presença na sala. Mensagens pendentes, ocultas, expiradas ou de outra sala não aceitam reações. O envio é idempotente e só confirma a reação após resposta do servidor.
+
+É possível arrastar o balão ou o cabeçalho do painel com mouse ou toque, sem abrir o chat ao terminar um arraste. A posição fica salva neste navegador; abertura, redimensionamento e tela cheia mantêm o painel nos limites da tela. Alternativa com teclado: focar o balão e usar Alt + setas.
+
+Validação: testes de banco cobrem contagem entre dois usuários, idempotência, retirada, isolamento, vínculo, RLS e limpeza; testes de interface cobrem mensagens não lidas, quatro reações, falha de rede, arrastar, limites, persistência e distinção entre clique e arraste.

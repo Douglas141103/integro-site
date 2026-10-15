@@ -32,7 +32,7 @@ try {
   await script('./egg.js?v=20261014-egg14-powers1');
   await script('./worlds.js?v=20261013-egg1');
   await import('./multiplayer.js?v=20261015-chat1');
-  if(!unloaded)await import('./chat.js?v=20261015-chat1');
+  if(!unloaded)await import('./chat.js?v=20261015-chat3');
   if(!unloaded)await import('./egg-cloud.js?v=20261014-egg14-powers1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}
