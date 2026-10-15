@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {boxDatabase,uid} from './box-db-fixture.mjs';
-import {normalizeMessage,moderate,parseReview,reviewRequest} from '../supabase/functions/box-chat/moderation.mjs';
+import {normalizeMessage,moderate,parseReview,reviewRequest,profanityBlock,safetyNormalize} from '../supabase/functions/box-chat/moderation.mjs';
 const migration=await readFile(new URL('../supabase/migrations/20261015010000_box_moderated_chat.sql',import.meta.url),'utf8');
 const reactionsMigration=await readFile(new URL('../supabase/migrations/20261015033000_box_chat_reactions.sql',import.meta.url),'utf8');
 async function setup(){const {db,call}=await boxDatabase();await db.exec(`alter table public.profiles add column school_id uuid;create role service_role; create table public.students(id uuid primary key,full_name text,school_id uuid);create table public.student_guardians(student_id uuid,guardian_profile_id uuid);insert into public.students values('${uid(50)}','Álvaro Silva',null),('${uid(51)}','Beatriz Santos',null);insert into public.student_guardians values('${uid(50)}','${uid(1)}'),('${uid(51)}','${uid(2)}');`);await db.exec(migration);await db.exec(migration);await db.exec(reactionsMigration);await db.exec(reactionsMigration);return {db,call};}
@@ -65,3 +65,10 @@ test('reactions are idempotent per student, private, room-scoped and only on app
  await db.query("update private.box_chat_messages set status='approved',created_at=now()-interval '8 days' where id=$1",[first.id]);await assert.rejects(react(2,a.id,first.id,'star'),/message_not_found/);
  await chat(db,1,a.id,uid(50));assert.equal((await db.query('select count(*)::int n from private.box_chat_reactions')).rows[0].n,0);
  }finally{await db.close();}});
+
+test('Brazilian profanity variants are blocked independently of a permissive AI, without substring blocking',async()=>{
+ const unsafe=['Ku','KU!','vai tomar no ku','k.u','k u','k_u','k-u','KÚ','k\u200bu','k\u00adu','k\u034fu','Ｋｕ','kuuuu','cu','c u','c🟢u','cú','CUZÃO','кυ','p0rr4','p.o.r.r.a','f d p','vtnc','v.s.f','f0d4-se','buc3t4','m3rd4'];
+ for(const body of unsafe){assert.equal(profanityBlock(body),true,body);let calls=[];const result=await moderate({body,code:'A10001',context:[]},{key:'test',fetcher:async(url)=>{calls.push(url);return {ok:true,json:async()=>({results:[{flagged:false}]})};}});assert.equal(result.allow,false,body);assert.equal(result.reason,'abuse');assert.equal(calls.length,1);assert(calls[0].endsWith('/moderations'));}
+ for(const body of ['cubo','cuidado','curva','cultura','curtir','curso','culpa','cuca','Pikachu','Kuromi','computador','disputa','Vamos pular!','Peguei o ovo','Derrotei o monstro','Vou te empurrar na corrida','Fase 4'])assert.equal(profanityBlock(body),false,body);
+ const request=reviewRequest({body:'Ku',code:'A10001',context:[]});assert.equal(request.model,'gpt-4.1-mini');assert.equal(JSON.parse(request.input).message.normalized_for_safety,'ku');assert.match(request.instructions,/variantes fonéticas/);assert.equal(normalizeMessage('k\u00adu'),'ku');assert.equal(safetyNormalize('p0rr4'),'porra');
+});

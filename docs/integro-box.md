@@ -256,3 +256,12 @@ Cada mensagem aprovada tem 👍, ⭐, 🎆 e 😊, com contagem por reação e d
 É possível arrastar o balão ou o cabeçalho do painel com mouse ou toque, sem abrir o chat ao terminar um arraste. A posição fica salva neste navegador; abertura, redimensionamento e tela cheia mantêm o painel nos limites da tela. Alternativa com teclado: focar o balão e usar Alt + setas.
 
 Validação: testes de banco cobrem contagem entre dois usuários, idempotência, retirada, isolamento, vínculo, RLS e limpeza; testes de interface cobrem mensagens não lidas, quatro reações, falha de rede, arrastar, limites, persistência e distinção entre clique e arraste.
+
+
+## Reforço contra variantes de palavrões — 15/10/2026
+
+Após relato de passagem da palavra “Ku”, a função `box-chat` recebeu uma camada determinística de bloqueio por palavra completa, independente da classificação da IA. Normaliza acentos, caracteres invisíveis, substituições frequentes de letras por números e alguns caracteres visualmente semelhantes; reconhece separadores e letras repetidas. Inclui `ku`, `k.u`, `k u`, `k_u` e outros palavrões/abreviações frequentes. Não é uma lista exaustiva de evasões.
+
+A instrução contextual passou a proibir explicitamente gírias vulgares isoladas e variantes fonéticas, mesmo sem alvo, preservando nomes/palavras comuns como cubo, cuidado e Kuromi. O texto original e uma representação normalizada são enviados juntos ao classificador; nenhum deles é tratado como instrução. Modelos mantidos: `omni-moderation-latest` e `gpt-4.1-mini` (padrão do parâmetro `BOX_CHAT_MODEL`). Falhas continuam sem publicação.
+
+A atualização foi publicada diretamente na Edge Function, sem mudança do frontend. Testes automatizados cobrem variantes, palavras comuns e um fornecedor simulado permissivo. Teste real em sala privada confirmou o bloqueio de “Ku” e “k.u” sem entrega no histórico; “Vamos montar um cubo!” foi aprovada. A consulta corretiva por variantes isoladas já aprovadas encontrou zero ocorrências; não houve alteração de mensagens antigas por essa consulta.
