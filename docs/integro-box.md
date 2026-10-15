@@ -1,5 +1,18 @@
 # Integro Box
 
+## Integro Rush — 15/10/2026 (rush1)
+
+Concluído o início de `rush-src/rules.mjs` encontrado na branch local `codex/integro-rush`. Jogo original de corrida em três faixas, com 15 fases de quatro minutos: Caribe, ruínas, neve, lava e ilhas do céu. Há saltos, deslizes, três vidas, pontos de retorno a cada minuto, ímã, escudo, estrelas e 24 acessórios visuais comprados apenas com moedas virtuais. O mapa desbloqueia as fases em sequência. Uma tentativa conserva moedas coletadas ao voltar ao ponto de retorno, sem permitir recolher a mesma moeda duas vezes.
+
+A entrada está no catálogo autenticado e na apresentação pública. O cenário Three.js usa peças instanciadas para a pista, geometria compartilhada e três níveis gráficos. Teclado, gestos e botões grandes funcionam com as mesmas regras. O jogo pausa ao ocultar a página ou perder foco, sai da sala online antes de iniciar e bloqueia reabertura após logout. A partida, moedas e acessórios ficam na chave `integro-rush-v1` do `BoxStorage`, separados por conta neste navegador. Não há sincronização entre aparelhos. A atualização do portal salva a corrida antes de recarregar.
+
+Reconstrução: `cd integro-box/rush-src && npm ci && npm run build`. A licença do Three.js está preservada no bundle. Nenhuma dependência é carregada de CDN em tempo de execução.
+
+A migração `20261015170000_box_rush_usage.sql` acrescenta `rush` ao registro de uso sem mudar permissões. Foi validada em banco isolado; a aplicação no banco de produção ainda precisa ser confirmada. Se o servidor ainda não aceitar `rush`, o cliente encerra a sessão anterior e sinaliza indisponibilidade, sem atribuir o tempo da corrida ao jogo anterior. O funcionamento individual não depende dessa migração.
+
+Verificação: `node --test tests/box-rush.test.mjs tests/box-gosnake.test.mjs tests/site-update.test.mjs` — 15 testes, todos aprovados. Cobrem passagem pelas 15 pistas, colisões, poderes, retorno sem duplicar moedas, loja, persistência, integração do catálogo, pausa, gestos, logout concorrente, falha de WebGL, montagem dos cinco ambientes e 24 acessórios, migração e escopo da gestão. A renderização WebGL real, o desempenho em celular e a aparência visual ainda não foram conferidos em navegador nesta sessão.
+
+
 ## Cabeçalho da conta e presença — 13/10/2026 (box9)
 
 A faixa superior de atalhos foi retirada da apresentação. O catálogo continua oferecendo todos os jogos. O cabeçalho exibe o `full_name` do próprio perfil autorizado e a quantidade de contas com o Integro Box aberto e visível. Uma conta equivale a uma presença, mesmo com várias abas/dispositivos. A conta familiar não permite identificar quantas pessoas físicas a utilizam.
