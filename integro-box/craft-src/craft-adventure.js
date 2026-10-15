@@ -125,7 +125,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
  spreadFluids(){
   // Recalculate a bounded flow from sources; removing a source drains its stream.
   const desired=new Map(),queue=[];for(const [n,id]of this.fluidSources){if(this.cells[n]!==id){this.fluidSources.delete(n);continue}queue.push([n,id,0]);desired.set(n,id)}
-  const pass=n=>!this.cells[n]||this.flowCells.has(n)||[22,23].includes(this.cells[n]);
+  const pass=n=>!this.smallCells.has(n)&&(!this.cells[n]||this.flowCells.has(n)||[22,23].includes(this.cells[n]));
   let cursor=0;while(cursor<queue.length&&desired.size<400){const [n,id,depth]=queue[cursor++],p=pos(n);if(p.y<=1)continue;const down=index(p.x,p.y-1,p.z);const below=this.cells[down];
    if(below&&[22,23].includes(below)&&below!==id){this.set(p.x,p.y-1,p.z,3);this.fluidSources.delete(down);continue}
    if(pass(down)&&!desired.has(down)){desired.set(down,id);queue.push([down,id,depth]);continue}
@@ -140,7 +140,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   for(let i=0;i<queue.length&&i<256;i++){const p=pos(queue[i]);for(const [dx,dy,dz]of directions){const x=p.x+dx,y=p.y+dy,z=p.z+dz;if(x<0||z<0||x>=SIZE||z>=SIZE||y<1||y>=HEIGHT)continue;const n=index(x,y,z),id=this.cells[n];if([57,58,13,20,59].includes(id)&&!powered.has(n)){powered.add(n);if(id===57)queue.push(n)}}}
   for(const [n,id]of [...this.features])if([57,13,20,59].includes(id)){const p=pos(n),old=this.meta(p),on=powered.has(n);if(!on&&!old.powered)continue;const m={...old,powered:on};if(id===13){m.open=on;this.setMeta(p,m);if(this.player&&this.collides(this.player.x,this.player.y,this.player.z))m.open=true;}if(id===20)m.lit=on;
    if(id===59){const r=m.rot||0,dx=[0,1,0,-1][r],dz=[-1,0,1,0][r],front={x:p.x+dx,y:p.y,z:p.z+dz},end={x:p.x+dx*2,y:p.y,z:p.z+dz*2},b=this.get(front.x,front.y,front.z);
-    if(on&&!m.extended&&(b===0||isCube(b)&&b!==11)&&!this.occupied(end.x,end.y,end.z)&&!this.overlaps(front.x,front.y,front.z)&&!this.overlaps(end.x,end.y,end.z)&&end.x>0&&end.z>0&&end.x<SIZE-1&&end.z<SIZE-1){if(b)this.set(end.x,end.y,end.z,b);this.set(front.x,front.y,front.z,63);m.extended=true}
+    if(on&&!m.extended&&!this.smallCells.has(index(front.x,front.y,front.z))&&(b===0||isCube(b)&&b!==11)&&!this.occupied(end.x,end.y,end.z)&&!this.overlaps(front.x,front.y,front.z)&&!this.overlaps(end.x,end.y,end.z)&&end.x>0&&end.z>0&&end.x<SIZE-1&&end.z<SIZE-1){if(b)this.set(end.x,end.y,end.z,b);this.set(front.x,front.y,front.z,63);m.extended=true}
     if(!on&&m.extended){if(b===63)this.set(front.x,front.y,front.z,0);m.extended=false}
    }this.setMeta(p,m);
   }

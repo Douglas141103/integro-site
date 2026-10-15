@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {BLOCKS} from './craft-items.js';
 const mat=c=>new THREE.MeshLambertMaterial({color:c});
-function builder(group,center=.5){const palette=new Map();return(w,h,d,c,x,y,z,glow=false)=>{const key=c+':'+glow;if(!palette.has(key)){const m=mat(c);if(glow){m.emissive=new THREE.Color(c);m.emissiveIntensity=.7}palette.set(key,m)}const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),palette.get(key));b.position.set(x-center,y,z-center);group.add(b);return b}}
+function builder(group,center=.5){const palette=new Map();return(w,h,d,c,x,y,z,glow=false)=>{const key=c+':'+glow;if(!palette.has(key)){const m=mat(c);if(glow){m.emissive=new THREE.Color(c);m.emissiveIntensity=.7}palette.set(key,m)}const b=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.16),palette.get(key));b.position.set(x-center,y,z-center);group.add(b);return b}}
 export function makeProp(id,meta={}){const g=new THREE.Group(),box=builder(g),wood=0xba8b56,dark=0x715039,cream=0xf5e9ce;
  if(id===12){for(let i=0;i<4;i++){box(1,(i+1)*.25,.25,wood,.5,(i+1)*.125,(i+.5)*.25);box(.98,.035,.23,0xdfb67d,.5,(i+1)*.25+.008,(i+.5)*.25)}}
  if(id===13){const door=new THREE.Group(),b=builder(door,0);door.position.set(-.5,0,-.5);b(1,1.92,.12,wood,.5,.96,.06);for(const x of[.11,.89])b(.09,1.84,.14,dark,x,.96,.06);for(const y of[.12,1.02,1.81])b(.85,.08,.14,dark,.5,y,.06);for(const x of[.3,.65])b(.2,.47,.015,0xa8d4d0,x,1.39,-.01);b(.08,.09,.1,0xf7d372,.83,.92,-.03);if(meta.open){door.rotation.y=-Math.PI/2;door.position.x+=.12;}g.add(door)}

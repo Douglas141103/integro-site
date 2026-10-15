@@ -274,3 +274,14 @@ Versão `20261015-craft3`: controles circulares translúcidos, barra de seis ata
 No mundo individual, mirar em animal adulto transforma Quebrar em Caçar (tecla E): vaca/porco dão 3 carnes, boi 4, ovelha/capivara 2. O animal sai do mundo e a carne vai diretamente à mochila, sem sangue. Filhotes, alcance acima de 4 blocos e mochila cheia não permitem coleta. Carne crua (64) exige fornalha: 1 carne + 1 madeira, 12 s, produz 1 carne assada (65). Usar carne assada recupera 55 de alimento e 20 de vida. Animais removidos, carne e cozimento persistem no salvamento. Salas compartilhadas continuam no protocolo de blocos básicos, sem animais.
 
 Validação: `node tests/box-craft-food.cjs`, `node tests/box-craft-adventure.cjs`, `node tests/box-craft-hud.cjs` e bundle esbuild. O teste de HUD usa Three/raycast real com renderizador substituído; não houve conferência visual/WebGL em navegador nesta sessão.
+
+
+## IntegroCraft — blocos de meia unidade e detalhes (15/10/2026)
+
+Versão `20261015-craft4`: no mundo individual, materiais básicos e lã são colocados em uma grade de 0,5 unidade em cada eixo. Geometria, mira e colisões usam o tamanho real reduzido. Ao minerar um bloco antigo, somente uma das oito peças é retirada; as outras sete permanecem no local. Cada peça usa/retorna uma unidade na mochila. Preencher as oito partes com o mesmo material reúne novamente a célula, permitindo as interações existentes. Móveis, estações, terras preparadas e minérios preservam suas regras de tamanho/interação. O campo de visão voltou para 88° retrato / 74° paisagem, pois a redução agora está nas peças.
+
+`smallCells` é um campo adicional do save v2 (até 4.000 células detalhadas), validado na leitura e preservado junto das construções anteriores. Líquidos e pistões respeitam as construções pequenas. As salas online mantêm o protocolo anterior de blocos inteiros, com as melhorias visuais. Não houve migração de banco.
+
+Faces expostas do terreno usam quatro quadrados menores; árvores naturais têm troncos de nove faces e folhagem arredondada, com colisões ajustadas. Modelos de móveis/animais têm arestas suaves. Grama e flores são agrupadas por chunk em uma malha decorativa sem interferir na mira. Construções existentes de madeira/folhas mantêm seus formatos.
+
+Validação: `box-craft-detail.cjs` verifica dimensões reais de 0,5 unidade e raycast, colisões, alcance, inventário, mineração parcial, salvamento, reunião das peças, líquidos e compatibilidade com saves antigos. Suítes de HUD, aventuras, alimentos e atualização também verificadas. Renderização WebGL visual não disponível nesta sessão.

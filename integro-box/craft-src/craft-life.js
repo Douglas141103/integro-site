@@ -20,10 +20,10 @@ export const lifeMethods={
  meta(p){return this.props.get(idx(p.x,p.y,p.z))||{rot:0}},
  setMeta(p,m){this.props.set(idx(p.x,p.y,p.z),m);this.lifeDirty=true},
  nearby(p){return p&&Math.hypot(p.x+.5-this.player.x,p.y+.5-(this.player.y+1.5),p.z+.5-this.player.z)<=7},
- occupied(x,y,z){if(this.get(x,y,z))return true;const below=this.get(x,y-1,z);return below>=12&&below<=21&&itemHeight(below)>1},
+ occupied(x,y,z){if(this.get(x,y,z)||this.smallCells?.has(idx(x,y,z)))return true;const below=this.get(x,y-1,z);return below>=12&&below<=21&&itemHeight(below)>1},
  collisionAt(x,y,z){
   if(x<.32||z<.32||x>SIZE-.32||z>SIZE-.32)return true;
-  for(let a=Math.floor(x-.29);a<=Math.floor(x+.29);a++)for(let b=Math.floor(y+.02)-1;b<=Math.floor(y+1.74);b++)for(let c=Math.floor(z-.29);c<=Math.floor(z+.29);c++)for(const q of itemBoxes(this.get(a,b,c),this.meta({x:a,y:b,z:c}))){if(x+.29>a+q[0]&&x-.29<a+q[3]&&y+1.74>b+q[1]&&y+.02<b+q[4]&&z+.29>c+q[2]&&z-.29<c+q[5])return true}
+  for(let a=Math.floor(x-.29);a<=Math.floor(x+.29);a++)for(let b=Math.floor(y+.02)-1;b<=Math.floor(y+1.74);b++)for(let c=Math.floor(z-.29);c<=Math.floor(z+.29);c++)for(const q of this.detailBoxes(a,b,c)){if(x+.29>a+q[0]&&x-.29<a+q[3]&&y+1.74>b+q[1]&&y+.02<b+q[4]&&z+.29>c+q[2]&&z-.29<c+q[5])return true}
   return false;
  },
  stepMove(x,z){const p=this.player;if(!this.collides(x,p.y,z)){p.x=x;p.z=z;return}
