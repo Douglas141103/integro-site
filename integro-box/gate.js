@@ -7,6 +7,7 @@ function lock(){
  window.BoxChat?.stop();
  window.BoxPresence?.stop();
  window.BoxGoSnake?.stop();
+ window.BoxRush?.stop();
  window.BoxBounce?.stop();
  window.BoxInterDance?.stop();
  window.BoxCraft?.stop?.();
@@ -39,8 +40,9 @@ try {
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce.js?v=20261014-bounce3');
-  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261015-chat2');startUsage();}
-  if(!unloaded)await script('./catalog.js?v=20261014-egg14-powers1');
+  if(!unloaded){const {installRush}=await import('./rush.js?v=20261015-rush1');installRush();}
+  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261015-rush1');startUsage();}
+  if(!unloaded)await script('./catalog.js?v=20261015-rush1');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

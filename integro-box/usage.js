@@ -1,12 +1,12 @@
 import {supabase} from './access.js?v=20261015-chat1';
-const screens={danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
+const screens={rushApp:'rush',danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
 export function currentGame(doc=document){
  for(const [id,game] of Object.entries(screens)){const el=doc.getElementById(id);if(el&&!el.hidden&&!el.classList.contains('hidden'))return game;}
  const play=doc.getElementById('play');
  return play&&!play.hidden&&!play.classList.contains('hidden')?window.BoxUsageGame||'lobby':'lobby';
 }
 export function startUsage({client=supabase}={}){
- let id=crypto.randomUUID(),danceUnavailable=false;
+ let id=crypto.randomUUID(),unavailable=new Set();
  const device=matchMedia('(pointer:coarse)').matches?(Math.min(screen.width,screen.height)<600?'mobile':'tablet'):'desktop';
  let lastInput=Date.now(),busy=false,stopped=false,lastState='',timer,queued=false;
  const notice=document.getElementById('boxUsageNotice');
@@ -22,14 +22,15 @@ export function startUsage({client=supabase}={}){
  async function pulse(action='pulse'){
   if(stopped)return;if(busy){queued=true;return;}busy=true;const s=state();lastState=JSON.stringify(s);
   try{
-   if(danceUnavailable&&s.p_game==='interdance'){if(notice)notice.textContent=normal+' Registro do InterDance temporariamente indisponível.';return;}
+   const label=s.p_game==='rush'?'Integro Rush':'InterDance';
+   if(unavailable.has(s.p_game)){if(notice)notice.textContent=normal+' Registro do '+label+' temporariamente indisponível.';return;}
    const {data,error}=await client.rpc('box_usage',{p_session:id,p_action:action,p_device:device,...s});
-   if(s.p_game==='interdance'&&/invalid_usage/.test(error?.message||'')){
-    // Old deployments must not attribute unrecorded dance time to the previous game.
-    danceUnavailable=true;
+   if(['interdance','rush'].includes(s.p_game)&&/invalid_usage/.test(error?.message||'')){
+    // Old deployments must not attribute unrecorded game time to the previous game.
+    unavailable.add(s.p_game);
     await client.rpc('box_usage',{p_session:id,p_action:'end',p_device:device,p_game:'lobby',p_room:null,p_active:false,p_visible:false});
     id=crypto.randomUUID();
-    if(notice)notice.textContent=normal+' Registro do InterDance temporariamente indisponível.';
+    if(notice)notice.textContent=normal+' Registro do '+label+' temporariamente indisponível.';
     return;
    }
    if(notice)notice.textContent=error||data?.error?normal+' Registro temporariamente indisponível.':normal;
