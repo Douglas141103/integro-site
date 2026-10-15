@@ -1,3 +1,4 @@
+import {fineFluidMethods} from './craft-fluids.js';
 import {detailMethods} from './craft-detail.js';
 import {SIZE,HEIGHT,WATER_LEVEL,index} from './craft-config.js';
 export {SIZE,HEIGHT,WATER_LEVEL,index} from './craft-config.js';
@@ -10,7 +11,7 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));const hash=(x,z)=>{const n=Math.s
 export const groundLevel=(x,z)=>Math.floor(6+Math.sin(x*.16)*1.8+Math.cos(z*.17)*1.7+(x>29?Math.max(0,1-Math.hypot(x-38,z-33)/18)*10:0));
 export class CraftWorld{
  constructor(raw){raw=upgradeSave(raw);this.cells=new Uint8Array(SIZE*SIZE*HEIGHT);this.edits=new Map();this.inventory={1:24,2:24,3:24,4:12,5:12,6:16,7:12,8:12,9:24,10:8};this.stats={mined:0,placed:0,crafted:0};this.selected=1;this.creative=false;this.time=0;this.dirty=new Set();this.generate();generateExpansion(this);this.base=this.cells.slice();if(raw?.version===2){for(const e of Array.isArray(raw.edits)?raw.edits:[]){if(Array.isArray(e)&&Number.isInteger(e[0])&&e[0]>=SIZE*SIZE&&e[0]<this.cells.length&&Number.isInteger(e[1])&&e[1]>=0&&(!!BLOCKS[e[1]]||e[1]===0)&&e[1]!==11){this.cells[e[0]]=e[1];this.edits.set(e[0],e[1])}}for(const k in this.inventory)this.inventory[k]=Number.isFinite(raw.inventory?.[k])?Math.floor(clamp(raw.inventory[k],0,9999)):this.inventory[k];for(const k in this.stats)this.stats[k]=Math.floor(clamp(Number(raw.stats?.[k])||0,0,1e6));if(BLOCKS[raw.selected]&&raw.selected!==11)this.selected=raw.selected;this.creative=raw.creative===true;this.time=Number.isFinite(raw.time)?Math.max(0,raw.time):0;}
- this.initDetail(raw);this.initLife(raw);this.initAdventure(raw);this.lastSafe=this.findDrySpawn();this.jumpBuffer=0;this.player={...this.lastSafe,vy:0,yaw:Math.PI,pitch:-.05,grounded:false};if(raw?.player){const p=raw.player;if(['x','y','z','yaw','pitch'].every(k=>Number.isFinite(p[k]))&&p.x>1&&p.x<SIZE-1&&p.z>1&&p.z<SIZE-1&&p.y>1&&p.y<HEIGHT+12&&!this.collides(p.x,p.y,p.z))Object.assign(this.player,{x:p.x,y:p.y,z:p.z,yaw:p.yaw,pitch:clamp(p.pitch,-1.4,1.4)})}}
+ this.initDetail(raw);this.initLife(raw);this.initAdventure(raw);this.initFineFluids(raw);this.lastSafe=this.findDrySpawn();this.jumpBuffer=0;this.player={...this.lastSafe,vy:0,yaw:Math.PI,pitch:-.05,grounded:false};if(raw?.player){const p=raw.player;if(['x','y','z','yaw','pitch'].every(k=>Number.isFinite(p[k]))&&p.x>1&&p.x<SIZE-1&&p.z>1&&p.z<SIZE-1&&p.y>1&&p.y<HEIGHT+12&&!this.collides(p.x,p.y,p.z))Object.assign(this.player,{x:p.x,y:p.y,z:p.z,yaw:p.yaw,pitch:clamp(p.pitch,-1.4,1.4)})}}
  get(x,y,z){if(y<0)return 11;if(x<0||z<0||x>=SIZE||z>=SIZE||y>=HEIGHT)return 0;return this.cells[index(x,y,z)]}
  generate(){for(let x=0;x<48;x++)for(let z=0;z<48;z++){const h=groundLevel(x,z);for(let y=0;y<=h;y++)this.cells[index(x,y,z)]=y===0?11:y<h-2?3:y<h?2:h<6?6:h>12?10:1;}for(let x=3;x<48-3;x++)for(let z=3;z<48-3;z++){const h=groundLevel(x,z);if(h<6||h>11||Math.hypot(x-23,z-10)<5||hash(x,z)>.025)continue;for(let y=h+1;y<h+5;y++)this.cells[index(x,y,z)]=4;for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++){if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)>3)continue;const n=index(x+dx,h+dy,z+dz);if(!this.cells[n])this.cells[n]=5;}}}
  surface(x,z){for(let y=HEIGHT-1;y>=0;y--)if((this.get(x,y,z)&&!BLOCKS[this.get(x,y,z)]?.fluid)||this.smallCells?.has(index(x,y,z)))return y;return 0}
@@ -34,10 +35,12 @@ export class CraftWorld{
  if(wantJump&&(water||p.grounded)){p.vy=Math.max(p.vy,9);this.jumpBuffer=0}
  if(water){if(wantJump||p.vy>3)p.vy-=5*dt;else{const buoyancy=(this.waterSurface()-.65-p.y)*14-p.vy*5;p.vy=clamp(p.vy+buoyancy*dt,-2,3)}}else p.vy=Math.max(-24,p.vy-24*dt);
  this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);const dy=p.vy*dt,n=Math.max(1,Math.ceil(Math.abs(dy)/.15));p.grounded=false;for(let i=0;i<n;i++){if(!this.collides(p.x,p.y+dy/n,p.z))p.y+=dy/n;else{if(p.vy<0)p.grounded=true;p.vy=0;break}}}if(p.y<-3)this.home()}
- serialize(){return{version:2,...this.lifeSave(),...this.adventureSave(),...this.detailSave(),edits:[...this.edits],inventory:{...this.inventory},selected:this.selected,creative:this.creative,stats:{...this.stats},time:this.time,player:{...this.player}}}
+ serialize(){return{version:2,...this.lifeSave(),...this.adventureSave(),...this.detailSave(),...this.fineFluidSave(),edits:[...this.edits],inventory:{...this.inventory},selected:this.selected,creative:this.creative,stats:{...this.stats},time:this.time,player:{...this.player}}}
 }
 
 Object.assign(CraftWorld.prototype,lifeMethods);
 Object.assign(CraftWorld.prototype,adventureMethods(CraftWorld.prototype));
 
 Object.assign(CraftWorld.prototype,detailMethods());
+
+Object.assign(CraftWorld.prototype,fineFluidMethods(CraftWorld.prototype));

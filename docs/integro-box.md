@@ -285,3 +285,12 @@ Versão `20261015-craft4`: no mundo individual, materiais básicos e lã são co
 Faces expostas do terreno usam quatro quadrados menores; árvores naturais têm troncos de nove faces e folhagem arredondada, com colisões ajustadas. Modelos de móveis/animais têm arestas suaves. Grama e flores são agrupadas por chunk em uma malha decorativa sem interferir na mira. Construções existentes de madeira/folhas mantêm seus formatos.
 
 Validação: `box-craft-detail.cjs` verifica dimensões reais de 0,5 unidade e raycast, colisões, alcance, inventário, mineração parcial, salvamento, reunião das peças, líquidos e compatibilidade com saves antigos. Suítes de HUD, aventuras, alimentos e atualização também verificadas. Renderização WebGL visual não disponível nesta sessão.
+
+
+## IntegroCraft — água e lava nos canais pequenos (15/10/2026)
+
+Versão `20261015-craft5`: baldes usam a face da mira na grade de meia unidade, permitindo despejar em canais estreitos e nas laterais de bordas sem chão imediatamente abaixo. Água e lava descem por gravidade e se espalham ao encontrar apoio (respectivamente até 8 e 4 passos horizontais de meia unidade), com limite de 2.048 células de fluxo e 64 novas fontes. O fluxo é recalculado ao usar o balde e a cada segundo, preservando os blocos pequenos das margens e do fundo. As fontes antigas de bloco inteiro continuam compatíveis.
+
+Fontes novas são salvas em `fineSources`, separadas dos sólidos; a corrente é derivada novamente ao carregar. O balde vazio recolhe a fonte associada à corrente na mira e drena sua queda, devolvendo um balde cheio uma única vez. Água e lava em contato solidificam em pedra. A malha por chunk une os segmentos verticais, com textura de movimento para água e lava; a mira reconhece o fluxo. Água pequena participa da irrigação/nado e lava mantém o retorno seguro ao início. Recursos disponíveis no mundo individual.
+
+Validação: `node tests/box-craft-waterfalls.cjs` cobre os dois líquidos, canais de 0,5 unidade, queda sem apoio, preservação dos sólidos, mira, salvamento, coleta/drenagem, alteração de caminho, inventário, alcance, mistura, entradas inválidas e limites. Suítes anteriores de blocos pequenos, aventura e HUD mantidas. Conferência visual/WebGL no navegador não disponível nesta sessão.

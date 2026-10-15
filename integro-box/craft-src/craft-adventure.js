@@ -125,7 +125,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
  spreadFluids(){
   // Recalculate a bounded flow from sources; removing a source drains its stream.
   const desired=new Map(),queue=[];for(const [n,id]of this.fluidSources){if(this.cells[n]!==id){this.fluidSources.delete(n);continue}queue.push([n,id,0]);desired.set(n,id)}
-  const pass=n=>!this.smallCells.has(n)&&(!this.cells[n]||this.flowCells.has(n)||[22,23].includes(this.cells[n]));
+  const pass=n=>!this.smallCells.has(n)&&!this.fineFluidCells?.has(n)&&(!this.cells[n]||this.flowCells.has(n)||[22,23].includes(this.cells[n]));
   let cursor=0;while(cursor<queue.length&&desired.size<400){const [n,id,depth]=queue[cursor++],p=pos(n);if(p.y<=1)continue;const down=index(p.x,p.y-1,p.z);const below=this.cells[down];
    if(below&&[22,23].includes(below)&&below!==id){this.set(p.x,p.y-1,p.z,3);this.fluidSources.delete(down);continue}
    if(pass(down)&&!desired.has(down)){desired.set(down,id);queue.push([down,id,depth]);continue}
