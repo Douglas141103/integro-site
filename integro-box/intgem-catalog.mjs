@@ -9,7 +9,7 @@ export const GAMES=[
  ['words','Ponte das Palavras','play','letters'],['robot','Rota do Robô','play','robot'],
  ['memory','Memória em Inglês','play','cards']
 ].map(([id,name,screen,symbol])=>({id,name,screen,symbol}));
-export const PACKS=[{id:'gem1',gems:1,cents:99},{id:'gem5',gems:5,cents:299},{id:'gem10',gems:10,cents:699},{id:'gem20',gems:20,cents:1099}];
+export const PACKS=[{id:'gem1',gems:1,cents:100},{id:'gem5',gems:5,cents:299},{id:'gem10',gems:10,cents:699},{id:'gem20',gems:20,cents:1099}];
 export const ITEMS=GAMES.flatMap(g=>[
  {id:g.id+'_jade',game:g.id,name:'Aura de Jade',kind:'aura',rarity:'Raro',price:4,color:'#54ead2',secondary:'#86aaff',description:'Brilho de cristal e moldura de jade no cenário de '+g.name+'.'},
  {id:g.id+'_guardian',game:g.id,name:'Guardião '+({egg:'do Ninho',rush:'da Expedição',bounce:'dos Saltos',bairro:'do Bairro',fruit:'das Frutas',craft:'dos Blocos',gosnake:'da Serpente',fuitcort:'da Lâmina',interball:'da Arena',interdance:'do Ritmo',house:'das Descobertas',math:'dos Números',words:'das Palavras',robot:'da Rota',memory:'da Memória'}[g.id]),kind:'companion',rarity:'Épico',price:7,color:'#ffc96a',secondary:'#63e7e5',description:'Mascote animado no HUD que acompanha você em '+g.name+'.'},

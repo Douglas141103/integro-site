@@ -25,7 +25,7 @@ test('wallet uses confirmed balances, buys with displayed server price, and moun
    server={...server,equipped:[{game:game.id,kind:'aura',item:game.id+'_jade'},{game:game.id,kind:'companion',item:game.id+'_guardian'}]};await api.refresh();
    assert.equal(w.document.querySelector('.ig-dock').parentElement.id,game.screen);assert.equal(w.document.querySelector('.ig-aura').parentElement.id,game.screen);assert(w.document.querySelector('.ig-companion svg'));
   }
-  await api.open('packs');assert.equal(w.document.querySelectorAll('[data-pack]').length,4);assert.match(w.document.querySelector('.ig-packs').textContent,/0,99/);
+  await api.open('packs');assert.equal(w.document.querySelectorAll('[data-pack]').length,4);assert.match(w.document.querySelector('.ig-packs').textContent,/1,00/);assert.equal(w.document.querySelector('[data-pack="gem1"]').disabled,false);assert.equal(w.document.querySelector('[data-pack="gem5"]').disabled,false);
   api.stop();assert.equal(w.BoxIntGem,undefined);assert.equal(w.document.querySelector('.ig-dock'),null);assert.equal(w.document.querySelector('.ig-game-themed'),null);
  }finally{w.BoxIntGem?.stop();w.close();}
 });
