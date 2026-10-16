@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {EggAdventure,WORLDS,NESTS,LENGTH,CORRAL,TREADMILL,TRACK_HALF_WIDTH,PLAYER_RADIUS,corridorHalfWidth,constrainToCorridor} from '../integro-box/egg-src/egg-rules.js';
 const legal=p=>assert(Math.abs(p.x)<=corridorHalfWidth(p.z)-PLAYER_RADIUS+1e-8,`outside track at ${p.x}, ${p.z}`);
 
-test('all fourteen tracks contain running, sprinting and airborne players at maximum training',()=>{
+test('all twenty tracks contain running, sprinting and airborne players at maximum training',()=>{
  for(let world=0;world<WORLDS.length;world++)for(const sign of[-1,1]){
   const g=new EggAdventure();g.save.training=600;g.save.upgrades.turbo=10;g.save.upgrades.boots=10;g.save.abilityStock.doubleJump=1;g.useAbility('doubleJump');
   g.player.z=-world*LENGTH-20;g.jump();

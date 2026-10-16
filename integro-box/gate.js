@@ -30,11 +30,11 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
-  await script('./egg.js?v=20261016-egg-toon1');
+  await script('./egg.js?v=20261016-egg20-rides1');
   await script('./worlds.js?v=20261013-egg1');
-  await import('./multiplayer.js?v=20261015-chat1');
+  await import('./multiplayer.js?v=20261016-egg20-rides1');
   if(!unloaded)await import('./chat.js?v=20261015-chat6');
-  if(!unloaded)await import('./egg-cloud.js?v=20261014-egg14-powers1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261016-egg20-rides1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261013-dance1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');

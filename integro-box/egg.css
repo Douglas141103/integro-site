@@ -199,3 +199,6 @@
 #eggApp:has(.egg-sheet:not([hidden])) .egg-ability-dock{pointer-events:none}
 @media(max-width:600px) and (orientation:portrait){.egg-ability-dock{bottom:158px}.egg-ability-button{width:48px;height:48px}}
 @media(max-height:450px){.egg-ability-dock{bottom:14px;gap:8px}.egg-ability-button{width:48px;height:48px}}
+
+#eggRideBonus{color:#9fe2b0;font-size:.65rem;font-weight:800;white-space:nowrap}
+#eggJump.held{transform:translateY(2px);filter:brightness(1.12)}

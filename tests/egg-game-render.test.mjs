@@ -27,6 +27,14 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   w.BoxEggRuntime.raceStart();w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),accessories:['crown'],equipped:{head:'crown'},creatures:[{id:1,uid:'pet-one',world:0,rarity:'common',mutation:'normal'}],companionId:'pet-one'});tick(20);assert.equal(state().equippedModels,2);assert.equal(state().creatures.length,1);
   key('d');tick(34);key('d',true);key('e');assert.equal(state().mode,'train');tick(40);assert(state().trainXP>0);assert.equal(actor.model.current,'run');
   w.BoxEggCloud={frozen:true};const pose=actor.model.bones.kneeL.quaternion.toArray();tick(20);assert.deepEqual(actor.model.bones.kneeL.quaternion.toArray(),pose);w.BoxEggCloud.frozen=false;
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),vehicles:['skateBreeze','scooterPort'],vehicle:'skateBreeze'});tick(3);
+  const joy=w.document.getElementById('eggJoystick'),jump=w.document.getElementById('eggJump'),sprint=w.document.getElementById('eggSprint');
+  joy.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});for(const el of [joy,jump,sprint])el.setPointerCapture=()=>{};
+  const pointer=(el,type,id,x=50,y=50)=>{const e=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:id,pointerType:'touch',button:0,isPrimary:id===1,clientX:x,clientY:y});el.dispatchEvent(e);};
+  pointer(joy,'pointerdown',1,50,10);pointer(sprint,'pointerdown',2);tick(3);const beforeJump=state().player.z;pointer(jump,'pointerdown',3);tick(5);assert(state().player.y>.3);assert(state().player.z<beforeJump-.8);assert.equal(actor.vehicleId,'skateBreeze');
+  pointer(jump,'pointercancel',3);pointer(sprint,'pointerup',2);const stillRunning=state().player.z;tick(5);assert(state().player.z<stillRunning,'releasing action fingers preserves joystick');pointer(joy,'pointerup',1);tick(60);const stoppedZ=state().player.z;tick(5);assert.equal(state().player.z,stoppedZ);
+  pointer(jump,'pointerdown',4);key('Escape');const pausedY=state().player.y;tick(10);pointer(jump,'pointerdown',5);assert.equal(state().player.y,pausedY);key('Escape');tick(70);
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:1000000});w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();w.document.querySelector('[data-shop-tab="vehicles"]').click();assert.equal(w.document.querySelectorAll('[data-vehicle]').length,2);assert.match(w.document.getElementById('eggSheetTag').textContent,/96 ITENS/);w.document.querySelector('[data-vehicle="scooterPort"]').click();w.document.getElementById('eggCloseSheet').click();tick(2);assert.equal(actor.vehicleId,'scooterPort');
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });
