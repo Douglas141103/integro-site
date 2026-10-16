@@ -76,7 +76,7 @@ async function sync(){
  const token=version,adapter=window.BoxAdapters[room.game];
  if(!adapter.active()||document.hidden){status('Sala pausada. Volte ao jogo em até 30 segundos para manter sua presença.');schedule(1500);return;}
  const raw=adapter.state();if(!raw){schedule();return;}
- const state={x:raw.x,y:raw.y||0,z:raw.z,yaw:raw.yaw||0,zone:raw.zone,gesture:Date.now()<gestureUntil?gesture:''};
+ const state={x:raw.x,y:raw.y||0,z:raw.z,yaw:raw.yaw||0,zone:raw.zone,gesture:Date.now()<gestureUntil?gesture:'',vehicle:room.game==='egg'&&window.BoxEgg?.vehicleIds?.includes(raw.vehicle)?raw.vehicle:''};
  const edit=editQueue[0]||null;
  try{
   const data=await rpc('sync',{p_state:state,p_revision:room.revision,p_edit:edit});

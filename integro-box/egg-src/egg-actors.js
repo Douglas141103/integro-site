@@ -1,3 +1,5 @@
+import {VEHICLES} from './egg-expansion.js';
+import {vehicleModel} from './egg-expansion-models.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {RunnerCharacter} from '../rush-src/character.js';
@@ -23,14 +25,21 @@ export class EggExplorer {
   this.pack=new T.Group();for(const child of [...b.back.children])this.pack.add(child);b.back.add(this.pack);
   this.elapsed=0;this.previous=null;this.takeoff=8;this.carryBlend=0;this.g.userData.actor=this;
  }
- update(dt,{player,moving=0,training=false,carrying=false,speed=9,push=false,reducedMotion=false}={}){
+ update(dt,{player,moving=0,training=false,carrying=false,speed=9,push=false,reducedMotion=false,vehicle=null}={}){
   const p=player||{x:0,y:0,z:0,vy:0};dt=clamp(dt,0,.05);if(!dt)return;this.elapsed+=dt;
+  const vehicleId=!training&&VEHICLES[vehicle]?vehicle:null;if(vehicleId!==this.vehicleId){this.ride?.removeFromParent();this.vehicleId=vehicleId;this.ride=vehicleId?vehicleModel(this.art,vehicleId,VEHICLES[vehicleId]):null;if(this.ride)this.g.add(this.ride);}
+  this.space.position.y=this.ride?.52+Math.sin(this.elapsed*4)*.018:0;if(this.ride){this.ride.position.y=this.space.position.y-.22;this.ride.rotation.z=Math.sin(this.elapsed*2)*.015;}
   if(p.vy>0&&(!this.previous||p.vy>this.previous.vy+.2||this.previous.y===0))this.takeoff=Math.max(1,p.vy);
-  const airborne=p.y>.002||p.vy>0,phase=clamp((1-p.vy/this.takeoff)*.5,0,.99),idle=!training&&moving<.02&&!airborne;
+  const airborne=p.y>.002||p.vy>0,phase=clamp((1-p.vy/this.takeoff)*.5,0,.99),idle=!training&&(moving<.02||this.ride)&&!airborne;
   this.model.update({x:0,lane:0,jump:airborne?(1-phase)*1.05:0,y:0,slide:0,invincible:0,speed:18*clamp(speed/9,.8,2.1),level:{speed:18}},dt,{preview:idle,previewYaw:0,externalVelocityY:p.vy/.82,time:this.elapsed,reducedMotion});
   this.model.root.rotation.y=0;
   this.carryBlend+=(Number(carrying)-this.carryBlend)*(1-Math.exp(-dt*16));
   const b=this.model.bones,w=this.carryBlend;
+  if(this.ride){
+   b.hips.position.y=.72-Math.max(0,Math.sin(this.model.landAge/.22*Math.PI))*(this.model.landAge<.22?.07:0);b.spine.rotation.x=-.10;b.chest.rotation.z=this.ride.rotation.z;b.head.rotation.x=.08;
+   this.model.root.updateMatrixWorld(true);const q=this.space.getWorldQuaternion(new T.Quaternion()),skate=VEHICLES[vehicleId].type==='skate';
+   for(const [side,sign]of[['L',-1],['R',1]]){const target=new T.Vector3(sign*.20,.115,skate?sign*.28:sign*.18).applyMatrix4(this.space.matrixWorld);this.model.legs[side].solve(target,q);b['shoulder'+side].rotation.set(skate?.18:1.05,0,skate?sign*.38:sign*.05);b['elbow'+side].rotation.x=skate?.45:.2;}
+  }
   for(const [side,sign]of[['L',1],['R',-1]]){const arm=b['shoulder'+side],elbow=b['elbow'+side];arm.rotation.x=T.MathUtils.lerp(arm.rotation.x,.87,w);arm.rotation.z=T.MathUtils.lerp(arm.rotation.z,sign*.35,w);elbow.rotation.x=T.MathUtils.lerp(elbow.rotation.x,1.18,w);if(push){arm.rotation.x=1.35;elbow.rotation.x=.20;}}
   b.chest.rotation.y*=1-w*.7;this.model.root.updateMatrixWorld(true);this.previous={y:p.y,vy:p.vy};
  }
@@ -65,7 +74,13 @@ const SPECIES={
  robot:{head:[1.22,-.06],hip:.45,leg:.40,foot:.055,r:.10,arms:true},
  griffin:{head:[1.08,-.17],hip:.43,leg:.37,foot:.065,r:.085,wing:true},
  phoenix:{head:[1.12,-.16],hip:.43,leg:.37,foot:.065,r:.075,wing:true},
- clockOwl:{head:[1.16,-.1],hip:.37,leg:.31,foot:.065,r:.06,wing:true}
+ clockOwl:{head:[1.16,-.1],hip:.37,leg:.31,foot:.065,r:.06,wing:true},
+ hedgehog:{head:[.88,-.27],hip:.40,leg:.34,foot:.06,r:.075,quad:true},
+ otter:{head:[1.13,-.12],hip:.42,leg:.36,foot:.065,r:.09,arms:true},
+ scorpion:{head:[.43,-.35],hip:.24,leg:.18,foot:.06,r:.04,quad:true,low:true,legPairs:4},
+ auroraWolf:{head:[1.04,-.22],hip:.52,leg:.46,foot:.06,r:.075,quad:true},
+ galaxyAlien:{head:[1.14,-.1],hip:.45,leg:.39,foot:.065,r:.09,arms:true},
+ integroConductor:{head:[1.23,-.05],hip:.45,leg:.39,foot:.065,r:.10,arms:true}
 };
 
 // Keep all fourteen recognisable species. Rebind their low-poly surfaces to a
@@ -93,17 +108,17 @@ export class EggCreatureRig {
    if(target===chest)part.traverse(mesh=>{if(mesh.isMesh)torso.push(mesh);});
   }
   const legColor=['panda','penguin'].includes(kind)?0x274e4b:['chick','griffin','phoenix','clockOwl'].includes(kind)?0xeab25e:color;
-  for(const sign of[-1,1])for(const rear of(config.quad?[false,true]:[false])){
-   const name=(sign<0?'L':'R')+(rear?'Back':'Front'),z=config.quad?(rear?.31:-.25):0,x=sign*(config.low?.34:.21),l1=config.leg*.52,l2=config.leg*.48;
+  for(const sign of[-1,1])for(let row=0;row<(config.legPairs||(config.quad?2:1));row++){const rear=row>0;
+   const name=(sign<0?'L':'R')+(config.legPairs?String(row):rear?'Back':'Front'),z=config.legPairs?-.3+row*.22:config.quad?(rear?.31:-.25):0,x=sign*(config.low?.34:.21),l1=config.leg*.52,l2=config.leg*.48;
    const thigh=bone('thigh'+name,hips,x,config.hip,z),knee=bone('knee'+name,thigh,0,-l1,0),foot=bone('foot'+name,knee,0,-l2,0);
    Object.assign(this.bones,{['thigh'+name]:thigh,['knee'+name]:knee,['foot'+name]:foot});
-   const footShape=art.mesh(foot,kind==='robot'?'round':'ball',legColor,0,0,-.055,config.hop?.17:config.low?.16:.12,config.foot,config.hop?.30:config.waddle?.24:.18,'trim');
-   if(kind==='robot')footShape.scale.set(.22,.11,.32);
+   const footShape=art.mesh(foot,['robot','integroConductor'].includes(kind)?'round':'ball',legColor,0,0,-.055,config.hop?.17:config.low?.16:.12,config.foot,config.hop?.30:config.waddle?.24:.18,'trim');
+   if(['robot','integroConductor'].includes(kind))footShape.scale.set(.22,.11,.32);
    this.legs.push({name,thigh,knee,foot,x,z,l1,l2,phase:config.hop?0:(sign<0?0:.5)+(rear?.5:0),target:new T.Vector3()});
   }
   // Add articulated forearms to the two humanoid species.
   for(const arm of this.arms){const b=arm.bone,children=[...b.children];for(const c of children)b.remove(c);const fore=bone(b.name+'Elbow',b,0,-.23,0);this.bones[fore.name]=fore;arm.elbow=fore;
-   art.mesh(b,'ball',legColor,0,-.10,0,.12,.19,.12,'trim');art.mesh(fore,kind==='robot'?'round':'ball',legColor,0,-.12,-.02,.14,.19,.13,'trim');
+   art.mesh(b,'ball',legColor,0,-.10,0,.12,.19,.12,'trim');art.mesh(fore,['robot','integroConductor'].includes(kind)?'round':'ball',legColor,0,-.12,-.02,.14,.19,.13,'trim');
   }
   this.rig.updateMatrixWorld(true);this.skeleton=new T.Skeleton(Object.values(this.bones));this.index=Object.fromEntries(this.skeleton.bones.map((b,i)=>[b.name,i]));
   // A smoothly weighted torso bends between hips and chest instead of moving
