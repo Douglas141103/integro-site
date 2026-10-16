@@ -2,3 +2,43 @@
 @media(max-width:650px) and (orientation:portrait){.fruit-top{left:12px;right:12px;top:12px;gap:7px;grid-template-columns:40px 1fr 112px}.fruit-game-logo{width:145px;max-width:100%;height:83px;margin-top:-5px}.fruit-top-actions{display:grid;grid-template-columns:repeat(3,34px);gap:5px}.fruit-top button{width:34px;height:34px;padding:7px;border-radius:11px}.fruit-top #fruitBack{width:40px;height:40px}.fruit-hud{top:100px;left:14px;right:14px;width:auto;grid-template-columns:minmax(0,1fr) 84px}.fruit-quest{position:static}.fruit-quest button{width:29px;height:26px;padding:4px}.fruit-mission-card{padding:10px 12px}.fruit-mission-card strong{font-size:14px}.fruit-bottom{left:16px;right:16px;bottom:22px}.fruit-joystick{width:84px;height:84px}.fruit-context{left:0;bottom:105px;gap:10px}.fruit-context #fruitInteract{width:48px;height:48px}.fruit-context #fruitPotion{width:42px;height:44px}.fruit-attacks{gap:7px}.fruit-attacks button{width:50px;height:54px;padding:9px 9px 16px}.fruit-moves{gap:9px}.fruit-moves button{width:44px;height:42px;padding:7px 8px 12px}.fruit-toast{bottom:181px;max-width:90%;font-size:12px}.fruit-dialog{padding:17px;width:96vw}.fruit-dialog h2{font-size:21px}.fruit-dialog .fruit-panel-grid,.fruit-dialog .fruit-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:950px) and (orientation:landscape){.fruit-top{top:8px;left:12px;right:12px;grid-template-columns:36px 1fr auto}.fruit-top button{width:35px;height:35px;padding:7px;border-radius:10px}.fruit-game-logo{height:66px;width:140px;margin-top:-12px}.fruit-top-actions{gap:6px}.fruit-hud{top:54px;left:12px;width:270px;grid-template-columns:1fr 64px;gap:7px}.fruit-vitals{padding:7px 9px}.fruit-radar{height:60px}.fruit-hud-numbers{margin-bottom:4px}.fruit-mission-card{padding:8px 10px}.fruit-mission-card strong{font-size:12px}.fruit-mission-card span{font-size:9px}.fruit-quest{position:static;flex-direction:row;gap:3px}.fruit-quest button{height:24px;width:24px;padding:4px}.fruit-mission-card>div:first-child{max-width:166px}.fruit-radar span{bottom:-13px}.fruit-bottom{left:15px;right:15px;bottom:15px}.fruit-joystick{width:70px;height:70px}.fruit-context{left:84px;bottom:0}.fruit-context #fruitInteract{height:44px;width:44px}.fruit-attacks button{width:48px;height:48px;padding:7px 9px 14px}.fruit-moves button{width:39px;height:36px;padding:5px 8px 10px}.fruit-toast{bottom:135px;font-size:11px}.fruit-boss-meter{position:absolute;left:calc(100% + 14px);top:0;width:min(210px,30vw)}.fruit-dialog{max-height:94dvh}.fruit-overlay{padding:10px}.fruit-hud-alert{position:absolute;left:285px;top:45px;width:190px}}
 @media(prefers-reduced-motion:reduce){.fruit-app *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Compact play HUD: keep the center clear and reserve touch targets for play. */
+.fruit-top{top:max(7px,env(safe-area-inset-top));left:10px;right:10px;grid-template-columns:32px minmax(50px,90px) auto;justify-content:space-between;gap:6px;align-items:center}
+.fruit-top .fruit-game-logo{height:34px;width:100%;margin:0;filter:drop-shadow(0 2px 0 #14425742)}
+.fruit-top .fruit-top-actions{display:flex;gap:4px}
+.fruit-top button,.fruit-top #fruitBack{width:30px;height:32px;padding:6px;border-radius:10px;border-width:1px;box-shadow:0 2px 0 #173c4a}
+.fruit-hud{top:calc(max(7px,env(safe-area-inset-top)) + 40px);left:10px;right:auto;width:min(330px,calc(100% - 20px));grid-template-columns:minmax(0,1fr) 52px;gap:5px}
+.fruit-vitals{padding:5px 8px;border-width:1px;border-radius:10px;box-shadow:0 2px 0 #214f5b55}
+.fruit-hud-numbers{font-size:10px;line-height:12px;margin-bottom:3px}
+.fruit-meter-row{font-size:7px;line-height:9px;margin-bottom:3px;gap:5px;letter-spacing:.2px}
+.fruit-meter-row>span{width:35px}.fruit-meter-row>b{font-size:8px;min-width:20px}
+.fruit-hud progress{height:5px}.fruit-xp{margin-top:3px;gap:0}.fruit-xp progress{height:2px}.fruit-xp span{display:none}
+.fruit-radar{height:52px;border-width:2px;outline-width:1px;box-shadow:0 2px 0 #1e4e5d55}
+.fruit-radar span{bottom:3px;color:#fff5c8;font-size:6px;line-height:7px;letter-spacing:.5px;text-shadow:0 1px 2px #143e4b}
+.fruit-mission-card{padding:2px 4px 3px 7px;border-width:1px;border-radius:10px;gap:4px;box-shadow:0 2px 0 #153a4844;min-width:0}
+.fruit-mission-summary{display:flex;gap:5px;align-items:center;flex:1;min-width:0;min-height:30px;max-width:none;padding:0;border:0;background:none;color:inherit;text-align:left;pointer-events:auto}
+.fruit-mission-summary small{font-size:8px;letter-spacing:0;white-space:nowrap;flex:none}
+.fruit-mission-summary strong{font-size:11px;line-height:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fruit-mission-summary [data-mission]{display:none}
+.fruit-quest{position:static;display:flex;flex-direction:row;gap:3px}
+.fruit-quest #fruitQuest{display:none}.fruit-quest button{height:30px;width:30px;padding:6px;border-radius:7px}
+.fruit-island-track{height:2px}
+.fruit-boss-meter{position:static;width:auto;padding:4px 8px;border-radius:8px}.fruit-boss-meter strong{font-size:9px;line-height:11px;margin-bottom:2px}
+.fruit-hud-alert{position:static;width:auto;padding:4px 7px;border-width:1px;border-radius:8px;font-size:10px;line-height:13px}
+.fruit-bottom{left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom))}
+.fruit-joystick{width:72px;height:72px;border-width:2px;outline-width:2px}.fruit-joystick span{width:34px;height:34px;margin:-17px}
+.fruit-context{left:0;bottom:90px;gap:6px}.fruit-context #fruitInteract,.fruit-context #fruitPotion{width:44px;height:44px;padding:7px 7px 12px;border-radius:12px}
+.fruit-combat,.fruit-attacks,.fruit-moves{gap:6px}.fruit-attacks button{width:44px;height:48px;padding:7px 7px 14px;border-radius:12px}
+.fruit-moves button{width:44px;height:44px;padding:7px 7px 12px;border-radius:12px}
+.fruit-toast{bottom:156px;font-size:11px;line-height:15px;max-width:min(80%,320px)}
+.fruit-utilities{position:absolute;left:94px;bottom:max(12px,env(safe-area-inset-bottom));width:64px;z-index:4;display:grid;grid-template-columns:30px 30px;gap:4px;pointer-events:none}
+.fruit-utilities button{pointer-events:auto;position:relative;height:30px;min-width:0;padding:3px;border:1px solid #4d8c87;border-radius:9px;background:#e5f6e9eb;color:#174c59;box-shadow:0 2px 0 #214f5b55;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px}
+.fruit-utilities [data-fruit-rooms]{font-size:9px;font-weight:800}
+.fruit-utilities [data-fruit-wallet]{grid-column:1/-1}.fruit-utilities [data-fruit-wallet]>span{color:#258eb0;font-size:16px}.fruit-utilities [data-fruit-wallet]>b{font-size:10px;overflow:hidden;text-overflow:ellipsis}
+.fruit-utilities [data-fruit-chat]>b{position:absolute;top:-6px;right:-4px;min-width:15px;height:15px;border-radius:10px;padding:1px 3px;background:#c52032;color:#fff;font:700 9px/13px Arial}
+body.fruit-playing .ig-dock,body.fruit-playing>.ig-wallet-button,body.fruit-playing #boxChatToggle[aria-expanded=false],body.fruit-playing #boxOnlineToggle{display:none!important}
+body.fruit-playing #boxOnlinePanel{position:fixed;bottom:145px;max-height:calc(100dvh - 165px)}
+@media(min-width:651px){.fruit-top{grid-template-columns:32px 110px auto;justify-content:start}.fruit-top .fruit-top-actions{margin-left:6px}.fruit-hud{width:290px}.fruit-utilities{left:112px;width:98px;grid-template-columns:46px 46px}.fruit-utilities button{height:32px}}
+@media(max-width:350px){.fruit-top{left:8px;right:8px;grid-template-columns:30px minmax(46px,1fr) auto;gap:4px}.fruit-top .fruit-top-actions{gap:3px}.fruit-top button{width:29px}.fruit-hud{left:8px;width:calc(100% - 16px)}}
+@media(max-height:450px) and (orientation:landscape){.fruit-hud{width:265px}.fruit-boss-meter{position:absolute;left:280px;top:0;width:180px}.fruit-hud-alert{position:absolute;left:280px;top:42px;width:180px}.fruit-context{left:0;bottom:82px}.fruit-dialog{max-height:94dvh}}
