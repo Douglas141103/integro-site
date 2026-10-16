@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {createIntGem3D} from '../intgem-3d.mjs';
 import {REGIONS,SHOP,distanceAt} from './rules.mjs';
 import {ArtResources,createShadowTexture} from './art.js';
 import {RunnerCharacter,makeAccessory} from './character.js';
@@ -26,7 +27,7 @@ export class RushScene {
  group(parent=this.world){const g=new T.Group();parent.add(g);return g;}
  resize(){const w=Math.max(1,this.canvas.clientWidth||960),h=Math.max(1,this.canvas.clientHeight||600);this.renderer.setPixelRatio(this.controller.scale);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=w<h?Math.min(72,Math.max(62,T.MathUtils.radToDeg(2*Math.atan(.30/(w/h))))):57;this.camera.updateProjectionMatrix();if(this.previewCamera){this.previewCamera.aspect=w/h;this.previewCamera.updateProjectionMatrix();}}
  clearLevel(){
-  this.character?.dispose();this.previewCharacter?.dispose();this.previewCharacter=null;this.aura?.material.dispose();this.shadow?.material.dispose();this.shadow?.geometry.dispose();this.ribbon?.geometry.dispose();this.ribbon?.material.dispose();
+  this.intgem?.dispose();this.intgem=null;this.character?.dispose();this.previewCharacter?.dispose();this.previewCharacter=null;this.aura?.material.dispose();this.shadow?.material.dispose();this.shadow?.geometry.dispose();this.ribbon?.geometry.dispose();this.ribbon?.material.dispose();
   this.world?.traverse(o=>{if(o.isInstancedMesh)o.dispose();});this.merged.forEach(g=>g.dispose());this.merged=[];this.world.clear();this.objects.clear();this.pools.clear();this.scenery=[];this.particles=[];this.lastTime=null;
  }
  setLevel(run,progress){
@@ -38,7 +39,7 @@ export class RushScene {
   for(let lane=-1;lane<=1;lane++){const slabs=new T.InstancedMesh(this.geo('box',tile),this.mat(r.road,0,tile),120);slabs.instanceMatrix.setUsage(T.DynamicDrawUsage);slabs.frustumCulled=false;slabs.receiveShadow=true;slabs.userData.lane=lane;this.world.add(slabs);this.roadParts.push(slabs);}
   this.lines=new T.InstancedMesh(this.geo('box','trim'),this.mat(0xf6deb4,0,'trim'),100);this.lines.instanceMatrix.setUsage(T.DynamicDrawUsage);this.lines.frustumCulled=false;this.world.add(this.lines);
   const count=this.quality==='low'?12:this.quality==='high'?24:16;for(let i=0;i<count;i++){const g=sceneryPatch(this.resources,r,i,run.level.seed);g.userData.slot=i*288/count;this.merged.push(...g.userData.mergedGeometry);this.world.add(g);this.scenery.push(g);}
-  this.character=new RunnerCharacter(this.characterArt,progress);this.player=this.character.root;this.world.add(this.player);
+  this.character=new RunnerCharacter(this.characterArt,progress);this.player=this.character.root;this.world.add(this.player);this.intgem=createIntGem3D(T,this.player);
   this.shadow=new T.Mesh(new T.PlaneGeometry(1,1),new T.MeshBasicMaterial({map:this.textureShadow,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}));this.shadow.rotation.x=-Math.PI/2;this.shadow.position.set(0,.013,0);this.shadow.scale.set(1.65,1.25,1);this.world.add(this.shadow);
   this.aura=this.mesh(this.player,'ball',0x63e6ff,0,1.1,0,1.1,1.35,1.1);this.aura.material=new T.MeshBasicMaterial({color:0x72efff,transparent:true,opacity:.14,depthWrite:false,wireframe:false});this.aura.visible=false;
   this.trailColor=SHOP.find(x=>x.id===progress.equipped.trail)?.color||0x6cffe0;
@@ -84,7 +85,7 @@ export class RushScene {
   for(const g of this.scenery){g.position.z=20-((g.userData.slot-travel%288+288)%288);g.visible=g.position.z>-this.controller.distance;}
   const wanted=new Set();for(const {o,z} of positions){if(z < -this.controller.distance || z>12||run.claimed.has(o.id))continue;wanted.add(o.id);let g=this.objects.get(o.id);if(!g){const pool=this.pools.get(o.type);g=pool?.pop()||this.makeObstacle(o);g.userData={...o};g.visible=true;this.world.add(g);this.objects.set(o.id,g);}g.rotation.set(0,0,0);g.position.set(o.lane*2.55,0,z);if(['coin','magnet','shield'].includes(o.type)){g.rotation.y=time*1.6+o.id;g.position.y=Math.sin(time*2+o.id)*.1;if(o.type==='coin'&&run.magnet>0&&z>-10&&z<0){const t=(z+10)/10;g.position.x=T.MathUtils.lerp(g.position.x,run.x,t*t);g.position.y+=t*.4;}}}
   for(const [id,g]of this.objects)if(!wanted.has(id)){g.visible=false;this.world.remove(g);this.objects.delete(id);if(!this.pools.has(g.userData.type))this.pools.set(g.userData.type,[]);this.pools.get(g.userData.type).push(g);}
-  this.character.update(run,dt,{paused,time,reducedMotion:this.reducedMotion});this.aura.visible=run.shield>0;this.aura.rotation.y=time*.65;
+  this.character.update(run,dt,{paused,time,reducedMotion:this.reducedMotion});this.intgem.update(globalThis.window?.BoxIntGem?.getEquipped('rush'),time,this.reducedMotion);this.aura.visible=run.shield>0;this.aura.rotation.y=time*.65;
   this.shadow.position.x=run.x;const shadowScale=1-run.y*.12;this.shadow.scale.set(1.65*shadowScale,1.25*shadowScale,1);this.shadow.material.opacity=1-run.y*.16;
   this.ribbon.visible=!!this.progress.equipped.trail&&!paused&&!this.reducedMotion;
   if(this.ribbon.visible){this.trailHistory.unshift(run.x);this.trailHistory.pop();const p=this.ribbon.geometry.attributes.position;

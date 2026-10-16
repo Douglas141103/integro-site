@@ -1,11 +1,13 @@
-import {loadBoxStudents} from './player-profile.js?v=20261015-chat1';
+import {loadBoxStudents} from './player-profile.js?v=20261016-intgem1';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const config=window.INTEGRO_SUPABASE;
-export const supabase=createClient(config.url,config.anonKey);
+export const supabase=window.BoxSupabase||(window.BoxSupabase=createClient(config.url,config.anonKey));
 export async function requireFamily(){
  const {data,error}=await supabase.auth.getUser();
- if(error || !data.user){location.replace('/portal-familia/index.html?next=integro-box');return null;}
- const {data:profile,error:profileError}=await supabase.from('profiles').select('role,full_name').eq('id',data.user.id).single();
- if(profileError || !['responsavel','integro_admin','diretor','coordenacao','professor'].includes(profile?.role)) throw new Error('Este acesso precisa de um perfil autorizado no Portal da Família.');
- return loadBoxStudents({...data.user,boxProfile:profile},supabase);
+ if(error || !data.user){location.replace('./entrar.html');return null;}
+ const {data:access,error:accessError}=await supabase.rpc('box_access');
+ if(accessError||!access?.allowed)throw new Error('Não foi possível liberar esta conta. Confirme seu e-mail ou entre em contato com o Instituto.');
+ const user={...data.user,boxName:access.display_name,boxFamily:access.family};
+ if(!access.family)return {...user,boxStudents:[],boxStudent:null};
+ return loadBoxStudents(user,supabase);
 }

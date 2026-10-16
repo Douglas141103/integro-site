@@ -1,4 +1,4 @@
-import {supabase} from './access.js?v=20261015-chat1';
+import {supabase} from './access.js?v=20261016-intgem1';
 
 // One ephemeral key per account; names, emails and profile IDs never enter the channel.
 export async function accountPresenceKey(id,webCrypto=crypto){
