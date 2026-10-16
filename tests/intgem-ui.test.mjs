@@ -18,16 +18,21 @@ test('wallet uses confirmed balances, buys with displayed server price, and moun
  w.eval(source+'\nwindow.startIntGem=startIntGem;');
  try{
   const api=await w.startIntGem({user:{id:'visitor'},client});await api.open();
-  assert.equal(w.document.querySelectorAll('.ig-item').length,83);assert.equal(api.balance,8);
+  assert.equal(w.document.querySelectorAll('.ig-item').length,0);assert.equal(api.balance,8);assert(w.document.querySelector('[data-tab=collection]').hidden);assert(w.document.querySelector('[data-tab=exchange]').hidden);
+  w.document.getElementById('eggApp').hidden=false;await api.open('collection','egg');assert.equal(w.document.querySelectorAll('.ig-item').length,41);assert.equal(w.document.querySelector('.ig-select'),null);
   w.document.querySelector('[data-buy="egg_jade"]').click();await new Promise(r=>setTimeout(r,0));
   assert.deepEqual(JSON.parse(JSON.stringify(calls.find(c=>c.p_action==='buy').p_payload)),{item:'egg_jade',price:4});assert.equal(api.balance,4);
   for(const game of catalog.GAMES){
    for(const id of screens)w.document.getElementById(id).hidden=true;w.document.getElementById(game.screen).hidden=false;w.BoxUsageGame=game.id;
-   server={...server,equipped:[{game:game.id,kind:'aura',item:game.id+'_jade'},{game:game.id,kind:'companion',item:game.id+'_guardian'}]};await api.refresh();
+   server={...server,equipped:[{game:game.id,kind:'aura',item:game.id+'_jade'},{game:game.id,kind:'companion',item:game.id+'_guardian'}]};await api.refresh();await api.open('collection',game.id);
+   assert.equal(w.document.querySelectorAll('.ig-item').length,catalog.ITEMS.filter(i=>i.game===game.id).length);assert.equal(w.document.querySelector('[data-tab=exchange]').hidden,game.id!=='egg');
    assert.equal(w.document.querySelector('.ig-dock').parentElement.id,game.screen);assert.equal(w.document.querySelector('.ig-aura').parentElement.id,game.screen);assert(w.document.querySelector('.ig-companion svg'));
   }
   let fruitPaused=0;w.BoxFruitRuntime={playing:()=>true,pause:()=>fruitPaused++};await api.open('packs');assert.equal(fruitPaused,1);assert.equal(w.document.querySelectorAll('[data-pack]').length,4);assert.match(w.document.querySelector('.ig-packs').textContent,/1,00/);assert.equal(w.document.querySelector('[data-pack="gem1"]').disabled,false);assert.equal(w.document.querySelector('[data-pack="gem5"]').disabled,false);
+  for(const id of screens)w.document.getElementById(id).hidden=true;await api.open('collection','egg');assert.equal(w.document.querySelectorAll('.ig-item').length,0);assert.equal(w.document.querySelectorAll('[data-pack]').length,4);
   api.stop();assert.equal(w.BoxIntGem,undefined);assert.equal(w.document.querySelector('.ig-dock'),null);assert.equal(w.document.querySelector('.ig-game-themed'),null);
+  const standalone=w.document.createElement('main');w.document.body.append(standalone);let unsubscribed=false;client.auth={onAuthStateChange:()=>({data:{subscription:{unsubscribe(){unsubscribed=true;}}}})};
+  const page=await w.startIntGem({user:{id:'visitor'},standalone,client});await page.open('collection','egg');assert.equal(standalone.querySelectorAll('.ig-item').length,0);assert(standalone.querySelector('[data-tab=collection]').hidden);assert(standalone.querySelector('[data-tab=exchange]').hidden);assert.equal(standalone.querySelectorAll('[data-pack]').length,4);await page.open('history');assert.match(standalone.textContent,/Seus pedidos recentes/);page.stop();assert(unsubscribed);
  }finally{w.BoxIntGem?.stop();w.close();}
 });
 

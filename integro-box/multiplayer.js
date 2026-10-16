@@ -5,8 +5,8 @@ const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
 const messages={room_unavailable:'Sala encerrada, expirada ou código incorreto.',not_member:'Você saiu desta sala. Peça um novo convite.',room_full:'Esta sala já tem quatro jogadores.',rate_limit:'Aguarde um pouco antes de tentar novamente.',not_owner:'Somente quem criou a sala pode fazer isso.',invalid_edit:'Este bloco está fora do alcance.',occupied:'Há um jogador neste espaço. Escolha outro bloco.',world_limit:'A sala atingiu o limite de alterações. Criem uma nova sala para continuar.'};
 let room=null,timer=null,busy=false,version=0,gesture='',gestureUntil=0,listVersion=0,listBusy=false,editQueue=[],lastWorld={},started=false,failures=0,lastSyncAt=0;
 const panel=document.createElement('aside');panel.id='boxOnline';panel.setAttribute('aria-label','Salas multiplayer');
-panel.innerHTML=`<button id="boxOnlineToggle" aria-expanded="false" aria-controls="boxOnlinePanel">Salas <span aria-hidden="true">↗</span></button>
-<section id="boxOnlinePanel" hidden><header><h2>Juntos na aventura</h2><button id="boxOnlineClose" aria-label="Fechar painel">×</button></header>
+panel.innerHTML=`<button id="boxOnlineToggle" title="Arraste para mover as salas" aria-label="Salas. Arraste para mover; Alt + setas para reposicionar." aria-expanded="false" aria-controls="boxOnlinePanel">Salas <span aria-hidden="true">↗</span></button>
+<section id="boxOnlinePanel" hidden><header id="boxOnlineDrag" title="Arraste para mover as salas"><h2>Juntos na aventura</h2><button id="boxOnlineClose" aria-label="Fechar painel">×</button></header>
 <p>Salas públicas ou por convite · até 4 jogadores · chat com revisão por IA</p>
 <div id="boxRoomSetup"><label for="boxGame">Escolha o mundo</label><select id="boxGame"><option value="egg">Pegue o Ovo</option><option value="bairro">Meu Bairro</option><option value="craft">IntegroCraft</option></select><section class="boxPublic"><h3>Salas públicas</h3><p>Encontre outros jogadores com login da família. Pessoas que você não conhece podem entrar.</p><div class="boxRoomActions"><button id="boxBrowse">Atualizar salas</button><button id="boxCreatePublic">Criar sala pública</button></div><div id="boxPublicList" aria-live="polite"></div></section><details class="boxPrivate"><summary>Sala privada por convite</summary><button id="boxCreate">Criar sala privada</button>
 <form id="boxJoinForm"><label for="boxCode">Código do convite</label><input id="boxCode" maxlength="14" autocomplete="off" autocapitalize="characters" placeholder="12 letras e números" required><button>Entrar com convite</button></form><small>O responsável compartilha o código apenas com famílias conhecidas. Cada jogador entra com uma conta de família diferente.</small></details></div>
@@ -14,13 +14,57 @@ panel.innerHTML=`<button id="boxOnlineToggle" aria-expanded="false" aria-control
 <p id="boxOnlineStatus" role="status" aria-live="polite"></p></section>`;
 document.body.append(panel);
 const status=text=>$('boxOnlineStatus').textContent=text;
-function toggle(open){$('boxOnlinePanel').hidden=!open;$('boxOnlineToggle').setAttribute('aria-expanded',String(open));if(open&&!room)void browse();else if(!open)listVersion++;}
+function toggle(open){$('boxOnlinePanel').hidden=!open;$('boxOnlineToggle').setAttribute('aria-expanded',String(open));if(open&&!room)void browse();else if(!open)listVersion++;placeRooms();}
 $('boxOnlineToggle').onclick=()=>toggle($('boxOnlinePanel').hidden);
 $('boxOnlineClose').onclick=()=>toggle(false);
 $('boxOnlinePanel').addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();toggle(false);$('boxOnlineToggle').focus();}});
 // Game keyboard listeners must not capture typing in the room controls.
 panel.addEventListener('keydown',e=>e.stopPropagation());panel.addEventListener('keyup',e=>e.stopPropagation());
-document.addEventListener('fullscreenchange',()=>{(document.fullscreenElement||document.body).append(panel);});
+document.addEventListener('fullscreenchange',()=>{(document.fullscreenElement||document.body).append(panel);placeRooms();});
+// Keep the launcher small and movable without turning a drag into a click.
+const roomPositionKey='integro-box-rooms-position-v1';
+let roomDrag=null,suppressRoomClick=false;
+const roomViewport=()=>({width:document.documentElement.clientWidth||window.innerWidth,height:window.innerHeight});
+function placeRooms(right,bottom){
+ const rect=panel.getBoundingClientRect(),view=roomViewport();
+ if(rect.width&&rect.height){
+  right=Number.isFinite(right)?right:view.width-rect.right;bottom=Number.isFinite(bottom)?bottom:view.height-rect.bottom;
+  panel.style.right=Math.max(8,Math.min(right,Math.max(8,view.width-rect.width-8)))+'px';
+  panel.style.bottom=Math.max(8,Math.min(bottom,Math.max(8,view.height-rect.height-8)))+'px';
+ }
+ const sheet=$('boxOnlinePanel');if(sheet.hidden)return;
+ const anchor=panel.getBoundingClientRect(),size=sheet.getBoundingClientRect();
+ const left=Math.max(8,Math.min((anchor.width?anchor.right:view.width-8)-size.width,view.width-size.width-8));
+ const preferred=anchor.height?anchor.top-size.height-8:60;
+ const top=Math.max(8,Math.min(preferred,view.height-size.height-8));
+ Object.assign(sheet.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',transform:'none'});
+}
+function saveRoomPosition(){try{window.localStorage.setItem(roomPositionKey,JSON.stringify({right:parseFloat(panel.style.right),bottom:parseFloat(panel.style.bottom)}));}catch{}}
+function roomDragStart(e){
+ if(roomDrag||e.button!==0||e.target.closest('#boxOnlineClose'))return;
+ e.stopPropagation();suppressRoomClick=false;const rect=panel.getBoundingClientRect(),view=roomViewport();
+ roomDrag={id:e.pointerId,x:e.clientX,y:e.clientY,right:view.width-rect.right,bottom:view.height-rect.bottom,moved:false,handle:e.currentTarget};
+ try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
+}
+function roomDragMove(e){
+ if(!roomDrag||roomDrag.id!==e.pointerId)return;
+ const dx=e.clientX-roomDrag.x,dy=e.clientY-roomDrag.y;if(!roomDrag.moved&&Math.hypot(dx,dy)<6)return;
+ roomDrag.moved=true;panel.dataset.dragging='true';e.preventDefault();placeRooms(roomDrag.right-dx,roomDrag.bottom-dy);
+}
+function roomDragEnd(e){
+ if(!roomDrag||roomDrag.id!==e.pointerId)return;
+ if(e.type==='pointerup'&&roomDrag.moved)placeRooms(roomDrag.right-(e.clientX-roomDrag.x),roomDrag.bottom-(e.clientY-roomDrag.y));
+ suppressRoomClick=roomDrag.moved;if(roomDrag.moved)saveRoomPosition();
+ try{roomDrag.handle.releasePointerCapture(e.pointerId);}catch{}roomDrag=null;delete panel.dataset.dragging;
+}
+for(const handle of [$('boxOnlineToggle'),$('boxOnlineDrag')])handle.addEventListener('pointerdown',roomDragStart);
+window.addEventListener('pointermove',roomDragMove,{passive:false,capture:true});window.addEventListener('pointerup',roomDragEnd);window.addEventListener('pointercancel',roomDragEnd);
+panel.addEventListener('dragstart',e=>e.preventDefault());panel.addEventListener('click',e=>{if(suppressRoomClick){suppressRoomClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
+$('boxOnlineToggle').addEventListener('keydown',e=>{if(e.altKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const r=panel.getBoundingClientRect(),v=roomViewport();placeRooms(v.width-r.right+(e.key==='ArrowLeft'?20:e.key==='ArrowRight'?-20:0),v.height-r.bottom+(e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0));saveRoomPosition();}});
+try{const saved=JSON.parse(window.localStorage.getItem(roomPositionKey));if(saved&&Number.isFinite(saved.right)&&Number.isFinite(saved.bottom))placeRooms(saved.right,saved.bottom);}catch{}
+window.addEventListener('resize',()=>placeRooms());
+if(window.ResizeObserver)new window.ResizeObserver(()=>placeRooms()).observe($('boxOnlinePanel'));
+
 function controls(disabled){for(const button of $('boxRoomSetup').querySelectorAll('button'))button.disabled=disabled||button.dataset.full==='true';}
 async function rpc(action,extras={}){
  const {data,error}=await supabase.rpc('box_room',{p_action:action,...(room?{p_room:room.id}:{}),...extras});

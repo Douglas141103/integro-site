@@ -37,8 +37,10 @@
 .fruit-utilities [data-fruit-rooms]{font-size:9px;font-weight:800}
 .fruit-utilities [data-fruit-wallet]{grid-column:1/-1}.fruit-utilities [data-fruit-wallet]>span{color:#258eb0;font-size:16px}.fruit-utilities [data-fruit-wallet]>b{font-size:10px;overflow:hidden;text-overflow:ellipsis}
 .fruit-utilities [data-fruit-chat]>b{position:absolute;top:-6px;right:-4px;min-width:15px;height:15px;border-radius:10px;padding:1px 3px;background:#c52032;color:#fff;font:700 9px/13px Arial}
-body.fruit-playing .ig-dock,body.fruit-playing>.ig-wallet-button,body.fruit-playing #boxChatToggle[aria-expanded=false],body.fruit-playing #boxOnlineToggle{display:none!important}
-body.fruit-playing #boxOnlinePanel{position:fixed;bottom:145px;max-height:calc(100dvh - 165px)}
+body.fruit-playing .ig-dock,body.fruit-playing>.ig-wallet-button,body.fruit-playing #boxChatToggle[aria-expanded=false]{display:none!important}
 @media(min-width:651px){.fruit-top{grid-template-columns:32px 110px auto;justify-content:start}.fruit-top .fruit-top-actions{margin-left:6px}.fruit-hud{width:290px}.fruit-utilities{left:112px;width:98px;grid-template-columns:46px 46px}.fruit-utilities button{height:32px}}
 @media(max-width:350px){.fruit-top{left:8px;right:8px;grid-template-columns:30px minmax(46px,1fr) auto;gap:4px}.fruit-top .fruit-top-actions{gap:3px}.fruit-top button{width:29px}.fruit-hud{left:8px;width:calc(100% - 16px)}}
 @media(max-height:450px) and (orientation:landscape){.fruit-hud{width:265px}.fruit-boss-meter{position:absolute;left:280px;top:0;width:180px}.fruit-hud-alert{position:absolute;left:280px;top:42px;width:180px}.fruit-context{left:0;bottom:82px}.fruit-dialog{max-height:94dvh}}
+
+/* Salas uses the movable launcher in Fruit Box as well. */
+.fruit-utilities [data-fruit-rooms]{display:none}
