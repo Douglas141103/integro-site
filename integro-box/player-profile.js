@@ -9,7 +9,7 @@ export async function loadBoxStudents(user,client,storage=localStorage){
  const selected=students.find(s=>s.id===saved)||(students.length===1?students[0]:null);
  return {...user,boxStudents:students,boxStudent:selected};
 }
-export function playerName(user){return user.boxStudent?.full_name?.trim()||(user.boxStudents?.length?'Selecione o aluno':'Jogador');}
+export function playerName(user){return user.boxStudent?.full_name?.trim()||(user.boxStudents?.length?'Selecione o aluno':user.boxName||'Jogador');}
 export function mountPlayerProfile(user,{doc=document,win=window,storage=localStorage}={}){
  const label=doc.getElementById('boxUserName');label.textContent=playerName(user);
  win.BoxPlayer={studentId:user.boxStudent?.id||null};

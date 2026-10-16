@@ -5,7 +5,7 @@ if(!lobby||lobby.dataset.catalogReady)return;
 const games=[
  ['integro-rush','Integro Rush','#playRush','Corrida','15 expedições 3D, cinco mundos e 24 acessórios. Pule, deslize e explore.'],
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
- ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','14 pistas, 52 acessórios, poderes e boosts para sua aventura.'],
+ ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','20 pistas, 64 acessórios, skates e patinetes voadores para sua aventura.'],
  ['meu-bairro','Meu Bairro','#playDollGame','Criatividade','Uma casa, lojas e muitas histórias para viver.'],
  ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore ilhas e descubra frutas escondidas.'],
  ['integrocraft','IntegroCraft','#playCraft','Criatividade','Explore, fabrique e construa o seu mundo.'],

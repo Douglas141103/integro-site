@@ -1,4 +1,4 @@
-import {supabase} from './access.js?v=20261015-chat1';
+import {supabase} from './access.js?v=20261016-intgem1';
 const $=id=>document.getElementById(id);
 const titles={egg:'Pegue o Ovo',bairro:'Meu Bairro',craft:'IntegroCraft'};
 const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
