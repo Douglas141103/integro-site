@@ -30,7 +30,7 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
-  await script('./egg.js?v=20261014-egg14-powers1');
+  await script('./egg.js?v=20261016-egg-toon1');
   await script('./worlds.js?v=20261013-egg1');
   await import('./multiplayer.js?v=20261015-chat1');
   if(!unloaded)await import('./chat.js?v=20261015-chat6');
@@ -40,7 +40,7 @@ try {
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce.js?v=20261014-bounce3');
-  if(!unloaded){const {installRush}=await import('./rush.js?v=20261015-rush-speed5');installRush();}
+  if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-egg-toon1');installRush();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261015-rush1');startUsage();}
   if(!unloaded)await script('./catalog.js?v=20261015-rush1');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}
