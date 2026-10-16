@@ -2,7 +2,7 @@
 
 Cadastro público gratuito usa Supabase Auth com confirmação de e-mail. O cadastro do Box fica em `private.box_accounts`; não cria perfis, cargos ou permissões escolares. As contas existentes do Instituto continuam funcionando. Não há assinatura mensal implementada neste projeto.
 
-Pacotes avulsos: 1 / R$ 0,99; 5 / R$ 2,99; 10 / R$ 6,99; 20 / R$ 10,99. Preços preservados conforme solicitação (duas compras de 5 custam menos que o pacote de 10). Catálogo: 45 cosméticos permanentes, três por jogo, a 4, 7 e 12 IntGem. Todos têm representação durante a partida; Egg e Rush também têm acessórios 3D, Bounce muda a cor da personagem e os jogos clássicos recebem detalhes temáticos.
+Pacotes avulsos: 1 / R$ 1,00; 5 / R$ 2,99; 10 / R$ 6,99; 20 / R$ 10,99. Preços conforme solicitação e ajuste autorizado do pacote de 1 gema (duas compras de 5 custam menos que o pacote de 10). Catálogo: 45 cosméticos permanentes, três por jogo, a 4, 7 e 12 IntGem. Todos têm representação durante a partida; Egg e Rush também têm acessórios 3D, Bounce muda a cor da personagem e os jogos clássicos recebem detalhes temáticos.
 
 ## Recompensas e conversão
 
@@ -15,9 +15,9 @@ Pacotes avulsos: 1 / R$ 0,99; 5 / R$ 2,99; 10 / R$ 6,99; 20 / R$ 10,99. Preços 
 
 Edge Function `intgem-pay`: JWT de plataforma desativado porque recebe webhook público; criação e verificação pelo comprador autenticam o usuário explicitamente com `auth.getUser`. O webhook não confia em preço, status ou usuário enviados. Confirma pela API `/payment_check` da InfinitePay, com o handle do estabelecimento e o pedido criado no banco. Compara o campo `amount` em centavos, pois `paid_amount` pode conter juros. Serviço credita uma vez por pedido; identificador de transação é único. RPC de liquidação é exclusiva de `service_role`; navegador não recebe essa credencial.
 
-Fornecedor: `douglas-azevedo-3eb`. Retorno: `/integro-box/intgem.html`. Webhook: `/functions/v1/intgem-pay/webhook`. O checkout oferece cartão e outras formas habilitadas pelo fornecedor; a documentação não oferece parâmetro para restringir somente a cartão. Dados do cartão ficam na InfinitePay.
+Fornecedor: `instituto-integro`. Retorno: `/integro-box/intgem.html`. Webhook: `/functions/v1/intgem-pay/webhook`. O checkout oferece cartão e outras formas habilitadas pelo fornecedor; a documentação não oferece parâmetro para restringir somente a cartão. Dados do cartão ficam na InfinitePay.
 
-Em 16/10/2026, a API recusou a criação de links de R$ 0,99 e R$ 2,99 com `external_checkout_not_enabled`. O titular precisa habilitar o **Checkout Integrado** em Vendas → Checkout → Configurações, no aplicativo InfinitePay. A integração fica pronta, mas não há compra real validada nem confirmação de que o fornecedor aceitará o valor de R$ 0,99 após a habilitação. Não aumentar esse preço silenciosamente se houver rejeição. A interface preserva o saldo e informa indisponibilidade.
+Em 16/10/2026, o titular confirmou que a conta recebedora é `$instituto-integro`, com Checkout Integrado habilitado. A identificação anterior apontava para outra conta. A API gerou links reais, sem pagamento, para R$ 2,99, R$ 6,99 e R$ 10,99. O valor de R$ 0,99 foi rejeitado com HTTP 422 (`Total price must be greater than 1`); testes de criação com R$ 1,00 e R$ 1,01 foram aceitos. O titular autorizou a alteração do pacote de 1 gema para R$ 1,00, aplicada no catálogo e na criação de pedidos. A criação de checkout no servidor também recusa valores abaixo de R$ 1,00. Nenhum cartão foi cobrado e o crédito decorrente de pagamento real ainda não foi validado.
 
 Referência: https://www.infinitepay.io/checkout-documentacao
 
@@ -27,4 +27,4 @@ Não existe estorno/chargeback automático documentado nessa API. Reversões exi
 
 `node --test --test-concurrency=2 tests/*.test.mjs` cobre banco PostgreSQL local (PGlite), isolamento, bônus, confirmação de pagamento, repetição, catálogo, conversão e UI em DOM. Testes de cena 3D validam transforms, recursos e materiais em CPU. A validação desta entrega não inclui renderização WebGL em navegador nem pagamento com cartão real. O envio de e-mail de cadastro depende da configuração de Auth/SMTP e dos redirecionamentos permitidos no projeto Supabase.
 
-Bundles: `node integro-box/egg-src/build.mjs` e `node integro-box/rush-src/build.mjs`. Aplicar a migração `20261016180041_box_intgem_economy.sql`, publicar a função e só então atualizar o frontend. Tabelas privadas com RLS e sem leitura/escrita direta para contas comuns.
+Bundles: `node integro-box/egg-src/build.mjs` e `node integro-box/rush-src/build.mjs`. Aplicar as migrações `20261016180041_box_intgem_economy.sql` e `20261016184145_box_intgem_one_real.sql`, publicar a função e só então atualizar o frontend. Tabelas privadas com RLS e sem leitura/escrita direta para contas comuns.

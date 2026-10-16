@@ -12,6 +12,7 @@ async function setup(){
  await db.exec(`create role service_role;alter table auth.users add column email_confirmed_at timestamptz default now(),add column is_anonymous boolean default false;alter table public.profiles add column active boolean default true;alter table public.students add column full_name text;insert into auth.users(id,email) values('${uid(20)}','visitor@example.test'),('${uid(21)}','unconfirmed@example.test');update auth.users set email_confirmed_at=null where id='${uid(21)}';`);
  for(const name of ['20261013210000_box_egg_expansion.sql','20261016170000_box_egg_twenty.sql','20261015010000_box_moderated_chat.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
  await db.exec(migration);await db.exec(migration);
+ const priceMigration=await readFile(new URL('../supabase/migrations/20261016184145_box_intgem_one_real.sql',import.meta.url),'utf8');await db.exec(priceMigration);await db.exec(priceMigration);
  const run=(n,sql,args=[])=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);return (await tx.query(sql,args)).rows[0]?.r;});
  const rpc=(n,action='wallet',payload={})=>run(n,'select public.box_intgem($1,$2) r',[action,payload]);
  const access=(n,name=null)=>run(n,'select public.box_access($1) r',[name]);
@@ -45,6 +46,7 @@ test('daily credits use server time, ignore hidden/offline intervals and cannot 
   for(let i=0;i<12;i++)await rpc(20,'pulse',{game:'lobby',active:true,visible:true});assert.equal((await rpc(20)).balance,1);
   assert.equal((await rpc(20,'buy',{item:'egg_jade',price:0})).error,'price_changed');
   assert.equal((await rpc(20,'buy',{item:'egg_jade',price:4})).error,'insufficient_balance');
+  const single=await order(20,'gem1',89);assert.equal(single.amount,100);assert.equal(single.gems,1);assert.equal((await pay('settle',single.id,{transaction_nsu:'old-price',invoice_slug:'abc',amount:99,capture_method:'credit_card'})).error,'payment_mismatch');
   const o=await order(20);assert.equal(o.amount,1099);assert.equal((await order(20)).error,'checkout_in_progress');
   assert.equal((await pay('settle',o.id,{transaction_nsu:'payment-20',invoice_slug:'abc',amount:1,capture_method:'credit_card'})).error,'payment_mismatch');
   const proof={transaction_nsu:'payment-20',invoice_slug:'abc',amount:1099,capture_method:'credit_card'};
@@ -76,13 +78,14 @@ test('conversion quotes use real demand and reserves, debit the versioned cloud 
 test('catalog covers every game with permanent visible cosmetics above 3 gems and exact pack prices',()=>{
  assert.equal(GAMES.length,15);assert.equal(ITEMS.length,45);assert.equal(new Set(ITEMS.map(x=>x.id)).size,45);
  assert(ITEMS.every(x=>x.price>3));for(const g of GAMES)assert.equal(ITEMS.filter(x=>x.game===g.id).length,3);
- assert.deepEqual(PACKS.map(p=>[p.gems,p.cents]),[[1,99],[5,299],[10,699],[20,1099]]);
+ assert.deepEqual(PACKS.map(p=>[p.gems,p.cents]),[[1,100],[5,299],[10,699],[20,1099]]);
 });
 test('provider confirmation rejects forged redirects, amount mismatch and foreign checkout URLs; paid_amount may include fees',async()=>{
  let requests=[];const order={id:uid(90),gems:5,amount:299};
  const fetcher=async(url,opts)=>{requests.push([url,JSON.parse(opts.body)]);return {ok:true,json:async()=>url.endsWith('/links')?{url:'https://checkout.infinitepay.com.br/test'}:{success:true,paid:true,amount:299,paid_amount:309,capture_method:'credit_card'}};};
- assert.equal(await createCheckout(order,'https://example.test/webhook',{fetcher}),'https://checkout.infinitepay.com.br/test');assert.equal(requests[0][1].items[0].price,299);assert.equal(requests[0][1].handle,'douglas-azevedo-3eb');
- assert.equal((await verifyPayment(order,'tx','slug',{fetcher})).paid,true);assert.equal(requests[1][1].order_nsu,order.id);
+ assert.equal(await createCheckout(order,'https://example.test/webhook',{fetcher}),'https://checkout.infinitepay.com.br/test');assert.equal(requests[0][1].items[0].price,299);assert.equal(requests[0][1].handle,'instituto-integro');
+ assert.equal((await verifyPayment(order,'tx','slug',{fetcher})).paid,true);assert.equal(requests[1][1].order_nsu,order.id);assert.equal(requests[1][1].handle,'instituto-integro');
+ await assert.rejects(createCheckout({...order,amount:99},'https://example.test/webhook',{fetcher}),/checkout_below_minimum/);
  const answer=value=>({fetcher:async()=>({ok:true,json:async()=>value})});
  assert.equal((await verifyPayment(order,'tx','slug',answer({success:true,paid:false}))).paid,false);
  await assert.rejects(verifyPayment(order,'tx','slug',answer({success:true,paid:true,amount:99,capture_method:'credit_card'})),/payment_mismatch/);

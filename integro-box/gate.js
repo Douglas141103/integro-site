@@ -44,7 +44,7 @@ try {
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-intgem1');installRush();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261016-intgem1');startUsage();}
   if(!unloaded)await script('./catalog.js?v=20261016-intgem1');
-  if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-intgem1');await startIntGem({user});}
+  if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-intgem2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }

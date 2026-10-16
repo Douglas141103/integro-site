@@ -1,4 +1,5 @@
-export const HANDLE='douglas-azevedo-3eb';
+export const HANDLE='instituto-integro';
+export const MINIMUM_CENTS=100;
 export const SITE='https://www.institutointegro.com.br';
 export const API='https://api.checkout.infinitepay.io';
 const checkoutHosts=new Set(['checkout.infinitepay.com.br','checkout.infinitepay.io','pay.infinitepay.io','buy.infinitepay.io']);
@@ -9,6 +10,7 @@ export async function providerPost(path,body,{fetcher=fetch}={}){
  const data=await r.json();if(!data||typeof data!=='object')throw new Error('invalid_provider_response');return data;
 }
 export async function createCheckout(order,webhook,options){
+ if(order.amount<MINIMUM_CENTS)throw new Error('checkout_below_minimum');
  const result=await providerPost('/links',{handle:HANDLE,order_nsu:order.id,redirect_url:SITE+'/integro-box/intgem.html',webhook_url:webhook,items:[{quantity:1,price:order.amount,description:`${order.gems} IntGem — Instituto Integro`}]},options);
  const url=safeCheckout(result.url);if(!url)throw new Error('invalid_checkout_url');return url;
 }
