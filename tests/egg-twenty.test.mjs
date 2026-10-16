@@ -5,7 +5,7 @@ import {EggAdventure,WORLDS,NESTS,CORRAL,VEHICLES,ACCESSORIES,cleanSave} from '.
 import {boxDatabase,uid} from './box-db-fixture.mjs';
 const advance=(g,seconds,input={})=>{for(let i=0;i<Math.round(seconds/.02);i++)g.update(.02,input);};
 test('all six added tracks have unique guardians, eggs, progression and permanent collection',()=>{
- assert.equal(WORLDS.length,20);assert.equal(WORLDS[19].name,'Estação Integro');assert.equal(new Set(WORLDS.map(w=>w.kind)).size,20);assert.equal(Object.keys(ACCESSORIES).length,64);
+ assert.equal(WORLDS.length,20);assert.equal(WORLDS[19].name,'Estação Integro');assert.equal(new Set(WORLDS.map(w=>w.kind)).size,20);assert.equal(Object.keys(ACCESSORIES).length,82);
  for(let i=14;i<20;i++){
   const g=new EggAdventure();assert.equal(g.nestEggs[i].length,3);assert(g.recommendedTraining(i)>g.recommendedTraining(i-1));assert(g.recommendedTraining(i)<=600);
   Object.assign(g.player,NESTS[i]);assert.equal(g.zone(),i);assert(g.steal(0));Object.assign(g.player,CORRAL);assert.equal(g.interact(),'deposit');advance(g,8.1);

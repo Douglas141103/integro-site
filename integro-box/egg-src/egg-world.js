@@ -1,3 +1,5 @@
+import {premiumAccessory} from './egg-intgem-models.js';
+import {PREMIUM_BY_NATIVE} from '../egg-intgem-catalog.mjs';
 import {expansionCreature,expansionScenery,expansionAccessory,vehicleModel} from './egg-expansion-models.js';
 import {NEW_ACCESSORIES,VEHICLES} from './egg-expansion.js';
 import {extraAccessory,abilityModel} from './egg-extra-models.js';
@@ -40,7 +42,7 @@ export function createEggWorld(scene){
   const expanded=expansionCreature(g,kind,color,limbs,{ball,cyl,torus,rod,softBox,group});if(expanded){faceY=expanded.faceY;faceZ=expanded.faceZ;}
   if(rarity!=='common')torus(g,.55,.035,RARITIES[rarity].color,0,.055,0).rotation.x=Math.PI/2;const ex=kind==='turtle'?.10:.12;for(const x of[-ex,ex]){ball(g,.065,0xffffff,x,faceY,faceZ);ball(g,.035,dark,x,faceY,faceZ-.055);ball(g,.012,0xffffff,x-.01,faceY+.015,faceZ-.084)}g.traverse(o=>{if(o.isMesh)o.castShadow=true});actorBuilding=false;return rigCreature(g,limbs,kind,color,actorArt);
  }
- function accessory(p,id){const g=group(p);if(NEW_ACCESSORIES[id])expansionAccessory(id,g,{ball,cyl,torus,rod,softBox});if(ACCESSORY_EXPANSION[id])extraAccessory(id,g,{ball,cyl,torus,rod,softBox});
+ function accessory(p,id){const g=group(p);premiumAccessory(g,PREMIUM_BY_NATIVE[id],{ball,cyl,torus,rod,softBox});if(NEW_ACCESSORIES[id])expansionAccessory(id,g,{ball,cyl,torus,rod,softBox});if(ACCESSORY_EXPANSION[id])extraAccessory(id,g,{ball,cyl,torus,rod,softBox});
  if(id==='crown'){cyl(g,.34,.34,.16,0xf2c653,0,.1,0,10);for(let j=0;j<7;j++){const a=j*Math.PI*2/7;cyl(g,0,.09,.28,0xffd968,Math.sin(a)*.29,.3,Math.cos(a)*.29,4);ball(g,.055,j%2?0x75dded:0xf0799c,Math.sin(a)*.33,.12,Math.cos(a)*.33)}}
  if(id==='halo'){torus(g,.4,.06,0xffdf79,0,.16,0).rotation.x=Math.PI/2;for(const x of[-.5,.5])cyl(g,0,.06,.17,0xfff4ba,x,.2,0,4)}
  if(id==='headphones'){torus(g,.33,.045,0x3655b4,0,0,0);for(const x of[-.32,.32]){softBox(g,.12,.3,.23,0x62e2e8,x,-.03,0);softBox(g,.13,.2,.15,0x8173ee,x*1.15,-.03,0)}}

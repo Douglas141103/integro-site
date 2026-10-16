@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
 import * as catalog from '../integro-box/intgem-catalog.mjs';
+import {eggItemArt} from '../integro-box/egg-intgem-catalog.mjs';
 import * as THREE from '../integro-box/egg-src/node_modules/three/build/three.module.js';
 import {createIntGem3D} from '../integro-box/intgem-3d.mjs';
 
@@ -12,12 +13,12 @@ test('wallet uses confirmed balances, buys with displayed server price, and moun
  const w=dom.window;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
  let server={balance:8,daily:{seconds:45,rewarded:false},items:catalog.ITEMS,owned:[],equipped:[],history:[],orders:[]};const calls=[];
  const client={rpc:async(name,args)=>{calls.push({name,...args});if(args.p_action==='buy'){const item=catalog.ITEMS.find(i=>i.id===args.p_payload.item);server={...server,balance:server.balance-item.price,owned:[item.id],equipped:[{game:item.game,kind:item.kind,item:item.id}]};}return {data:structuredClone(server)};}};
- Object.assign(w,{GAMES:catalog.GAMES,ITEMS:catalog.ITEMS,PACKS:catalog.PACKS,gemArt:catalog.gemArt,money:catalog.money,activeGame:()=>catalog.activeGame(w.document,w),supabase:client});
+ Object.assign(w,{eggItemArt,GAMES:catalog.GAMES,ITEMS:catalog.ITEMS,PACKS:catalog.PACKS,gemArt:catalog.gemArt,money:catalog.money,activeGame:()=>catalog.activeGame(w.document,w),supabase:client});
  let source=await readFile(new URL('../integro-box/intgem.js',import.meta.url),'utf8');source=source.replace(/^import .*;\n/gm,'').replaceAll('export ','');
  w.eval(source+'\nwindow.startIntGem=startIntGem;');
  try{
   const api=await w.startIntGem({user:{id:'visitor'},client});await api.open();
-  assert.equal(w.document.querySelectorAll('.ig-item').length,45);assert.equal(api.balance,8);
+  assert.equal(w.document.querySelectorAll('.ig-item').length,83);assert.equal(api.balance,8);
   w.document.querySelector('[data-buy="egg_jade"]').click();await new Promise(r=>setTimeout(r,0));
   assert.deepEqual(JSON.parse(JSON.stringify(calls.find(c=>c.p_action==='buy').p_payload)),{item:'egg_jade',price:4});assert.equal(api.balance,4);
   for(const game of catalog.GAMES){
@@ -34,8 +35,8 @@ test('native toon accessories toggle equipped slots, respect reduced motion and 
  const parent=new THREE.Group(),fx=createIntGem3D(THREE,parent);assert.equal(fx.root.visible,false);
  fx.update({aura:catalog.ITEMS.find(i=>i.id==='egg_jade'),companion:catalog.ITEMS.find(i=>i.id==='egg_guardian')},10,true);
  assert.equal(fx.root.visible,true);assert.equal(fx.root.children[0].position.y,1.25);
- fx.update({},11);assert.equal(fx.root.visible,false);
- let disposed=0;fx.root.traverse(o=>o.geometry?.addEventListener('dispose',()=>disposed++));fx.dispose();assert.equal(parent.children.length,0);assert(disposed>=8);
+ let disposed=0;fx.root.traverse(o=>o.geometry?.addEventListener('dispose',()=>disposed++));
+ fx.update({},11);assert.equal(fx.root.visible,false);fx.dispose();assert.equal(parent.children.length,0);assert(disposed>=8);
 });
 
 test('public registration sends only a nickname and routes confirmation to the Box',async()=>{
