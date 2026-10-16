@@ -7,7 +7,7 @@ const games=[
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
  ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','20 pistas, 64 acessórios, skates e patinetes voadores para sua aventura.'],
  ['meu-bairro','Meu Bairro','#playDollGame','Criatividade','Uma casa, lojas e muitas histórias para viver.'],
- ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore ilhas e descubra frutas escondidas.'],
+ ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore 20 ilhas, enfrente guardiões e descubra frutas.'],
  ['integrocraft','IntegroCraft','#playCraft','Criatividade','Explore, fabrique e construa o seu mundo.'],
  ['gosnake','GoSnake','#playGoSnake','Desafios','Frutas, túneis e poderes em 15 arenas.'],
  ['fuitcort','FuitCort','#playFuitCort','Desafios','Corte frutas e conquiste novos equipamentos.'],
