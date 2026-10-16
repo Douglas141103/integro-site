@@ -25,6 +25,16 @@ Não existe estorno/chargeback automático documentado nessa API. Reversões exi
 
 ## Verificação e publicação
 
+### Vendas no Caixa Integro
+
+A migração `20261016185036_box_intgem_finance.sql` integra os pagamentos confirmados ao caixa de **INSTITUTO INTEGRO** (`da5d33a5-616a-4abc-8f88-78f5ecb85cd4`). O gatilho roda quando o servidor confirma o pagamento e credita as gemas. Cada pedido gera exatamente um recibo `intgem`, vinculado por `intgem_order_id` e `cash_cycle_id`, na data local de confirmação em America/Manaus. Checkout pendente, bônus diário, compra de cosmético e conversão não são receitas.
+
+O ciclo vigente segue a política existente, do dia 11 ao dia 10. Se ainda não existe, é criado aberto, respeitando o guardião de ciclos. Ciclos fechados nunca são reabertos. Um recebimento confirmado em ciclo anterior que não pôde ser escriturado fica pendente de conciliação; não é deslocado silenciosamente para outro período. O recibo integra os totais e a distribuição já existente do caixa, sem criar movimento adicional e sem ser classificado como mensalidade.
+
+O valor registrado é o preço **bruto do pacote**. Não é o líquido depositado em banco; taxas, prazo de liquidação e eventuais estornos precisam de conciliação com o extrato da InfinitePay. O cadastro do jogador identifica o beneficiário, não comprova o nome/documento do titular do cartão. A integração informa isso sem inventar dados fiscais. Recibos automáticos são imutáveis; correções devem preservar o original e usar o procedimento administrativo de conciliação.
+
+Falhas do lançamento não desfazem o crédito de gemas. A fila privada `intgem_finance_posts` guarda a tentativa e o motivo, e o job `intgem-finance-retry` tenta novamente a cada cinco minutos, em lotes de até 100. O vínculo único e o bloqueio do pedido impedem duplicação entre webhook, retorno e novas tentativas. Para monitorar pendências: `select order_id, attempted_at, last_error from private.intgem_finance_posts where entry_id is null order by attempted_at`. A fila e as funções não são acessíveis ao navegador.
+
 `node --test --test-concurrency=2 tests/*.test.mjs` cobre banco PostgreSQL local (PGlite), isolamento, bônus, confirmação de pagamento, repetição, catálogo, conversão e UI em DOM. Testes de cena 3D validam transforms, recursos e materiais em CPU. A validação desta entrega não inclui renderização WebGL em navegador nem pagamento com cartão real. O envio de e-mail de cadastro depende da configuração de Auth/SMTP e dos redirecionamentos permitidos no projeto Supabase.
 
 Bundles: `node integro-box/egg-src/build.mjs` e `node integro-box/rush-src/build.mjs`. Aplicar as migrações `20261016180041_box_intgem_economy.sql` e `20261016184145_box_intgem_one_real.sql`, publicar a função e só então atualizar o frontend. Tabelas privadas com RLS e sem leitura/escrita direta para contas comuns.

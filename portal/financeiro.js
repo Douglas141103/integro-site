@@ -102,6 +102,7 @@ function showStatus(message, type = 'ok') {
 
 function entryTypeLabel(type) {
   const labels = {
+    intgem: 'Venda de IntGem',
     mensalidade: 'Mensalidade',
     matricula: 'Matrícula',
     avaliacao: 'Avaliação / diagnóstico',

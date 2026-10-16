@@ -314,7 +314,7 @@ test("finance page loader activates the single renderer before add-on scripts", 
     "window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true"
   );
   const financeScriptPosition = page.indexOf(
-    "financeiro.js?v=20260903-cycle-11-v1"
+    "financeiro.js?v="
   );
   assert.ok(inlineFlagPosition >= 0);
   assert.ok(financeScriptPosition > inlineFlagPosition);
