@@ -3,3 +3,10 @@
 @media(max-width:600px){#boxOnlineToggle{font-size:12px;padding:8px 10px;max-width:150px}#boxOnlinePanel{width:340px;max-width:calc(100vw - 24px)}}
 
 #boxOnline *,#boxOnline *::before,#boxOnline *::after{box-sizing:border-box}#boxOnline h3{font-size:16px;margin:14px 0 6px}#boxOnline .boxPublic p{font-size:13px}#boxOnline .boxRoomActions{display:flex;gap:8px;flex-wrap:wrap}#boxOnline .boxPublicRoom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid #365047}#boxOnline .boxPublicRoom strong{overflow-wrap:anywhere}#boxOnline .boxPublicRoom span{grid-column:1;color:#c4dbce}#boxOnline .boxPublicRoom button{grid-column:2;grid-row:1/3;align-self:center}#boxOnline button:disabled{opacity:.5;cursor:not-allowed}#boxOnline .boxPrivate{border-top:1px solid #536d64;margin-top:18px;padding-top:14px}#boxOnline .boxPrivate summary{cursor:pointer;font-weight:700;margin-bottom:10px}
+
+/* Compact launcher; the sheet is kept inside the viewport by placeRooms(). */
+#boxOnline{right:14px;bottom:136px;transform:none;max-width:calc(100vw - 16px)}
+#boxOnline #boxOnlineToggle{height:36px;min-height:36px;max-width:100px;padding:6px 10px;font-size:11px;line-height:20px;border:1px solid #7ba79e;border-radius:12px;background:#244e48!important;color:#e7fff2!important;box-shadow:0 3px 10px #0003;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#boxOnlineToggle span{font-size:12px;color:#a8e6c6}#boxOnline #boxOnlinePanel{position:fixed;width:340px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 24px);padding:17px;transform:none;border-radius:17px}
+#boxOnline #boxOnlineToggle,#boxOnlineDrag{touch-action:none;cursor:grab;user-select:none}#boxOnline[data-dragging] #boxOnlineToggle,#boxOnline[data-dragging] #boxOnlineDrag{cursor:grabbing}#boxOnlineDrag{padding:2px 0 8px}#boxOnline #boxOnlineDrag h2{font-size:17px}#boxOnline #boxOnlineClose{padding:3px;min-height:32px;width:32px;font-size:21px}
+@media(max-height:450px){#boxOnline{bottom:80px}#boxOnline #boxOnlinePanel{max-height:calc(100dvh - 16px)}}

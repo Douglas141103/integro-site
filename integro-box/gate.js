@@ -1,5 +1,7 @@
 import {supabase,requireFamily} from './access.js?v=20261016-intgem1';
 const message=document.getElementById('boxGateMessage');
+const gate=document.getElementById('boxGate');
+const phase=text=>{message.textContent=text;};
 let unloaded=false;
 function lock(){
  if(unloaded)return;unloaded=true;
@@ -23,7 +25,7 @@ try {
  if(user){
   window.BoxStorage={getItem:k=>localStorage.getItem('box:'+user.id+':'+k),setItem:(k,v)=>localStorage.setItem('box:'+user.id+':'+k,v),removeItem:k=>localStorage.removeItem('box:'+user.id+':'+k)};
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
-  message.textContent='Preparando os jogos…';
+  phase('Preparando os seus mundos…');
   const {mountPlayerProfile}=await import('./player-profile.js?v=20261016-intgem1');
   mountPlayerProfile(user);
   const {startPresence}=await import('./presence.js?v=20261016-intgem1');
@@ -31,10 +33,12 @@ try {
   await script('./classic-games.js?v=20261012-usage1');
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
+  phase('Montando as aventuras 3D…');
   await script('./egg.js?v=20261016-egg-income70');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261016-fruit20-toon1');
-  await import('./multiplayer.js?v=20261016-intgem1');
+  phase('Conectando amigos e salas…');
+  await import('./multiplayer.js?v=20261016-box-ui2');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
   if(!unloaded)await import('./egg-cloud.js?v=20261016-intgem1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
@@ -44,9 +48,10 @@ try {
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261016-intgem1');startUsage();}
-  if(!unloaded)await script('./catalog.js?v=20261016-fruit20-toon1');
-  if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-fruit20-toon1');await startIntGem({user});}
+  phase('Organizando seu catálogo…');
+  if(!unloaded)await script('./catalog.js?v=20261016-box-ui2');
+  if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-box-ui2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }
-} catch(error){message.textContent=error.message||'Não foi possível verificar o acesso. Tente novamente.';document.getElementById('boxRetry').hidden=false;}
+} catch(error){gate.dataset.state='error';gate.setAttribute('aria-busy','false');message.textContent=error.message||'Não foi possível verificar o acesso. Tente novamente.';document.getElementById('boxRetry').hidden=false;}

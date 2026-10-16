@@ -1,0 +1,15 @@
+/* An indeterminate animation: the messages follow actual loading stages. */
+#boxGate{box-sizing:border-box;min-height:100dvh;padding:32px 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;text-align:center;background:radial-gradient(ellipse at 50% 35%,#173c46 0,transparent 54%),#0c1729;color:#f4f8ff;font-family:Inter,system-ui,sans-serif}
+#boxGate .box-loader-art{position:relative;width:270px;height:210px;margin-bottom:20px;flex:none}
+.box-loader-logo{position:absolute;width:220px;height:150px;object-fit:contain;left:25px;top:32px;filter:drop-shadow(0 12px 18px #0005);animation:box-loader-float 2.6s ease-in-out infinite}
+.box-loader-orbit{position:absolute;inset:3px 32px;border:1px solid #92e2c32b;border-radius:50%;transform:rotate(-20deg)}
+.box-loader-orbit:before{content:'';position:absolute;width:11px;height:11px;top:21px;left:23px;border-radius:50%;background:#baed76;box-shadow:0 0 22px #baed7670}
+.box-loader-world{position:absolute;width:72px;height:48px;object-fit:contain;border:1px solid #b1ecda4a;border-radius:12px;background:#173a45;box-shadow:0 8px 16px #06152260;animation:box-loader-float 3.2s ease-in-out infinite}
+.world-egg{left:2px;bottom:9px;rotate:-12deg;animation-delay:-1s}.world-fruit{right:0;top:0;rotate:12deg;animation-delay:-2s}.box-loader-spark{position:absolute;color:#ffdf89;right:25px;bottom:10px;font-size:26px;animation:box-loader-glow 1.7s ease-in-out infinite}
+#boxGate h1{font-size:clamp(23px,5vw,30px);line-height:1.2;letter-spacing:-.6px;margin:0 0 12px}#boxGateMessage{font-size:14px;color:#c2d6e0;line-height:1.5;max-width:330px;margin:0 0 22px;min-height:21px}
+.box-loader-track{width:170px;height:5px;background:#2b4353;border-radius:6px;overflow:hidden}.box-loader-track i{display:block;width:50%;height:100%;border-radius:6px;background:linear-gradient(90deg,#70d9cb,#d5f08b);animation:box-loader-progress 1.4s ease-in-out infinite}
+#boxGate .box-loader-caption{font-size:11px;line-height:1.5;color:#8ca7ba;margin:13px 0 32px}#boxGate .box-loader-about{font-size:12px;color:#b6d9c4;text-decoration:none;padding:10px}#boxGate #boxRetry{padding:11px 20px;background:#cff29d;border-radius:12px;color:#23463d;font-weight:750;text-decoration:none;margin-bottom:10px}
+#boxGate[data-state=error] .box-loader-track,#boxGate[data-state=error] .box-loader-caption{display:none}#boxGate[data-state=error] *{animation:none!important}
+@keyframes box-loader-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}@keyframes box-loader-glow{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.12)}}@keyframes box-loader-progress{0%{transform:translateX(-110%)}100%{transform:translateX(210%)}}
+@media(prefers-reduced-motion:reduce){#boxGate *{animation:none!important}.box-loader-track i{width:100%;background:#82d8bf}}
+@media(max-height:450px) and (orientation:landscape){#boxGate{padding:16px}.box-loader-art{scale:.65;margin:-34px 0 -22px!important}#boxGate .box-loader-caption{margin:10px 0}#boxGate h1{font-size:22px}#boxGateMessage{margin-bottom:12px}}

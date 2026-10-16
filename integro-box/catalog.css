@@ -7,3 +7,21 @@ body.catalog-enabled{background:#091323;color:#f3f6ff}body.catalog-enabled>heade
 @media(prefers-reduced-motion:reduce){.catalog-card{transition:none}}
 
 .catalog-legacy{display:none!important}
+
+/* One account bar; secondary information is accessible from Conta. */
+body.catalog-enabled>header .head{min-height:74px;gap:12px;padding:6px 20px}
+body.catalog-enabled>header .brand-logo{width:100px;height:62px}
+body.catalog-enabled>header .box-player{flex:1;gap:8px;margin-left:0;min-width:0}
+body.catalog-enabled>header .box-player-name{min-width:0}body.catalog-enabled>header .box-player-name small{display:none}
+body.catalog-enabled>header .box-player-name strong{display:block;max-width:230px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.catalog-enabled>header .box-presence{background:transparent;border:0;padding:0;font-size:11px;gap:6px;box-shadow:none;min-height:16px}
+body.catalog-enabled>header .ig-wallet-button{order:2;min-height:38px;padding:6px 9px;border-radius:12px;font-size:12px;gap:4px;box-shadow:0 2px 0 #163e4166}
+body.catalog-enabled>header .ig-wallet-button svg{width:23px;height:23px}
+.catalog-settings{order:3;width:54px;height:38px;flex:0 0 54px;border-radius:12px;font-size:11px;font-weight:750}
+#lobby[data-catalog-ready]{padding-top:18px}.catalog-intro{gap:12px;margin-bottom:18px}.catalog-intro h1{font-size:26px;margin:0}.catalog-search{padding:11px 15px;min-height:42px;border-radius:14px}
+.catalog-recent-row{scrollbar-width:none;scroll-snap-type:x proximity}.catalog-recent-row::-webkit-scrollbar{display:none}.catalog-recent-game{scroll-snap-align:start}.catalog-recent{margin-bottom:18px}
+.catalog-filters{scrollbar-width:none;padding-bottom:8px}.catalog-filters::-webkit-scrollbar{display:none}.catalog-feature{margin-top:28px}
+.catalog-account{padding:26px;max-width:420px}.catalog-account h2{padding-right:28px;font-size:23px}.catalog-account-profile:empty{display:none}.catalog-account-profile{display:grid;gap:8px;margin:20px 0}.catalog-account-profile label{font-size:12px;color:#bdd2de}.catalog-account #boxStudentSelect{width:100%;max-width:none;padding:10px;background:#1d3248;color:#fff;border-color:#4d6e80;border-radius:10px;font-size:13px}
+.catalog-account .box-account{display:flex;flex-direction:column;align-items:stretch;gap:10px;background:none;padding:8px 0}.catalog-account .box-account small{display:none}.catalog-account .box-account a,.catalog-account #boxLogout,.catalog-account-links>.catalog-detail{display:block;text-decoration:none;text-align:left;min-height:44px;padding:12px 14px;border:1px solid #3a5369;border-radius:12px;background:#20394b;color:#ebf6ff;font:600 13px/1.4 system-ui}.catalog-account #boxLogout{background:none;color:#ffccbf}.catalog-account-links>.catalog-detail{width:100%;margin-top:2px}.catalog-privacy{margin-top:20px;border-top:1px solid #354b61;padding-top:16px}.catalog-privacy summary{cursor:pointer;font-weight:650;font-size:13px}.catalog-privacy #boxUsageNotice{font:12px/1.65 system-ui;color:#bed0df;margin:12px 0 0}
+@media(max-width:600px){body.catalog-enabled>header .head{min-height:66px;padding:5px 12px;gap:8px}body.catalog-enabled>header .brand-logo{width:72px;height:54px}body.catalog-enabled>header .box-player{align-items:flex-start;flex-direction:column;gap:3px}body.catalog-enabled>header .box-player-name strong{max-width:120px;font-size:12px}body.catalog-enabled>header .box-presence{font-size:10px}.box-presence-dot{width:6px;height:6px}body.catalog-enabled>header .ig-wallet-button{padding:5px 7px;font-size:11px;min-width:48px}.catalog-settings{width:48px;flex-basis:48px}#lobby[data-catalog-ready]{padding:16px 12px 30px}.catalog-intro{gap:12px}.catalog-intro h1{font-size:23px}.catalog-search{font-size:13px}.catalog-recent h2,.catalog-section-title h2{font-size:16px}.catalog-recent-game{flex-basis:190px}.catalog-recent-game img{width:66px;height:58px}.catalog-recent-game span{font-size:12px}.catalog-filter{padding:9px 14px;min-height:38px;font-size:12px}.catalog-section-title{margin:10px 0 14px}.catalog-feature h2{font-size:20px}.catalog-feature p{font-size:11px}}
+@media(max-width:350px){body.catalog-enabled>header .head{gap:6px;padding-left:8px;padding-right:8px}body.catalog-enabled>header .brand-logo{width:62px}body.catalog-enabled>header .box-player-name strong{max-width:105px}}
