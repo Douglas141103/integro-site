@@ -49,7 +49,7 @@ test('toon surfaces share a discrete ramp, the crown covers the scalp and the ru
   c.root.updateMatrixWorld(true);c.skeleton.update();const surfaces=[];let triangles=0;
   c.root.traverse(m=>{if(!m.isMesh||m.userData.contour)return;surfaces.push(m);triangles+=(m.geometry.index?.count||m.geometry.attributes.position.count)/3;assert(m.material.isMeshToonMaterial);assert.equal(m.material.gradientMap,art.toonRamp);});
   assert(triangles<16000,`${triangles} triangles`);assert(surfaces.length<=18);assert.equal(art.toonRamp.magFilter,T.NearestFilter);assert.deepEqual([...art.toonRamp.image.data],[62,128,196,255]);
-  const ray=new T.Raycaster(new T.Vector3(0,3,.02),new T.Vector3(0,-1,0)),hits=ray.intersectObjects(surfaces,false);assert(hits.length);assert.equal(hits[0].object.name,'head-details','skin must not protrude through the hair crown');
+  const ray=new T.Raycaster(new T.Vector3(0,3,.02),new T.Vector3(0,-1,0)),hits=ray.intersectObjects(surfaces,false);assert(hits.length);assert(['head-details','cap-details'].includes(hits[0].object.name),'skin must not protrude through the hair crown');
  }finally{c.dispose();art.dispose();}}
 });
 

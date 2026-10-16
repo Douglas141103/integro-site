@@ -1,5 +1,15 @@
 # Integro Box
 
+## Integro Rush — movimento e apoio dos pés (rush-motion4)
+
+O rig ganhou quatro controles secundários para boné, franja, capuz e acessórios das costas. As pernas usam IK analítico de dois ossos com direção de dobra do joelho e orientação do tornozelo; o apoio considera a sola durante a entrada do calcanhar e a saída da ponta do pé. Braços e tronco usam FK, rotação contrária de quadril/ombros e passada com cadência adaptada à fase. Pesos do tronco passam por quadril, coluna e peito.
+
+Salto com preparação visual curta, impulso, recolhimento no ápice e extensão para pousar; compressão e recuperação na aterrissagem. A curva, duração e regras de colisão do salto permanecem iguais. Deslize com entrada, acomodação e retorno progressivo. A pose de saída é preservada durante o blend, eliminando o salto instantâneo de pose. A pausa congela também o corpo e os movimentos secundários.
+
+Boné, franja, capuz e costas usam molas amortecidas com integração analítica e limites de movimento. A preferência por movimento reduzido diminui a elasticidade e o balanço extra. Toda a animação é local e visual; não altera dados de progresso, moedas ou regras das fases.
+
+Validação: 27 testes nas suítes de movimento, arte, Rush, GoSnake e atualização do portal. Cobrem pés apoiados, ausência de penetração da sola, normalização dos ossos, poses distintas de salto, transição do deslize, pausa, resposta independente da taxa de quadros (30/60/120 Hz), movimento secundário, persistência e jogabilidade. Conferência offline das poses; validação visual WebGL e desempenho em aparelho real ainda não disponíveis nesta sessão.
+
 ## Integro Rush — low poly, cel-shading e HUD (rush-toon3)
 
 A direção visual passa a low poly estilizado com `MeshToonMaterial`, uma rampa compartilhada de quatro níveis de iluminação e contornos por malha invertida no personagem. Luz principal, preenchimento e tone mapping foram ajustados para preservar as cores. O modelo tem boné padrão, cabelo fechado acima do crânio, rosto com olhos planos, jaqueta com capuz e emblema, calça larga e tênis detalhados. Os detalhes rígidos são agrupados por osso: 15 superfícies e 15 contornos no visual padrão, com menos de 16 mil triângulos nas superfícies. A loja continua equipando os mesmos 24 itens e preserva moedas e progresso existentes.
