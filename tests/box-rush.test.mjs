@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {JSDOM} from 'jsdom';
-import {Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore,buildTrack} from '../integro-box/rush-src/rules.mjs';
+import {Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore,buildTrack,speedAt,distanceAt} from '../integro-box/rush-src/rules.mjs';
 import {rushHUDMarkup,paintRushHUD} from '../integro-box/rush-src/hud.js';
 import {RushScene} from '../integro-box/rush-src/scene.js';
 import * as T from '../integro-box/rush-src/node_modules/three/build/three.module.js';
@@ -87,8 +87,26 @@ test('illustrated HUD reflects lives, timed powers, regional theme and real chec
  try{
   r.time=65.2;r.health=1;r.coins=2500;r.magnet=4.1;paintRushHUD(app,r,p);
   assert.equal(get('rushName').textContent,r.level.name);assert.equal(get('rushCoins').textContent,'2.500');assert.equal(get('rushLife').getAttribute('aria-label'),'1 vida');assert.equal(app.querySelectorAll('[data-heart].empty').length,2);assert.equal(get('rushClock').textContent,'2:55');assert.equal(get('rushProgress').value,65.2);assert.equal(app.querySelectorAll('.rush-checkpoint.reached').length,1);assert.equal(get('rushMagnet').hidden,false);assert.equal(get('rushMagnetTime').textContent,'5s');assert.equal(get('rushShield').hidden,true);
+  assert.equal(get('rushPace').textContent,(r.speed/r.level.speed).toFixed(2).replace('.',',')+'×');assert(get('rushSpeed').querySelectorAll('i.lit').length>1);
   r.magnet=0;r.shield=3.5;r.health=3;paintRushHUD(app,r,p);assert(get('rushMagnet').hidden);assert.equal(get('rushShieldTime').textContent,'4s');assert.equal(app.querySelectorAll('[data-heart].empty').length,0);
   paintRushHUD(app,new Run(12),p);assert.equal(app.dataset.region,'sky');assert.equal(get('rushStage').textContent,'EXPEDIÇÃO 13 / 15');assert.equal(app.querySelectorAll('.rush-checkpoint.reached').length,0);
   for(const use of app.querySelectorAll('use'))assert(app.querySelector(use.getAttribute('href')),'every illustrated icon has its artwork');
  }finally{dom.window.close();}
+});
+
+test('speed grows continuously in every phase and survives save, pause and checkpoint retry',()=>{
+ for(const level of LEVELS){let previous=0;for(let time=0;time<=240;time+=.5){const speed=speedAt(level,time);assert(speed>previous);assert(speed<level.speed*1.75);previous=speed;const derivative=(distanceAt(level,time+.001)-distanceAt(level,time))/.001;assert(Math.abs(derivative-speed)<.0002);}}
+ const r=new Run(0);r.track=[];advance(r,125);const p=clean(null),copy=restore(snapshot(r),p);assert.equal(copy.speed,r.speed);assert.equal(copy.distance,r.distance);
+ const before=r.distance;r.status='lost';r.update(.05);assert.equal(r.distance,before);r.retry();assert.equal(r.speed,speedAt(r.level,120));assert.equal(r.distance,distanceAt(r.level,120));
+ const distances=[];for(const fps of[30,60,120]){const f=new Run(0);f.track=[];for(let i=0;i<fps*5;i++)f.update(1/fps);distances.push(f.distance);}for(const d of distances)assert(Math.abs(d-distances[0])<1e-8);
+});
+
+test('accelerating scenery and obstacles share travelled distance and gaps meet their collision point',()=>{
+ const renderer={shadowMap:{},setPixelRatio(){},setSize(){},render(){},dispose(){}};
+ const s=new RushScene({clientWidth:393,clientHeight:710},'low',{rendererFactory:()=>renderer}),r=new Run(0);s.setLevel(r,clean(null));try{
+  const gap=r.track.find(o=>o.type==='gap');r.time=gap.time-.3;s.draw(r,0);const object=s.objects.get(gap.id),old=object.position.z,scenery=s.scenery.find(g=>g.position.z<0&&g.position.z>-100),oldScenery=scenery.position.z,oldDistance=r.distance;
+  r.time+=.1;s.draw(r,.1);const travel=r.distance-oldDistance;assert(Math.abs(object.position.z-old-travel)<1e-8);assert(Math.abs(scenery.position.z-oldScenery-travel)<1e-8);
+  r.time=gap.time;s.draw(r,.2);assert(Math.abs(object.position.z)<1e-8,'obstacle reaches the player exactly when collision is checked');
+  const slabs=s.roadParts.find(p=>p.userData.lane===gap.lane),matrix=new T.Matrix4();let holes=0;for(let i=0;i<slabs.count;i++){slabs.getMatrixAt(i,matrix);const p=new T.Vector3().setFromMatrixPosition(matrix);if(Math.abs(p.z)<1.25){holes++;assert.equal(p.y,-50);}}assert(holes>0,'visible floor hole must follow the accelerating gap');
+ }finally{s.dispose();}
 });

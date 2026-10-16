@@ -48,3 +48,20 @@ test('gait pace is stable at 30, 60 and 120 Hz',()=>{
  const poses=[];for(const fps of[30,60,120]){const f=fixture();try{for(let i=0;i<fps*2;i++)f.step(1/fps);poses.push(['head','footL','footR'].map(name=>world(f.c.bones[name])));}finally{f.dispose();}}
  for(const pose of poses)for(let i=0;i<3;i++)assert(pose[i].distanceTo(poses[0][i])<.025);
 });
+
+test('running has visible heel recovery, flight and arm swing; jumping separates the legs',()=>{
+ const f=fixture();try{
+  let flight=0,footLift=0,armTravel=0,minArm=Infinity,maxArm=-Infinity,minZ=Infinity,maxZ=-Infinity;
+  for(let i=0;i<180;i++){f.step();const left=world(f.c.bones.footL),right=world(f.c.bones.footR),hand=world(f.c.bones.handL);
+   if(Object.values(f.c.legs).every(leg=>!leg.contact))flight++;
+   footLift=Math.max(footLift,Math.abs(left.y-right.y));minArm=Math.min(minArm,hand.z);maxArm=Math.max(maxArm,hand.z);minZ=Math.min(minZ,left.z);maxZ=Math.max(maxZ,left.z);
+  }
+  armTravel=maxArm-minArm;assert(flight>15,'running needs a flight interval, not continuous walking support');assert(footLift>.40,'heel must visibly recover above the other shoe');assert(maxZ-minZ>.75,'stride cannot collapse into shuffling');assert(armTravel>.65,'arms visibly drive the run');
+  f.r.action('jump');for(let i=0;i<30;i++)f.step();assert(Math.abs(world(f.c.bones.footL).y-world(f.c.bones.footR).y)>.30,'apex must have a clearly raised knee');
+ }finally{f.dispose();}
+});
+
+test('step cadence increases with the actual running speed',()=>{
+ const cycles=[];for(const time of[0,180]){const f=fixture();f.r.time=time;let total=0;try{for(let i=0;i<120;i++){const before=f.c.gaitPhase;f.step();total+=(f.c.gaitPhase-before+1)%1;}cycles.push(total);}finally{f.dispose();}}
+ assert(cycles[1]>cycles[0]*1.2);assert(cycles[1]<cycles[0]*1.5);
+});

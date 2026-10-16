@@ -8,6 +8,10 @@ export const REGIONS=[
 ];
 const names=['Baía das Esmeraldas','Pontes de Coral','Tempestade no Caribe','Templo das Cascatas','Jardins Suspensos','Fuga das Ruínas','Passagem Polar','Desfiladeiro de Gelo','A Grande Avalanche','Pontes sobre a Lava','Cratera em Erupção','Coração do Vulcão','Arquipélago das Nuvens','Aurora Celestial','A Última Expedição'];
 export const LEVELS=names.map((name,i)=>({name,index:i,region:Math.floor(i/3),duration:DURATION,speed:18+i*.45,seed:1703+i*7919,bonus:150+i*25,chapters:[['Costa dos coqueiros','Passarela de coral','Ilhas e cascatas','Reta das esmeraldas'],['Entrada do templo','Jardim das colunas','Pontes ancestrais','Santuário perdido'],['Encosta gelada','Túnel das agulhas','Zona de avalanche','Passagem do cume'],['Rio de magma','Pontes de basalto','Chuva de brasas','Fuga da cratera'],['Mar de nuvens','Portais celestes','Chuva de estrelas','Horizonte final']][Math.floor(i/3)]}));
+// One continuous, bounded acceleration curve. Integrating it keeps the road,
+// scenery and obstacles moving together, including across checkpoint reloads.
+export function speedAt(level,time){return level.speed*(1+.75*(1-Math.exp(-Math.max(0,time)/90)));}
+export function distanceAt(level,time){const t=Math.max(0,time);return level.speed*(1.75*t+67.5*Math.expm1(-t/90));}
 export function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
 export const SHOP=[
  ['cap-coral','Boné Coral','head',180,0xff705d,'cap'],['cap-ocean','Boné Oceano','head',220,0x39c5dc,'cap'],['hat-explorer','Chapéu Explorador','head',450,0xdbb674,'hat'],['crown-ice','Coroa Glacial','head',1200,0x97e7ff,'crown'],['crown-solar','Coroa Solar','head',3200,0xffcd5d,'crown'],['halo-aurora','Halo Aurora','head',6500,0xe5a1ff,'halo'],
@@ -30,6 +34,8 @@ export function buildTrack(index){const level=LEVELS[index],random=rng(level.see
 export class Run {
  constructor(index){if(!LEVELS[index])throw Error('Fase inválida');this.level=LEVELS[index];this.track=buildTrack(index);this.time=0;this.lane=0;this.x=0;this.jump=0;this.slide=0;this.health=3;this.coins=0;this.hits=0;this.magnet=0;this.shield=0;this.invincible=0;this.status='playing';this.seen=new Set();this.claimed=new Set();this.events=[];this.checkpoint=0;this.rewarded=false;}
  get y(){return this.jump>0?Math.sin(Math.PI*(1-this.jump/1.05))*2.65:0;}
+ get speed(){return speedAt(this.level,this.time);}
+ get distance(){return distanceAt(this.level,this.time);}
  action(a){if(this.status!=='playing')return;if(a==='left')this.lane=Math.max(-1,this.lane-1);if(a==='right')this.lane=Math.min(1,this.lane+1);if(a==='jump'&&!this.jump){this.jump=1.05;this.slide=0;}if(a==='slide'&&!this.slide&&!this.jump)this.slide=.95;}
  update(dt){if(this.status!=='playing'||!Number.isFinite(dt))return;dt=Math.max(0,Math.min(.05,dt));const before=this.time;this.time=Math.min(DURATION,this.time+dt);this.x+=(this.lane*2.55-this.x)*Math.min(1,dt*15);for(const k of ['jump','slide','magnet','shield','invincible'])this[k]=Math.max(0,this[k]-dt);
   const cp=Math.min(3,Math.floor(this.time/60))*60;if(cp>this.checkpoint){this.checkpoint=cp;this.health=Math.min(3,this.health+1);this.events.push({type:'checkpoint'});}

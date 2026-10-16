@@ -33,7 +33,10 @@ export class LegIK {
 // and toe-off. Coordinates match the existing shoe and collision scale.
 export function soleHeight(pitch){const c=Math.cos(pitch),s=Math.sin(pitch);return .012-Math.min(-.1*c+.395*s,-.1*c-.205*s);}
 export function gaitFoot(phase){
- const p=((phase%1)+1)%1,stance=.56;
- if(p<stance){const u=p/stance,pitch=.19*(1-smooth(0,.25,u))-.48*smooth(.66,1,u);return {z:T.MathUtils.lerp(-.32,.29,u),y:soleHeight(pitch),pitch,contact:true};}
- const u=(p-stance)/(1-stance),pitch=T.MathUtils.lerp(-.48,.19,smooth(0,1,u));return {z:T.MathUtils.lerp(.29,-.32,smooth(0,1,u)),y:soleHeight(pitch)+Math.sin(u*Math.PI)*.28,pitch,contact:false};
+ const p=((phase%1)+1)%1,stance=.38;
+ if(p<stance){const u=p/stance,pitch=.10*(1-smooth(0,.25,u))-.65*smooth(.55,1,u);return {z:T.MathUtils.lerp(-.40,.40,u),y:soleHeight(pitch),pitch,contact:true};}
+ // Running has a flight phase. The recovering heel kicks back, folds high,
+ // then reaches forward; a short double-support walk looked like shuffling.
+ const u=(p-stance)/(1-stance),v=1-u,pitch=u<.28?T.MathUtils.lerp(-.65,-1.05,smooth(0,.28,u)):T.MathUtils.lerp(-1.05,.10,smooth(.28,1,u));
+ return {z:v*v*v*.40+3*v*v*u*.78-3*v*u*u*.66-u*u*u*.40,y:soleHeight(pitch)+Math.sin(Math.PI*u)**1.2*.49,pitch,contact:false};
 }
