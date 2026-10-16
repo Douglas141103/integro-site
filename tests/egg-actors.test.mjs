@@ -26,7 +26,7 @@ test('species gait changes legs and loose parts; paused animation remains frozen
  }finally{c.dispose();}}
 });
 
-test('explorer IK handles rotated parents; jump, carrying and all 64 accessories remain attached',()=>{
+test('explorer IK handles rotated parents; jump, carrying and all 82 accessories remain attached',()=>{
  const actor=world.hero(scene),p={x:3,y:0,z:-500,vy:0};actor.g.position.set(p.x,0,p.z);actor.g.rotation.y=2.3;
  try{
   assert.equal(actor.model.skeleton.bones.length,21);
@@ -34,7 +34,7 @@ test('explorer IK handles rotated parents; jump, carrying and all 64 accessories
   assert(contacts>50);const running=actor.model.bones.shoulderL.rotation.x;for(let i=0;i<45;i++)actor.update(1/60,{player:p,moving:1,carrying:true});assert(Math.abs(actor.model.bones.shoulderL.rotation.x-.87)<.02);assert(Math.abs(actor.model.bones.elbowL.rotation.x-1.18)<.02);assert.notEqual(running,actor.model.bones.shoulderL.rotation.x);
   const egg=world.egg(actor.carry,0xffcc66,.65);const before=position(egg);p.y=1;p.vy=4;actor.g.position.y=1;for(let i=0;i<12;i++)actor.update(1/60,{player:p,moving:1,carrying:true});assert(position(egg).y>before.y+.6);
   let disposed=0,last=null;for(const[id,def]of Object.entries(ACCESSORIES)){world.equipAccessories(actor,{[def.slot]:id});if(last)assert(disposed>0);const mesh=actor.wear.children.find(m=>!m.userData.contour);assert(mesh?.isSkinnedMesh,id);mesh.geometry.addEventListener('dispose',()=>disposed++);last=mesh;actor.update(1/60,{player:p,moving:1,carrying:true});const size=geometryBounds(mesh).getSize(new T.Vector3());assert(Math.max(...size.toArray())<4,id+' follows the bone without exploding');}
-  world.equipAccessories(actor,{});assert.equal(disposed,64);assert(actor.hat.visible&&actor.pack.visible);
+  world.equipAccessories(actor,{});assert.equal(disposed,82);assert(actor.hat.visible&&actor.pack.visible);
  }finally{actor.dispose();}
 });
 

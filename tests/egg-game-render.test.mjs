@@ -5,10 +5,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import vm from 'node:vm';
+import {NEW_EGG_ITEMS} from '../integro-box/egg-intgem-catalog.mjs';
 import {JSDOM} from 'jsdom';
 import {buildSync} from '../integro-box/egg-src/node_modules/esbuild/lib/main.js';
 const require=createRequire(new URL('../integro-box/egg-src/entry.js',import.meta.url)),T=require('three');
-test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped pets with the real actors',()=>{
+test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped pets with the real actors',async()=>{
  const dom=new JSDOM(readFileSync(new URL('../integro-box/jogar.html',import.meta.url),'utf8'),{url:'https://example.test/integro-box/jogar.html',pretendToBeVisual:true}),w=dom.window;
  w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({},{get:(o,k)=>o[k]||(()=>{})});w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,AA';w.scrollTo=()=>{};
  let frame,clock=0,adapter;const errors=[];
@@ -34,7 +35,16 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   pointer(joy,'pointerdown',1,50,10);pointer(sprint,'pointerdown',2);tick(3);const beforeJump=state().player.z;pointer(jump,'pointerdown',3);tick(5);assert(state().player.y>.3);assert(state().player.z<beforeJump-.8);assert.equal(actor.vehicleId,'skateBreeze');
   pointer(jump,'pointercancel',3);pointer(sprint,'pointerup',2);const stillRunning=state().player.z;tick(5);assert(state().player.z<stillRunning,'releasing action fingers preserves joystick');pointer(joy,'pointerup',1);tick(60);const stoppedZ=state().player.z;tick(5);assert.equal(state().player.z,stoppedZ);
   pointer(jump,'pointerdown',4);key('Escape');const pausedY=state().player.y;tick(10);pointer(jump,'pointerdown',5);assert.equal(state().player.y,pausedY);key('Escape');tick(70);
-  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:1000000});w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();w.document.querySelector('[data-shop-tab="vehicles"]').click();assert.equal(w.document.querySelectorAll('[data-vehicle]').length,2);assert.match(w.document.getElementById('eggSheetTag').textContent,/96 ITENS/);w.document.querySelector('[data-vehicle="scooterPort"]').click();w.document.getElementById('eggCloseSheet').click();tick(2);assert.equal(actor.vehicleId,'scooterPort');
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:1000000});w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();assert.equal(w.document.querySelectorAll('.egg-gem-card').length,41);assert(w.document.querySelector('[data-gem-item="egg_station_head"]').disabled);w.document.querySelector('[data-shop-tab="vehicles"]').click();assert.equal(w.document.querySelectorAll('[data-vehicle]').length,2);assert.match(w.document.getElementById('eggSheetTag').textContent,/129 ITENS/);w.document.querySelector('[data-vehicle="scooterPort"]').click();w.document.getElementById('eggCloseSheet').click();tick(2);assert.equal(actor.vehicleId,'scooterPort');
+  const premium=NEW_EGG_ITEMS.find(i=>i.id==='egg_station_head');let gemEquipment={head:premium};
+  w.BoxIntGem={balance:0,getCatalog:()=>[],getEquipped:()=>gemEquipment,refresh:async()=>{},toggleEquipment:async()=>{gemEquipment={};}};
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),accessories:['crown'],equipped:{head:'crown'}});tick(2);
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();w.document.querySelector('[data-shop-tab="accessories"]').click();
+  assert.equal(w.document.querySelectorAll('[data-equip="clockworkCrown"]').length,0);
+  assert.equal(w.document.querySelector('[data-equip="crown"]').textContent,'Equipar');
+  w.document.querySelector('[data-equip="crown"]').click();await Promise.resolve();await Promise.resolve();
+  assert.equal(w.BoxEggRuntime.save().equipped.head,'crown');assert.equal(gemEquipment.head,undefined);
+  assert.equal(w.document.querySelector('[data-equip="crown"]').textContent,'Guardar');w.document.getElementById('eggCloseSheet').click();tick(2);
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });

@@ -60,8 +60,8 @@ test('conversion quotes use real demand and reserves, debit the versioned cloud 
  }finally{await db.close();}
 });
 test('catalog covers every game with permanent visible cosmetics above 3 gems and exact pack prices',()=>{
- assert.equal(GAMES.length,15);assert.equal(ITEMS.length,45);assert.equal(new Set(ITEMS.map(x=>x.id)).size,45);
- assert(ITEMS.every(x=>x.price>3));for(const g of GAMES)assert.equal(ITEMS.filter(x=>x.game===g.id).length,3);
+ assert.equal(GAMES.length,15);assert.equal(ITEMS.length,83);assert.equal(new Set(ITEMS.map(x=>x.id)).size,83);
+ assert(ITEMS.every(x=>x.price>3));for(const g of GAMES)assert.equal(ITEMS.filter(x=>x.game===g.id).length,g.id==='egg'?41:3);
  assert.deepEqual(PACKS.map(p=>[p.gems,p.cents]),[[1,100],[5,299],[10,699],[20,1099]]);
 });
 test('provider confirmation rejects forged redirects, amount mismatch and foreign checkout URLs; paid_amount may include fees',async()=>{

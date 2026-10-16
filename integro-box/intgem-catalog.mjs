@@ -1,4 +1,5 @@
 // The database is authoritative for prices, balances, ownership and equipment.
+import {EGG_PREMIUM_ITEMS} from './egg-intgem-catalog.mjs?v=20261016-eggshop1';
 export const GAMES=[
  ['rush','Integro Rush','rushApp','runner'],['bounce','Bounce Tegro','bounceApp','ball'],
  ['egg','Pegue o Ovo','eggApp','egg'],['bairro','Meu Bairro','dollApp','home'],
@@ -10,11 +11,11 @@ export const GAMES=[
  ['memory','Memória em Inglês','play','cards']
 ].map(([id,name,screen,symbol])=>({id,name,screen,symbol}));
 export const PACKS=[{id:'gem1',gems:1,cents:100},{id:'gem5',gems:5,cents:299},{id:'gem10',gems:10,cents:699},{id:'gem20',gems:20,cents:1099}];
-export const ITEMS=GAMES.flatMap(g=>[
+export const ITEMS=[...GAMES.flatMap(g=>[
  {id:g.id+'_jade',game:g.id,name:'Aura de Jade',kind:'aura',rarity:'Raro',price:4,color:'#54ead2',secondary:'#86aaff',description:'Brilho de cristal e moldura de jade no cenário de '+g.name+'.'},
  {id:g.id+'_guardian',game:g.id,name:'Guardião '+({egg:'do Ninho',rush:'da Expedição',bounce:'dos Saltos',bairro:'do Bairro',fruit:'das Frutas',craft:'dos Blocos',gosnake:'da Serpente',fuitcort:'da Lâmina',interball:'da Arena',interdance:'do Ritmo',house:'das Descobertas',math:'dos Números',words:'das Palavras',robot:'da Rota',memory:'da Memória'}[g.id]),kind:'companion',rarity:'Épico',price:7,color:'#ffc96a',secondary:'#63e7e5',description:'Mascote animado no HUD que acompanha você em '+g.name+'.'},
  {id:g.id+'_cosmos',game:g.id,name:'Aura Cósmica',kind:'aura',rarity:'Lendário',price:12,color:'#b7a1ff',secondary:'#ffb9df',description:'Cristais, estrelas e moldura cósmica para '+g.name+'.'}
-]);
+]),...EGG_PREMIUM_ITEMS];
 export const money=cents=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
 export function activeGame(doc=document,win=window){
  for(const g of GAMES.filter(g=>g.screen!=='play')){const el=doc.getElementById(g.screen);if(el&&!el.hidden&&!el.classList.contains('hidden'))return g.id;}

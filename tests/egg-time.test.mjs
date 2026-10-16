@@ -1,13 +1,14 @@
+import {PREMIUM_BY_NATIVE} from '../integro-box/egg-intgem-catalog.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';import {boxDatabase,uid} from './box-db-fixture.mjs';
 import {EggAdventure,ACCESSORIES,ABILITIES,WORLDS,NESTS,CORRAL,cleanSave,freshSave} from '../integro-box/egg-src/egg-rules.js';
 import {ACCESSORY_EXPANSION} from '../integro-box/egg-src/egg-content.js';
 import {createAbilityDock,abilityCards} from '../integro-box/egg-src/egg-abilities-ui.js';
 const advance=(g,seconds,input={})=>{for(let i=0;i<Math.round(seconds/.05);i++)g.update(.05,input)};
-test('30 added accessories are purchasable, equip in the right slot, and survive old-save migration',()=>{
- assert.equal(Object.keys(ACCESSORY_EXPANSION).length,30);assert.equal(Object.keys(ACCESSORIES).length,64);assert.ok(Object.values(ACCESSORY_EXPANSION).some(a=>a.price===500000));
+test('ordinary accessories retain coin purchases and converted relics require IntGem',()=>{
+ assert.equal(Object.keys(ACCESSORY_EXPANSION).length,30);assert.equal(Object.keys(ACCESSORIES).length,82);assert.ok(Object.values(ACCESSORY_EXPANSION).some(a=>a.price===500000));
  const g=new EggAdventure();g.save.coins=10000000;const original=g.save.coins;let spent=0;
- for(const[id,a]of Object.entries(ACCESSORY_EXPANSION)){assert.ok(g.buy(id));spent+=a.price;assert.equal(g.save.equipped[a.slot],id);assert.equal(g.buy(id),false);assert.ok(cleanSave(g.save).accessories.includes(id));}
+ for(const[id,a]of Object.entries(ACCESSORY_EXPANSION)){if(PREMIUM_BY_NATIVE[id]){const before=g.save.coins;assert.equal(g.buy(id),false);assert.equal(g.save.coins,before);continue;}assert.ok(g.buy(id));spent+=a.price;assert.equal(g.save.equipped[a.slot],id);assert.equal(g.buy(id),false);assert.ok(cleanSave(g.save).accessories.includes(id));}
  assert.equal(g.save.coins,original-spent);const old={version:4,coins:721,training:86,accessories:['infinityWings'],equipped:{back:'infinityWings'}};const save=cleanSave(old);assert.equal(save.coins,721);assert.equal(save.training,86);assert.equal(save.equipped.back,'infinityWings');assert.equal(save.abilityStock.bubble,0);
 });
 test('power inventory, exclusive slots, active time and race restrictions survive reload',()=>{

@@ -2,7 +2,15 @@
 
 Cadastro público gratuito usa Supabase Auth com confirmação de e-mail. O cadastro do Box fica em `private.box_accounts`; não cria perfis, cargos ou permissões escolares. As contas existentes do Instituto continuam funcionando. Não há assinatura mensal implementada neste projeto.
 
-Pacotes avulsos: 1 / R$ 1,00; 5 / R$ 2,99; 10 / R$ 6,99; 20 / R$ 10,99. Preços conforme solicitação e ajuste autorizado do pacote de 1 gema (duas compras de 5 custam menos que o pacote de 10). Catálogo: 45 cosméticos permanentes, três por jogo, a 4, 7 e 12 IntGem. Todos têm representação durante a partida; Egg e Rush também têm acessórios 3D, Bounce muda a cor da personagem e os jogos clássicos recebem detalhes temáticos.
+Pacotes avulsos: 1 / R$ 1,00; 5 / R$ 2,99; 10 / R$ 6,99; 20 / R$ 10,99. Preços conforme solicitação e ajuste autorizado do pacote de 1 gema (duas compras de 5 custam menos que o pacote de 10). Catálogo: 83 cosméticos permanentes. Pegue o Ovo oferece 41 itens (30 novos, oito relíquias convertidas e três clássicos), de 4 a 28 IntGem; os demais jogos mantêm três itens cada, a 4, 7 e 12 IntGem. Todos têm representação durante a partida; Egg e Rush também têm acessórios 3D, Bounce muda a cor da personagem e os jogos clássicos recebem detalhes temáticos.
+
+## Loja IntGem do Pegue o Ovo
+
+A aba IntGem abre dentro da loja do jogo, com saldo, filtros por categoria e itens adquiridos, prévia, descrição e confirmação do preço antes do débito. Há seis coleções novas — Estação Integro, Tesouros do Recife, Expedição Boreal, Forja do Vulcão, Exploradores do Cosmos e Realeza do Ninho — com cinco itens cada: cabeça, rosto, costas, mascote e aura. Os 30 novos itens custam entre 4 e 18 IntGem. São cosméticos permanentes, sem bônus de velocidade ou produção; uma peça de cada categoria pode ser equipada ao mesmo tempo.
+
+Oito acessórios antes vendidos por Integros passam a aceitar somente IntGem: Asas de dragão (14), Halo prismático (16), Máscara dos segundos (18), Coroa do tempo (20), Ampulheta eterna (22), Máscara galáctica (24), Portal das galáxias (26) e Farol do infinito (28). A migração `20261016190709_egg_intgem_shop.sql` preserva uma única vez os itens e os equipamentos já registrados nos saves do servidor. Não debita gemas nem gera receita. Saves enviados após essa migração não permitem reivindicar itens premium retroativamente. Itens presentes apenas em um save local não sincronizado não são prova de aquisição no servidor.
+
+A carteira do servidor é a fonte de propriedade e equipamento premium. A compra e o débito são atômicos e seguem o preço do catálogo no banco. Repetir a compra de um item já adquirido não cobra novamente. O cliente bloqueia compra fora da base, mostra saldo insuficiente e mantém os itens comuns na loja de Integros. Os 18 acessórios novos usam os pontos de fixação do personagem; seis mascotes e seis auras têm modelos próprios. O catálogo nativo passa a 82 acessórios.
 
 ## Recompensas e conversão
 
@@ -37,4 +45,4 @@ Falhas do lançamento não desfazem o crédito de gemas. A fila privada `intgem_
 
 `node --test --test-concurrency=2 tests/*.test.mjs` cobre banco PostgreSQL local (PGlite), isolamento, bônus, confirmação de pagamento, repetição, catálogo, conversão e UI em DOM. Testes de cena 3D validam transforms, recursos e materiais em CPU. A validação desta entrega não inclui renderização WebGL em navegador nem pagamento com cartão real. O envio de e-mail de cadastro depende da configuração de Auth/SMTP e dos redirecionamentos permitidos no projeto Supabase.
 
-Bundles: `node integro-box/egg-src/build.mjs` e `node integro-box/rush-src/build.mjs`. Aplicar as migrações `20261016180041_box_intgem_economy.sql` e `20261016184145_box_intgem_one_real.sql`, publicar a função e só então atualizar o frontend. Tabelas privadas com RLS e sem leitura/escrita direta para contas comuns.
+Bundles: `node integro-box/egg-src/build.mjs` e `node integro-box/rush-src/build.mjs`. Aplicar as migrações `20261016180041_box_intgem_economy.sql` e `20261016184145_box_intgem_one_real.sql`, publicar a função, aplicar também `20261016185036_box_intgem_finance.sql` e `20261016190709_egg_intgem_shop.sql` e só então atualizar o frontend. Tabelas privadas com RLS e sem leitura/escrita direta para contas comuns.
