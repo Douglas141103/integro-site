@@ -24,6 +24,14 @@ test('bubble, freezing, double jump, stamina and speed have different physical e
  const jump=new EggAdventure();jump.save.abilityStock.doubleJump=1;jump.useAbility('doubleJump');assert.ok(jump.jump());jump.update(.05);assert.ok(jump.jump());assert.equal(jump.jump(),false);advance(jump,2);assert.equal(jump.player.y,0);assert.ok(jump.jump());jump.update(.05);assert.ok(jump.jump());
  const run=new EggAdventure();run.save.abilityStock.endurance=1;run.save.abilityStock.rush=1;const speed=run.speed();assert.ok(run.useAbility('endurance'));assert.ok(run.useAbility('rush'));assert.equal(run.speed(),speed*1.25);advance(run,3,{z:-1,sprint:true});assert.equal(run.energy,run.maxEnergy());
 });
+test('reduced corral production preserves earned money and fractional accrual through reload',()=>{
+ const save=freshSave();Object.assign(save,{coins:1000,incomeEarned:250,incomePending:2.75,creatures:[{id:1,uid:'income-rebalance',world:0,rarity:'common',mutation:'normal',incomeProgress:.25}]});
+ let g=new EggAdventure(save);assert.equal(g.save.coins,1000);assert.equal(g.save.incomeEarned,250);assert.equal(g.save.incomePending,2.75);assert.equal(g.save.creatures[0].incomeProgress,.25);
+ assert.ok(Math.abs(g.incomeRate()*60-2.8)<1e-10,'common chick now earns 2.8 instead of 4 integros per minute');assert.equal(g.saleValue(0),80);
+ advance(g,60);assert.equal(g.save.coins,1005);assert.equal(g.save.incomeEarned,255);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.8)<1e-8);
+ g=new EggAdventure(g.save);advance(g,60);assert.equal(g.save.coins,1008);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.6)<1e-8);
+ g.save.abilityStock.incomeBoost=1;assert.ok(g.useAbility('incomeBoost'));advance(g,60);assert.equal(g.save.coins,1014);assert.equal(g.save.incomeEarned,264);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.2)<1e-8,'boost doubles the reduced production and retains fractions');
+});
 test('training, hatching and income boosts double only their advertised production',()=>{
  const train=new EggAdventure();train.save.abilityStock.trainingBoost=1;assert.equal(train.useAbility('trainingBoost'),false);train.mode='train';train.useAbility('trainingBoost');advance(train,1);assert.ok(Math.abs(train.save.trainXP-2)<.001);
  const hatch=new EggAdventure();hatch.save.abilityStock.hatchBoost=1;assert.equal(hatch.useAbility('hatchBoost'),false);hatch.save.eggs=[{id:1,world:13,rarity:'rare',mutation:'gold',remaining:8}];hatch.useAbility('hatchBoost');advance(hatch,4.1);assert.equal(hatch.save.creatures.length,1);assert.equal(hatch.save.creatures[0].world,13);

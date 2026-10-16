@@ -21,6 +21,8 @@ export const WORLDS=[
  ...NEW_WORLDS
 ];
 export const TRAINING_MAX=600;
+// Applies only to new automatic corral income; balances and sale values are retained.
+export const CORRAL_INCOME_MULTIPLIER=.7;
 export const LENGTH=48,CORRAL={x:-5,z:14},TREADMILL={x:5,z:14};
 export const TRACK_HALF_WIDTH=4.75,BASE_HALF_WIDTH=9.4,PLAYER_RADIUS=.4;
 export function corridorHalfWidth(z){const t=Math.max(0,Math.min(1,(z-3)/5));return TRACK_HALF_WIDTH+(BASE_HALF_WIDTH-TRACK_HALF_WIDTH)*t;}
@@ -122,7 +124,7 @@ export class EggAdventure{
  refreshDay(){const d=new Date().toISOString().slice(0,10);if(this.save.daily.day!==d)this.save.daily={day:d,delivered:0,claimed:false}}
  companion(){return this.save.creatures.find(c=>c.uid===this.save.companionId)||null}power(){const c=this.companion();return c?companionPower(c.world):null}
  equipPet(uid){if(!this.inBase()||!this.save.creatures.some(c=>c.uid===uid))return false;this.save.companionId=this.save.companionId===uid?null:uid;this.emit('upgrade',this.save.companionId?'Companheiro pronto! '+companionDescription(this.companion()):'Companheiro voltou ao curral.');return true}
- creatureIncomeRate(c){return WORLDS[c.world].value*RARITIES[c.rarity].mult*MUTATIONS[c.mutation||'normal'].mult/1200*(this.effect('incomeBoost')?2:1)}
+ creatureIncomeRate(c){return WORLDS[c.world].value*RARITIES[c.rarity].mult*MUTATIONS[c.mutation||'normal'].mult/1200*CORRAL_INCOME_MULTIPLIER*(this.effect('incomeBoost')?2:1)}
  incomeRate(){return this.save.creatures.reduce((v,c)=>v+this.creatureIncomeRate(c),0)}
  creditIncome(amount,pet){amount=Math.min(Math.floor(amount),1e9-this.save.coins);if(amount<=0)return 0;this.save.coins+=amount;this.save.incomeEarned+=amount;this.events.push({type:'income',amount,uid:pet?.uid,world:pet?.world});return amount}
  collectIncome(){const amount=this.creditIncome(Math.floor(this.save.incomePending+1e-9));this.save.incomePending=Math.max(0,this.save.incomePending-amount);return amount||false}
