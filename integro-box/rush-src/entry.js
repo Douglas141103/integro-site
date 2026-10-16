@@ -1,5 +1,6 @@
 import {Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore} from './rules.mjs';
 import {RushScene} from './scene.js';
+import {rushHUDMarkup,paintRushHUD} from './hud.js';
 const KEY='integro-rush-v1';
 const previewRun=new Run(0);
 export function installRush({makeScene=(canvas,q)=>new RushScene(canvas,q)}={}){
@@ -10,10 +11,8 @@ export function installRush({makeScene=(canvas,q)=>new RushScene(canvas,q)}={}){
  window.BoxCatalogAssets={...window.BoxCatalogAssets,'integro-rush':'./assets/catalog-v1/integro-rush.svg'};
  const app=document.createElement('section');app.id='rushApp';app.hidden=true;app.setAttribute('aria-label','Integro Rush — corrida 3D');
  app.innerHTML=`<canvas id="rushCanvas" tabindex="0" aria-label="Setas ou WASD: trocar faixa, pular e deslizar. Esc: pausar."></canvas>
- <div class="rush-top"><button id="rushExit" aria-label="Voltar ao catálogo">‹</button><div class="rush-title"><small>INTEGRO RUSH</small><b id="rushName">Sua próxima expedição</b></div><div class="rush-life" id="rushLife" aria-label="3 vidas">♥ ♥ ♥</div><div class="rush-money"><span aria-hidden="true">●</span> <b id="rushCoins">0</b></div><button id="rushPause" aria-label="Pausar corrida">Ⅱ</button></div>
- <div class="rush-progress"><div><span id="rushChapter">15 fases · 5 mundos</span><b id="rushClock">4:00</b></div><progress id="rushProgress" value="0" max="240" aria-label="Progresso da fase"></progress></div>
- <div id="rushPowers" class="rush-powers"></div><div id="rushToast" class="rush-toast" role="status" aria-live="polite"></div>
- <div class="rush-controls"><div><button data-rush-action="left" aria-label="Faixa da esquerda">←</button><button data-rush-action="right" aria-label="Faixa da direita">→</button></div><div><button data-rush-action="slide" aria-label="Deslizar">↓<small>DESLIZAR</small></button><button data-rush-action="jump" aria-label="Pular">↑<small>PULAR</small></button></div></div>
+ ${rushHUDMarkup()}
+ <div id="rushToast" class="rush-toast" role="status" aria-live="polite"></div>
  <div class="rush-overlay" id="rushOverlay"><div id="rushSheet" class="rush-sheet" role="dialog" aria-modal="true" aria-labelledby="rushHeading" tabindex="-1"></div></div>`;
  document.body.append(app);const canvas=$('rushCanvas'),sheet=$('rushSheet');
  let progress=clean(null),run=null,stored=true,active=false,closed=false,opening=false,scene=null,mode='home',raf=0,last=0,accumulator=0,saveAt=0,hudAt=0,toastUntil=0,thumbnailQueue=[],thumbnailAt=0,gesture=null,audio=null,shopSlot='all';
@@ -25,7 +24,7 @@ export function installRush({makeScene=(canvas,q)=>new RushScene(canvas,q)}={}){
  function toast(text){$('rushToast').textContent=text;$('rushToast').classList.add('visible');toastUntil=performance.now()+2600;}
  function audioStart(){if(!progress.sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();void audio.resume().catch(()=>{});}catch{}}
  function tone(f,d=.1){if(!audio||!progress.sound||audio.state!=='running')return;const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d);}
- function hud(){const r=run;$('rushName').textContent=r?`${String(r.level.index+1).padStart(2,'0')} · ${r.level.name}`:'Sua próxima expedição';$('rushLife').textContent=r?'♥ '.repeat(r.health)+'♡ '.repeat(3-r.health):'♥ ♥ ♥';$('rushLife').setAttribute('aria-label',`${r?.health??3} vidas`);$('rushCoins').textContent=r?String(r.coins):String(progress.coins);$('rushChapter').textContent=r?r.level.chapters[Math.min(3,Math.floor(r.time/60))]:'15 fases · 5 mundos';$('rushClock').textContent=clock(240-(r?.time||0));$('rushProgress').value=r?.time||0;$('rushPowers').textContent=[r?.magnet>0?`Ímã ${Math.ceil(r.magnet)}s`:'',r?.shield>0?`Escudo ${Math.ceil(r.shield)}s`:''].filter(Boolean).join(' · ');}
+ function hud(){paintRushHUD(app,run,progress);}
  function show(panel){mode=panel;gesture=null;$('rushOverlay').hidden=false;app.classList.add('rush-menu');const i=run?.level.index||0;let body='';
   const resumeAction=run?.status==='playing'?button('Retomar corrida','data-resume',true):run?.status==='lost'?button('Voltar ao ponto de retorno','data-retry',true):'';
   if(panel==='home')body=`<div class="rush-home-art"><img src="./assets/catalog-v1/integro-rush.svg" alt="Integro Rush, expedição entre ilhas"></div><span class="rush-kicker">15 EXPEDIÇÕES · 5 MUNDOS</span><h1 id="rushHeading">O mundo espera.<br><em>Corra para descobrir.</em></h1><p>Desvie dos obstáculos, salte sobre abismos e encontre seu caminho entre ilhas, ruínas e vulcões.</p><div class="rush-actions">${resumeAction||button('Começar · fase '+progress.unlocked,'data-start="'+(progress.unlocked-1)+'"',true)}${button('Mapa das fases','data-panel="levels"')}${button('Meu explorador','data-panel="shop"')}${button('Como jogar','data-panel="help"')}</div><div class="rush-settings">${button(progress.sound?'♫ Som ligado':'♪ Som desligado','data-sound')}<label>Gráficos <select id="rushQuality"><option value="auto">Automático</option><option value="low">Leve</option><option value="high">Detalhado</option></select></label>${button('Tela cheia ⛶','data-full')}</div><p class="rush-note">${note()} Moedas virtuais, sem compras em dinheiro.</p>`;

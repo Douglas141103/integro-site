@@ -2,10 +2,17 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {rng} from './rules.mjs';
 
+function palmFrond(){
+ const positions=[],uv=[],indices=[],width=[.035,.24,.43,.4,.3,.15,0],height=[0,.3,.47,.45,.28,-.02,-.37];
+ for(let i=0;i<7;i++)for(let side=0;side<3;side++){positions.push(i*.46,height[i]+(side===1?.09:0),(side-1)*width[i]);uv.push(side/2,i/6);}
+ for(let i=0;i<6;i++)for(let j=0;j<2;j++){const a=i*3+j,b=a+3;indices.push(a,a+1,b,a+1,b+1,b);}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;
+}
+
 export function batchScenery(root,art){
  root.updateMatrixWorld(true);const inv=root.matrixWorld.clone().invert(),pieces=[];
  root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.clone().applyMatrix4(inv.clone().multiply(o.matrixWorld));const non=geo.index?geo.toNonIndexed():geo;if(non!==geo)geo.dispose();const colors=new Float32Array(non.attributes.position.count*3),c=o.material.color;for(let i=0;i<colors.length;i+=3){colors[i]=c.r;colors[i+1]=c.g;colors[i+2]=c.b;}non.setAttribute('color',new T.BufferAttribute(colors,3));pieces.push(non);});root.clear();
- const owned=[],g=mergeGeometries(pieces,false);pieces.forEach(p=>p.dispose());if(g){const material=art.material(0xffffff,'batch');material.vertexColors=true;const mesh=new T.Mesh(g,material);mesh.receiveShadow=true;root.add(mesh);owned.push(g);}
+ const owned=[],g=mergeGeometries(pieces,false);pieces.forEach(p=>p.dispose());if(g){g.computeVertexNormals();const material=art.material(0xffffff,'batch');material.vertexColors=true;material.side=T.DoubleSide;const mesh=new T.Mesh(g,material);mesh.receiveShadow=true;root.add(mesh);owned.push(g);}
  root.userData.mergedGeometry=owned;return root;
 }
 export function sceneryPatch(art,region,index,seed){
@@ -16,13 +23,17 @@ export function sceneryPatch(art,region,index,seed){
  const base=kind==='snow'?0xd8e9ed:kind==='lava'?0x615666:kind==='sky'?0xb0b5da:0xc7bd94;
  part('rock',base,0,-3.1,0,4.8,3.1,5,'stone');part('cyl',kind==='snow'?0xf5ffff:kind==='ruins'?0x8eae79:kind==='lava'?0x655462:0xe4cf9c,0,-.6,0,4.3,.8,4.6,kind==='snow'?'snow':'sand');
  function palm(x,z,scale=1){const trunk=part('cyl',0xbc8e59,x,1.9*scale,z,.16*scale,4.8*scale,.2*scale,'wood');trunk.rotation.z=side*.13;
-  for(let j=0;j<7;j++){const a=j*Math.PI*2/7,m=part('ball',j%2?0x31aa85:0x6cbe70,x+Math.cos(a)*1.1*scale,4.1*scale,z+Math.sin(a)*1.1*scale,1.55*scale,.09*scale,.43*scale,'leaf');m.rotation.y=-a;m.rotation.z=Math.cos(a)*.2;}
-  for(let j=0;j<3;j++)part('ball',0xa26b46,x+(j-1)*.21,3.85*scale,z,.19,.19,.19,'wood');
+  const cx=x-Math.sin(side*.13)*2.4*scale,cy=(1.9+Math.cos(.13)*2.4)*scale;
+  for(let j=0;j<7;j++){const a=j*Math.PI*2/7,geo=art.own('palm-frond-v2',palmFrond(),'leaf'),material=art.material(j%2?0x209f79:0x78c65a,'leaf');material.side=T.DoubleSide;const m=new T.Mesh(geo,material);m.position.set(cx,cy,z);m.scale.setScalar(scale);m.rotation.y=-a;m.rotation.x=(j%2?.12:-.06);g.add(m);}
+  for(let j=0;j<3;j++)part('ball',0xa26b46,cx+(j-1)*.21*scale,cy-.24*scale,z,.19*scale,.19*scale,.19*scale,'wood');
  }
  function windowFrame(x,y,z,c=0x267b8a){box(0xffe4b5,x,y,z,.72,1.05,.14,'wood');box(c,x,y,z-.09,.52,.82,.08,'plaster');box(0xffe7bf,x,y,z-.15,.035,.87,.025,'wood');}
  function cottage(x,z,roof=0xf1775c,wall=0xf6d39d){box(wall,x,1.25,z,3.5,2.9,2.8,'plaster');box(0xffe5b4,x,2.64,z,3.75,.16,3,'wood');
   for(const sign of[-1,1]){const r=box(roof,x+sign*.95,3.16,z,2.35,.18,3.45,'roof');r.rotation.z=sign*-.48;}
   windowFrame(x-1,1.4,z-1.47);windowFrame(x+1,1.4,z-1.47);box(0x409587,x,.77,z-1.48,.72,1.8,.12,'wood');box(0xffd174,x,.5,z-1.57,.54,.08,.03,'trim');
+  // Both sides are visible as the runner passes; the old rear was a blank wall.
+  for(const dx of[-1,1]){box(0xffe4b5,x+dx,1.4,z+1.47,.76,1.09,.14,'wood');box(0x267b8a,x+dx,1.4,z+1.56,.53,.83,.08,'plaster');box(0xffe7bf,x+dx,1.4,z+1.62,.04,.87,.025,'wood');box(0xffe7bf,x+dx,1.4,z+1.63,.57,.04,.025,'wood');}
+  box(0x409587,x,.77,z+1.48,.72,1.8,.12,'wood');box(0xffd174,x+.2,.84,z+1.57,.065,.065,.05,'trim');
  }
  if(kind==='island'){
   if(variant===0){cottage(0,0);palm(-2.8,1,.75);box(0x319e9b,0,.12,-2.2,4.5,.2,1.2,'wood');for(const x of[-1.6,1.6])box(0xfbe2b5,x,1.05,-2.5,.12,1.8,.12,'wood');box(0x4b97a4,0,1.65,-2.5,3.4,.14,.13,'wood');}

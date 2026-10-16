@@ -1,5 +1,15 @@
 # Integro Box
 
+## Integro Rush — low poly, cel-shading e HUD (rush-toon3)
+
+A direção visual passa a low poly estilizado com `MeshToonMaterial`, uma rampa compartilhada de quatro níveis de iluminação e contornos por malha invertida no personagem. Luz principal, preenchimento e tone mapping foram ajustados para preservar as cores. O modelo tem boné padrão, cabelo fechado acima do crânio, rosto com olhos planos, jaqueta com capuz e emblema, calça larga e tênis detalhados. Os detalhes rígidos são agrupados por osso: 15 superfícies e 15 contornos no visual padrão, com menos de 16 mil triângulos nas superfícies. A loja continua equipando os mesmos 24 itens e preserva moedas e progresso existentes.
+
+HUD vetorial original em `rush-src/hud.js`: corações, moeda, bússola, relógio, estrelas de checkpoint, ímã, escudo e comandos ilustrados. A paleta acompanha a região. O HUD exibe o nome completo da fase, energia, moedas, capítulo, tempo restante, progresso e duração dos poderes. Controles respeitam áreas seguras, modo paisagem e preferência por movimento reduzido.
+
+Câmera mais próxima, com menos céu e acompanhamento lateral ampliado. Curvatura distante suavizada, folhas de palmeira modeladas, fachadas visíveis nos dois sentidos. O rastro de esferas foi substituído por fita apenas quando um cosmético de rastro estiver equipado.
+
+Validação: 23 testes passaram nas suítes Rush, arte, GoSnake e atualização do portal. Incluem cobertura do couro cabeludo, rampa toon, orçamento geométrico, enquadramento das três faixas em quatro formatos de tela, deslize sob obstáculos, HUD, loja e persistência. Conferência offline das malhas; WebGL e desempenho em aparelho real ainda não verificados nesta sessão, pois o ambiente não oferece o navegador de testes suportado.
+
 ## Integro Rush — acabamento cartoon (rush-art2)
 
 Personagem remodelado com superfícies de perfil, seis malhas com skinning e esqueleto de 17 ossos. Cinco animações (corrida, repouso, salto, deslize e impacto) usam AnimationMixer e transições; articulações de joelho/cotovelo, ajuste dos pés ao chão, inclinação nas curvas, elasticidade no salto e compressão ao aterrissar. O modelo inclui rosto, cabelo, capuz, bolso, cordões, costuras, tênis e acessórios. São modelos e texturas originais construídos em código; não são arquivos do Subway Surfers nem ativos extraídos de terceiros.
