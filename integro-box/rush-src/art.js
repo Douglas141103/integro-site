@@ -10,10 +10,12 @@ export function createPaintAtlas(){
   const u=(x%tile)/127,v=(y%tile)/127,id=Math.floor(y/tile)*4+Math.floor(x/tile);
   const noise=(Math.sin(x*127.1+y*311.7)*43758.5453)%1,brush=Math.sin(u*15+Math.sin(v*11)*.8)*Math.sin(v*24);
   let a=.88+.045*brush+.025*noise+.06*(1-v);
-  if(id===0){a-=.17*Math.exp(-(((u-.04)/.013)**2))+.17*Math.exp(-(((u-.96)/.013)**2));a+=.035*Math.sin(u*120);}
-  if(id===1){a=.7+.06*Math.sin((u+v)*180)+.04*brush;if(u<.06||u>.94)a+=.18;}
-  if(id===2)a=.84+.14*Math.exp(-((u-.5)**2+(v-.35)**2)*9)+.018*noise;
-  if(id===3)a=.72+.13*Math.sin(u*35+v*4)+.05*brush;
+  // Clothing needs broad, quiet colour fields. Strong procedural stripes made
+  // small moving characters look corrugated and hid the sculpted silhouette.
+  if(id===0)a=.95+.012*brush+.005*noise;
+  if(id===1)a=.92+.012*Math.sin((u+v)*180)+.008*brush;
+  if(id===2)a=.97+.025*Math.exp(-((u-.5)**2+(v-.35)**2)*9);
+  if(id===3)a=.93+.025*Math.sin(u*14+v*2);
   if(id===4){const row=Math.floor(v*4),joint=Math.abs(((u*3+row*.5)%1)-.5);a=.84+.05*brush;if(v*4%1<.065||joint>.475)a-=.22;if(v*4%1>.09&&v*4%1<.12)a+=.09;}
   if(id===5){a=.79+.095*Math.sin(u*28+Math.sin(v*8)*1.4)+.025*Math.sin(u*80);if(u<.025||u>.975)a-=.19;}
   if(id===6){a=.85+.06*brush;const row=v*5%1;if(row<.07)a-=.23;const seam=(u*4+Math.floor(v*5)*.5)%1;if(seam<.05)a-=.12;}
@@ -40,9 +42,21 @@ export function profileGeometry(rings,segments=20){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
  const normals=g.attributes.normal;for(let j=0;j<rings.length;j++){const a=j*(segments+1),b=a+segments;const n=new T.Vector3().fromBufferAttribute(normals,a).add(new T.Vector3().fromBufferAttribute(normals,b)).normalize();normals.setXYZ(a,n.x,n.y,n.z);normals.setXYZ(b,n.x,n.y,n.z);}return g;
 }
+// Shape-preserving interpolation rounds hand-authored silhouettes without the
+// overshoot of a spline (important around eyelids, cuffs and narrow ankles).
+export function sculptGeometry(rings,segments=32,steps=3){
+ const smooth=[];for(let j=0;j<rings.length-1;j++)for(let i=0;i<steps;i++){
+  const t=i/steps,s=t*t*(3-2*t),a=rings[j],b=rings[j+1];
+  smooth.push([T.MathUtils.lerp(a[0],b[0],t),T.MathUtils.lerp(a[1],b[1],s),T.MathUtils.lerp(a[2],b[2],s),T.MathUtils.lerp(a[3]||0,b[3]||0,s)]);
+ }smooth.push(rings.at(-1));return profileGeometry(smooth,segments);
+}
+export function createToonRamp(){
+ const pixels=new Uint8Array([62,128,196,255]);
+ const texture=new T.DataTexture(pixels,4,1,T.RedFormat);texture.minFilter=T.NearestFilter;texture.magFilter=T.NearestFilter;texture.generateMipmaps=false;texture.needsUpdate=true;return texture;
+}
 export class ArtResources {
- constructor({curved=false}={}){this.geometries=new Map();this.materials=new Map();this.atlas=createPaintAtlas();this.curved=curved;}
- material(color,tile='cloth',metal=0){const key=color+':'+tile+':'+metal;if(!this.materials.has(key)){const m=new T.MeshStandardMaterial({color,map:this.atlas,roughness:metal?.36:.82,metalness:metal});
+ constructor({curved=false}={}){this.geometries=new Map();this.materials=new Map();this.atlas=createPaintAtlas();this.toonRamp=createToonRamp();this.curved=curved;}
+ material(color,tile='cloth',metal=0){const key=color+':'+tile+':'+metal;if(!this.materials.has(key)){const m=new T.MeshToonMaterial({color,map:this.atlas,gradientMap:this.toonRamp});
   // Curvature is only in the distant view; collision space remains unchanged.
   if(this.curved){m.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`vec4 mvPosition=vec4(transformed,1.0);
 #ifdef USE_INSTANCING
@@ -50,13 +64,19 @@ mvPosition=instanceMatrix*mvPosition;
 #endif
 vec4 rushWorld=modelMatrix*mvPosition;
 float rushDistance=max(0.0,-rushWorld.z-28.0);
-rushWorld.y-=rushDistance*rushDistance*0.0011;
+rushWorld.y-=rushDistance*rushDistance*0.0005;
 mvPosition=viewMatrix*rushWorld;
-gl_Position=projectionMatrix*mvPosition;`);};m.customProgramCacheKey=()=> 'rush-curve-v1';}
+gl_Position=projectionMatrix*mvPosition;`);};m.customProgramCacheKey=()=> 'rush-toon-curve-v2';}
   this.materials.set(key,m);}return this.materials.get(key);}
+ outlineMaterial(){
+  if(!this.contour){this.contour=new T.MeshBasicMaterial({color:0x163747,side:T.BackSide,depthWrite:false});
+   this.contour.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed += normal * 0.012;');};this.contour.customProgramCacheKey=()=> 'rush-ink-contour-v1';}
+  return this.contour;
+ }
  geometry(kind,tile='cloth'){const key=kind+':'+tile;if(!this.geometries.has(key)){let g;
-  if(kind==='round')g=new RoundedBoxGeometry(1,1,1,2,.13);
-  else if(kind==='ball')g=new T.SphereGeometry(1,16,10);
+  if(kind==='round')g=new RoundedBoxGeometry(1,1,1,1,.13);
+  else if(kind==='ball')g=new T.SphereGeometry(1,12,8);
+  else if(kind==='disk')g=new T.CircleGeometry(1,16);
   else if(kind==='rock')g=new T.IcosahedronGeometry(1,1);
   else if(kind==='cyl')g=new T.CylinderGeometry(1,1,1,16);
   else if(kind==='cone')g=new T.ConeGeometry(1,1,12);
@@ -66,6 +86,6 @@ gl_Position=projectionMatrix*mvPosition;`);};m.customProgramCacheKey=()=> 'rush-
   this.geometries.set(key,atlasUV(g,tile));}return this.geometries.get(key);}
  mesh(parent,kind,color,x,y,z,sx=1,sy=sx,sz=sx,tile='cloth',metal=0){const m=new T.Mesh(this.geometry(kind,tile),this.material(color,tile,metal));m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;}
  own(key,g,tile='cloth'){if(!this.geometries.has(key))this.geometries.set(key,atlasUV(g,tile));else g.dispose();return this.geometries.get(key);}
- dispose(){for(const g of this.geometries.values())g.dispose();for(const m of this.materials.values())m.dispose();this.atlas.dispose();}
+ dispose(){for(const g of this.geometries.values())g.dispose();for(const m of this.materials.values())m.dispose();this.contour?.dispose();this.atlas.dispose();this.toonRamp.dispose();}
 }
 export function createShadowTexture(){const n=64,a=new Uint8Array(n*n*4);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const r=Math.hypot((x-31.5)/31.5,(y-31.5)/31.5),i=(y*n+x)*4;a[i]=15;a[i+1]=33;a[i+2]=50;a[i+3]=Math.round(Math.max(0,1-r*r)**2*95);}const t=new T.DataTexture(a,n,n);t.needsUpdate=true;return t;}

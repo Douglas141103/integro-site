@@ -43,3 +43,23 @@ test('preview uses the same renderer and level changes dispose old geometry and 
  let released=0;const owned=[...s.character.ownedGeometry,...s.merged,s.shadow.geometry];owned.forEach(g=>g.addEventListener('dispose',()=>released++));s.setPreview(true);s.draw(r,0,true);assert.equal(lastScene,s.previewScene);s.turnPreview(.8);s.draw(r,.02,true);assert(s.previewCharacter.root.rotation.y>Math.PI);s.setPreview(false);s.draw(r,.03);assert.equal(lastScene,s.scene);
  s.emit('coin',r);s.draw(r,.05);assert(s.fx.count>0);s.setLevel(new Run(3),p);assert.equal(released,owned.length);s.dispose();assert.equal(disposed,1);
 });
+
+test('toon surfaces share a discrete ramp, the crown covers the scalp and the runner stays low poly',()=>{
+ for(const head of[null,'halo-aurora']){const art=new ArtResources(),p=clean(null);p.equipped.head=head;const c=new RunnerCharacter(art,p);try{
+  c.root.updateMatrixWorld(true);c.skeleton.update();const surfaces=[];let triangles=0;
+  c.root.traverse(m=>{if(!m.isMesh||m.userData.contour)return;surfaces.push(m);triangles+=(m.geometry.index?.count||m.geometry.attributes.position.count)/3;assert(m.material.isMeshToonMaterial);assert.equal(m.material.gradientMap,art.toonRamp);});
+  assert(triangles<16000,`${triangles} triangles`);assert(surfaces.length<=18);assert.equal(art.toonRamp.magFilter,T.NearestFilter);assert.deepEqual([...art.toonRamp.image.data],[62,128,196,255]);
+  const ray=new T.Raycaster(new T.Vector3(0,3,.02),new T.Vector3(0,-1,0)),hits=ray.intersectObjects(surfaces,false);assert(hits.length);assert.equal(hits[0].object.name,'head-details','skin must not protrude through the hair crown');
+ }finally{c.dispose();art.dispose();}}
+});
+
+test('portrait framing keeps all three lanes visible and raises the distant road above the old empty sky',()=>{
+ const renderer={shadowMap:{},setPixelRatio(){},setSize(){},render(){},dispose(){}};
+ for(const [w,h]of[[393,710],[360,780],[320,900],[900,600]]){const s=new RushScene({clientWidth:w,clientHeight:h},'auto',{rendererFactory:()=>renderer}),r=new Run(0);try{
+  s.setLevel(r,clean(null));for(const lane of[-1,0,1]){r.lane=lane;r.x=lane*2.55;for(let i=0;i<70;i++)s.draw(r,i/60);s.camera.updateMatrixWorld();
+   for(const x of[r.x-.5,r.x+.5])assert(Math.abs(new T.Vector3(x,1.5,0).project(s.camera).x)<1,'runner remains inside the viewport');
+   const head=new T.Vector3(r.x,2.35,0).project(s.camera),feet=new T.Vector3(r.x,0,0).project(s.camera);assert((1-head.y)/2>.4);assert((1-feet.y)/2<.85);if(w===393)assert((head.y-feet.y)/2>.20);
+   const horizon=new T.Vector3(0,-Math.pow(120-28,2)*.0005,-120).project(s.camera);assert((1-horizon.y)/2<.4);
+  }
+ }finally{s.dispose();}}
+});

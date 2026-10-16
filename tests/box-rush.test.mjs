@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {JSDOM} from 'jsdom';
 import {Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore,buildTrack} from '../integro-box/rush-src/rules.mjs';
+import {rushHUDMarkup,paintRushHUD} from '../integro-box/rush-src/hud.js';
 import {RushScene} from '../integro-box/rush-src/scene.js';
 import * as T from '../integro-box/rush-src/node_modules/three/build/three.module.js';
 import {usageDatabase} from './box-usage-fixture.mjs';
@@ -45,7 +46,7 @@ async function ui(storage=new Map()){
  const dom=new JSDOM(await read('integro-box/jogar.html'),{url:'https://www.institutointegro.com.br/integro-box/jogar.html'}),w=dom.window;let frame,exits=0,resolveDisconnect=null;
  w.BoxStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};w.BoxMultiplayer={async disconnect(){exits++;if(resolveDisconnect)await resolveDisconnect;}};
  w.document.getElementById('brandHome').onclick=()=>{w.document.getElementById('lobby').classList.remove('hidden');};
- const ctx=vm.createContext({window:w,document:w.document,performance:{now:()=>0},console,Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore,requestAnimationFrame:cb=>{frame=cb;return 1;},cancelAnimationFrame:()=>{frame=null;}});
+ const ctx=vm.createContext({window:w,document:w.document,performance:{now:()=>0},console,Run,LEVELS,REGIONS,SHOP,clean,purchase,complete,snapshot,restore,rushHUDMarkup,paintRushHUD,requestAnimationFrame:cb=>{frame=cb;return 1;},cancelAnimationFrame:()=>{frame=null;}});
  const source=(await read('integro-box/rush-src/entry.js')).replace(/^import .*;\n/gm,'').replace('export function','function');vm.runInContext(source,ctx);const api=ctx.installRush({makeScene:fakeScene});
  return {dom,w,ctx,api,storage,exits:()=>exits,frame:time=>frame?.(time),block:p=>{resolveDisconnect=p},click:selector=>w.document.querySelector(selector).click()};
 }
@@ -79,4 +80,15 @@ test('all five 3D environments and 24 equipped items build with finite transform
 
 test('Rush usage migration preserves permissions and can be applied twice',async()=>{
  const f=await usageDatabase();try{const sql=await read('supabase/migrations/20261015170000_box_rush_usage.sql');await f.db.exec(sql);await f.db.exec(sql);await assert.rejects(()=>f.pulse(null,109,'rush'),/box_access_denied/);await f.pulse(3,109,'rush');await f.tick(3,109);await f.pulse(3,109,'rush');const report=await f.report(1,3,'rush');assert.equal(report.sessions[0].history[0].game,'rush');assert(report.summary.active_seconds>=29);await assert.rejects(()=>f.report(3),/box_management_denied/);await f.pulse(3,109,'craft');}finally{await f.db.close();}
+});
+
+test('illustrated HUD reflects lives, timed powers, regional theme and real checkpoint progress',()=>{
+ const dom=new JSDOM(`<section id="rushApp">${rushHUDMarkup()}</section>`),app=dom.window.document.querySelector('section'),p=clean(null),r=new Run(0),get=id=>app.querySelector('#'+id);
+ try{
+  r.time=65.2;r.health=1;r.coins=2500;r.magnet=4.1;paintRushHUD(app,r,p);
+  assert.equal(get('rushName').textContent,r.level.name);assert.equal(get('rushCoins').textContent,'2.500');assert.equal(get('rushLife').getAttribute('aria-label'),'1 vida');assert.equal(app.querySelectorAll('[data-heart].empty').length,2);assert.equal(get('rushClock').textContent,'2:55');assert.equal(get('rushProgress').value,65.2);assert.equal(app.querySelectorAll('.rush-checkpoint.reached').length,1);assert.equal(get('rushMagnet').hidden,false);assert.equal(get('rushMagnetTime').textContent,'5s');assert.equal(get('rushShield').hidden,true);
+  r.magnet=0;r.shield=3.5;r.health=3;paintRushHUD(app,r,p);assert(get('rushMagnet').hidden);assert.equal(get('rushShieldTime').textContent,'4s');assert.equal(app.querySelectorAll('[data-heart].empty').length,0);
+  paintRushHUD(app,new Run(12),p);assert.equal(app.dataset.region,'sky');assert.equal(get('rushStage').textContent,'EXPEDIÇÃO 13 / 15');assert.equal(app.querySelectorAll('.rush-checkpoint.reached').length,0);
+  for(const use of app.querySelectorAll('use'))assert(app.querySelector(use.getAttribute('href')),'every illustrated icon has its artwork');
+ }finally{dom.window.close();}
 });
