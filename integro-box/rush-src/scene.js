@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {REGIONS,SHOP} from './rules.mjs';
+import {REGIONS,SHOP,distanceAt} from './rules.mjs';
 import {ArtResources,createShadowTexture} from './art.js';
 import {RunnerCharacter,makeAccessory} from './character.js';
 import {sceneryPatch,createBackdrop} from './environment.js';
@@ -30,7 +30,7 @@ export class RushScene {
   this.world?.traverse(o=>{if(o.isInstancedMesh)o.dispose();});this.merged.forEach(g=>g.dispose());this.merged=[];this.world.clear();this.objects.clear();this.pools.clear();this.scenery=[];this.particles=[];this.lastTime=null;
  }
  setLevel(run,progress){
-  this.clearLevel();this.run=run;this.progress=progress;this.region=REGIONS[run.level.region];const r=this.region;
+  this.clearLevel();this.run=run;this.progress=progress;this.region=REGIONS[run.level.region];const r=this.region;this.trackDistances=new Map(run.track.map(o=>[o,distanceAt(run.level,o.time)]));
   this.scene.background=new T.Color(r.sky);this.scene.fog=new T.Fog(r.fog,65,230);this.sun.color.set(r.type==='lava'?0xffb084:0xffefce);
   this.mesh(this.world,'box',r.water,0,-5,-95,500,.2,500,0,r.type==='lava'?'basalt':'cloud');
   const backdrop=createBackdrop(this.resources,r);this.merged.push(...backdrop.userData.mergedGeometry);this.world.add(backdrop);
@@ -78,11 +78,11 @@ export class RushScene {
  draw(run,time,paused=false){
   if(!this.player)return;const raw=this.lastTime==null?1/60:time-this.lastTime,dt=Math.max(0,Math.min(.05,raw));this.lastTime=time;
   if(this.preview){this.previewCharacter.update(run,dt,{preview:true,time,reducedMotion:this.reducedMotion});this.previewCharacter.root.rotation.y+=this.previewAngle;this.renderer.render(this.previewScene,this.previewCamera);return;}
-  if(!paused&&this.controller.observe(raw))this.resize();const travel=run.time*run.level.speed,gaps=run.track.filter(o=>o.type==='gap'&&Math.abs((o.time-run.time)*run.level.speed)<285);
-  for(const slabs of this.roadParts){const lane=slabs.userData.lane;for(let i=0;i<120;i++){const z=18-((i*2.4-travel%288+288)%288),gap=gaps.some(o=>o.lane===lane&&Math.abs(z+(o.time-run.time)*run.level.speed)<1.25);this.position.set(lane*2.55,gap?-50:-.32,z);this.scale.set(2.51,.58,2.42);this.matrix.compose(this.position,this.rotation,this.scale);slabs.setMatrixAt(i,this.matrix);}slabs.instanceMatrix.needsUpdate=true;}
+  if(!paused&&this.controller.observe(raw))this.resize();const travel=run.distance,positions=run.track.map(o=>({o,z:travel-(this.trackDistances.get(o)??distanceAt(run.level,o.time))})),gaps=positions.filter(({o,z})=>o.type==='gap'&&Math.abs(z)<285);
+  for(const slabs of this.roadParts){const lane=slabs.userData.lane;for(let i=0;i<120;i++){const z=18-((i*2.4-travel%288+288)%288),gap=gaps.some(g=>g.o.lane===lane&&Math.abs(z-g.z)<1.25);this.position.set(lane*2.55,gap?-50:-.32,z);this.scale.set(2.51,.58,2.42);this.matrix.compose(this.position,this.rotation,this.scale);slabs.setMatrixAt(i,this.matrix);}slabs.instanceMatrix.needsUpdate=true;}
   for(let i=0;i<100;i++){this.position.set(i%2?3.85:-3.85,.025,18-((Math.floor(i/2)*6-travel%300+300)%300));this.scale.set(.09,.06,3.5);this.matrix.compose(this.position,this.rotation,this.scale);this.lines.setMatrixAt(i,this.matrix);}this.lines.instanceMatrix.needsUpdate=true;
   for(const g of this.scenery){g.position.z=20-((g.userData.slot-travel%288+288)%288);g.visible=g.position.z>-this.controller.distance;}
-  const wanted=new Set();for(const o of run.track){const z=-(o.time-run.time)*run.level.speed;if(z < -this.controller.distance || z>12||run.claimed.has(o.id))continue;wanted.add(o.id);let g=this.objects.get(o.id);if(!g){const pool=this.pools.get(o.type);g=pool?.pop()||this.makeObstacle(o);g.userData={...o};g.visible=true;this.world.add(g);this.objects.set(o.id,g);}g.rotation.set(0,0,0);g.position.set(o.lane*2.55,0,z);if(['coin','magnet','shield'].includes(o.type)){g.rotation.y=time*1.6+o.id;g.position.y=Math.sin(time*2+o.id)*.1;if(o.type==='coin'&&run.magnet>0&&z>-10&&z<0){const t=(z+10)/10;g.position.x=T.MathUtils.lerp(g.position.x,run.x,t*t);g.position.y+=t*.4;}}}
+  const wanted=new Set();for(const {o,z} of positions){if(z < -this.controller.distance || z>12||run.claimed.has(o.id))continue;wanted.add(o.id);let g=this.objects.get(o.id);if(!g){const pool=this.pools.get(o.type);g=pool?.pop()||this.makeObstacle(o);g.userData={...o};g.visible=true;this.world.add(g);this.objects.set(o.id,g);}g.rotation.set(0,0,0);g.position.set(o.lane*2.55,0,z);if(['coin','magnet','shield'].includes(o.type)){g.rotation.y=time*1.6+o.id;g.position.y=Math.sin(time*2+o.id)*.1;if(o.type==='coin'&&run.magnet>0&&z>-10&&z<0){const t=(z+10)/10;g.position.x=T.MathUtils.lerp(g.position.x,run.x,t*t);g.position.y+=t*.4;}}}
   for(const [id,g]of this.objects)if(!wanted.has(id)){g.visible=false;this.world.remove(g);this.objects.delete(id);if(!this.pools.has(g.userData.type))this.pools.set(g.userData.type,[]);this.pools.get(g.userData.type).push(g);}
   this.character.update(run,dt,{paused,time,reducedMotion:this.reducedMotion});this.aura.visible=run.shield>0;this.aura.rotation.y=time*.65;
   this.shadow.position.x=run.x;const shadowScale=1-run.y*.12;this.shadow.scale.set(1.65*shadowScale,1.25*shadowScale,1);this.shadow.material.opacity=1-run.y*.16;

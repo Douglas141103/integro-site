@@ -1,5 +1,16 @@
 # Integro Box
 
+
+## Integro Rush — corrida expressiva, aceleração e logo (rush-speed5)
+
+A análise do vídeo enviado mostrou uma passada curta, com apoio quase contínuo, e pouca diferença entre as pernas durante o salto. A corrida agora usa apoio de 38% do ciclo, intervalos com os dois pés no ar, retorno alto do calcanhar, passada ampliada, braços mais ativos e rotação oposta de tórax/quadril. O salto tem um joelho elevado e a outra perna estendida, com braços assimétricos; as transições e o IK de contato permanecem.
+
+A velocidade cresce continuamente com o tempo da fase: `base × (1 + 0,75 × (1 − exp(−tempo/90)))`. Aos quatro minutos chega a aproximadamente 1,70× o ritmo inicial. A pista, as bordas, o cenário, moedas, obstáculos e buracos usam a integral dessa curva, mantendo a passagem por z=0 no instante da colisão. A cadência dos passos acompanha a velocidade. Velocidade e distância são derivadas do tempo salvo, preservando pausa, recarga e retorno ao checkpoint sem novos campos no salvamento. O HUD mostra o multiplicador real em “RITMO”.
+
+Nova logo ilustrada criada pelo Criar Imagem usando Pegue o Ovo e IntegroCraft como referências de família visual: personagem de boné coral e moletom turquesa, ilha, moedas e tipografia volumétrica. A arte WebP substitui o SVG nas capas do catálogo, página pública e abertura do Rush, com proporção 3:2 e sem corte no celular. O título compacto do HUD segue a mesma paleta.
+
+Validação: 31 testes nas suítes Rush, movimento, arte, GoSnake e atualização do portal. Cobrem o crescimento contínuo da velocidade, integral/distância, alinhamento de obstáculos e buracos, pausa, checkpoints, salvamentos, cadência a 30/60/120 Hz, altura dos pés, amplitude dos braços e assimetria no salto. Poses da geometria real também foram conferidas em renderização offline. A aparência WebGL e o desempenho desta versão em aparelho real não foram testados neste ambiente.
+
 ## Integro Rush — movimento e apoio dos pés (rush-motion4)
 
 O rig ganhou quatro controles secundários para boné, franja, capuz e acessórios das costas. As pernas usam IK analítico de dois ossos com direção de dobra do joelho e orientação do tornozelo; o apoio considera a sola durante a entrada do calcanhar e a saída da ponta do pé. Braços e tronco usam FK, rotação contrária de quadril/ombros e passada com cadência adaptada à fase. Pesos do tronco passam por quadril, coluna e peito.

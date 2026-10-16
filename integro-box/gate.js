@@ -40,7 +40,7 @@ try {
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce.js?v=20261014-bounce3');
-  if(!unloaded){const {installRush}=await import('./rush.js?v=20261015-rush-motion4');installRush();}
+  if(!unloaded){const {installRush}=await import('./rush.js?v=20261015-rush-speed5');installRush();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261015-rush1');startUsage();}
   if(!unloaded)await script('./catalog.js?v=20261015-rush1');
   if(!unloaded){document.body.classList.remove('box-locked');document.getElementById('boxGate').hidden=true;}

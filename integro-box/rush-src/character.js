@@ -128,7 +128,7 @@ export class RunnerCharacter {
    outline.name='ink-'+surface.name;outline.userData.contour=true;outline.frustumCulled=false;outline.renderOrder=1;surface.parent.add(outline);if(surface.isSkinnedMesh)outline.bind(this.skeleton,surface.bindMatrix);}
  }
  batchAttachments(){
-  // Preserve the 17-bone rig, but combine rigid details by bone. The cap,
+  // Preserve the articulated rig, but combine rigid details by bone. The cap,
   // seams, eyes and laces share one atlas instead of adding a draw per detail.
   this.rig.updateMatrixWorld(true);
   for(const b of Object.values(this.bones)){
@@ -147,16 +147,16 @@ export class RunnerCharacter {
   const clip=(name,duration,keys)=>{const tracks=[],times=keys.map(k=>k[0]*duration);for(const name of Object.keys(this.bones)){
    const values=[];for(const [,pose]of keys){const q=new T.Quaternion().setFromEuler(new T.Euler(...(pose[name]||[0,0,0])));values.push(q.x,q.y,q.z,q.w);}tracks.push(new T.QuaternionKeyframeTrack(name+'.quaternion',times,values));}
    return new T.AnimationClip(name,duration,tracks);};
-  const run=[];for(let i=0;i<=16;i++){const t=i/16*Math.PI*2,s=Math.sin(t);run.push([i/16,{hips:[0,s*.055,s*.04],spine:[-.12,s*.045,-s*.025],chest:[-.035,-s*.09,s*.025],head:[.13,s*.025,-s*.025],shoulderL:[-Math.cos(t)*.76,0,-.14],shoulderR:[Math.cos(t)*.76,0,.14],elbowL:[.92-Math.cos(t)*.17,0,0],elbowR:[.92+Math.cos(t)*.17,0,0],handL:[.1,0,-.06],handR:[.1,0,.06],thighL:[s*.6,0,0],thighR:[-s*.6,0,0],kneeL:[-.7-Math.max(0,-s)*.6,0,0],kneeR:[-.7-Math.max(0,s)*.6,0,0] }]);}
+  const run=[];for(let i=0;i<=16;i++){const t=i/16*Math.PI*2,s=Math.sin(t);run.push([i/16,{hips:[0,s*.09,s*.045],spine:[-.21,s*.07,-s*.035],chest:[-.05,-s*.19,s*.045],head:[.22,s*.035,-s*.045],shoulderL:[.15-Math.cos(t)*1.04,-.12,-.24],shoulderR:[.15+Math.cos(t)*1.04,.12,.24],elbowL:[1.2-Math.cos(t)*.30,0,-.08],elbowR:[1.2+Math.cos(t)*.30,0,.08],handL:[.1,0,-.06],handR:[.1,0,.06],thighL:[s*.6,0,0],thighR:[-s*.6,0,0],kneeL:[-.7-Math.max(0,-s)*.6,0,0],kneeR:[-.7-Math.max(0,s)*.6,0,0] }]);}
   const idle=[];for(let i=0;i<=8;i++){const t=i/8*Math.PI*2;idle.push([i/8,{chest:[Math.sin(t)*.02,0,0],head:[0,Math.sin(t)*.05,0],shoulderL:[.05,0,-.08],shoulderR:[.05,0,.08],elbowL:[.12,0,0],elbowR:[.12,0,0]}]);}
   const crouch={spine:[-.3,0,0],head:[.22,0,0],shoulderL:[-.6,0,-.15],shoulderR:[-.6,0,.15],elbowL:[.45,0,0],elbowR:[.45,0,0],thighL:[.65,0,0],thighR:[.65,0,0],kneeL:[-1.2,0,0],kneeR:[-1.2,0,0],footL:[.55,0,0],footR:[.55,0,0]};
-  const launch={spine:[-.08,0,0],head:[.06,0,0],shoulderL:[1.25,0,-.16],shoulderR:[1.1,0,.16],elbowL:[.85,0,0],elbowR:[1.05,0,0],thighL:[.6,0,-.06],thighR:[-.25,0,.05],kneeL:[-.9,0,0],kneeR:[-.65,0,0],footL:[.3,0,0],footR:[.6,0,0]};
-  const apex={spine:[-.2,.06,0],chest:[-.04,-.08,0],head:[.17,0,0],shoulderL:[.8,0,-.3],shoulderR:[.5,0,.3],elbowL:[1.25,0,0],elbowR:[1.1,0,0],thighL:[1.15,0,-.08],thighR:[.68,0,.08],kneeL:[-1.8,0,0],kneeR:[-1.65,0,0],footL:[.6,0,0],footR:[.7,0,0]};
-  const reach={spine:[-.15,0,0],head:[.12,0,0],shoulderL:[.15,0,-.2],shoulderR:[-.1,0,.2],elbowL:[.8,0,0],elbowR:[.7,0,0],thighL:[.35,0,-.03],thighR:[.2,0,.03],kneeL:[-.55,0,0],kneeR:[-.4,0,0],footL:[.18,0,0],footR:[.18,0,0]};
+  const launch={spine:[-.18,.1,0],chest:[-.05,-.16,0],head:[.18,0,0],shoulderL:[1.55,-.1,-.38],shoulderR:[-.6,.1,.30],elbowL:[1.1,0,0],elbowR:[1.25,0,0],thighL:[1.25,0,-.16],thighR:[-.35,0,.13],kneeL:[-1.35,0,0],kneeR:[-.6,0,0],footL:[.05,0,0],footR:[.65,0,0]};
+  const apex={spine:[-.26,.12,-.06],chest:[-.07,-.22,.04],head:[.25,.05,.02],shoulderL:[1.05,-.1,-.48],shoulderR:[-.30,.1,.36],elbowL:[1.35,0,0],elbowR:[.95,0,0],thighL:[1.65,0,-.20],thighR:[.12,0,.15],kneeL:[-1.5,0,0],kneeR:[-.42,0,0],footL:[-.15,0,0],footR:[.38,0,0]};
+  const reach={spine:[-.20,0,0],head:[.17,0,0],shoulderL:[.4,0,-.30],shoulderR:[-.25,0,.28],elbowL:[.85,0,0],elbowR:[.8,0,0],thighL:[.55,0,-.12],thighR:[.12,0,.10],kneeL:[-.65,0,0],kneeR:[-.4,0,0],footL:[.12,0,0],footR:[.18,0,0]};
   const slide={spine:[-1.22,0,0],chest:[-.10,0,0],head:[.86,0,0],shoulderL:[-.4,0,-.32],shoulderR:[-.35,0,.32],elbowL:[.35,0,0],elbowR:[.4,0,0],thighL:[1.3,0,-.08],thighR:[1.1,0,.08],kneeL:[-2.0,0,0],kneeR:[-2.1,0,0],footL:[.7,0,0],footR:[1,0,0]};
   const slideSettle={...slide,chest:[-.12,.09,-.055],head:[.88,-.07,.03],shoulderL:[-.48,0,-.38],shoulderR:[-.25,0,.28]};
   const hit={spine:[.1,0,.14],head:[-.08,-.16,0],shoulderL:[.8,0,-.5],shoulderR:[.3,0,.6],elbowL:[.8,0,0],elbowR:[.5,0,0]};
-  return [clip('run',.66,run),clip('idle',3,idle),clip('jump',1,[[0,crouch],[.07,crouch],[.19,launch],[.48,apex],[.72,apex],[.91,reach],[1,crouch]]),clip('slide',1,[[0,crouch],[.12,slide],[.38,slideSettle],[.72,slide],[.93,slide],[1,slide]]),clip('hit',.4,[[0,hit],[.35,hit],[1,{}]])];
+  return [clip('run',.66,run),clip('idle',3,idle),clip('jump',1,[[0,crouch],[.07,crouch],[.18,launch],[.42,apex],[.62,apex],[.88,reach],[1,crouch]]),clip('slide',1,[[0,crouch],[.12,slide],[.38,slideSettle],[.72,slide],[.93,slide],[1,slide]]),clip('hit',.4,[[0,hit],[.35,hit],[1,{}]])];
  }
  event(type){if(type==='hit'||type==='shield-hit')this.hit=.32;}
  update(run,dt,{paused=false,preview=false,time=0,reducedMotion=false}={}){
@@ -165,16 +165,17 @@ export class RunnerCharacter {
   if(this.wasAirborne&&!airborne)this.landAge=0;this.wasAirborne=airborne;this.landAge+=dt;this.hit=Math.max(0,this.hit-dt);
   const jumpPhase=airborne?clamp(1-run.jump/1.05,0,1):0,slidePhase=sliding?clamp(1-run.slide/.95,0,1):0;
   const target=preview||paused?'idle':sliding?'slide':airborne?'jump':this.hit>0?'hit':'run',moving=target==='run'||target==='hit';
-  if(moving)this.gaitPhase=(this.gaitPhase+dt/(.66/(1+Math.max(0,run.level?.speed-18)*.012)))%1;
+  const pace=clamp((run.speed||run.level?.speed||18)/18,1,2.4);
+  if(moving)this.gaitPhase=(this.gaitPhase+dt/(.54/Math.sqrt(pace)))%1;
   const blend=1-Math.exp(-dt*(target==='slide'?42:target==='jump'?32:18));
   for(const [name,action]of Object.entries(this.actions)){this.poseWeights[name]+=((target===name?1:0)-this.poseWeights[name])*blend;action.setEffectiveWeight(this.poseWeights[name]);if(name==='run')action.time=this.gaitPhase*.66;else if(name==='jump'&&airborne)action.time=jumpPhase;else if(name==='slide'&&sliding)action.time=slidePhase;else if(name==='hit')action.time=.4-this.hit;else if(name==='idle')action.time=this.elapsed%3;}
   this.current=target;this.mixer.update(dt);this.slideBlend+=((sliding?1:0)-this.slideBlend)*(1-Math.exp(-dt*(sliding?42:18)));
   const anticipation=airborne?(1-smooth(.055,.13,jumpPhase))*Math.sin(Math.min(1,jumpPhase/.09)*Math.PI)*.10:0;
   const landing=this.landAge<.22?Math.sin(this.landAge/.22*Math.PI)*(1-this.landAge/.22)*.17:0;
-  const bounce=moving?Math.sin(this.gaitPhase*Math.PI*4)*.018:preview?Math.sin(this.elapsed*2.1)*.009:0;
+  const bounce=moving?-Math.sin(this.gaitPhase*Math.PI*4)*.035:preview?Math.sin(this.elapsed*2.1)*.009:0;
   const cartoon=reducedMotion?.2:1,stretch=airborne?Math.exp(-(((jumpPhase-.18)/.10)**2))*.075:0,squash=(anticipation+landing)*cartoon;
   this.rig.scale.set(1+squash*.35-stretch*.35*cartoon,1-squash+stretch*cartoon,1+squash*.25-stretch*.25*cartoon);this.rig.rotation.set(0,0,0);this.rig.position.y=0;
-  this.bones.hips.position.set(0,T.MathUtils.lerp(.82+bounce-anticipation*.65-landing*.72,.335,this.slideBlend),0);
+  this.bones.hips.position.set(0,T.MathUtils.lerp((moving?.735:.80)+bounce-anticipation*.65-landing*.72,.335,this.slideBlend),0);
   const visualY=airborne?run.y*smooth(.025,.12,jumpPhase):0;
   this.root.position.set(preview?0:run.x,visualY,0);const lean=this.lean.step(preview?0:clamp((run.lane*2.55-run.x)*-.12,-.18,.18),dt);
   this.root.rotation.set(0,preview?Math.PI+Math.sin(time*.4)*.25:(run.lane*2.55-run.x)*-.08,reducedMotion?lean*.4:lean);
@@ -184,7 +185,7 @@ export class RunnerCharacter {
    let foot=moving?gaitFoot(this.gaitPhase+offset):{z:sliding?(side==='L'?-.36:-.19):-.03,y:soleHeight(0),pitch:0,contact:true};
    // Both feet absorb landing before returning to the alternating stride.
    if(moving&&this.landAge<.18){const mix=smooth(.045,.18,this.landAge);foot={z:T.MathUtils.lerp(-.04,foot.z,mix),y:T.MathUtils.lerp(soleHeight(0),foot.y,mix),pitch:foot.pitch*mix,contact:mix<.5||foot.contact};}
-   this.ikTarget.set(sign*(sliding?.22:.19),foot.y,foot.z).applyQuaternion(this.heading);this.ikTarget.x+=this.root.position.x;
+   this.ikTarget.set(sign*(sliding?.22:.23),foot.y,foot.z).applyQuaternion(this.heading);this.ikTarget.x+=this.root.position.x;
    this.footOrientation.copy(this.heading).multiply(this.eulerQuaternion(foot.pitch));this.legs[side].contact=foot.contact&&ikWeight>.999&&visualY<.002;this.legs[side].solve(this.ikTarget,this.footOrientation,ikWeight);
   }}else for(const leg of Object.values(this.legs))leg.contact=false;
   this.root.updateMatrixWorld(true);let minY=Infinity;for(const side of['L','R'])for(const x of[-.1825,.1825])for(const z of[-.395,.205]){this.footPoint.set(x,-.1,z).applyMatrix4(this.bones['foot'+side].matrixWorld);minY=Math.min(minY,this.footPoint.y);}

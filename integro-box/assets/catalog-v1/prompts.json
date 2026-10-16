@@ -74,5 +74,15 @@
     "name": "Bounce Tegro",
     "tool": "Criar imagem (built-in)",
     "prompt": "Use case: logo-brand. Create the official game logo and 3:2 cover for \"Bounce Tegro\", exact spelling, in the same polished toy-like cartoon logo family as the supplied Integro Box Pegue o Ovo reference. Brand new original emblem: a glossy cheerful round red bouncing ball with small expressive eyes, springing above a grassy floating island, a large bright flower and three little golden teardrop collectibles, blue sky glow. Bold huge dimensional rounded letters \"Bounce\" on top and \"Tegro\" underneath, golden yellow and fresh lime with thick navy outlines, clean highlights, legible at thumbnail size. Composition centered and compact, no clipping, no other words, no watermark. Deep navy vignette background matching the catalogue cover family. This is the logo; the actual gameplay is colorful illustrated side-scrolling 2D."
+  },
+  {
+    "id": "integro-rush",
+    "name": "Integro Rush",
+    "tool": "Criar imagem (built-in)",
+    "references": [
+      "pegue-o-ovo.webp",
+      "integrocraft.webp"
+    ],
+    "prompt": "Original polished soft-3D cartoon logo in the Integro Box catalog family. Exact title Integro Rush, yellow and turquoise dimensional lettering with navy outlines, cheerful runner with backward orange cap, teal hoodie and navy trousers, tropical floating island, palm, three coins and speed swoosh. Wide 3:2 emblem. No other text."
   }
 ]
