@@ -32,7 +32,7 @@ try {
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   await script('./egg.js?v=20261016-eggshop1');
-  await script('./fruit.js?v=20261016-fruit20-toon1');
+  await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261016-fruit20-toon1');
   await import('./multiplayer.js?v=20261016-intgem1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
