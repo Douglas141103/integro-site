@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createEggPush,PUSH_RULES} from '../integro-box/egg-push.js';
-import {EggAdventure} from '../integro-box/egg-src/egg-rules.js';
+import {EggAdventure,TRACK_HALF_WIDTH,PLAYER_RADIUS} from '../integro-box/egg-src/egg-rules.js';
 function fixture(){
  let clock=100000,serial=0;const channels=[],sent=[],players=[1,2,3].map(slot=>({slot,state:{x:0,y:0,z:-10,yaw:0,zone:'world'}}));
  const race={id:'race-1',starts:new Date(clock-1000).toISOString(),results:{}};
@@ -14,7 +14,7 @@ function fixture(){
 test('two runners exchange a shove, show confirmation, and physically recover inside the track',async()=>{
  const f=fixture(),[a,b]=f.users;assert.equal(a.api.state().target,2);assert.equal(a.api.state().ready,true);
  const original=JSON.stringify(b.game.save);assert.equal(await a.api.push(),true);assert.equal(b.effects[0].kind,'received');assert.equal(a.effects[0].kind,'sent');assert.equal(JSON.stringify(b.game.save),original,'shove does not charge money or change inventory');
- const before=b.game.player.x;for(let i=0;i<40;i++)b.game.update(.02,{});assert.ok(b.game.player.x>before+2);assert.ok(b.game.player.x<=9);assert.ok(b.game.player.y>=0);assert.equal(b.game.pushVelocity,null);
+ const before=b.game.player.x;for(let i=0;i<40;i++)b.game.update(.02,{});assert.ok(b.game.player.x>before+1.5);assert.equal(b.game.player.x,TRACK_HALF_WIDTH-PLAYER_RADIUS,'shove stops at the physical track edge');assert.ok(b.game.player.y>=0);assert.equal(b.game.pushVelocity,null);
  assert.equal(await a.api.push(),false,'button cooldown prevents repeated shoves');assert.ok(a.api.state().remaining>2000);
 });
 test('victim protection, replay detection and sender cooldown reject repeated impacts',async()=>{

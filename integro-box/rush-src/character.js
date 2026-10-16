@@ -38,7 +38,7 @@ export function makeAccessory(art,item){
 }
 
 export class RunnerCharacter {
- constructor(art,progress){
+ constructor(art,progress,options={}){
   this.art=art;this.root=new T.Group();this.root.name='RushExplorer';this.rig=new T.Group();this.root.add(this.rig);this.meshes=[];this.ownedGeometry=[];
   const h=bone('hips',this.rig,0,.9,0),sp=bone('spine',h,0,.19,0),ch=bone('chest',sp,0,.26,0),neck=bone('neck',ch,0,.24,0),head=bone('head',neck,0,.12,0);
   this.bones={hips:h,spine:sp,chest:ch,neck,head};
@@ -49,7 +49,7 @@ export class RunnerCharacter {
   }
   for(const [name,parent]of[['cap',head],['fringe',head],['hood',ch],['back',ch]])this.bones[name]=bone(name,parent);
   this.rig.updateMatrixWorld(true);this.skeleton=new T.Skeleton(Object.values(this.bones));this.index=Object.fromEntries(this.skeleton.bones.map((b,i)=>[b.name,i]));
-  const suit=SHOP.find(x=>x.id===progress.equipped.suit)?.color||0x18bcae,ink=0x17384d,skin=0xeeb087,hairColor=0x382b31,cream=0xffeac7;
+  const suit=options.suitColor||SHOP.find(x=>x.id===progress.equipped.suit)?.color||0x18bcae,ink=0x17384d,skin=0xeeb087,hairColor=0x382b31,cream=0xffeac7;
   const torso=this.skinPart('jacket',[[.85,.24,.17],[.91,.29,.2],[1.05,.32,.215],[1.26,.365,.22],[1.39,.35,.205],[1.48,.23,.16],[1.53,.13,.11]],suit,'cloth',v=>{if(v.y<1.13){const t=smooth(.94,1.13,v.y);return [['hips',1-t],['spine',t]];}const t=smooth(1.13,1.36,v.y);return [['spine',1-t],['chest',t]];});
   // Baked colour blocking gives the jacket a deliberate front/back design,
   // with a cream shirt opening and dark waist, instead of a striped cylinder.
@@ -104,10 +104,10 @@ export class RunnerCharacter {
   for(const sign of[-1,1]){const badge=this.part(ch,'round',suit,sign*.04,-.15,.255,.04,.13,.013,'trim');badge.rotation.z=-.35;}
   for(const x of[-.12,.12]){piping(art,ch,'runner-cord-'+x,[[x,.12,-.17],[x*.9,.02,-.225],[x*1.1,-.085,-.23]],cream,.01);this.part(ch,'cyl',0xffb94c,x*1.1,-.085,-.23,.014,.04,.014,'trim');}
   for(const sign of[-1,1]){const pocket=this.part(ch,'round',shade(suit,.66),sign*.21,-.22,-.182,.12,.023,.025,'cloth');pocket.rotation.z=-sign*.45;}
-  const hat=SHOP.find(x=>x.id===progress.equipped.head)||{color:0xf36d4d,model:'cap'};
+  const hat=options.hat||SHOP.find(x=>x.id===progress.equipped.head)||{color:0xf36d4d,model:'cap'};
   const accessory=makeAccessory(art,hat);accessory.position.set(0,hat.model==='cap'||hat.model==='hat'?.25:.38,.015);
   if(hat.model==='cap')accessory.rotation.set(.06,Math.PI+.12,-.075);this.bones.cap.add(accessory);
-  const back=SHOP.find(x=>x.id===progress.equipped.back);if(back){const accessory=makeAccessory(art,back);accessory.position.set(0,-.03,.32);this.bones.back.add(accessory);}
+  const back=options.back||SHOP.find(x=>x.id===progress.equipped.back);if(back){const accessory=makeAccessory(art,back);accessory.position.set(0,-.03,.32);this.bones.back.add(accessory);}
   this.batchAttachments();
   this.addContours();
   this.root.traverse(o=>{if(o.isMesh){o.castShadow=!o.userData.contour;o.receiveShadow=false;}});
@@ -115,7 +115,7 @@ export class RunnerCharacter {
   this.current='idle';this.hit=0;this.landAge=10;this.wasAirborne=false;this.slideBlend=0;this.footPoint=new T.Vector3();this.elapsed=0;this.gaitPhase=0;this.hasFrame=false;this.previousVisualY=0;this.previousX=0;this.previousVx=0;this.previousSpine=0;
   this.legs={};for(const side of['L','R'])this.legs[side]=new LegIK(this.bones['thigh'+side],this.bones['knee'+side],this.bones['foot'+side]);
   this.lean=new MotionSpring(20,.8);this.secondary={};for(const name of['cap','hood','back','fringe'])this.secondary[name]={pitch:new MotionSpring(name==='cap'?27:19,.62),roll:new MotionSpring(20,.7)};
-  this.ikTarget=new T.Vector3();this.footOrientation=new T.Quaternion();this.heading=new T.Quaternion();this.euler=new T.Euler();
+  this.ikTarget=new T.Vector3();this.footOrientation=new T.Quaternion();this.heading=new T.Quaternion();this.euler=new T.Euler();this.parentInverse=new T.Matrix4();this.parentOrientation=new T.Quaternion();
 
  }
  part(parent,kind,c,x,y,z,sx,sy=sx,sz=sx,tile='cloth'){return this.art.mesh(parent,kind,c,x,y,z,sx,sy,sz,tile);}
@@ -159,7 +159,7 @@ export class RunnerCharacter {
   return [clip('run',.66,run),clip('idle',3,idle),clip('jump',1,[[0,crouch],[.07,crouch],[.18,launch],[.42,apex],[.62,apex],[.88,reach],[1,crouch]]),clip('slide',1,[[0,crouch],[.12,slide],[.38,slideSettle],[.72,slide],[.93,slide],[1,slide]]),clip('hit',.4,[[0,hit],[.35,hit],[1,{}]])];
  }
  event(type){if(type==='hit'||type==='shield-hit')this.hit=.32;}
- update(run,dt,{paused=false,preview=false,time=0,reducedMotion=false}={}){
+ update(run,dt,{paused=false,preview=false,previewYaw,externalVelocityY=0,time=0,reducedMotion=false}={}){
   if(paused&&!preview&&this.hasFrame)return;
   dt=clamp(dt,0,.05);this.elapsed+=dt;const airborne=!preview&&run.jump>0,sliding=!preview&&run.slide>0;
   if(this.wasAirborne&&!airborne)this.landAge=0;this.wasAirborne=airborne;this.landAge+=dt;this.hit=Math.max(0,this.hit-dt);
@@ -178,7 +178,8 @@ export class RunnerCharacter {
   this.bones.hips.position.set(0,T.MathUtils.lerp((moving?.735:.80)+bounce-anticipation*.65-landing*.72,.335,this.slideBlend),0);
   const visualY=airborne?run.y*smooth(.025,.12,jumpPhase):0;
   this.root.position.set(preview?0:run.x,visualY,0);const lean=this.lean.step(preview?0:clamp((run.lane*2.55-run.x)*-.12,-.18,.18),dt);
-  this.root.rotation.set(0,preview?Math.PI+Math.sin(time*.4)*.25:(run.lane*2.55-run.x)*-.08,reducedMotion?lean*.4:lean);
+  this.root.rotation.set(0,preview?(previewYaw??Math.PI+Math.sin(time*.4)*.25):(run.lane*2.55-run.x)*-.08,reducedMotion?lean*.4:lean);
+  this.parentInverse.identity();this.parentOrientation.identity();if(this.root.parent){this.root.parent.updateWorldMatrix(true,false);this.parentInverse.copy(this.root.parent.matrixWorld).invert();this.root.parent.getWorldQuaternion(this.parentOrientation).normalize();}
   this.root.updateMatrixWorld(true);this.heading.setFromEuler(this.euler.set(0,this.root.rotation.y,0));
   const groundIK=!airborne||jumpPhase<.13,ikWeight=airborne?1-smooth(.04,.11,jumpPhase):1;
   if(groundIK){for(const [side,sign,offset]of[['L',-1,0],['R',1,.5]]){
@@ -186,16 +187,17 @@ export class RunnerCharacter {
    // Both feet absorb landing before returning to the alternating stride.
    if(moving&&this.landAge<.18){const mix=smooth(.045,.18,this.landAge);foot={z:T.MathUtils.lerp(-.04,foot.z,mix),y:T.MathUtils.lerp(soleHeight(0),foot.y,mix),pitch:foot.pitch*mix,contact:mix<.5||foot.contact};}
    this.ikTarget.set(sign*(sliding?.22:.23),foot.y,foot.z).applyQuaternion(this.heading);this.ikTarget.x+=this.root.position.x;
-   this.footOrientation.copy(this.heading).multiply(this.eulerQuaternion(foot.pitch));this.legs[side].contact=foot.contact&&ikWeight>.999&&visualY<.002;this.legs[side].solve(this.ikTarget,this.footOrientation,ikWeight);
+   if(this.root.parent)this.ikTarget.applyMatrix4(this.root.parent.matrixWorld);
+   this.footOrientation.copy(this.parentOrientation).multiply(this.heading).multiply(this.eulerQuaternion(foot.pitch));this.legs[side].contact=foot.contact&&ikWeight>.999&&visualY<.002;this.legs[side].solve(this.ikTarget,this.footOrientation,ikWeight);
   }}else for(const leg of Object.values(this.legs))leg.contact=false;
-  this.root.updateMatrixWorld(true);let minY=Infinity;for(const side of['L','R'])for(const x of[-.1825,.1825])for(const z of[-.395,.205]){this.footPoint.set(x,-.1,z).applyMatrix4(this.bones['foot'+side].matrixWorld);minY=Math.min(minY,this.footPoint.y);}
+  this.root.updateMatrixWorld(true);let minY=Infinity;for(const side of['L','R'])for(const x of[-.1825,.1825])for(const z of[-.395,.205]){this.footPoint.set(x,-.1,z).applyMatrix4(this.bones['foot'+side].matrixWorld).applyMatrix4(this.parentInverse);minY=Math.min(minY,this.footPoint.y);}
   if(minY<.002)this.root.position.y+=.002-minY;
-  this.secondaryMotion(dt,{visualY:visualY+this.bones.hips.position.y*this.rig.scale.y,run,preview,reducedMotion,landing});
+  this.secondaryMotion(dt,{visualY:visualY+this.bones.hips.position.y*this.rig.scale.y,run,preview,reducedMotion,landing,externalVelocityY});
   this.root.visible=preview||run.invincible<=0||Math.floor(time*10)%2===0;this.hasFrame=true;
  }
  eulerQuaternion(pitch){this.pitchQ ||= new T.Quaternion();return this.pitchQ.setFromEuler(this.euler.set(pitch,0,0));}
- secondaryMotion(dt,{visualY,run,preview,reducedMotion,landing}){
-  const safeDt=Math.max(dt,1/240),vy=this.hasFrame?(visualY-this.previousVisualY)/safeDt:0,vx=this.hasFrame&&!preview?(run.x-this.previousX)/safeDt:0,ax=clamp((vx-this.previousVx)/safeDt,-50,50),angular=this.hasFrame?(this.bones.spine.rotation.x-this.previousSpine)/safeDt:0;
+ secondaryMotion(dt,{visualY,run,preview,reducedMotion,landing,externalVelocityY=0}){
+  const safeDt=Math.max(dt,1/240),vy=(this.hasFrame?(visualY-this.previousVisualY)/safeDt:0)+externalVelocityY,vx=this.hasFrame&&!preview?(run.x-this.previousX)/safeDt:0,ax=clamp((vx-this.previousVx)/safeDt,-50,50),angular=this.hasFrame?(this.bones.spine.rotation.x-this.previousSpine)/safeDt:0;
   const amount=reducedMotion?.2:1;
   for(const [name,state]of Object.entries(this.secondary)){const loose=name==='hood'||name==='back',targetX=clamp(-vy*(loose?.016:.006)-angular*(loose?.018:.006)+landing*.5,-.15,.15)*amount,targetZ=clamp(ax*(loose?.002:.0008),-.08,.08)*amount;
    this.bones[name].rotation.x=state.pitch.step(targetX,dt);this.bones[name].rotation.z=state.roll.step(targetZ,dt);
