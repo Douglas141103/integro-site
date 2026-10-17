@@ -246,30 +246,31 @@ export function setCharacterPainter(painter){characterPainter=painter;}
     E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
     let w = Q >= 0, G = Math.sin(C * Math.PI * 2), D = I.skin || "#d2a082", i = I.hair || "#302c47", s = I.color || "#89d8e5", k = I.accent || "#d9ef8f", e = I.look === "capybara", h = I.look === "robot", J = I.look === "box";
     const pose=animePose(C*60/(I.bpm||140),I.bpm||140,Q,!!cue.reduced,cue);
-    const hx=pose.hipX*36,hy=72+(HIP_HEIGHT-pose.hipY)*35;
+    const facing=Math.cos(pose.facing),backFacing=facing<-.35;
+    const hx=(pose.travelX+pose.hipX*facing+pose.hipZ*Math.sin(pose.facing))*50,hy=72+(HIP_HEIGHT-pose.hipY)*35;
     // Compatibility mode also has articulated knees, elbows and wrists.
     Ag(E,0,103,32,5,"#18233e33",null);
     for(const [side,sign]of [['L',-1],['R',1]]) {
       const foot=pose.feet[side],x0=hx+sign*8,y0=hy;
-      const fx=sign*12+(foot.x-sign*.205)*42,fy=98-(foot.y-.1775)*45;
+      const fx=foot.x*50,fy=98-(foot.y-.1775)*45+(foot.z-.045)*6;
       const kx=(x0+fx)/2+sign*(3+(HIP_HEIGHT-pose.hipY)*18),ky=(y0+fy)/2;
       xg(E,[x0,y0,kx,ky],_A,10);xg(E,[x0,y0,kx,ky],'#556988',7);
       xg(E,[kx,ky,fx,fy],_A,8);xg(E,[kx,ky,fx,fy],'#556988',5.5);
       E.save();E.translate(fx,fy);E.rotate(sign*foot.lift*.12);
       kg(E,-8,-3,18,9,4,sign<0?k:'#f9efde',_A,1.5);xg(E,[-4,0,0,-1,5,0],'#ffffff',1.2);E.restore();
     }
-    E.translate(hx,hy);E.rotate(-pose.spineRoll);E.translate(0,-76);
+    E.translate(hx,hy);E.rotate(-pose.spineRoll);E.scale(.4+.6*Math.abs(facing),1);E.translate(0,-76);
     E.beginPath();E.moveTo(-15,47);E.bezierCurveTo(-21,49,-17,66,-16,77);E.quadraticCurveTo(0,82,16,77);E.bezierCurveTo(17,66,21,49,15,47);E.closePath();hB(E,s,_A,1.8);
     xg(E,[-15,76,0,79,15,76],k,3);kg(E,-7,56,14,15,4,'#fff5dd',null);OC(E,0,63,5,s);
     for(const sign of [-1,1]) {
-      const left=sign<0;E.save();E.translate(sign*18,52);
-      E.rotate(-(left?pose.leftArm:pose.rightArm));
+      const left=sign<0,hipHand=left?pose.hipHand:0;E.save();E.translate(sign*18,52);
+      E.rotate(-(left?pose.leftArm:pose.rightArm)*(1-hipHand)+.7*hipHand);
       kg(E,-4.5,0,9,15,4.5,s,_A,1.6);E.translate(0,13);
-      E.rotate(-sign*(.28+Math.abs(left?pose.leftElbow:pose.rightElbow)*.55));
+      E.rotate(-sign*(.28+Math.abs(left?pose.leftElbow:pose.rightElbow)*.55)*(1-hipHand)-1.6*hipHand);
       kg(E,-3.5,0,7,13,3.5,s,_A,1.5);E.translate(0,12);
-      E.rotate(-(left?pose.leftWrist:pose.rightWrist));
+      E.rotate(-(left?pose.leftWrist:pose.rightWrist)*(1-hipHand)+.9*hipHand);
       Ag(E,0,1,4.5,5,e?'#b8895f':D,_A,1.6);
-      const curl=left?pose.leftCurl:pose.rightCurl;
+      const curl=left?pose.leftCurl*(1-hipHand)+.1*hipHand:pose.rightCurl;
       for(let finger=0;finger<4;finger++){
         const bend=left&&finger===0?curl*(1-pose.leftPoint):curl;
         const x=(finger-1.5)*2.1,length=finger===3?4.3:5.6;
@@ -280,6 +281,12 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       E.restore();
     }
     E.translate(0,45);E.rotate(-pose.neckTurn);E.scale(.88,.88);E.translate(0,-45);
+    if(backFacing){
+      if(h||J)kg(E,-23,3,46,43,12,J?'#dfbb82':'#c2dbe0',_A,2);
+      else Ag(E,0,24,e?26:23,25,e?D:i,_A,2);
+      if(I.look==='phones'||h||e){xg(E,[-25,24,-28,-1,28,-1,25,24],k,5);kg(E,-29,18,7,17,4,k,_A,1.5);kg(E,22,18,7,17,4,k,_A,1.5);}
+      E.restore();return;
+    }
     if(e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
     else if (h || J) if (kg(E, -24, 2, 48, 43, J ? 12 : 15, J ? "#dfbb82" : "#c2dbe0", _A, 2.8), J) xg(E, [-20, 12, 0, 18, 21, 12], "#ab834f", 2), kg(E, -3, 3, 6, 13, 2, "#f8e8bd", null), Ag(E, -9, 25, 4.3, 5.8, _A, null), Ag(E, 10, 25, 4.3, 5.8, _A, null), Ag(E, -10, 23, 1.5, 2, "#fff", null), Ag(E, 9, 23, 1.5, 2, "#fff", null), xg(E, [-6, 35, 2, 42, 10, 34], _A, 2), OC(E, 0, -7, 8, k, 0.15);
     else {

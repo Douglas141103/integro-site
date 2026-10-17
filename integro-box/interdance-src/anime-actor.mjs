@@ -2,7 +2,7 @@ import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {animePose} from './anime-motion.mjs';
-import {createLegSolver} from './dance-kinematics.mjs';
+import {createLegSolver,createHipHandSolver} from './dance-kinematics.mjs';
 import {LEG_LENGTH,HEAD_SCALE} from './dance-proportions.mjs';
 import {ARM_PROFILE,LEG_PROFILE,shapeJacket,createLimbSurface,jointCorrectionInfluence} from './anime-body.mjs';
 
@@ -196,6 +196,9 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const hairGroup=new T.Group();head.add(hairGroup);
   if(!robot&&!carton&&!capy) {
     mesh(hairGroup,new T.SphereGeometry(1,20,12,0,Math.PI*2,0,1.67).scale(.36,.35,.29),hair,0,.13,-.025);
+    // The full turn reveals the nape; cover the rear of the haircut as well as
+    // the front fringe, leaving a small visible neck below the hairline.
+    ellipsoid(hairGroup,hair,0,.025,-.205,.30,.28,.105);
     for(let i=0;i<5;i++){
       const shape=new T.Shape();const x=(i-2)*.115;
       shape.moveTo(x-.09,.19);shape.quadraticCurveTo(x+.10,.21,x+.055,-.035-(i%2)*.045);shape.quadraticCurveTo(x-.015,.005,x-.09,.19);
@@ -231,6 +234,7 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const shadow=mesh(root,new T.CircleGeometry(.45,28),new T.MeshBasicMaterial({color:0x1a2039,transparent:true,opacity:.23,depthWrite:false}),0,.02,0,false);resources.add(shadow.material);shadow.rotation.x=0;shadow.scale.y=.16;shadow.position.z=-.2;
   function setPalette(p) {for(const key of ['color','skin','hair','accent'])if(p[key])palette[key].color.set(p[key]);}
   const solveLeg=createLegSolver(rig,bones);
+  const solveHipHand=createHipHandSolver(bones);
   let previous=null,lastTime=-Infinity;
   function pose(seconds,bpm,lane,reduced=false,cue={}){
     const target=animePose(seconds,bpm,lane,reduced,cue);
@@ -239,10 +243,10 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     const reset=!previous||reduced||seconds<lastTime||seconds-lastTime>.25;
     const blend=reset?1:1-Math.exp(-Math.max(0,seconds-lastTime)*22);
     const p={...target};
-    for(const key of Object.keys(target))if(typeof target[key]==='number'&&!['stamp','beat'].includes(key))
+    for(const key of Object.keys(target))if(typeof target[key]==='number'&&!['stamp','beat','facing','travelX','travelZ'].includes(key))
       p[key]=reset?target[key]:T.MathUtils.lerp(previous[key],target[key],blend);
     previous=p;lastTime=seconds;
-    rootBone.rotation.y=p.rootTurn;
+    rootBone.position.set(p.travelX,0,p.travelZ);rootBone.rotation.y=p.facing+p.rootTurn;
     hips.position.set(p.hipX,p.hipY,p.hipZ);
     hips.rotation.set(0,p.hipTurn,p.hipRoll);
     spine.rotation.set(p.spineBend,0,p.spineRoll);
@@ -258,11 +262,12 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
       bones['hand'+side].rotation.set(-.08,sign*.12,left?p.leftWrist:p.rightWrist);
       for(let f=0;f<FINGER_NAMES.length;f++)for(let joint=0;joint<3;joint++){
         const b=bones[FINGER_NAMES[f]+side+(joint+1)];
-        const curl=left?p.leftCurl*(f===1?1-p.leftPoint*.92:1):p.rightCurl;
+        const curl=left?T.MathUtils.lerp(p.leftCurl*(f===1?1-p.leftPoint*.92:1),.1,p.hipHand):p.rightCurl;
         b.rotation.set(-curl*(f===0?.65:1)*(joint===0?.75:1),0,joint===0?(f===0?-sign*.7:sign*(f-2)*p.fingerSpread):0);
       }
     }
     rig.updateWorldMatrix(true,true);
+    solveHipHand(p.hipHand);
     for(const side of ['L','R'])solveLeg(side,p.feet[side]);
     for(const {bone,parts} of correctives){
       const bend=2*Math.acos(T.MathUtils.clamp(Math.abs(bone.quaternion.w),0,1));
