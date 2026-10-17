@@ -33,9 +33,9 @@ function paintedTexture(kind,document) {
   p.clearRect(0,0,256,256);p.lineCap='round';p.lineJoin='round';
   if(kind==='jacket') {
     p.fillStyle='#fff8ee';p.fillRect(0,0,256,256);
-    p.fillStyle='#b9adc9';p.beginPath();p.moveTo(0,140);p.lineTo(74,154);p.lineTo(33,165);p.lineTo(0,158);p.fill();
+    p.fillStyle='#d6d0df';p.beginPath();p.moveTo(0,140);p.lineTo(74,154);p.lineTo(33,165);p.lineTo(0,158);p.fill();
     p.beginPath();p.moveTo(256,180);p.lineTo(194,190);p.lineTo(230,205);p.lineTo(256,198);p.fill();
-    p.strokeStyle='#615979';p.lineWidth=4;p.beginPath();p.moveTo(128,19);p.lineTo(128,238);p.stroke();
+    p.strokeStyle='#aaa2b4';p.lineWidth=4;p.beginPath();p.moveTo(128,19);p.lineTo(128,238);p.stroke();
     p.strokeStyle='#fff';p.lineWidth=3;p.beginPath();p.moveTo(135,27);p.lineTo(135,233);p.stroke();
     p.strokeStyle='#82768f';p.lineWidth=3;for(const side of [-1,1]) {p.beginPath();p.moveTo(128+side*22,151);p.lineTo(128+side*61,162);p.lineTo(128+side*57,195);p.stroke();}
     p.fillStyle='#fff3c4';p.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?10:20;p.lineTo(183+Math.cos(a)*r,88+Math.sin(a)*r);}p.closePath();p.fill();
@@ -59,13 +59,14 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   if(jacketTexture)resources.add(jacketTexture);if(hairTexture)resources.add(hairTexture);
   const cloth=material('color',person.color||'#80cbe6',jacketTexture),accent=material('accent',person.accent||'#e2e7a2');
   const skin=material('skin',person.skin||'#d2a082'),hair=material('hair',person.hair||'#302c47',hairTexture);
-  const ink=material(null,INK),cream=material(null,WHITE),pants=material(null,0x34415f),eyeInk=material(null,INK,null,true),eyeWhite=material(null,WHITE,null,true),iris=material(null,0x6cabb9,null,true);
+  const ink=material(null,INK),cream=material(null,WHITE),pants=material(null,0x34415f),eyeInk=material(null,INK,null,true),eyeWhite=material(null,WHITE,null,true),iris=material(null,0x715344,null,true);
   const bone=(name,parent,x=0,y=0,z=0)=>{const b=new T.Bone();b.name=name;b.position.set(x,y,z);parent.add(b);return b;};
-  const hips=bone('hips',rig,0,.93,0),chest=bone('chest',hips,0,.43,0),head=bone('head',chest,0,.61,0);
+  const hips=bone('hips',rig,0,1.04,0),chest=bone('chest',hips,0,.43,0),head=bone('head',chest,0,.61,0);
+  head.scale.setScalar(.83);
   const bones={hips,chest,head};
   for(const [side,sign] of [['L',-1],['R',1]]) {
     const shoulder=bone('shoulder'+side,chest,sign*.38,.14,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
-    const thigh=bone('thigh'+side,hips,sign*.17,-.02,0),knee=bone('knee'+side,thigh,0,-.36,0),foot=bone('foot'+side,knee,0,-.35,0);
+    const thigh=bone('thigh'+side,hips,sign*.17,-.02,0),knee=bone('knee'+side,thigh,0,-.41,0),foot=bone('foot'+side,knee,0,-.41,0);
     Object.assign(bones,{['shoulder'+side]:shoulder,['elbow'+side]:elbow,['hand'+side]:hand,['thigh'+side]:thigh,['knee'+side]:knee,['foot'+side]:foot});
   }
   rig.updateMatrixWorld(true);const skeleton=new T.Skeleton(Object.values(bones));
@@ -90,11 +91,14 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     for(const m of [mat,outline]) {const skinned=new T.SkinnedMesh(geometry,m);skinned.name=m===outline?'skinned-inverted-hull':upper+' weighted cloth';skinned.frustumCulled=false;rig.add(skinned);skinned.bind(skeleton);}
   }
   mesh(chest,box(.67,.62,.38,.12),cloth,0,-.06,0);
+  mesh(chest,box(.28,.45,.035,.015),ink,0,-.015,.197,false);
+  for(const side of [-1,1]){const panel=mesh(chest,box(.12,.42,.045,.025),cream,side*.22,.005,.20,false);panel.rotation.z=side*-.14;}
+  mesh(chest,box(.10,.065,.045,.008),accent,-.24,.11,.23,false);
   mesh(hips,box(.49,.23,.30),pants,0,0,0);
   mesh(chest,new T.TorusGeometry(.18,.055,6,18),accent,0,.26,0).rotation.x=Math.PI/2;
   mesh(chest,box(.65,.08,.39,.025),accent,0,-.34,0);
   for(const [side,sign] of [['L',-1],['R',1]]) {
-    limb('shoulder'+side,'elbow'+side,.60,.145,cloth);limb('thigh'+side,'knee'+side,.70,.15,pants);
+    limb('shoulder'+side,'elbow'+side,.60,.145,cloth);limb('thigh'+side,'knee'+side,.82,.14,pants);
     ellipsoid(bones['shoulder'+side],cloth,0,0,0,.145,.13,.14);
     ellipsoid(bones['hand'+side],skin,0,-.015,.025,.10,.12,.09);
     mesh(bones['hand'+side],box(.19,.055,.18,.02),accent,0,.07,0);
@@ -123,12 +127,12 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const eyes=[];
   for(const sign of [-1,1]) {
     const e=new T.Group();e.position.set(sign*(capy?.18:.13),.015,capy?.285:robot?.29:.244);face.add(e);eyes.push(e);
-    ellipsoid(e,eyeWhite,0,0,0,.087,.105,.028,false);
-    ellipsoid(e,robot?accent:iris,.008,-.013,.026,.047,.067,.009,false);
-    ellipsoid(e,eyeInk,.01,-.005,.035,.024,.048,.008,false);
-    ellipsoid(e,eyeWhite,-.008,.031,.044,.019,.027,.006,false);
+    ellipsoid(e,eyeWhite,0,0,0,.067,.079,.020,false);
+    ellipsoid(e,robot?accent:iris,.008,-.013,.026,.038,.052,.009,false);
+    ellipsoid(e,eyeInk,.01,-.005,.035,.019,.037,.008,false);
+    ellipsoid(e,eyeWhite,-.008,.031,.044,.013,.017,.006,false);
     ellipsoid(e,eyeWhite,.025,-.039,.043,.009,.012,.006,false);
-    detail(e,[[-.085,.04,.016],[-.045,.096,.021],[.025,.102,.022],[.083,.058,.016]],eyeInk,.014);
+    detail(e,[[-.065,.028,.016],[-.033,.073,.021],[.025,.075,.022],[.063,.040,.016]],eyeInk,.014);
     detail(head,[[sign*.205,.17,.239],[sign*.13,.19,.263],[sign*.055,.165,.253]],hair,.014);
     if(!robot&&!carton){const blush=material(null,0xcd7d86,null,true);for(let j=0;j<2;j++)detail(head,[[sign*(.18+j*.035),-.13,.22],[sign*(.17+j*.035),-.16,.23]],blush,.008);}
   }

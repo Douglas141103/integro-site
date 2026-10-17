@@ -6,7 +6,7 @@ export function animePose(seconds, bpm = 140, lane = -1, reduced = false) {
   const action = !reduced && lane >= 0;
   const crouch = action && lane === 1 ? .14 : 0, lift = action && lane === 2 ? .12 : 0;
   return {stamp, beat, sway:reduced ? 0 : swing*.075,
-    hipY:.93 + (reduced ? 0 : Math.abs(bounce)*.035) - crouch + lift,
+    hipY:1.04 + (reduced ? 0 : Math.abs(bounce)*.035) - crouch + lift,
     lean:action ? [-.18,.06,-.035,.18][lane] : swing*.035,
     turn:reduced ? .12 : .12+Math.sin(beat*Math.PI*.5)*.1,
     squash:1-crouch*.45+lift*.28,

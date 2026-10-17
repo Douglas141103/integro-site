@@ -78,7 +78,7 @@ test('late 3D loading cannot revive a closed game and reopening releases its ren
   try{
     t.game.show();assert.equal(t.game.getState().graphics,'loading');t.game.hide();complete(painter());await new Promise(r=>setImmediate(r));
     assert.equal(disposed,1);assert.equal(draws,0);assert.equal(t.game.active,false);
-    t.game.show();complete(painter());await new Promise(r=>setImmediate(r));assert.equal(t.game.getState().graphics,'anime');assert(draws>0);
+    t.game.show();complete(painter());await new Promise(r=>setImmediate(r));assert.equal(t.game.getState().graphics,'anime');assert.equal(draws,0,'home cover does not render unused 3D rigs');await t.click('[data-stage="0"]');assert(draws>0);
     t.game.hide();assert.equal(disposed,2);
   }finally{t.destroy();}
 });
@@ -91,4 +91,23 @@ test('3D failure falls back to the illustrated game without stopping timing, sco
     const note=generateSong(stages[0]).notes[0];t.step(note.time);t.press(keys[note.lane]);t.press(arrows[note.lane]);
     assert.deepEqual(t.game.getState().players.map(p=>p.score),[1000,1000]);
   }finally{t.destroy();}
+});
+
+test('new preparation preserves selected track and social overlays stay off controls only during songs',async()=>{
+ const t=setup();try{
+  t.game.show();assert.equal(t.w.document.querySelectorAll('.dance-stage').length,16);assert.equal(t.w.document.querySelectorAll('[data-match]').length,0);
+  await t.click('[data-stage="8"]');await t.click('[data-mode="easy"]');await t.click('[data-match="versus"]');assert.equal(t.game.getState().stage,8);assert.equal(t.game.getState().mode,'easy');
+  await t.click('[data-action="versus"]');assert(t.w.document.body.classList.contains('dance-in-song'));assert.equal(t.w.document.getElementById('danceApp').dataset.view,'playing');
+  t.press('p');assert(!t.w.document.body.classList.contains('dance-in-song'));await t.click('[data-action="resume"]');assert(t.w.document.body.classList.contains('dance-in-song'));
+  t.game.hide();assert(!t.w.document.body.classList.contains('dance-in-song'));
+ }finally{t.destroy();}
+});
+test('actual stylesheet keeps colored pads readable and wallet styles separate',()=>{
+ const t=setup();try{
+  const style=t.w.document.createElement('style');style.textContent=readFileSync(new URL('../integro-box/interdance.css',import.meta.url),'utf8');t.w.document.head.append(style);t.game.show();
+  for(const [index,color]of ['rgb(185, 154, 255)','rgb(102, 228, 237)','rgb(190, 245, 140)','rgb(255, 155, 185)'].entries()){
+   const pad=t.w.document.querySelector(`[data-dance-lane="${index}"]`),css=t.w.getComputedStyle(pad);assert.equal(css.backgroundColor,color);assert.equal(css.color,'rgb(13, 25, 49)');assert(pad.querySelector('svg'));assert(pad.getAttribute('aria-label'));
+  }
+  const wallet=t.w.document.createElement('button');wallet.className='ig-wallet-button';t.w.document.getElementById('danceApp').append(wallet);assert.notEqual(t.w.getComputedStyle(wallet).backgroundColor,'rgb(25, 35, 59)');
+ }finally{t.destroy();}
 });
