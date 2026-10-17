@@ -39,10 +39,10 @@ test('moving platforms carry Blue and checkpoint recovery preserves unique seeds
  const loaded=new BlueRun(0,cleanProgress(JSON.stringify(p)),true);assert.equal(loaded.player.x,88);assert(loaded.collected.has('0:2'));assert.equal(p.seeds.filter(s=>s==='0:2').length,1);
 });
 test('Bront only accepts one pulse in each vulnerable cycle and requires three rounds',()=>{
- const r=new BlueRun(3);r.player.x=20;r.pulse();assert.equal(r.boss.hits,0);
+ const r=new BlueRun(3);r.player.x=r.boss.x-1;r.pulse();assert.equal(r.boss.hits,0);
  for(let hit=1;hit<=3;hit++){r.boss.phase='rest';r.boss.clock=4;r.boss.hitThisCycle=false;r.cooldown=0;r.pulse();assert.equal(r.boss.hits,hit);r.cooldown=0;r.pulse();assert.equal(r.boss.hits,hit);}
  assert.equal(r.status,'won');assert.equal(r.events.filter(e=>e.type==='won').length,1);
- const danger=new BlueRun(3);danger.player.x=21;danger.boss.phase='roll';danger.boss.clock=2;danger.update(1/60);assert.equal(danger.player.health,2);step(danger,5);assert.equal(danger.player.health,2);
+ const danger=new BlueRun(3);danger.player.x=danger.boss.x;danger.boss.phase='roll';danger.boss.clock=2;danger.update(1/60);assert.equal(danger.player.health,2);step(danger,5);assert.equal(danger.player.health,2);
 });
 test('56 working bones, finite deformations, normalized skin weights and complete shader normals',()=>{
  const actor=createBlue();assert.equal(actor.skeleton.bones.length,56);let vertices=0,poseTime=2;

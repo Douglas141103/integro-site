@@ -30,10 +30,10 @@ export const LEVELS=[
   platforms:[land(-4,18),lift(21,0,3,'x',2.2,1),land(24,40),root(33,5),land(42,57),step(49,1.1,3),lift(60,1,3.8,'y',1,1.1,-Math.PI/2),land(63,78,2),lift(82,2,3.6,'x',2.1,.8),land(86,101,2),step(94,3.1,3),lift(104,1.1,3.5,'y',.9,1.2),land(107,114),bridge(114,120,'garden'),land(120,135,2),step(119,1,2.5)],
   switches:[{x:112,y:0,group:'garden'}],seeds:[seed(35,.65),seed(94,3.85),seed(122,2.75)],enemies:[enemy(46,48),enemy(89,92,2)],checkpoints:[{x:43,y:0},{x:67,y:2},{x:109,y:0}],
   signs:[mark(12,'A plataforma vem até você. Espere, pule e acompanhe.'),mark(29,'Segure ↓ Agachar para passar sob a raiz.'),mark(53,'Suba no elevador quando ele estiver baixo.'),mark(76,'Espere a plataforma chegar à borda.'),mark(108,'Acenda a ponte e use o degrau para alcançar o jardim.')],theme:'mill'},
- {id:3,name:'Bront, o tatu de musgo',subtitle:'O primeiro farol',length:30,spawn:{x:4,y:0},end:{x:25,y:0},boss:true,
+ {id:3,name:'Bront, o tatu de musgo',subtitle:'O primeiro farol',length:20,spawn:{x:3,y:0},end:{x:18,y:0},boss:true,arena:{left:1,right:19,rollLeft:4,rollRight:16,bossStart:16},
   intro:['Pip','Bront não é mau: o Véu o confundiu. Pule a rolagem. Quando ele descansar, aproxime-se e use Pulso!'],
   outro:['Bront','A luz voltou… Obrigado, Blue! O vento está soprando outra vez. O primeiro farol de Lúmina está aceso.'],
-  platforms:[land(-3,34),step(3,1.6,3),step(27,1.6,3)],seeds:[],enemies:[],checkpoints:[],switches:[],signs:[],theme:'sanctuary'}
+  platforms:[land(-3,23)],seeds:[],enemies:[],checkpoints:[],switches:[],signs:[],theme:'sanctuary'}
 ].map(l=>({...l,platforms:l.platforms.map((p,i)=>({...p,id:`p${i}`})),seeds:l.seeds.map((s,i)=>({...s,id:`${l.id}:${i}`}))}));
 
 export function platformAt(p,time){return {...p,x:p.x+(p.axis==='x'?Math.sin(time*p.speed+p.phase)*p.amplitude:0),y:p.y+(p.axis==='y'?Math.sin(time*p.speed+p.phase)*p.amplitude:0)};}

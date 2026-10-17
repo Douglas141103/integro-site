@@ -54,7 +54,7 @@ try {
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
-  if(!unloaded){const {installBlueWorld}=await import('./blue-loader.js?v=20261017-blue1');installBlueWorld();}
+  if(!unloaded){const {installBlueWorld}=await import('./blue-loader.js?v=20261017-blue2');installBlueWorld();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261017-blue1');startUsage();}
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261017-blue1');
