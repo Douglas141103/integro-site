@@ -56,3 +56,13 @@ Each of the 18 characters now has exactly 56 functional bones: a root, hips, thr
 Six original eight-count phrases form a 48-beat sequence: step-touch, diagonal reaches, front taps, body waves, alternating disco reaches and knee lifts. They follow the music tempo, ease between upper-body gestures and retain a planted supporting foot through each transition. Hit/hold accents layer over the choreography; the musical clock and judgment are unchanged. The 2D compatibility renderer shares the footwork/arm choreography and now shows simplified finger gestures. Reduced motion still freezes the pose.
 
 Validation covers all 56 bones driving geometry and articulating, all 18 characters, the existing 65,000-triangle limit, all six phrases, transition continuity, 7,215 IK poses at 100/140/200 BPM, and the existing audio/input/solo/versus/storage flows. Offline CPU projections check representative silhouettes and clothing deformation. Browser/WebGL lighting and mobile frame rate still require a real-device check; CPU projections do not verify those.
+
+## Proportions and joint deformation — 20261017-dance-fit1
+
+The 56-bone rig keeps its choreography with a narrower, tapered jacket, a defined waist, smaller shoulder caps, slimmer cuffs/shoes, a slightly smaller head and longer thighs/shins (0.46 each instead of 0.41). The pelvis is lifted by the matching amount; leg IK derives its segment lengths from the actual skeleton and retains the same floor contacts. A visible neck bridges the collar and head.
+
+`anime-body.mjs` builds profiled limb surfaces with distinct upper-arm/elbow/forearm/wrist and thigh/knee/calf/ankle widths. Denser rings and narrower skin-weight transitions localize bending at the joints. A bounded bend-driven morph restores the front/back depth lost by linear skinning at elbows and knees. The surface and its outline share the correction, including morph normals. Jacket details undergo the same shape and skin transforms as the jacket. Body outlines are thinner, with separate fine outlines for fingers.
+
+`dance-proportions.mjs` keeps geometry-free constants available to the 2D fallback without loading Three.js. The fallback also has a tapered torso, slimmer limbs, smaller shoes/head and longer legs.
+
+Validation adds cross-section area checks throughout deep-bend poses to detect collapse or excessive bulging and verifies that the outline follows the morph. Existing checks retain all 18 character geometry budgets, 56 functional bones, grounded feet, phrase transitions and gameplay behavior. Offline front and oblique CPU projections were inspected. Actual WebGL appearance and mobile frame rate still require real-device verification.
