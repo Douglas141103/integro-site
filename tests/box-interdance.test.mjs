@@ -30,7 +30,7 @@ test('original synthesizer produces finite stereo audio and supports cancellatio
   assert(wave.left.length>=song.duration*8000);assert.equal(wave.left.length,wave.right.length);assert(wave.left.some(n=>n!==0));assert(wave.left.every(Number.isFinite));assert(wave.right.every(Number.isFinite));
   assert.equal(await synthesize(song,{sampleRate:8000,cancelled:()=>true}),null);
 });
-function setup(){
+function setup(options={}){
   const page=readFileSync(new URL('../integro-box/jogar.html',import.meta.url),'utf8'),dom=new JSDOM(page,{url:'https://example.test/integro-box/jogar.html',pretendToBeVisual:true}),w=dom.window;
   const gradient={addColorStop(){}},context=new Proxy({createLinearGradient:()=>gradient,createRadialGradient:()=>gradient,measureText:()=>({width:50})},{get:(obj,key)=>key in obj?obj[key]:()=>{}});
   w.HTMLCanvasElement.prototype.getContext=()=>context;w.HTMLElement.prototype.setPointerCapture=()=>{};
@@ -38,7 +38,7 @@ function setup(){
   let tick;globalThis.requestAnimationFrame=fn=>(tick=fn,1);globalThis.cancelAnimationFrame=()=>{};
   const data=new Map();const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};
   const audio={context:{state:'running'},running:false,offset:0,clock:0,setVolume(){},async unlock(){},async render(){return true;},play(offset=0){this.clock=offset;this.running=true;},position(){return this.clock;},pause(){this.offset=this.clock;this.running=false;},stop(){this.running=false;this.offset=0;},stopSource(){this.running=false;},dispose(){this.stop();},wav(){return null;}};
-  const game=createInterDance({storage,audio});
+  const game=createInterDance({storage,audio,...options});
   const click=selector=>{const button=w.document.querySelector(selector);assert(button,'missing '+selector);return button.onclick();};
   const press=(key,type='keydown',repeat=false)=>w.document.dispatchEvent(new w.KeyboardEvent(type,{key,repeat,bubbles:true,cancelable:true}));
   return {w,dom,game,audio,data,click,press,step:time=>{audio.clock=time;tick(1000+time*1000);},destroy(){game.hide();w.close();}};
@@ -70,4 +70,25 @@ test('solo remains playable after versus and saved progress uses only the provid
 });
 test('leaving during music preparation prevents a late start',async()=>{
   const t=setup();try{let complete;t.audio.render=()=>new Promise(resolve=>complete=resolve);t.game.show();await t.click('[data-stage="0"]');const pending=t.click('[data-action="versus"]');await new Promise(resolve=>setImmediate(resolve));t.game.hide();complete(true);await pending;assert.equal(t.game.active,false);assert.equal(t.audio.running,false);}finally{t.destroy();}
+});
+test('late 3D loading cannot revive a closed game and reopening releases its renderer',async()=>{
+  let complete,disposed=0,draws=0;
+  const painter=()=>({draw(){draws++;return true;},setOptions(){},dispose(){disposed++;}});
+  const t=setup({loadRenderer:()=>new Promise(resolve=>complete=resolve)});
+  try{
+    t.game.show();assert.equal(t.game.getState().graphics,'loading');t.game.hide();complete(painter());await new Promise(r=>setImmediate(r));
+    assert.equal(disposed,1);assert.equal(draws,0);assert.equal(t.game.active,false);
+    t.game.show();complete(painter());await new Promise(r=>setImmediate(r));assert.equal(t.game.getState().graphics,'anime');assert(draws>0);
+    t.game.hide();assert.equal(disposed,2);
+  }finally{t.destroy();}
+});
+test('3D failure falls back to the illustrated game without stopping timing, scores or versus',async()=>{
+  let unavailable;
+  const t=setup({loadRenderer:async options=>{unavailable=options.onUnavailable;return {draw:()=>true,setOptions(){},dispose(){}};}});
+  try{
+    t.game.show();await new Promise(r=>setImmediate(r));await t.click('[data-stage="0"]');await t.click('[data-action="versus"]');
+    unavailable();assert.equal(t.game.getState().graphics,'compatibility');assert.equal(t.audio.running,true);
+    const note=generateSong(stages[0]).notes[0];t.step(note.time);t.press(keys[note.lane]);t.press(arrows[note.lane]);
+    assert.deepEqual(t.game.getState().players.map(p=>p.score),[1000,1000]);
+  }finally{t.destroy();}
 });

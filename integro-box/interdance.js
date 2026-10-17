@@ -1,4 +1,67 @@
+// integro-box/interdance-src/anime-stage.mjs
+function drawAnimeStage(ctx, width, height, stage, beat = 0) {
+  const night = ["city", "arcade", "space", "aurora", "festival", "station", "volcano"].includes(stage.theme);
+  const floor = height * 0.77;
+  ctx.save();
+  ctx.fillStyle = night ? "#fff3d30d" : "#2632570b";
+  for (let x = 10; x < width; x += 21) for (let y = 85; y < height * 0.54; y += 21) if (x < width * 0.16 || x > width * 0.84) {
+    ctx.beginPath();
+    ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 0.14;
+  ctx.fillStyle = stage.accent;
+  for (const side of [-1, 1]) {
+    const start = width * (side < 0 ? 0.08 : 0.92), drift = Math.sin(beat * Math.PI / 16) * width * 0.035;
+    ctx.beginPath();
+    ctx.moveTo(start, 66);
+    ctx.lineTo(width * 0.5 + side * width * 0.28 + drift, floor);
+    ctx.lineTo(width * 0.5 + side * width * 0.08 + drift, floor);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = night ? "#252841" : "#51667b";
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.91);
+  ctx.lineTo(width * 0.28, floor);
+  ctx.lineTo(width * 0.72, floor);
+  ctx.lineTo(width, height * 0.91);
+  ctx.lineTo(width, height);
+  ctx.lineTo(0, height);
+  ctx.fill();
+  ctx.strokeStyle = stage.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.91);
+  ctx.lineTo(width * 0.28, floor);
+  ctx.lineTo(width * 0.72, floor);
+  ctx.lineTo(width, height * 0.91);
+  ctx.stroke();
+  ctx.strokeStyle = "#ffffff16";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 7; i++) {
+    ctx.beginPath();
+    ctx.moveTo(width * 0.5 + (i - 3) * width * 0.06, floor + 2);
+    ctx.lineTo(width * 0.5 + (i - 3) * width * 0.22, height);
+    ctx.stroke();
+  }
+  for (const x of [0.2, 0.8]) {
+    ctx.fillStyle = stage.color + "38";
+    ctx.strokeStyle = stage.accent + "a0";
+    ctx.beginPath();
+    ctx.ellipse(width * x, height * 0.83, width * 0.085, height * 0.018, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // integro-box/interdance-src/engine.mjs
+var characterPainter = null;
+function setCharacterPainter(painter) {
+  characterPainter = painter;
+}
 var laneColors = ["#be8cff", "#69deee", "#b3ee70", "#ff8fae"];
 var $k = [["Primeiro passo", "P\xE1tio da escola", "Lia", 88, 60, "major", "school", "#ffd97b", "#7ba4e5", "cap", [0, 2, 4, 2, 1, 3, 2, 0], [0, 3, 4, 0], "pop"], ["Rua de neon", "Centro da cidade", "Nico", 94, 62, "minor", "city", "#84f4df", "#bb80f0", "phones", [0, 3, 2, 5, 4, 2, 1, 0], [0, 5, 3, 4], "electro"], ["Brisa em sincopa", "Praia dourada", "Sol", 98, 65, "major", "beach", "#ffc581", "#69c4dc", "flower", [4, 2, 0, 1, 2, 4, 5, 2], [0, 4, 3, 0], "tropical"], ["Circuito azul", "Oficina dos rob\xF4s", "Bit", 104, 57, "dorian", "lab", "#7bf6ed", "#6a88cc", "robot", [0, 0, 4, 6, 3, 4, 1, 2], [0, 3, 0, 4], "electro"], ["Ra\xEDzes do som", "Floresta encantada", "Iara", 106, 64, "minor", "forest", "#b1ef9c", "#4fa392", "leaf", [0, 2, 3, 5, 3, 2, 6, 4], [0, 5, 2, 4], "forest"], ["Roda de cores", "Feira dos brinquedos", "T\xE9o", 110, 67, "major", "fair", "#f8c488", "#d886ad", "cap", [2, 4, 5, 4, 2, 0, 1, 3], [0, 3, 1, 4], "funk"], ["Capivara groove", "Margem do rio", "Capi DJ", 112, 60, "pent", "river", "#dcc48d", "#71c0ab", "capybara", [0, 1, 3, 2, 4, 3, 1, 0], [0, 2, 3, 0], "tropical"], ["Fagulha", "Palco do vulc\xE3o", "Brasa", 116, 59, "minor", "volcano", "#ffb177", "#be636d", "flame", [0, 4, 3, 2, 6, 5, 3, 1], [0, 5, 3, 4], "rock"], ["Cristal em movimento", "Lago congelado", "\xCDris", 120, 66, "major", "ice", "#a6e6ff", "#9f99e5", "crown", [4, 6, 5, 2, 3, 1, 2, 0], [0, 4, 1, 3], "crystal"], ["Onda retr\xF4", "Fliperama espacial", "Pixel", 124, 61, "dorian", "arcade", "#df9cff", "#7973ba", "robot", [0, 2, 5, 6, 4, 1, 3, 2], [0, 3, 4, 2], "chip"], ["Jardim suspenso", "Estufa nas nuvens", "Flora", 128, 69, "pent", "garden", "#d1f29b", "#cf89aa", "flower", [2, 3, 1, 4, 0, 2, 4, 3], [0, 2, 3, 1], "forest"], ["Expresso da batida", "Esta\xE7\xE3o lunar", "Tril", 132, 63, "minor", "station", "#ffe095", "#8e97c3", "visor", [0, 3, 4, 1, 5, 2, 6, 4], [0, 5, 3, 2], "funk"], ["\xD3rbita lil\xE1s", "Observat\xF3rio", "Luna", 136, 68, "minor", "space", "#d6b7ff", "#7b83c9", "star", [0, 4, 2, 6, 3, 5, 1, 4], [0, 3, 5, 4], "electro"], ["Chuva de confete", "Carnaval de estrelas", "Mika", 140, 65, "major", "carnival", "#ffc89f", "#df86bb", "feather", [4, 2, 5, 3, 6, 4, 1, 2], [0, 3, 4, 1], "tropical"], ["Aurora el\xE9trica", "Montanha da aurora", "Aurora", 146, 62, "dorian", "aurora", "#96f5e2", "#9b81d1", "crown", [0, 2, 6, 4, 5, 3, 1, 6], [0, 4, 3, 5], "crystal"], ["Todo mundo dan\xE7a", "Festival Integro", "Maestro Box", 152, 60, "major", "festival", "#f5df92", "#c18ae8", "box", [0, 4, 2, 5, 3, 6, 4, 0], [0, 3, 5, 4], "finale"]];
 var stages = $k.map((E, A) => ({ id: A, week: A + 1, title: E[0], place: E[1], artist: E[2], bpm: 140 + A * 4, key: E[4], scale: E[5], theme: E[6], accent: E[7], color: E[8], look: E[9], motif: E[10], chords: E[11], groove: E[12], bars: A < 8 ? 32 : 40, skin: ["#c58c6c", "#f2cda3", "#9c6954", "#deb084"][A % 4], hair: ["#493e52", "#322d44", "#865742", "#413e59"][A % 4] }));
@@ -241,6 +304,7 @@ function VQ(E, A, g, B, I = "#ffffff99") {
   E.save(), E.translate(A, g), E.scale(B, B), E.beginPath(), E.moveTo(-32, 10), E.bezierCurveTo(-45, -2, -25, -18, -14, -9), E.bezierCurveTo(-15, -32, 20, -32, 24, -10), E.bezierCurveTo(50, -15, 50, 14, 28, 15), E.lineTo(-25, 15), E.closePath(), hB(E, I, null), E.restore();
 }
 function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false) {
+  if (characterPainter?.draw(E, A, g, B, I, C, Q, M)) return;
   E.save(), I.monochrome && (E.filter = "grayscale(" + I.monochrome + ")"), E.translate(A, g);
   let Y = B / 104;
   E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
@@ -268,6 +332,10 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false) {
   E.restore();
 }
 function drawBackground(E, A, g, B, I = 0) {
+  drawIllustratedBackground(E, A, g, B, I);
+  drawAnimeStage(E, A, g, B, I);
+}
+function drawIllustratedBackground(E, A, g, B, I = 0) {
   let C = B.theme, Q = ["city", "arcade", "space", "aurora", "festival", "station", "volcano"].includes(C), M = g * 0.77, Y = E.createLinearGradient(0, 0, 0, g);
   if (Y.addColorStop(0, Q ? "#252342" : C === "ice" ? "#a9d9ef" : "#b4dced"), Y.addColorStop(1, Q ? "#695275" : C === "volcano" ? "#eaaa8a" : "#f9e8d0"), E.fillStyle = Y, E.fillRect(0, 0, A, g), E.lineJoin = "round", E.lineCap = "round", Q) for (let G = 0; G < 28; G++) {
     let D = (G * 137 + 41) % A, i = (G * 57 + 17) % (g * 0.52);
@@ -330,9 +398,9 @@ function drawArrow(E, A, g, B, I, C, Q = 1) {
 }
 function drawSolo(E, A, g, B, I, C, Q, M = false, Y = false) {
   let w = C / (60 / B.bpm), G = phaseEffects(B, C, Y), D = M ? { person: B, mono: 0 } : eJ(B, C, Y);
-  drawBackground(E, A, g, B, w);
+  drawBackground(E, A, g, B, Y ? 0 : w);
   let i = A < g, s = M ? Math.min(g * 0.52, A * 0.35) : i ? Math.min(g * 0.16, A * 0.28) : Math.min(g * 0.42, A * 0.23), k = i && !M ? 132 : g * 0.81 - s, e = I?.song.opponent.findLast((K) => K.time <= C && K.time > C - 0.22), h = I && C - I.last.at < 0.17 ? I.last.lane : -1;
-  if (drawCharacter(E, A * (i ? 0.22 : 0.2), k, s, D.person, Y ? 0 : w, e?.lane ?? -1), drawCharacter(E, A * (i ? 0.78 : 0.8), k, s, Q, Y ? 0 : w, h, true), M) return;
+  if (drawCharacter(E, A * (i ? 0.22 : 0.2), k, s, D.person, Y ? 0 : w, e?.lane ?? -1), drawCharacter(E, A * (i ? 0.78 : 0.8), k, s, { ...Q, bpm: B.bpm }, Y ? 0 : w, h, true), M) return;
   E.textAlign = "center", E.font = "800 " + (i ? 10 : 12) + "px system-ui";
   let J = A * (i ? 0.22 : 0.2), c = k + s + 16;
   kg(E, J - (i ? 58 : 76), c - 13, i ? 116 : 152, 22, 11, D.mono > 0.8 ? "#343b46" : "#594977"), E.fillStyle = "#fff4da", E.fillText((D.mono > 0.8 ? "P&B \xB7 " : "CHEFE \xB7 ") + B.artist, J, c + 2);
@@ -365,6 +433,22 @@ var avatars = [{ artist: "Duda", skin: "#d7a57e", hair: "#3a334d", color: "#8fc5
 var escapeHTML = (E) => String(E).replace(/[&<>"']/g, (A) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[A]);
 var formatTime = (E) => Math.floor(Math.max(0, E) / 60) + ":" + String(Math.floor(Math.max(0, E) % 60)).padStart(2, "0");
 
+// integro-box/interdance-src/anime-motion.mjs
+function versusLayout(width, height) {
+  const portrait = width <= 600 && height > width, short = height < 500;
+  const characterSize = portrait ? Math.min(100, width * 0.23, Math.max(36, (height - 420) * 0.35)) : Math.min(height * 0.34, width * 0.15);
+  const top = portrait ? Math.max(124 + characterSize * 1.04 + 28, Math.min(252, height * 0.42)) : short ? 128 : 164;
+  return {
+    portrait,
+    top,
+    bottom: height - (portrait ? 169 : 109),
+    characterSize,
+    characterY: portrait ? 124 : height * 0.47,
+    boardWidth: portrait ? width / 2 - 24 : Math.min(width * 0.32, 270, width / 2 - characterSize * 0.92 - 24),
+    characterX: (player) => portrait ? width * (player ? 0.75 : 0.25) : width * (player ? 0.93 : 0.07)
+  };
+}
+
 // integro-box/interdance-src/versus.mjs
 function createVersusRuns(song) {
   return [new RhythmRun(song, true), new RhythmRun(song, true)];
@@ -380,18 +464,16 @@ function keyLane(key, versus) {
   return key in lanes ? lanes[key] + (versus && key.startsWith("arrow") ? 4 : 0) : null;
 }
 function drawVersus(ctx, width, height, stage, runs, time, reduced) {
-  const portrait = width <= 600 && height > width;
-  const top = height < 500 ? 132 : 164;
-  const bottom = height - (portrait ? 169 : 109);
-  const half = width / 2, boardWidth = Math.min(half - 24, 350), laneWidth = boardWidth / 4;
+  const layout = versusLayout(width, height), { portrait, top, bottom, boardWidth } = layout;
+  const half = width / 2, laneWidth = boardWidth / 4;
   const speed = Math.max(50, (bottom - top) / 1.65);
   const effects = phaseEffects(stage, time, reduced);
-  drawBackground(ctx, width, height, stage, time / (60 / stage.bpm));
+  drawBackground(ctx, width, height, stage, reduced ? 0 : time / (60 / stage.bpm));
   runs.forEach((run, player) => {
-    const center = half * (player + 0.5), left = center - boardWidth / 2;
+    const center = portrait ? half * (player + 0.5) : width * (player ? 0.68 : 0.32), left = center - boardWidth / 2;
     ctx.save();
-    ctx.globalAlpha = 0.8;
-    drawCharacter(ctx, center, Math.max(top, height * 0.48), Math.min(half * 0.55, height * 0.36), avatars[player], reduced ? 0 : time / run.song.beat, time - run.last.at < 0.2 ? run.last.lane : -1, player === 1);
+    ctx.globalAlpha = 1;
+    drawCharacter(ctx, layout.characterX(player), layout.characterY, layout.characterSize, { ...avatars[player], bpm: stage.bpm }, reduced ? 0 : time / run.song.beat, time - run.last.at < 0.2 ? run.last.lane : -1, player === 1);
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#15223ce8";
     ctx.fillRect(left - 5, top - 24, boardWidth + 10, bottom - top + 35);
@@ -439,7 +521,12 @@ function drawVersus(ctx, width, height, stage, runs, time, reduced) {
 }
 
 // integro-box/interdance-src/app.mjs
-function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio() } = {}) {
+async function loadAnimeRenderer(options) {
+  if (!globalThis.WebGL2RenderingContext) return null;
+  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-anime1");
+  return createAnimePainter(options);
+}
+function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {
   if (!storage) throw new Error("Entre com a conta da fam\xEDlia para jogar.");
   const $ = (id) => document.getElementById(id), app = $("danceApp"), canvas = $("danceCanvas"), ctx = canvas.getContext("2d"), sheet = $("danceSheet");
   const pads = [...$("dancePads").querySelectorAll("[data-dance-lane]")];
@@ -457,6 +544,36 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
   audio.setVolume(progress.volume);
   let active = false, view = "home", stage = stages[0], song = null, runs = [], match = "solo", preferredMatch = "solo", avatar = 0;
   let frameId = 0, width = 960, height = 540, generation = 0, finished = false, returnView = "home", toastUntil = 0;
+  let graphics = null, visualGeneration = 0;
+  function graphicsUnavailable() {
+    setCharacterPainter(null);
+    app.dataset.graphics = "compatibility";
+    if (active) toast("Modo leve ativado. A m\xFAsica e os comandos continuam normalmente.");
+  }
+  async function prepareGraphics() {
+    const token = ++visualGeneration;
+    app.dataset.graphics = "loading";
+    try {
+      const painter = await loadRenderer({ onUnavailable: () => {
+        if (active && token === visualGeneration) graphicsUnavailable();
+      } });
+      if (!active || token !== visualGeneration) {
+        painter?.dispose();
+        return;
+      }
+      if (!painter) {
+        app.dataset.graphics = "compatibility";
+        return;
+      }
+      graphics = painter;
+      graphics.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
+      setCharacterPainter(graphics);
+      app.dataset.graphics = "anime";
+      artwork();
+    } catch {
+      if (active && token === visualGeneration) graphicsUnavailable();
+    }
+  }
   const keyboard = /* @__PURE__ */ new Map(), pointers = /* @__PURE__ */ new Map(), pressed = new Array(8).fill(0);
   function persist() {
     try {
@@ -497,6 +614,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     app.classList.toggle("dance-versus", match === "versus");
   }
   function artwork() {
+    graphics?.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
     sheet.querySelectorAll("[data-stage-art]").forEach((c) => {
       const s = stages[+c.dataset.stageArt];
       c.width = 320;
@@ -527,7 +645,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     hud();
     $("danceTrack").innerHTML = "<b>Festival de ritmo</b><small>16 semanas \xB7 solo e versus</small>";
     const complete = stages.filter((s) => progress.best[`${s.id}-${progress.mode}-remix`]?.stars).length;
-    overlay("home", `<div class="dance-home-layout"><div class="dance-home-intro"><div class="dance-eyebrow">INTEGRO BOX APRESENTA</div><div class="dance-logo"><span>INTER</span>DANCE</div><canvas id="danceHero" class="dance-hero-art"></canvas><p>Escute. Sinta a batida. Acerte as setas.<br>16 semanas, 16 chefes e um palco para dois!</p><div class="dance-mode" aria-label="Modo de jogo">${["solo", "versus"].map((mode) => `<button data-match="${mode}" aria-pressed="${preferredMatch === mode}" class="${preferredMatch === mode ? "selected" : ""}">${mode === "solo" ? "Solo" : "Versus \xB7 2 jogadores"}</button>`).join("")}</div><p>${preferredMatch === "versus" ? "Duas pessoas no mesmo aparelho. Jogador 1 no WASD; jogador 2 nas setas. No celular, cada um tem seus bot\xF5es." : "Enfrente cada chefe no seu ritmo. Use WASD, setas ou os bot\xF5es na tela."}</p><div class="dance-mode" aria-label="Dificuldade">${["easy", "normal"].map((mode) => `<button data-mode="${mode}" aria-pressed="${progress.mode === mode}" class="${progress.mode === mode ? "selected" : ""}">${mode === "easy" ? "Aprender" : "Desafio"}</button>`).join("")}</div><label class="dance-avatar">Artista no solo <select id="danceAvatar"><option value="0" ${avatar === 0 ? "selected" : ""}>Duda</option><option value="1" ${avatar === 1 ? "selected" : ""}>Ravi</option></select></label><p class="dance-small">Aprender tem menos setas e mais tempo para acertar. ${saved ? "Recordes solo salvos neste navegador, separados por conta." : "Salvamento indispon\xEDvel nesta sess\xE3o."}</p><div class="dance-buttons">${button("settings", "Som e ajuda")}</div></div><div><div class="dance-stage-heading"><h2>Escolha sua semana</h2><span>${complete}/16 conclu\xEDdas no solo</span></div><div class="dance-stages">${stages.map((s) => {
+    overlay("home", `<div class="dance-home-layout"><div class="dance-home-intro"><div class="dance-eyebrow">INTEGRO BOX APRESENTA</div><div class="dance-logo"><span>INTER</span>DANCE</div><canvas id="danceHero" class="dance-hero-art"></canvas><p>Escute. Sinta a batida. Acerte as setas.<br>16 chefes, estilo anime e um palco para dois!</p><div class="dance-mode" aria-label="Modo de jogo">${["solo", "versus"].map((mode) => `<button data-match="${mode}" aria-pressed="${preferredMatch === mode}" class="${preferredMatch === mode ? "selected" : ""}">${mode === "solo" ? "Solo" : "Versus \xB7 2 jogadores"}</button>`).join("")}</div><p>${preferredMatch === "versus" ? "Duas pessoas no mesmo aparelho. Jogador 1 no WASD; jogador 2 nas setas. No celular, cada um tem seus bot\xF5es." : "Enfrente cada chefe no seu ritmo. Use WASD, setas ou os bot\xF5es na tela."}</p><div class="dance-mode" aria-label="Dificuldade">${["easy", "normal"].map((mode) => `<button data-mode="${mode}" aria-pressed="${progress.mode === mode}" class="${progress.mode === mode ? "selected" : ""}">${mode === "easy" ? "Aprender" : "Desafio"}</button>`).join("")}</div><label class="dance-avatar">Seu artista <select id="danceAvatar"><option value="0" ${avatar === 0 ? "selected" : ""}>Duda</option><option value="1" ${avatar === 1 ? "selected" : ""}>Ravi</option></select></label><p class="dance-small">Aprender tem menos setas e mais tempo para acertar. ${saved ? "Recordes solo salvos neste navegador, separados por conta." : "Salvamento indispon\xEDvel nesta sess\xE3o."}</p><div class="dance-buttons">${button("settings", "Som e ajuda")}</div></div><div><div class="dance-stage-heading"><h2>Escolha sua semana</h2><span>${complete}/16 conclu\xEDdas no solo</span></div><div class="dance-stages">${stages.map((s) => {
       const best = progress.best[`${s.id}-${progress.mode}-remix`];
       return `<button class="dance-stage" data-stage="${s.id}"><canvas data-stage-art="${s.id}" aria-hidden="true"></canvas><span class="num">${String(s.week).padStart(2, "0")}</span><span class="title"><small>SEMANA ${s.week}</small>${s.title}</span><span class="meta">Chefe ${s.artist} \xB7 ${s.bpm} BPM<br><span class="stars">${"\u2605".repeat(best?.stars || 0) + "\u2606".repeat(3 - (best?.stars || 0))}</span> ${best ? Math.round(best.accuracy) + "%" : ""}</span></button>`;
     }).join("")}</div></div></div>`);
@@ -614,7 +732,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     if (view === "playing") pause();
     if (view === "listen") audio.pause();
     returnView = view === "paused" ? "paused" : ["detail", "listen"].includes(view) ? "detail" : "home";
-    overlay("settings", `<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects ? "" : "selected"}>Completos \u2014 tremor e trocas</option><option value="reduced" ${progress.reducedEffects ? "selected" : ""}>Reduzidos \u2014 setas est\xE1veis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume * 100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume * 100}"></label><label>Ajuste de sincroniza\xE7\xE3o <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se voc\xEA ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D \xB7 jogador 2: \u2190 \u2193 \u2191 \u2192. No celular, cada jogador tem quatro bot\xF5es. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>\u2605 55% \xB7 \u2605\u2605 75% \xB7 \u2605\u2605\u2605 92%. Treino e versus n\xE3o alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button("backSettings", "Pronto", true)}${button("fullscreen", "Tela cheia")}</div></div>`);
+    overlay("settings", `<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects ? "" : "selected"}>Completos \u2014 poses anime e efeitos</option><option value="reduced" ${progress.reducedEffects ? "selected" : ""}>Reduzidos \u2014 poses e setas est\xE1veis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume * 100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume * 100}"></label><label>Ajuste de sincroniza\xE7\xE3o <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se voc\xEA ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D \xB7 jogador 2: \u2190 \u2193 \u2191 \u2192. No celular, cada jogador tem quatro bot\xF5es. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>\u2605 55% \xB7 \u2605\u2605 75% \xB7 \u2605\u2605\u2605 92%. Treino e versus n\xE3o alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button("backSettings", "Pronto", true)}${button("fullscreen", "Tela cheia")}</div></div>`);
   }
   function finish() {
     if (finished) return;
@@ -803,6 +921,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
       }
       if (runs.every((run) => run.status !== "playing")) finish();
     }
+    graphics?.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
     const playing = ["playing", "paused"].includes(view);
     if (match === "versus" && playing) drawVersus(ctx, width, height, stage, runs, position, progress.reducedEffects);
     else drawSolo(ctx, width, height, stage, runs[0], position, avatars[avatar], !playing, progress.reducedEffects);
@@ -812,6 +931,10 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     if (!active) return;
     active = false;
     generation++;
+    visualGeneration++;
+    setCharacterPainter(null);
+    graphics?.dispose();
+    graphics = null;
     cancelAnimationFrame(frameId);
     clearInputs();
     audio.dispose();
@@ -828,10 +951,11 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     document.body.classList.add("dance-playing");
     resize();
     home();
+    void prepareGraphics();
     frameId = requestAnimationFrame(frame);
   }, hide, pause, persist, get active() {
     return active;
-  }, getState: () => ({ active, view, stage: stage.id, week: stage.week, mode: progress.mode, match, time: runs[0]?.time || 0, players: runs.map((run) => run.result()), winner: finished && match === "versus" ? versusWinner(runs) : null, progress: JSON.parse(JSON.stringify(progress)), audioRunning: audio.running }) };
+  }, getState: () => ({ active, view, graphics: app.dataset.graphics || "compatibility", stage: stage.id, week: stage.week, mode: progress.mode, match, time: runs[0]?.time || 0, players: runs.map((run) => run.result()), winner: finished && match === "versus" ? versusWinner(runs) : null, progress: JSON.parse(JSON.stringify(progress)), audioRunning: audio.running }) };
   return api;
 }
 function installInterDance() {

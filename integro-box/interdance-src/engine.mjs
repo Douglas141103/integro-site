@@ -1,3 +1,6 @@
+import {drawAnimeStage} from './anime-stage.mjs';
+let characterPainter=null;
+export function setCharacterPainter(painter){characterPainter=painter;}
 // InterDance music, cartoon artwork and solo engine imported from Integro_Box_Atualizado.html.
   var laneColors = ["#be8cff", "#69deee", "#b3ee70", "#ff8fae"], $k = [["Primeiro passo", "P\xE1tio da escola", "Lia", 88, 60, "major", "school", "#ffd97b", "#7ba4e5", "cap", [0, 2, 4, 2, 1, 3, 2, 0], [0, 3, 4, 0], "pop"], ["Rua de neon", "Centro da cidade", "Nico", 94, 62, "minor", "city", "#84f4df", "#bb80f0", "phones", [0, 3, 2, 5, 4, 2, 1, 0], [0, 5, 3, 4], "electro"], ["Brisa em sincopa", "Praia dourada", "Sol", 98, 65, "major", "beach", "#ffc581", "#69c4dc", "flower", [4, 2, 0, 1, 2, 4, 5, 2], [0, 4, 3, 0], "tropical"], ["Circuito azul", "Oficina dos rob\xF4s", "Bit", 104, 57, "dorian", "lab", "#7bf6ed", "#6a88cc", "robot", [0, 0, 4, 6, 3, 4, 1, 2], [0, 3, 0, 4], "electro"], ["Ra\xEDzes do som", "Floresta encantada", "Iara", 106, 64, "minor", "forest", "#b1ef9c", "#4fa392", "leaf", [0, 2, 3, 5, 3, 2, 6, 4], [0, 5, 2, 4], "forest"], ["Roda de cores", "Feira dos brinquedos", "T\xE9o", 110, 67, "major", "fair", "#f8c488", "#d886ad", "cap", [2, 4, 5, 4, 2, 0, 1, 3], [0, 3, 1, 4], "funk"], ["Capivara groove", "Margem do rio", "Capi DJ", 112, 60, "pent", "river", "#dcc48d", "#71c0ab", "capybara", [0, 1, 3, 2, 4, 3, 1, 0], [0, 2, 3, 0], "tropical"], ["Fagulha", "Palco do vulc\xE3o", "Brasa", 116, 59, "minor", "volcano", "#ffb177", "#be636d", "flame", [0, 4, 3, 2, 6, 5, 3, 1], [0, 5, 3, 4], "rock"], ["Cristal em movimento", "Lago congelado", "\xCDris", 120, 66, "major", "ice", "#a6e6ff", "#9f99e5", "crown", [4, 6, 5, 2, 3, 1, 2, 0], [0, 4, 1, 3], "crystal"], ["Onda retr\xF4", "Fliperama espacial", "Pixel", 124, 61, "dorian", "arcade", "#df9cff", "#7973ba", "robot", [0, 2, 5, 6, 4, 1, 3, 2], [0, 3, 4, 2], "chip"], ["Jardim suspenso", "Estufa nas nuvens", "Flora", 128, 69, "pent", "garden", "#d1f29b", "#cf89aa", "flower", [2, 3, 1, 4, 0, 2, 4, 3], [0, 2, 3, 1], "forest"], ["Expresso da batida", "Esta\xE7\xE3o lunar", "Tril", 132, 63, "minor", "station", "#ffe095", "#8e97c3", "visor", [0, 3, 4, 1, 5, 2, 6, 4], [0, 5, 3, 2], "funk"], ["\xD3rbita lil\xE1s", "Observat\xF3rio", "Luna", 136, 68, "minor", "space", "#d6b7ff", "#7b83c9", "star", [0, 4, 2, 6, 3, 5, 1, 4], [0, 3, 5, 4], "electro"], ["Chuva de confete", "Carnaval de estrelas", "Mika", 140, 65, "major", "carnival", "#ffc89f", "#df86bb", "feather", [4, 2, 5, 3, 6, 4, 1, 2], [0, 3, 4, 1], "tropical"], ["Aurora el\xE9trica", "Montanha da aurora", "Aurora", 146, 62, "dorian", "aurora", "#96f5e2", "#9b81d1", "crown", [0, 2, 6, 4, 5, 3, 1, 6], [0, 4, 3, 5], "crystal"], ["Todo mundo dan\xE7a", "Festival Integro", "Maestro Box", 152, 60, "major", "festival", "#f5df92", "#c18ae8", "box", [0, 4, 2, 5, 3, 6, 4, 0], [0, 3, 5, 4], "finale"]], stages = $k.map((E, A) => ({ id: A, week: A + 1, title: E[0], place: E[1], artist: E[2], bpm: 140 + A * 4, key: E[4], scale: E[5], theme: E[6], accent: E[7], color: E[8], look: E[9], motif: E[10], chords: E[11], groove: E[12], bars: A < 8 ? 32 : 40, skin: ["#c58c6c", "#f2cda3", "#9c6954", "#deb084"][A % 4], hair: ["#493e52", "#322d44", "#865742", "#413e59"][A % 4] })), _k = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], pent: [0, 2, 4, 7, 9] }, lI = (E, A, g = 0) => {
     let B = _k[E.scale], I = (A % B.length + B.length) % B.length;
@@ -235,6 +238,7 @@
     E.save(), E.translate(A, g), E.scale(B, B), E.beginPath(), E.moveTo(-32, 10), E.bezierCurveTo(-45, -2, -25, -18, -14, -9), E.bezierCurveTo(-15, -32, 20, -32, 24, -10), E.bezierCurveTo(50, -15, 50, 14, 28, 15), E.lineTo(-25, 15), E.closePath(), hB(E, I, null), E.restore();
   }
   function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false) {
+    if(characterPainter?.draw(E,A,g,B,I,C,Q,M))return;
     E.save(), I.monochrome && (E.filter = "grayscale(" + I.monochrome + ")"), E.translate(A, g);
     let Y = B / 104;
     E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
@@ -261,7 +265,8 @@
     }
     E.restore();
   }
-  function drawBackground(E, A, g, B, I = 0) {
+  function drawBackground(E,A,g,B,I=0){drawIllustratedBackground(E,A,g,B,I);drawAnimeStage(E,A,g,B,I);}
+  function drawIllustratedBackground(E, A, g, B, I = 0) {
     let C = B.theme, Q = ["city", "arcade", "space", "aurora", "festival", "station", "volcano"].includes(C), M = g * 0.77, Y = E.createLinearGradient(0, 0, 0, g);
     if (Y.addColorStop(0, Q ? "#252342" : C === "ice" ? "#a9d9ef" : "#b4dced"), Y.addColorStop(1, Q ? "#695275" : C === "volcano" ? "#eaaa8a" : "#f9e8d0"), E.fillStyle = Y, E.fillRect(0, 0, A, g), E.lineJoin = "round", E.lineCap = "round", Q) for (let G = 0; G < 28; G++) {
       let D = (G * 137 + 41) % A, i = (G * 57 + 17) % (g * 0.52);
@@ -324,9 +329,9 @@
   }
   function drawSolo(E, A, g, B, I, C, Q, M = false, Y = false) {
     let w = C / (60 / B.bpm), G = phaseEffects(B, C, Y), D = M ? { person: B, mono: 0 } : eJ(B, C, Y);
-    drawBackground(E, A, g, B, w);
+    drawBackground(E, A, g, B, Y ? 0 : w);
     let i = A < g, s = M ? Math.min(g * 0.52, A * 0.35) : i ? Math.min(g * 0.16, A * 0.28) : Math.min(g * 0.42, A * 0.23), k = i && !M ? 132 : g * 0.81 - s, e = I?.song.opponent.findLast((K) => K.time <= C && K.time > C - 0.22), h = I && C - I.last.at < 0.17 ? I.last.lane : -1;
-    if (drawCharacter(E, A * (i ? 0.22 : 0.2), k, s, D.person, Y ? 0 : w, e?.lane ?? -1), drawCharacter(E, A * (i ? 0.78 : 0.8), k, s, Q, Y ? 0 : w, h, true), M) return;
+    if (drawCharacter(E, A * (i ? 0.22 : 0.2), k, s, D.person, Y ? 0 : w, e?.lane ?? -1), drawCharacter(E, A * (i ? 0.78 : 0.8), k, s, {...Q,bpm:B.bpm}, Y ? 0 : w, h, true), M) return;
     E.textAlign = "center", E.font = "800 " + (i ? 10 : 12) + "px system-ui";
     let J = A * (i ? 0.22 : 0.2), c = k + s + 16;
     kg(E, J - (i ? 58 : 76), c - 13, i ? 116 : 152, 22, 11, D.mono > 0.8 ? "#343b46" : "#594977"), E.fillStyle = "#fff4da", E.fillText((D.mono > 0.8 ? "P&B \xB7 " : "CHEFE \xB7 ") + B.artist, J, c + 2);
