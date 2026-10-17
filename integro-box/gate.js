@@ -16,6 +16,7 @@ function lock(){
  window.BoxRush?.stop();
  window.BoxBounce?.stop();
  window.BoxInterDance?.stop();
+ window.BoxRobot?.stop();
  window.BoxCraft?.stop?.();
  window.BoxEggCloud?.stop();
  window.BoxUsage?.stop();
@@ -33,7 +34,9 @@ try {
   mountPlayerProfile(user);
   const {startPresence}=await import('./presence.js?v=20261016-intgem1');
   if(!unloaded)startPresence(user);
-  await script('./classic-games.js?v=20261012-usage1');
+  await script('./classic-games.js?v=20261017-robot1');
+  await script('./robot-core.js?v=20261017-robot1');
+  await script('./robot-game.js?v=20261017-robot1');
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
@@ -52,7 +55,7 @@ try {
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261016-intgem1');startUsage();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261016-box-ui2');
+  if(!unloaded)await script('./catalog.js?v=20261017-robot1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-box-ui2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
