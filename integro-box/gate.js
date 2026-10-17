@@ -1,6 +1,6 @@
 import {supabase,requireFamily} from './access.js?v=20261016-intgem1';
 // Old game links must enter through the catalog before any game installer runs.
-const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft']);
+const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft','#blueworld','#blue-world']);
 if(gameAnchors.has(location.hash))history.replaceState(history.state,'',location.pathname+location.search);
 const message=document.getElementById('boxGateMessage');
 const gate=document.getElementById('boxGate');
@@ -17,6 +17,7 @@ function lock(){
  window.BoxBounce?.stop();
  window.BoxInterDance?.stop();
  window.BoxRobot?.stop();
+ window.BoxBlueWorld?.stop();
  window.BoxCraft?.stop?.();
  window.BoxEggCloud?.stop();
  window.BoxUsage?.stop();
@@ -53,9 +54,10 @@ try {
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
-  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261016-intgem1');startUsage();}
+  if(!unloaded){const {installBlueWorld}=await import('./blue-loader.js?v=20261017-blue1');installBlueWorld();}
+  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261017-blue1');startUsage();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261017-robot1');
+  if(!unloaded)await script('./catalog.js?v=20261017-blue1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-box-ui2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
