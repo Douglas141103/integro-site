@@ -6,7 +6,7 @@ Music, cartoon scenes and 16 solo stages imported from the user-supplied `Integr
 - `versus.mjs`: independent runs, player controls and winner.
 - `concert.mjs`: dark concert stage, fixed downward note lanes and one shared geometry contract for canvas targets and HTML touch pads.
 - `app.mjs`: menus, audio lifecycle, family-scoped storage and portal integration.
-- `anime-actor.mjs`: 21-bone characters, weighted sleeves/trousers, three-tone materials, edited face normals, inverted hulls and authored graphic textures.
+- `anime-actor.mjs`: 56-bone characters, articulated fingers, weighted jackets/sleeves/trousers, three-tone materials, edited face normals, inverted hulls and authored graphic textures.
 - `anime-motion.mjs`: continuous beat-driven motion with a 30 fps sprite cache and responsive versus layout, independent of the judgment/audio clock.
 - `anime-view.mjs`: lazy WebGL 2 renderer with one 384 × 448 transparent surface, four-character LRU cache, context-loss fallback and cleanup on exit.
 - `anime-stage.mjs`: legacy stage retained only for compatibility with the imported drawing engine.
@@ -48,3 +48,11 @@ The rig now includes a separate spine, neck, two clavicles and toe joints. Wrist
 `dance-kinematics.mjs` solves each leg against a stage-space foot target, keeping the supporting sole at the same floor height and preserving thigh/shin lengths while the pelvis moves. Swing feet return smoothly to planted positions. Rendering is cached at 30 fps; audio, scoring, charts, saves and input retain their existing timing. The 2D compatibility renderer also bends knees, elbows and wrists. Reduced motion freezes all secondary motion and reuses its cached sprite.
 
 Validation: 18 focused tests pass, including all 18 rigs at multiple animation phases, clipping bounds, foot contact and limb lengths over 1,800 poses, responsive layout, audio, solo/versus input, pauses, scoring, storage, rendering cleanup and fallback. Offline CPU projections of representative poses were inspected for geometry; these do not validate WebGL shaders or actual mobile frame rate. No browser QA was available in this session.
+
+## Full humanoid rig and choreography — 20261017-dance-rig56
+
+Each of the 18 characters now has exactly 56 functional bones: a root, hips, three spine segments, neck, head, jaw, two eyes, eight arm bones, eight leg/foot bones and thirty finger bones (three per finger). The finger geometry is merged into one skinned mesh per hand plus its outline. Jacket panels share the torso weights, so they follow the body wave without detaching. Every bone drives visible geometry; there are no padding bones. The microphone hand maintains a grip while the free hand alternates relaxed, curled and pointing gestures.
+
+Six original eight-count phrases form a 48-beat sequence: step-touch, diagonal reaches, front taps, body waves, alternating disco reaches and knee lifts. They follow the music tempo, ease between upper-body gestures and retain a planted supporting foot through each transition. Hit/hold accents layer over the choreography; the musical clock and judgment are unchanged. The 2D compatibility renderer shares the footwork/arm choreography and now shows simplified finger gestures. Reduced motion still freezes the pose.
+
+Validation covers all 56 bones driving geometry and articulating, all 18 characters, the existing 65,000-triangle limit, all six phrases, transition continuity, 7,215 IK poses at 100/140/200 BPM, and the existing audio/input/solo/versus/storage flows. Offline CPU projections check representative silhouettes and clothing deformation. Browser/WebGL lighting and mobile frame rate still require a real-device check; CPU projections do not verify those.

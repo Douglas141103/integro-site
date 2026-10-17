@@ -1,9 +1,12 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {animePose} from './anime-motion.mjs';
 import {createLegSolver} from './dance-kinematics.mjs';
 
 const INK=0x20243e, WHITE=0xfff5e6;
+export const FINGER_NAMES=Object.freeze(['thumb','index','middle','ring','little']);
+const FINGER_LENGTHS=[[.045,.033,.027],[.05,.036,.029],[.055,.04,.032],[.05,.036,.029],[.04,.029,.024]];
 export function makeToonRamp() {
   const ramp=new T.DataTexture(new Uint8Array([80,80,80,255,164,164,164,255,255,255,255,255]),3,1,T.RGBAFormat);
   ramp.minFilter=ramp.magFilter=T.NearestFilter;ramp.generateMipmaps=false;ramp.needsUpdate=true;return ramp;
@@ -62,16 +65,27 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const skin=material('skin',person.skin||'#d2a082'),hair=material('hair',person.hair||'#302c47',hairTexture);
   const ink=material(null,INK),cream=material(null,WHITE),pants=material(null,0x34415f),eyeInk=material(null,INK,null,true),eyeWhite=material(null,WHITE,null,true),iris=material(null,0x715344,null,true);
   const bone=(name,parent,x=0,y=0,z=0)=>{const b=new T.Bone();b.name=name;b.position.set(x,y,z);parent.add(b);return b;};
-  const hips=bone('hips',rig,0,1.04,0),spine=bone('spine',hips,0,.18,0),chest=bone('chest',spine,0,.25,0);
-  const neck=bone('neck',chest,0,.36,0),head=bone('head',neck,0,.25,0);
+  const rootBone=bone('root',rig),hips=bone('hips',rootBone,0,1.04,0),spine=bone('spine',hips,0,.18,0),chest=bone('chest',spine,0,.25,0);
+  const upperChest=bone('upperChest',chest,0,.14,0),neck=bone('neck',upperChest,0,.22,0),head=bone('head',neck,0,.25,0);
   head.scale.setScalar(.83);
-  const bones={hips,spine,chest,neck,head};
+  const jaw=bone('jaw',head,0,-.13,0);
+  const bones={root:rootBone,hips,spine,chest,upperChest,neck,head,jaw};
+  for(const [side,sign] of [['L',-1],['R',1]])bones['eye'+side]=bone('eye'+side,head,sign*(person.look==='capybara'?.18:.13),.015,person.look==='capybara'?.285:person.look==='robot'?.29:.244);
   for(const [side,sign] of [['L',-1],['R',1]]) {
-    const clavicle=bone('clavicle'+side,chest,sign*.16,.14,0);
+    const clavicle=bone('clavicle'+side,upperChest,sign*.16,0,0);
     const shoulder=bone('shoulder'+side,clavicle,sign*.22,0,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
     const thigh=bone('thigh'+side,hips,sign*.17,-.02,0),knee=bone('knee'+side,thigh,0,-.41,0),foot=bone('foot'+side,knee,0,-.41,0);
     const toe=bone('toe'+side,foot,0,-.055,.18);
     Object.assign(bones,{['clavicle'+side]:clavicle,['toe'+side]:toe,['shoulder'+side]:shoulder,['elbow'+side]:elbow,['hand'+side]:hand,['thigh'+side]:thigh,['knee'+side]:knee,['foot'+side]:foot});
+    for(let f=0;f<FINGER_NAMES.length;f++){
+      let parent=hand;
+      for(let joint=0;joint<3;joint++){
+        const name=FINGER_NAMES[f]+side+(joint+1);
+        const b=bone(name,parent,joint?0:sign*[-.075,-.045,-.01,.027,.059][f],joint?-FINGER_LENGTHS[f][joint-1]:f===0?-.035:-.105,f===0&&!joint?.015:.025*(joint===0));
+        if(!joint&&f===0)b.rotation.z=-sign*.7;
+        bones[name]=b;parent=b;
+      }
+    }
   }
   rig.updateMatrixWorld(true);const skeleton=new T.Skeleton(Object.values(bones));
   const ball=(x,y,z)=>new T.SphereGeometry(1,20,14).scale(x,y,z);
@@ -85,27 +99,53 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));
     return mesh(parent,new T.TubeGeometry(curve,12,r,5,false),mat,0,0,0,false);
   };
+  const skinnedPart=(geometry,mat,name,outlined=true)=>{
+    resources.add(geometry);
+    for(const m of outlined?[mat,outline]:[mat]) {const part=new T.SkinnedMesh(geometry,m);part.name=m===outline?'skinned-inverted-hull':name;part.frustumCulled=false;rig.add(part);part.bind(skeleton);}
+  };
   // Continuous weighted sleeves and trousers bend across elbows/knees.
   function limb(upper,lower,length,radius,mat) {
     const geometry=new T.CylinderGeometry(radius*.92,radius*.76,length,12,12,false).translate(0,-length/2,0);
     const position=geometry.attributes.position,indices=[],weights=[],a=skeleton.bones.indexOf(bones[upper]),b=skeleton.bones.indexOf(bones[lower]);
     const joint=-bones[lower].position.y;
     for(let i=0;i<position.count;i++){const w=T.MathUtils.smoothstep(-position.getY(i),joint-.10,joint+.10);indices.push(a,b,0,0);weights.push(1-w,w,0,0);}
-    geometry.applyMatrix4(bones[upper].matrixWorld);geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));resources.add(geometry);
-    for(const m of [mat,outline]) {const skinned=new T.SkinnedMesh(geometry,m);skinned.name=m===outline?'skinned-inverted-hull':upper+' weighted cloth';skinned.frustumCulled=false;rig.add(skinned);skinned.bind(skeleton);}
+    geometry.applyMatrix4(bones[upper].matrixWorld);geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));
+    skinnedPart(geometry,mat,upper+' weighted cloth');
   }
-  mesh(chest,box(.67,.62,.38,.12),cloth,0,-.06,0);
-  mesh(chest,box(.28,.45,.035,.015),ink,0,-.015,.197,false);
-  for(const side of [-1,1]){const panel=mesh(chest,box(.12,.42,.045,.025),cream,side*.22,.005,.20,false);panel.rotation.z=side*-.14;}
-  mesh(chest,box(.10,.065,.045,.008),accent,-.24,.11,.23,false);
+  // The jacket follows three spine segments instead of rotating as one block.
+  function jacketPart(geometry,mat,name,outlined=true){
+    const indices=[],weights=[];
+    for(let i=0;i<geometry.attributes.position.count;i++){
+      const y=geometry.attributes.position.getY(i),lower=y<-.1;
+      const a=lower?spine:chest,b=lower?chest:upperChest;
+      const w=T.MathUtils.smoothstep(y,lower?-.33:-.1,lower?-.1:.16);
+      indices.push(skeleton.bones.indexOf(a),skeleton.bones.indexOf(b),0,0);weights.push(1-w,w,0,0);
+    }
+    geometry.applyMatrix4(chest.matrixWorld);geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));skinnedPart(geometry,mat,name,outlined);
+  }
+  jacketPart(box(.67,.62,.38,.12).translate(0,-.06,0),cloth,'articulated jacket');
+  jacketPart(box(.28,.45,.035,.015).translate(0,-.015,.211),ink,'jacket center',false);
+  for(const side of [-1,1])jacketPart(box(.12,.42,.045,.025).rotateZ(side*-.14).translate(side*.22,.005,.216),cream,'jacket panel',false);
+  jacketPart(box(.10,.065,.045,.008).translate(-.24,.11,.25),accent,'jacket badge',false);
   mesh(hips,box(.49,.23,.30),pants,0,0,0);
-  mesh(chest,new T.TorusGeometry(.18,.055,6,18),accent,0,.26,0).rotation.x=Math.PI/2;
-  mesh(chest,box(.65,.08,.39,.025),accent,0,-.34,0);
+  mesh(upperChest,new T.TorusGeometry(.18,.055,6,18),accent,0,.12,0).rotation.x=Math.PI/2;
+  mesh(spine,box(.65,.08,.39,.025),accent,0,-.09,0);
   for(const [side,sign] of [['L',-1],['R',1]]) {
     limb('shoulder'+side,'elbow'+side,.60,.145,cloth);limb('thigh'+side,'knee'+side,.82,.14,pants);
     ellipsoid(bones['shoulder'+side],cloth,0,0,0,.145,.13,.14);
-    ellipsoid(bones['hand'+side],skin,0,-.015,.025,.10,.12,.09);
+    ellipsoid(bones['hand'+side],skin,0,-.04,.025,.085,.085,.055);
     mesh(bones['hand'+side],box(.19,.055,.18,.02),accent,0,.07,0);
+    // Thirty finger bones deform visible geometry. Merge all fifteen segments
+    // per hand into one mesh (+ outline), keeping the draw-call cost constant.
+    const fingers=[];
+    for(let f=0;f<FINGER_NAMES.length;f++)for(let joint=0;joint<3;joint++){
+      const b=bones[FINGER_NAMES[f]+side+(joint+1)],length=FINGER_LENGTHS[f][joint],radius=(f===0?.021:f===4?.014:.017)*(1-joint*.1);
+      let geometry=new T.CapsuleGeometry(radius,Math.max(.005,length-2*radius),2,6).translate(0,-length/2,0);
+      geometry.applyMatrix4(b.matrixWorld);geometry=geometry.toNonIndexed();
+      const indices=[],weights=[];for(let i=0;i<geometry.attributes.position.count;i++){indices.push(skeleton.bones.indexOf(b),0,0,0);weights.push(1,0,0,0);}
+      geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));fingers.push(geometry);
+    }
+    skinnedPart(mergeGeometries(fingers),skin,'articulated fingers '+side);for(const geometry of fingers)geometry.dispose();
     mesh(bones['foot'+side],box(.28,.17,.29,.06),cream,0,-.06,.015);
     mesh(bones['foot'+side],box(.29,.045,.30,.015),ink,0,-.135,.015);
     mesh(bones['toe'+side],box(.28,.14,.18,.05),cream,0,-.005,.07);
@@ -132,7 +172,7 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   else for(const sign of [-1,1])ellipsoid(head,skin,sign*.32,-.025,0,.075,.10,.065);
   const eyes=[];
   for(const sign of [-1,1]) {
-    const e=new T.Group();e.position.set(sign*(capy?.18:.13),.015,capy?.285:robot?.29:.244);face.add(e);eyes.push(e);
+    const e=bones[sign<0?'eyeL':'eyeR'];eyes.push(e);
     ellipsoid(e,eyeWhite,0,0,0,.067,.079,.020,false);
     ellipsoid(e,robot?accent:iris,.008,-.013,.026,.038,.052,.009,false);
     ellipsoid(e,eyeInk,.01,-.005,.035,.019,.037,.008,false);
@@ -143,8 +183,8 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     if(!robot&&!carton){const blush=material(null,0xcd7d86,null,true);for(let j=0;j<2;j++)detail(head,[[sign*(.18+j*.035),-.13,.22],[sign*(.17+j*.035),-.16,.23]],blush,.008);}
   }
   if(!robot&&!carton){detail(head,[[.006,-.04,.278],[.027,-.075,.289],[.003,-.08,.282]],material(null,0xa46b66),.008);}
-  const smile=detail(head,[[-.062,-.18,.233],[0,-.20,.249],[.07,-.17,.233]],eyeInk,.012);
-  const mouth=ellipsoid(head,eyeInk,0,-.18,.25,.057,.057,.01,false);mouth.visible=false;
+  const smile=detail(jaw,[[-.062,-.05,.233],[0,-.07,.249],[.07,-.04,.233]],eyeInk,.012);
+  const mouth=ellipsoid(jaw,eyeInk,0,-.05,.25,.057,.057,.01,false);mouth.visible=false;
   ellipsoid(mouth,eyeWhite,0,.017,.012,.038,.012,.003,false);
   const hairGroup=new T.Group();head.add(hairGroup);
   if(!robot&&!carton&&!capy) {
@@ -195,10 +235,12 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     for(const key of Object.keys(target))if(typeof target[key]==='number'&&!['stamp','beat'].includes(key))
       p[key]=reset?target[key]:T.MathUtils.lerp(previous[key],target[key],blend);
     previous=p;lastTime=seconds;
+    rootBone.rotation.y=p.rootTurn;
     hips.position.set(p.hipX,p.hipY,p.hipZ);
     hips.rotation.set(0,p.hipTurn,p.hipRoll);
     spine.rotation.set(p.spineBend,0,p.spineRoll);
     chest.rotation.set(-p.spineBend*.35,p.chestTurn,p.chestRoll);
+    upperChest.rotation.set(p.upperBend,p.upperTurn,-p.chestRoll*.4);
     neck.rotation.set(p.headNod*.4,p.neckTurn,-p.chestRoll*.5);
     head.rotation.set(p.headNod,-p.chestTurn*.35,-p.spineRoll*.35);
     for(const [side,sign]of [['L',-1],['R',1]]){
@@ -207,11 +249,18 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
       bones['shoulder'+side].rotation.set(left?p.leftShoulder:p.rightShoulder,sign*.08,left?p.leftArm:p.rightArm);
       bones['elbow'+side].rotation.set(left?p.leftElbow:p.rightElbow,0,sign*.06);
       bones['hand'+side].rotation.set(-.08,sign*.12,left?p.leftWrist:p.rightWrist);
+      for(let f=0;f<FINGER_NAMES.length;f++)for(let joint=0;joint<3;joint++){
+        const b=bones[FINGER_NAMES[f]+side+(joint+1)];
+        const curl=left?p.leftCurl*(f===1?1-p.leftPoint*.92:1):p.rightCurl;
+        b.rotation.set(-curl*(f===0?.65:1)*(joint===0?.75:1),0,joint===0?(f===0?-sign*.7:sign*(f-2)*p.fingerSpread):0);
+      }
     }
     rig.updateWorldMatrix(true,true);
     for(const side of ['L','R'])solveLeg(side,p.feet[side]);
     hairGroup.rotation.z=p.hairLag;ornament.rotation.z=p.hairLag*.45;
-    for(const eye of eyes)eye.scale.y=p.blink?.12:1;mouth.visible=p.singing;smile.visible=!p.singing;
+    jaw.rotation.x=p.jawOpen;
+    for(const eye of eyes){eye.scale.y=p.blink?.12:1;eye.rotation.y=p.eyeLook;}
+    mouth.visible=p.singing;smile.visible=!p.singing;
     root.updateMatrixWorld(true);skeleton.update();return p;
   }
   pose(0,140,-1,true);

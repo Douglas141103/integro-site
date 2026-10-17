@@ -12,53 +12,152 @@ function danceAccent(seconds, lane, cue = {}) {
   const duration = Math.max(0.32, Number(cue.duration) || 0);
   return smooth(age / 0.085) * (1 - smooth((age - duration) / 0.28));
 }
+var DANCE_ROUTINES = Object.freeze(["step-touch", "diagonal-reach", "front-tap", "body-wave", "disco-reach", "knee-lift"]);
+var STEPS = [
+  [0.13, 0.04, 0.105, -0.1],
+  [0.1, 0.19, 0.085, -0.13],
+  [0.025, 0.25, 0.055, -0.28],
+  [0.075, -0.025, 0.075, -0.08],
+  [0.12, 0.1, 0.09, -0.12],
+  [0.035, 0.11, 0.205, -0.2]
+];
+function phrasePose(index, beat) {
+  const swing = Math.sin(beat * Math.PI / 2), wave = Math.sin(beat * Math.PI);
+  const left = (1 + swing) / 2, right = 1 - left;
+  const p = {
+    armL: 0,
+    armR: 0,
+    shoulderL: 0,
+    shoulderR: 0,
+    elbowL: 0,
+    elbowR: 0,
+    torso: 0,
+    turn: 0,
+    roll: 0,
+    upper: 0,
+    wristL: 0,
+    wristR: 0,
+    curl: 0.2,
+    point: 0
+  };
+  switch (index) {
+    case 0:
+      p.armL = -0.12 * left;
+      p.armR = 0.12 * right;
+      p.turn = -0.06 * swing;
+      break;
+    case 1:
+      p.armL = -0.72 * left;
+      p.armR = 0.72 * right;
+      p.elbowL = 0.28 * left;
+      p.elbowR = 0.28 * right;
+      p.turn = 0.13 * swing;
+      p.roll = 0.055 * swing;
+      p.point = left;
+      break;
+    case 2:
+      p.shoulderL = -0.55 * right;
+      p.shoulderR = -0.55 * left;
+      p.elbowL = 0.3 * right;
+      p.elbowR = 0.3 * left;
+      p.curl = 0.7;
+      p.torso = 0.045;
+      break;
+    case 3:
+      p.armL = -0.3;
+      p.armR = 0.3;
+      p.elbowL = -0.22 * left;
+      p.elbowR = -0.22 * right;
+      p.torso = 0.13 * wave;
+      p.upper = 0.12 * Math.sin(beat * Math.PI - 0.9);
+      p.wristL = 0.24 * wave;
+      p.wristR = -0.24 * wave;
+      break;
+    case 4:
+      p.armL = -1.15 * left;
+      p.armR = 1.15 * right;
+      p.elbowL = 0.4 * left;
+      p.elbowR = 0.4 * right;
+      p.roll = 0.065 * swing;
+      p.turn = 0.1 * swing;
+      p.point = left;
+      p.wristL = -0.18 * left;
+      p.wristR = 0.18 * right;
+      break;
+    case 5:
+      p.shoulderL = -0.52 * right;
+      p.shoulderR = -0.52 * left;
+      p.elbowL = -0.22 * right;
+      p.elbowR = -0.22 * left;
+      p.curl = 0.58;
+      p.turn = -0.12 * swing;
+      break;
+  }
+  return p;
+}
 function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
   const stamp = reduced ? 0 : Math.max(0, seconds), beat = stamp * bpm / 60;
   const swing = Math.sin(beat * Math.PI / 2), pulse = (1 - Math.cos(beat * Math.PI * 2)) / 2;
+  const phrase = Math.floor(beat / 8) % DANCE_ROUTINES.length, phraseBeat = beat % 8;
+  const next = phrasePose(phrase, beat), prior = phrasePose((phrase + DANCE_ROUTINES.length - 1) % DANCE_ROUTINES.length, beat);
+  const mix = beat < 0.75 && phrase === 0 ? 1 : smooth(phraseBeat / 0.75), move = {};
+  for (const key of Object.keys(next)) move[key] = prior[key] + (next[key] - prior[key]) * mix;
   const accent = reduced ? 0 : danceAccent(stamp, lane, cue);
   const down = lane === 1 ? accent : 0, up = lane === 2 ? accent : 0;
   const side = lane === 0 ? -accent : lane === 3 ? accent : 0;
   const energy = reduced ? 0 : 1;
   const feet = {};
+  const [stepX, stepZ, stepHeight, stepPitch] = STEPS[phrase];
   for (const [name, sign, offset] of [["L", -1, 2], ["R", 1, 0]]) {
     const phase = ((beat - offset) % 4 + 4) % 4;
     const arc = phase < 1.5 ? Math.sin(Math.PI * phase / 1.5) ** 2 : 0;
     const lift = arc * energy;
     feet[name] = {
-      x: sign * (0.205 + 0.12 * lift),
-      y: 0.1775 + lift * (0.12 + 0.07 * up),
-      z: 0.045 + lift * 0.09,
+      x: sign * (0.205 + stepX * lift),
+      y: 0.1775 + lift * (stepHeight + 0.035 * up),
+      z: 0.045 + lift * stepZ,
       yaw: sign * (0.06 + lift * 0.13),
-      pitch: -0.12 * lift,
+      pitch: stepPitch * lift,
       toe: -0.22 * lift,
       lift
     };
   }
+  const support = feet.L.lift - feet.R.lift;
   return {
     stamp,
     beat,
     accent,
     feet,
-    hipX: -swing * 0.085 * energy + side * 0.045,
-    hipY: 0.965 - 0.052 * pulse * energy - 0.105 * down,
+    routine: DANCE_ROUTINES[phrase],
+    rootTurn: Math.sin(beat * Math.PI / 4) * 0.035 * energy,
+    hipX: (support * 0.095 - swing * 0.025) * energy + side * 0.035,
+    hipY: 0.95 - 0.048 * pulse * energy - 0.095 * down - Math.max(feet.L.lift, feet.R.lift) * 0.025,
     hipZ: -0.035 * down,
     hipRoll: swing * 0.065 * energy - side * 0.07,
     hipTurn: Math.sin(beat * Math.PI / 2 - 0.35) * 0.09 * energy,
-    spineBend: 0.05 + Math.sin(beat * Math.PI * 2 - 0.4) * 0.045 * energy + down * 0.15,
-    spineRoll: -swing * 0.055 * energy + side * 0.08,
-    chestTurn: -Math.sin(beat * Math.PI / 2 - 0.2) * 0.14 * energy + side * 0.16,
+    spineBend: 0.04 + (Math.sin(beat * Math.PI * 2 - 0.4) * 0.035 + move.torso) * energy + down * 0.13,
+    spineRoll: (-swing * 0.055 + move.roll) * energy + side * 0.06,
+    chestTurn: (-Math.sin(beat * Math.PI / 2 - 0.2) * 0.12 + move.turn) * energy + side * 0.13,
     chestRoll: -swing * 0.035 * energy,
+    upperBend: move.upper * energy,
+    upperTurn: Math.sin(beat * Math.PI / 2 - 0.65) * 0.065 * energy,
     neckTurn: Math.sin(beat * Math.PI / 2 - 0.45) * 0.06 * energy,
     headNod: Math.sin(beat * Math.PI * 2 - 0.55) * 0.045 * energy,
-    leftArm: -0.3 - swing * 0.25 * energy - Math.max(0, -side) * 0.66 - up * 1.38 - down * 0.16,
-    rightArm: 0.3 - swing * 0.25 * energy + Math.max(0, side) * 0.66 + up * 1.38 + down * 0.16,
-    leftShoulder: -0.16 - Math.max(0, swing) * 0.26 * energy - down * 0.3,
-    rightShoulder: -0.16 - Math.max(0, -swing) * 0.26 * energy - down * 0.3,
-    leftElbow: -0.55 - (0.5 + 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.55 * energy - up * 0.22,
-    rightElbow: -0.55 - (0.5 - 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.55 * energy - up * 0.22,
-    leftWrist: Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 * energy - up * 0.2,
-    rightWrist: -Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 * energy - up * 0.2,
-    clavicleLift: up * 0.18,
+    leftArm: clamp(-0.3 + (-swing * 0.2 + move.armL) * energy - Math.max(0, -side) * 0.55 - up * 1.2 - down * 0.16, -1.9, -0.08),
+    rightArm: clamp(0.3 + (-swing * 0.2 + move.armR) * energy + Math.max(0, side) * 0.55 + up * 1.2 + down * 0.16, 0.08, 1.9),
+    leftShoulder: -0.16 + (-Math.max(0, swing) * 0.2 + move.shoulderL) * energy - down * 0.22,
+    rightShoulder: -0.16 + (-Math.max(0, -swing) * 0.2 + move.shoulderR) * energy - down * 0.22,
+    leftElbow: -0.55 + (-(0.5 + 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.4 + move.elbowL) * energy - up * 0.15,
+    rightElbow: -0.55 + (-(0.5 - 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.4 + move.elbowR) * energy - up * 0.15,
+    leftWrist: (Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 + move.wristL) * energy - up * 0.15,
+    rightWrist: (-Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 + move.wristR) * energy - up * 0.15,
+    leftCurl: 0.22 + move.curl * 0.6 * energy,
+    rightCurl: 0.76 + Math.sin(beat * Math.PI / 2) * 0.045 * energy,
+    fingerSpread: (0.08 + 0.06 * Math.sin(beat * Math.PI / 2)) * energy,
+    leftPoint: Math.max(move.point * energy, up, Math.max(0, -side)),
+    eyeLook: Math.sin(beat * Math.PI / 4 - 0.3) * 0.065 * energy + side * 0.04,
+    jawOpen: (0.025 + 0.045 * pulse) * energy + accent * 0.075,
+    clavicleLift: up * 0.13 + Math.max(-move.armL, move.armR) * 0.055 * energy,
     hairLag: Math.sin(beat * Math.PI / 2 - 0.65) * 0.075 * energy,
     blink: !reduced && stamp % 4.7 > 4.54,
     singing: accent > 0.35
@@ -327,7 +426,14 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
     kg(E, -5, 0, 10, 13, 5, s, _A, 2);
     E.translate(0, 12);
     E.rotate(-(left ? pose.leftWrist : pose.rightWrist));
-    Ag(E, 0, 1, 5.5, 6, e ? "#b8895f" : D, _A, 2);
+    Ag(E, 0, 1, 4.5, 5, e ? "#b8895f" : D, _A, 1.6);
+    const curl = left ? pose.leftCurl : pose.rightCurl;
+    for (let finger = 0; finger < 4; finger++) {
+      const bend = left && finger === 0 ? curl * (1 - pose.leftPoint) : curl;
+      const x = (finger - 1.5) * 2.1, length = finger === 3 ? 4.3 : 5.6;
+      xg(E, [x, 4, x + sign * bend * 1.5, 4 + length * (1 - bend * 0.35), x + sign * bend * 2.5, 4 + length * (1 - bend * 0.6)], e ? "#b8895f" : D, 1.7);
+    }
+    xg(E, [-sign * 3, 0, -sign * 6, 2, -sign * 5, 4], e ? "#b8895f" : D, 2);
     if (!left) {
       kg(E, 3, -13, 4, 18, 2, "#4b607b", _A, 1.3);
       Ag(E, 5, -15, 6, 7, "#d6e5ea", _A, 1.6);
@@ -586,7 +692,7 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
 // integro-box/interdance-src/app.mjs
 async function loadAnimeRenderer(options) {
   if (!globalThis.WebGL2RenderingContext) return null;
-  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-rig1");
+  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-rig56");
   return createAnimePainter(options);
 }
 function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {
