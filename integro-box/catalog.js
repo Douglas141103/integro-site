@@ -16,11 +16,11 @@ const games=[
  ['rua-das-descobertas','Rua das Descobertas','#playStreetGame','Aventura','Procure objetos e resolva pequenas contas.'],
  ['torre-da-matematica','Torre da Matemática','[data-game="math"]','Desafios','Suba a torre com o poder dos números.'],
  ['ponte-das-palavras','Ponte das Palavras','[data-game="words"]','Desafios','Brinque com as letras e forme palavras.'],
- ['rota-do-robo','Rota do Robô','[data-game="robot"]','Desafios','Planeje o caminho e guie seu robô.'],
+ ['rota-do-robo','Rota do Robô','[data-game="robot"]','Desafios','Programe 12 missões pelo jardim, cânion e estação lunar.'],
  ['memoria-em-ingles','Memória em Inglês','[data-game="memory"]','Desafios','Encontre os pares e descubra palavras em inglês.']
 ].map(([id,name,selector,category,short])=>{const play=lobby.querySelector(selector);return {id,name,category,short,play,card:play?.closest('.card')};}).filter(g=>g.card);
 if(!games.length)return;
-const asset=id=>window.BoxCatalogAssets?.[id]||`./assets/catalog-v1/${id}.webp`;
+const asset=id=>window.BoxCatalogAssets?.[id]||(id==='rota-do-robo'?'./assets/robot-route.svg?v=20261017-robot1':`./assets/catalog-v1/${id}.webp`);
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;};
 const btn=(cls,label,fn)=>{const b=el('button',cls,label);b.type='button';b.addEventListener('click',fn);return b;};
 const read=k=>{try{const a=JSON.parse((window.BoxStorage||localStorage).getItem(k)||'[]');return Array.isArray(a)?a.filter(id=>games.some(g=>g.id===id)):[];}catch{return [];}};
