@@ -266,7 +266,14 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       E.rotate(-sign*(.28+Math.abs(left?pose.leftElbow:pose.rightElbow)*.55));
       kg(E,-5,0,10,13,5,s,_A,2);E.translate(0,12);
       E.rotate(-(left?pose.leftWrist:pose.rightWrist));
-      Ag(E,0,1,5.5,6,e?'#b8895f':D,_A,2);
+      Ag(E,0,1,4.5,5,e?'#b8895f':D,_A,1.6);
+      const curl=left?pose.leftCurl:pose.rightCurl;
+      for(let finger=0;finger<4;finger++){
+        const bend=left&&finger===0?curl*(1-pose.leftPoint):curl;
+        const x=(finger-1.5)*2.1,length=finger===3?4.3:5.6;
+        xg(E,[x,4,x+sign*bend*1.5,4+length*(1-bend*.35),x+sign*bend*2.5,4+length*(1-bend*.6)],e?'#b8895f':D,1.7);
+      }
+      xg(E,[-sign*3,0,-sign*6,2,-sign*5,4],e?'#b8895f':D,2);
       if(!left){kg(E,3,-13,4,18,2,'#4b607b',_A,1.3);Ag(E,5,-15,6,7,'#d6e5ea',_A,1.6);}
       E.restore();
     }
