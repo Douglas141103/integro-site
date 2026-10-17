@@ -1,5 +1,7 @@
 # Blue World — Campos do Orvalho
 
+Withdrawn from the Integro Box catalog on 2026-10-17 at the owner's request. The portal no longer installs or loads this game. Source and historical usage labels are retained for reference. Do not re-enable without a new request.
+
 First playable chapter of the Blue World plan: three side-scrolling traversal stages and Bront's guardian encounter. The other five worlds are explicitly marked as future content in the menu.
 
 ## Build

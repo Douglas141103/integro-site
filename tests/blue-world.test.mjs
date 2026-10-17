@@ -55,8 +55,9 @@ test('56 working bones, finite deformations, normalized skin weights and complet
 test('every scene assembles and releases without network or graphics context',()=>{
  for(let i=0;i<4;i++){const run=new BlueRun(i),world=createWorld(run,{document:null});world.update(run,1);assert.equal(world.blue.skeleton.bones.length,56);assert(world.scene.children.length>=3);world.dispose();}
 });
-test('Blue is lazily registered before catalog and usage, and old links still enter the catalog',()=>{
+test('withdrawn Blue World does not load or appear in the catalog; old anchors still enter the catalog',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8'),gate=read('integro-box/gate.js');
- assert(gate.indexOf('installBlueWorld')<gate.indexOf('startUsage'));assert(gate.includes("'#blueworld'"));assert(read('integro-box/catalog.js').includes("'blue-world','Blue World','#playBlueWorld'"));
- assert(read('integro-box/blue-loader.js').includes("import('./blue-world.js?v="));assert(read('integro-box/usage.js').includes("blueApp:'blueworld'"));assert(read('integro-box/jogar.html').includes('blue-world.css?v='));
+ assert(!gate.includes('installBlueWorld'));assert(gate.includes("'#blueworld'"));assert(!read('integro-box/catalog.js').includes('blue-world'));
+ assert(!read('integro-box/blue-loader.js').includes('import('));assert(read('integro-box/blue-loader.js').includes('return null'));
+ assert(!read('integro-box/jogar.html').includes('blue-world.css'));assert(read('integro-box/catalog.js').includes("games.find(g=>g.id==='integro-rush')"));
 });
