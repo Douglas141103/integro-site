@@ -1,7 +1,13 @@
-import {stages,generateSong,sanitizeProgress,RhythmRun,DanceAudio,drawBackground,drawCharacter,drawSolo,avatars,escapeHTML,formatTime} from './engine.mjs';
+import {stages,generateSong,sanitizeProgress,RhythmRun,DanceAudio,drawBackground,drawCharacter,drawSolo,setCharacterPainter,avatars,escapeHTML,formatTime} from './engine.mjs';
 import {createVersusRuns,versusWinner,keyLane,drawVersus} from './versus.mjs';
 
-export function createInterDance({onExit,storage=window.BoxStorage,audio=new DanceAudio()}={}) {
+async function loadAnimeRenderer(options){
+  if(!globalThis.WebGL2RenderingContext)return null;
+  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-anime1');
+  return createAnimePainter(options);
+}
+
+export function createInterDance({onExit,storage=window.BoxStorage,audio=new DanceAudio(),loadRenderer=loadAnimeRenderer}={}) {
   if(!storage) throw new Error('Entre com a conta da família para jogar.');
   const $=id=>document.getElementById(id), app=$('danceApp'), canvas=$('danceCanvas'), ctx=canvas.getContext('2d'), sheet=$('danceSheet');
   const pads=[...$('dancePads').querySelectorAll('[data-dance-lane]')];
@@ -13,6 +19,18 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
   audio.setVolume(progress.volume);
   let active=false,view='home',stage=stages[0],song=null,runs=[],match='solo',preferredMatch='solo',avatar=0;
   let frameId=0,width=960,height=540,generation=0,finished=false,returnView='home',toastUntil=0;
+  let graphics=null,visualGeneration=0;
+  function graphicsUnavailable(){setCharacterPainter(null);app.dataset.graphics='compatibility';if(active)toast('Modo leve ativado. A música e os comandos continuam normalmente.');}
+  async function prepareGraphics(){
+    const token=++visualGeneration;app.dataset.graphics='loading';
+    try{
+      const painter=await loadRenderer({onUnavailable:()=>{if(active&&token===visualGeneration)graphicsUnavailable();}});
+      if(!active||token!==visualGeneration){painter?.dispose();return;}
+      if(!painter){app.dataset.graphics='compatibility';return;}
+      graphics=painter;graphics.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});
+      setCharacterPainter(graphics);app.dataset.graphics='anime';artwork();
+    }catch{if(active&&token===visualGeneration)graphicsUnavailable();}
+  }
   const keyboard=new Map(),pointers=new Map(),pressed=new Array(8).fill(0);
   function persist(){try {storage.setItem(storageKey,JSON.stringify(progress));saved=true;}catch{saved=false;}}
   function toast(text){$('danceToast').textContent=text;$('danceToast').classList.add('visible');toastUntil=performance.now()+3500;}
@@ -20,14 +38,14 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
   function clearInputs(){keyboard.clear();pointers.clear();pressed.fill(0);runs.forEach(run=>run.held.clear());pads.forEach(pad=>pad.classList.remove('pressed'));}
   function resize(){const rect=app.getBoundingClientRect();width=rect.width||innerWidth;height=rect.height||innerHeight;const scale=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);ctx.setTransform(scale,0,0,scale,0,0);ctx.imageSmoothingEnabled=true;}
   function hud(visible=false){$('danceHUD').hidden=!visible||match==='versus';$('danceVersusHUD').hidden=!visible||match!=='versus';$('dancePads').hidden=!visible;$('dancePlayer2Pads').hidden=match!=='versus';app.classList.toggle('dance-versus',match==='versus');}
-  function artwork(){sheet.querySelectorAll('[data-stage-art]').forEach(c=>{const s=stages[+c.dataset.stageArt];c.width=320;c.height=160;drawBackground(c.getContext('2d'),320,160,s);drawCharacter(c.getContext('2d'),160,39,94,s,0);});const hero=$('danceHero');if(hero){hero.width=400;hero.height=220;drawSolo(hero.getContext('2d'),400,220,stage,null,0,avatars[avatar],true,progress.reducedEffects);}}
+  function artwork(){graphics?.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});sheet.querySelectorAll('[data-stage-art]').forEach(c=>{const s=stages[+c.dataset.stageArt];c.width=320;c.height=160;drawBackground(c.getContext('2d'),320,160,s);drawCharacter(c.getContext('2d'),160,39,94,s,0);});const hero=$('danceHero');if(hero){hero.width=400;hero.height=220;drawSolo(hero.getContext('2d'),400,220,stage,null,0,avatars[avatar],true,progress.reducedEffects);}}
   function overlay(next,html){view=next;$('danceOverlay').hidden=false;sheet.innerHTML=html;sheet.focus();bind();artwork();}
   const button=(action,label,primary=false)=>`<button data-action="${action}"${primary?' class="primary"':''}>${label}</button>`;
   function home(){
     generation++;audio.stop();clearInputs();hud();
     $('danceTrack').innerHTML='<b>Festival de ritmo</b><small>16 semanas · solo e versus</small>';
     const complete=stages.filter(s=>progress.best[`${s.id}-${progress.mode}-remix`]?.stars).length;
-    overlay('home',`<div class="dance-home-layout"><div class="dance-home-intro"><div class="dance-eyebrow">INTEGRO BOX APRESENTA</div><div class="dance-logo"><span>INTER</span>DANCE</div><canvas id="danceHero" class="dance-hero-art"></canvas><p>Escute. Sinta a batida. Acerte as setas.<br>16 semanas, 16 chefes e um palco para dois!</p><div class="dance-mode" aria-label="Modo de jogo">${['solo','versus'].map(mode=>`<button data-match="${mode}" aria-pressed="${preferredMatch===mode}" class="${preferredMatch===mode?'selected':''}">${mode==='solo'?'Solo':'Versus · 2 jogadores'}</button>`).join('')}</div><p>${preferredMatch==='versus'?'Duas pessoas no mesmo aparelho. Jogador 1 no WASD; jogador 2 nas setas. No celular, cada um tem seus botões.':'Enfrente cada chefe no seu ritmo. Use WASD, setas ou os botões na tela.'}</p><div class="dance-mode" aria-label="Dificuldade">${['easy','normal'].map(mode=>`<button data-mode="${mode}" aria-pressed="${progress.mode===mode}" class="${progress.mode===mode?'selected':''}">${mode==='easy'?'Aprender':'Desafio'}</button>`).join('')}</div><label class="dance-avatar">Artista no solo <select id="danceAvatar"><option value="0" ${avatar===0?'selected':''}>Duda</option><option value="1" ${avatar===1?'selected':''}>Ravi</option></select></label><p class="dance-small">Aprender tem menos setas e mais tempo para acertar. ${saved?'Recordes solo salvos neste navegador, separados por conta.':'Salvamento indisponível nesta sessão.'}</p><div class="dance-buttons">${button('settings','Som e ajuda')}</div></div><div><div class="dance-stage-heading"><h2>Escolha sua semana</h2><span>${complete}/16 concluídas no solo</span></div><div class="dance-stages">${stages.map(s=>{const best=progress.best[`${s.id}-${progress.mode}-remix`];return `<button class="dance-stage" data-stage="${s.id}"><canvas data-stage-art="${s.id}" aria-hidden="true"></canvas><span class="num">${String(s.week).padStart(2,'0')}</span><span class="title"><small>SEMANA ${s.week}</small>${s.title}</span><span class="meta">Chefe ${s.artist} · ${s.bpm} BPM<br><span class="stars">${'★'.repeat(best?.stars||0)+'☆'.repeat(3-(best?.stars||0))}</span> ${best?Math.round(best.accuracy)+'%':''}</span></button>`;}).join('')}</div></div></div>`);
+    overlay('home',`<div class="dance-home-layout"><div class="dance-home-intro"><div class="dance-eyebrow">INTEGRO BOX APRESENTA</div><div class="dance-logo"><span>INTER</span>DANCE</div><canvas id="danceHero" class="dance-hero-art"></canvas><p>Escute. Sinta a batida. Acerte as setas.<br>16 chefes, estilo anime e um palco para dois!</p><div class="dance-mode" aria-label="Modo de jogo">${['solo','versus'].map(mode=>`<button data-match="${mode}" aria-pressed="${preferredMatch===mode}" class="${preferredMatch===mode?'selected':''}">${mode==='solo'?'Solo':'Versus · 2 jogadores'}</button>`).join('')}</div><p>${preferredMatch==='versus'?'Duas pessoas no mesmo aparelho. Jogador 1 no WASD; jogador 2 nas setas. No celular, cada um tem seus botões.':'Enfrente cada chefe no seu ritmo. Use WASD, setas ou os botões na tela.'}</p><div class="dance-mode" aria-label="Dificuldade">${['easy','normal'].map(mode=>`<button data-mode="${mode}" aria-pressed="${progress.mode===mode}" class="${progress.mode===mode?'selected':''}">${mode==='easy'?'Aprender':'Desafio'}</button>`).join('')}</div><label class="dance-avatar">Seu artista <select id="danceAvatar"><option value="0" ${avatar===0?'selected':''}>Duda</option><option value="1" ${avatar===1?'selected':''}>Ravi</option></select></label><p class="dance-small">Aprender tem menos setas e mais tempo para acertar. ${saved?'Recordes solo salvos neste navegador, separados por conta.':'Salvamento indisponível nesta sessão.'}</p><div class="dance-buttons">${button('settings','Som e ajuda')}</div></div><div><div class="dance-stage-heading"><h2>Escolha sua semana</h2><span>${complete}/16 concluídas no solo</span></div><div class="dance-stages">${stages.map(s=>{const best=progress.best[`${s.id}-${progress.mode}-remix`];return `<button class="dance-stage" data-stage="${s.id}"><canvas data-stage-art="${s.id}" aria-hidden="true"></canvas><span class="num">${String(s.week).padStart(2,'0')}</span><span class="title"><small>SEMANA ${s.week}</small>${s.title}</span><span class="meta">Chefe ${s.artist} · ${s.bpm} BPM<br><span class="stars">${'★'.repeat(best?.stars||0)+'☆'.repeat(3-(best?.stars||0))}</span> ${best?Math.round(best.accuracy)+'%':''}</span></button>`;}).join('')}</div></div></div>`);
   }
   function detail(id=stage.id){
     generation++;audio.stop();clearInputs();hud();stage=stages[id]||stages[0];song=generateSong(stage,progress.mode);
@@ -58,7 +76,7 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
     if(view==='loading'){generation++;audio.stop();view='detail';}
     if(view==='playing')pause();if(view==='listen')audio.pause();
     returnView=view==='paused'?'paused':['detail','listen'].includes(view)?'detail':'home';
-    overlay('settings',`<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects?'':'selected'}>Completos — tremor e trocas</option><option value="reduced" ${progress.reducedEffects?'selected':''}>Reduzidos — setas estáveis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume*100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume*100}"></label><label>Ajuste de sincronização <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se você ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D · jogador 2: ← ↓ ↑ →. No celular, cada jogador tem quatro botões. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>★ 55% · ★★ 75% · ★★★ 92%. Treino e versus não alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button('backSettings','Pronto',true)}${button('fullscreen','Tela cheia')}</div></div>`);
+    overlay('settings',`<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects?'':'selected'}>Completos — poses anime e efeitos</option><option value="reduced" ${progress.reducedEffects?'selected':''}>Reduzidos — poses e setas estáveis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume*100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume*100}"></label><label>Ajuste de sincronização <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se você ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D · jogador 2: ← ↓ ↑ →. No celular, cada jogador tem quatro botões. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>★ 55% · ★★ 75% · ★★★ 92%. Treino e versus não alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button('backSettings','Pronto',true)}${button('fullscreen','Tela cheia')}</div></div>`);
   }
   function finish(){
     if(finished)return;finished=true;audio.stopSource();clearInputs();hud();
@@ -109,13 +127,14 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
       else{$('danceScore').textContent=runs[0].score.toLocaleString('pt-BR');$('danceEnergy').value=runs[0].energy;$('danceAccuracy').textContent=Math.round(runs[0].liveAccuracy)+'% · '+runs[0].combo+' combo';$('danceTime').textContent=formatTime(position)+' / '+formatTime(song.duration);$('danceProgress').value=Math.min(1,position/song.duration);}
       if(runs.every(run=>run.status!=='playing'))finish();
     }
+    graphics?.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});
     const playing=['playing','paused'].includes(view);
     if(match==='versus'&&playing)drawVersus(ctx,width,height,stage,runs,position,progress.reducedEffects);
     else drawSolo(ctx,width,height,stage,runs[0],position,avatars[avatar],!playing,progress.reducedEffects);
     if(now>toastUntil)$('danceToast').classList.remove('visible');
   }
-  function hide(){if(!active)return;active=false;generation++;cancelAnimationFrame(frameId);clearInputs();audio.dispose();persist();app.hidden=true;document.body.classList.remove('dance-playing');if(document.fullscreenElement===app)document.exitFullscreen?.().catch(()=>{});}
-  const api={show(){if(active)return;active=true;app.hidden=false;document.body.classList.add('dance-playing');resize();home();frameId=requestAnimationFrame(frame);},hide,pause,persist,get active(){return active;},getState:()=>({active,view,stage:stage.id,week:stage.week,mode:progress.mode,match,time:runs[0]?.time||0,players:runs.map(run=>run.result()),winner:finished&&match==='versus'?versusWinner(runs):null,progress:JSON.parse(JSON.stringify(progress)),audioRunning:audio.running})};
+  function hide(){if(!active)return;active=false;generation++;visualGeneration++;setCharacterPainter(null);graphics?.dispose();graphics=null;cancelAnimationFrame(frameId);clearInputs();audio.dispose();persist();app.hidden=true;document.body.classList.remove('dance-playing');if(document.fullscreenElement===app)document.exitFullscreen?.().catch(()=>{});}
+  const api={show(){if(active)return;active=true;app.hidden=false;document.body.classList.add('dance-playing');resize();home();void prepareGraphics();frameId=requestAnimationFrame(frame);},hide,pause,persist,get active(){return active;},getState:()=>({active,view,graphics:app.dataset.graphics||'compatibility',stage:stage.id,week:stage.week,mode:progress.mode,match,time:runs[0]?.time||0,players:runs.map(run=>run.result()),winner:finished&&match==='versus'?versusWinner(runs):null,progress:JSON.parse(JSON.stringify(progress)),audioRunning:audio.running})};
   return api;
 }
 

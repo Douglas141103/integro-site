@@ -27,3 +27,19 @@ body.dance-playing #boxOnline,body.dance-playing .box-online,body.dance-playing 
 }
 @media(max-height:500px) and (orientation:landscape){#danceVersusHUD{top:53px}#danceVersusHUD>div:not(.dance-vs-clock){padding:3px}#danceVersusHUD b{font-size:20px}#danceApp.dance-versus #dancePads{bottom:8px}#danceApp.dance-versus #dancePads button{height:44px}}
 @media(max-width:380px){.dance-top{gap:5px}.dance-brand span{font-size:15px}.dance-top #danceTrack b{font-size:10px}.dance-top #danceTrack small{max-width:116px}.dance-cover strong{font-size:28px}}
+
+/* Anime concert: ink outlines, cel colors and small, readable gameplay panels. */
+#danceApp{--dance-ink:#181d37;--dance-mint:#a7f0de;--dance-pink:#f3a9d2;background:var(--dance-ink)}
+.dance-top{gap:9px;isolation:isolate}.dance-top:before{content:"";position:absolute;inset:-12px -18px -8px;background:linear-gradient(#171d35f5,#171d35b8,transparent);z-index:-1;pointer-events:none}
+.dance-brand span{color:#a7f0de;text-shadow:2px 2px #37264e,3px 3px #16172c}.dance-top #danceTrack{min-width:0}.dance-top #danceTrack b{max-width:42vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#danceApp button{border-radius:12px;border-color:#11162d;box-shadow:0 3px 0 #11162d;color:#f9f4ed;background:#343951;transition:background .15s,transform .12s}
+#danceApp button.primary{background:#a7f0de;color:#203449;border-color:#1a293c}#danceApp button.secondary{background:#b7a3e5;border-color:#201f3c}.dance-mode button.selected{background:#a7f0de!important;color:#203449!important;box-shadow:0 3px #283b48!important}
+.dance-sheet{background:linear-gradient(145deg,#262940fa,#18253cfa);border:2px solid #7f87a85e;border-radius:22px}.dance-overlay{background:#101a339c;backdrop-filter:blur(2px)}
+.dance-eyebrow{color:#a7f0de;letter-spacing:2px}.dance-logo{color:#fff0c0;text-shadow:2px 2px #e387aa,4px 5px #171b33}.dance-logo span{color:#a7f0de}.dance-hero-art,.dance-detail-art{border:2px solid #7a8cac66;background:#1e2b45;object-fit:contain}
+.dance-stage{background:#262f49!important;border-color:#171c34!important;box-shadow:0 4px 0 #11172c!important}.dance-stage:hover{border-color:#a7f0de!important}.dance-stage canvas{height:auto!important;aspect-ratio:2/1}.dance-stage .num{background:#fff0bd;border-color:#28253f;color:#28253f}.dance-stage .stars{color:#ffe19c}.dance-stage .title small{color:#a7f0de;letter-spacing:1px}
+.dance-score,.dance-energy{background:#18263de8;border:1px solid #c7dcf04a;border-radius:12px;padding:6px 10px}.dance-score b{font-size:24px}.dance-energy{width:128px}.dance-energy meter{height:13px}.dance-score small,.dance-energy span{font-size:8px;letter-spacing:1px}
+#dancePads button{border:2px solid #18223c;border-bottom:4px solid #18223c;box-shadow:0 3px #0f1830;border-radius:14px;color:#1b2740}#dancePads button.pressed{filter:brightness(1.12)}
+#danceVersusHUD>div:not(.dance-vs-clock){background:#18263ded;border-width:2px;border-radius:12px}#danceVersusHUD>div:first-child{border-color:#8bdace}#danceVersusHUD>div:last-child{border-color:#d1a0e5}
+@media(max-width:600px){.dance-top{gap:6px}.dance-top .dance-brand{display:none}.dance-top #danceTrack b{max-width:48vw}.dance-top button{min-height:38px}.dance-score{top:70px;left:10px;padding:4px 8px}.dance-score b{font-size:20px}.dance-energy{top:70px;right:10px;width:110px;padding:4px 8px}.dance-home-intro .dance-hero-art{height:auto;align-self:center}.dance-sheet{padding:14px}.dance-detail-art{height:auto;aspect-ratio:20/11}.dance-sheet h1{font-size:25px}}
+@media(max-height:500px) and (orientation:landscape){.dance-score,.dance-energy{top:57px;padding:3px 8px}.dance-score b{font-size:18px}.dance-energy meter{height:10px}.dance-time{left:16px;right:16px}.dance-top #danceTrack b{font-size:12px}}
+@media(prefers-reduced-motion:reduce){#danceApp button{transition:none}}

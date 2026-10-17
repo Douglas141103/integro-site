@@ -1,3 +1,4 @@
+import {versusLayout} from './anime-motion.mjs';
 import {RhythmRun, drawBackground, drawCharacter, drawArrow, avatars, laneColors, phaseEffects, noteMotion} from './engine.mjs';
 
 // Both players receive independent copies of exactly the same chart and cannot be eliminated early.
@@ -15,18 +16,16 @@ export function keyLane(key, versus) {
   return key in lanes ? lanes[key] + (versus && key.startsWith('arrow') ? 4 : 0) : null;
 }
 export function drawVersus(ctx, width, height, stage, runs, time, reduced) {
-  const portrait = width <= 600 && height > width;
-  const top = height < 500 ? 132 : 164;
-  const bottom = height - (portrait ? 169 : 109);
-  const half = width / 2, boardWidth = Math.min(half - 24, 350), laneWidth = boardWidth / 4;
+  const layout=versusLayout(width,height),{portrait,top,bottom,boardWidth}=layout;
+  const half=width/2,laneWidth=boardWidth/4;
   const speed = Math.max(50, (bottom - top) / 1.65);
   const effects = phaseEffects(stage, time, reduced);
-  drawBackground(ctx, width, height, stage, time / (60 / stage.bpm));
+  drawBackground(ctx, width, height, stage, reduced ? 0 : time / (60 / stage.bpm));
   runs.forEach((run, player) => {
-    const center = half * (player + .5), left = center - boardWidth / 2;
+    const center = portrait?half*(player+.5):width*(player?.68:.32), left = center - boardWidth / 2;
     ctx.save();
-    ctx.globalAlpha = .8;
-    drawCharacter(ctx, center, Math.max(top, height * .48), Math.min(half * .55, height * .36), avatars[player], reduced ? 0 : time / run.song.beat, time - run.last.at < .2 ? run.last.lane : -1, player === 1);
+    ctx.globalAlpha = 1;
+    drawCharacter(ctx, layout.characterX(player), layout.characterY, layout.characterSize, {...avatars[player],bpm:stage.bpm}, reduced ? 0 : time / run.song.beat, time - run.last.at < .2 ? run.last.lane : -1, player === 1);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#15223ce8'; ctx.fillRect(left - 5, top - 24, boardWidth + 10, bottom - top + 35);
     ctx.strokeStyle = player === 0 ? '#b4dafe' : '#d9b9f7'; ctx.lineWidth = 2; ctx.strokeRect(left - 5, top - 24, boardWidth + 10, bottom - top + 35);
