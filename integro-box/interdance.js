@@ -15,16 +15,20 @@ function danceAccent(seconds, lane, cue = {}) {
   const duration = Math.max(0.32, Number(cue.duration) || 0);
   return smooth(age / 0.085) * (1 - smooth((age - duration) / 0.28));
 }
-var DANCE_ROUTINES = Object.freeze(["step-touch", "diagonal-reach", "front-tap", "body-wave", "disco-reach", "knee-lift"]);
-var STEPS = [
-  [0.13, 0.04, 0.105, -0.1],
-  [0.1, 0.19, 0.085, -0.13],
-  [0.025, 0.25, 0.055, -0.28],
-  [0.075, -0.025, 0.075, -0.08],
-  [0.12, 0.1, 0.09, -0.12],
-  [0.035, 0.11, 0.205, -0.2]
-];
-function phrasePose(index, beat) {
+var DANCE_ROUTINES = Object.freeze(["step-touch", "hand-on-hip", "diagonal-reach", "squat", "disco-reach", "step-turn", "front-tap", "body-wave", "knee-lift"]);
+var DANCE_CYCLE_BEATS = DANCE_ROUTINES.length * 8;
+var STEPS = {
+  "step-touch": [0.13, 0.04, 0.105, -0.1],
+  "diagonal-reach": [0.1, 0.19, 0.085, -0.13],
+  "front-tap": [0.025, 0.25, 0.055, -0.28],
+  "body-wave": [0.075, -0.025, 0.075, -0.08],
+  "disco-reach": [0.12, 0.1, 0.09, -0.12],
+  "knee-lift": [0.035, 0.11, 0.205, -0.2],
+  "hand-on-hip": [0.08, 0.025, 0.055, -0.08],
+  squat: [0, 0, 0, 0],
+  "step-turn": [0, 0, 0, 0]
+};
+function phrasePose(name, beat) {
   const swing = Math.sin(beat * Math.PI / 2), wave = Math.sin(beat * Math.PI);
   const left = (1 + swing) / 2, right = 1 - left;
   const p = {
@@ -41,15 +45,19 @@ function phrasePose(index, beat) {
     wristL: 0,
     wristR: 0,
     curl: 0.2,
-    point: 0
+    point: 0,
+    hipHand: 0,
+    squat: 0,
+    sway: 0
   };
-  switch (index) {
-    case 0:
+  const local = beat % 8, envelope = smooth(local / 0.65) * (1 - smooth((local - 7) / 0.75));
+  switch (name) {
+    case "step-touch":
       p.armL = -0.12 * left;
       p.armR = 0.12 * right;
       p.turn = -0.06 * swing;
       break;
-    case 1:
+    case "diagonal-reach":
       p.armL = -0.72 * left;
       p.armR = 0.72 * right;
       p.elbowL = 0.28 * left;
@@ -58,7 +66,7 @@ function phrasePose(index, beat) {
       p.roll = 0.055 * swing;
       p.point = left;
       break;
-    case 2:
+    case "front-tap":
       p.shoulderL = -0.55 * right;
       p.shoulderR = -0.55 * left;
       p.elbowL = 0.3 * right;
@@ -66,7 +74,7 @@ function phrasePose(index, beat) {
       p.curl = 0.7;
       p.torso = 0.045;
       break;
-    case 3:
+    case "body-wave":
       p.armL = -0.3;
       p.armR = 0.3;
       p.elbowL = -0.22 * left;
@@ -76,7 +84,7 @@ function phrasePose(index, beat) {
       p.wristL = 0.24 * wave;
       p.wristR = -0.24 * wave;
       break;
-    case 4:
+    case "disco-reach":
       p.armL = -1.15 * left;
       p.armR = 1.15 * right;
       p.elbowL = 0.4 * left;
@@ -87,7 +95,7 @@ function phrasePose(index, beat) {
       p.wristL = -0.18 * left;
       p.wristR = 0.18 * right;
       break;
-    case 5:
+    case "knee-lift":
       p.shoulderL = -0.52 * right;
       p.shoulderR = -0.52 * left;
       p.elbowL = -0.22 * right;
@@ -95,26 +103,73 @@ function phrasePose(index, beat) {
       p.curl = 0.58;
       p.turn = -0.12 * swing;
       break;
+    case "hand-on-hip":
+      p.hipHand = envelope;
+      p.sway = 0.04 * swing * envelope;
+      p.roll = 0.075 * swing * envelope;
+      p.armR = 0.35 + 0.3 * right;
+      p.wristR = 0.2 * wave;
+      break;
+    case "squat":
+      p.squat = Math.sin(local * Math.PI / 4) ** 2;
+      p.torso = 0.14 * p.squat;
+      p.shoulderL = -0.4 * p.squat;
+      p.shoulderR = -0.4 * p.squat;
+      p.elbowL = -0.15 * p.squat;
+      p.elbowR = -0.15 * p.squat;
+      break;
+    case "step-turn":
+      p.shoulderL = -0.18;
+      p.shoulderR = -0.18;
+      p.elbowL = -0.35;
+      p.elbowR = -0.35;
+      p.curl = 0.5;
+      break;
   }
   return p;
+}
+function turnFootwork(beat) {
+  const quarter = Math.min(3, Math.floor(beat / 2)), u = clamp((beat - quarter * 2) / 1.65), angle = smooth(u) * Math.PI / 2;
+  const points = { L: { x: -0.205, z: 0.045 }, R: { x: 0.205, z: 0.045 } };
+  const rotate = (moving2, support2, a) => {
+    const p = points[moving2], pivot = points[support2], x = p.x - pivot.x, z = p.z - pivot.z;
+    p.x = pivot.x + x * Math.cos(a) + z * Math.sin(a);
+    p.z = pivot.z - x * Math.sin(a) + z * Math.cos(a);
+  };
+  for (let i = 0; i < quarter; i++) rotate(i % 2 ? "L" : "R", i % 2 ? "R" : "L", Math.PI / 2);
+  const moving = quarter % 2 ? "L" : "R", support = quarter % 2 ? "R" : "L";
+  rotate(moving, support, angle);
+  const facing = quarter * Math.PI / 2 + angle, feet = {}, arc = u > 0 && u < 1 ? Math.sin(Math.PI * u) ** 2 : 0;
+  for (const [side, sign] of [["L", -1], ["R", 1]]) {
+    const lift = side === moving ? arc : 0;
+    feet[side] = { ...points[side], y: 0.1775 + lift * 0.1, yaw: facing + sign * 0.06, pitch: -0.1 * lift, toe: -0.15 * lift, lift };
+  }
+  return {
+    facing,
+    feet,
+    travelX: (points.L.x + points.R.x) / 2 - Math.sin(facing) * 0.045,
+    travelZ: (points.L.z + points.R.z) / 2 - Math.cos(facing) * 0.045
+  };
 }
 function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
   const stamp = reduced ? 0 : Math.max(0, seconds), beat = stamp * bpm / 60;
   const swing = Math.sin(beat * Math.PI / 2), pulse = (1 - Math.cos(beat * Math.PI * 2)) / 2;
   const phrase = Math.floor(beat / 8) % DANCE_ROUTINES.length, phraseBeat = beat % 8;
-  const next = phrasePose(phrase, beat), prior = phrasePose((phrase + DANCE_ROUTINES.length - 1) % DANCE_ROUTINES.length, beat);
+  const routine = DANCE_ROUTINES[phrase], turning = routine === "step-turn" && !reduced;
+  const next = phrasePose(routine, beat), prior = phrasePose(DANCE_ROUTINES[(phrase + DANCE_ROUTINES.length - 1) % DANCE_ROUTINES.length], beat);
   const mix = beat < 0.75 && phrase === 0 ? 1 : smooth(phraseBeat / 0.75), move = {};
   for (const key of Object.keys(next)) move[key] = prior[key] + (next[key] - prior[key]) * mix;
-  const accent = reduced ? 0 : danceAccent(stamp, lane, cue);
+  const turnEnvelope = turning ? smooth(phraseBeat / 0.5) * (1 - smooth((phraseBeat - 7.4) / 0.5)) : 0;
+  const accent = reduced ? 0 : danceAccent(stamp, lane, cue) * (1 - 0.65 * turnEnvelope);
   const down = lane === 1 ? accent : 0, up = lane === 2 ? accent : 0;
   const side = lane === 0 ? -accent : lane === 3 ? accent : 0;
   const energy = reduced ? 0 : 1;
-  const feet = {};
-  const [stepX, stepZ, stepHeight, stepPitch] = STEPS[phrase];
+  let feet = {};
+  const [stepX, stepZ, stepHeight, stepPitch] = STEPS[routine];
   for (const [name, sign, offset] of [["L", -1, 2], ["R", 1, 0]]) {
     const phase = ((beat - offset) % 4 + 4) % 4;
     const arc = phase < 1.5 ? Math.sin(Math.PI * phase / 1.5) ** 2 : 0;
-    const lift = arc * energy;
+    const lift = routine === "squat" ? 0 : arc * energy;
     feet[name] = {
       x: sign * (0.205 + stepX * lift),
       y: 0.1775 + lift * (stepHeight + 0.035 * up),
@@ -125,17 +180,25 @@ function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
       lift
     };
   }
+  const rotation = turning ? turnFootwork(phraseBeat) : { facing: 0, travelX: 0, travelZ: 0 };
+  if (turning) feet = rotation.feet;
+  const squat = move.squat * energy;
   const support = feet.L.lift - feet.R.lift;
   return {
     stamp,
     beat,
     accent,
     feet,
-    routine: DANCE_ROUTINES[phrase],
+    routine,
+    squat,
+    hipHand: move.hipHand * energy,
+    facing: rotation.facing,
+    travelX: rotation.travelX,
+    travelZ: rotation.travelZ,
     rootTurn: Math.sin(beat * Math.PI / 4) * 0.035 * energy,
-    hipX: (support * 0.095 - swing * 0.025) * energy + side * 0.035,
-    hipY: HIP_HEIGHT - 0.048 * pulse * energy - 0.095 * down - Math.max(feet.L.lift, feet.R.lift) * 0.025,
-    hipZ: -0.035 * down,
+    hipX: (support * 0.095 - swing * 0.025 + move.sway) * energy + side * 0.035,
+    hipY: HIP_HEIGHT - 0.048 * pulse * energy - 0.095 * down * (1 - 0.6 * squat) - Math.max(feet.L.lift, feet.R.lift) * 0.025 - 0.22 * squat,
+    hipZ: -0.035 * down - 0.06 * squat,
     hipRoll: swing * 0.065 * energy - side * 0.07,
     hipTurn: Math.sin(beat * Math.PI / 2 - 0.35) * 0.09 * energy,
     spineBend: 0.04 + (Math.sin(beat * Math.PI * 2 - 0.4) * 0.035 + move.torso) * energy + down * 0.13,
@@ -390,11 +453,12 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
   let w = Q >= 0, G = Math.sin(C * Math.PI * 2), D = I.skin || "#d2a082", i = I.hair || "#302c47", s = I.color || "#89d8e5", k = I.accent || "#d9ef8f", e = I.look === "capybara", h = I.look === "robot", J = I.look === "box";
   const pose = animePose(C * 60 / (I.bpm || 140), I.bpm || 140, Q, !!cue.reduced, cue);
-  const hx = pose.hipX * 36, hy = 72 + (HIP_HEIGHT - pose.hipY) * 35;
+  const facing = Math.cos(pose.facing), backFacing = facing < -0.35;
+  const hx = (pose.travelX + pose.hipX * facing + pose.hipZ * Math.sin(pose.facing)) * 50, hy = 72 + (HIP_HEIGHT - pose.hipY) * 35;
   Ag(E, 0, 103, 32, 5, "#18233e33", null);
   for (const [side, sign] of [["L", -1], ["R", 1]]) {
     const foot = pose.feet[side], x0 = hx + sign * 8, y0 = hy;
-    const fx = sign * 12 + (foot.x - sign * 0.205) * 42, fy = 98 - (foot.y - 0.1775) * 45;
+    const fx = foot.x * 50, fy = 98 - (foot.y - 0.1775) * 45 + (foot.z - 0.045) * 6;
     const kx = (x0 + fx) / 2 + sign * (3 + (HIP_HEIGHT - pose.hipY) * 18), ky = (y0 + fy) / 2;
     xg(E, [x0, y0, kx, ky], _A, 10);
     xg(E, [x0, y0, kx, ky], "#556988", 7);
@@ -409,6 +473,7 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   }
   E.translate(hx, hy);
   E.rotate(-pose.spineRoll);
+  E.scale(0.4 + 0.6 * Math.abs(facing), 1);
   E.translate(0, -76);
   E.beginPath();
   E.moveTo(-15, 47);
@@ -421,18 +486,18 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   kg(E, -7, 56, 14, 15, 4, "#fff5dd", null);
   OC(E, 0, 63, 5, s);
   for (const sign of [-1, 1]) {
-    const left = sign < 0;
+    const left = sign < 0, hipHand = left ? pose.hipHand : 0;
     E.save();
     E.translate(sign * 18, 52);
-    E.rotate(-(left ? pose.leftArm : pose.rightArm));
+    E.rotate(-(left ? pose.leftArm : pose.rightArm) * (1 - hipHand) + 0.7 * hipHand);
     kg(E, -4.5, 0, 9, 15, 4.5, s, _A, 1.6);
     E.translate(0, 13);
-    E.rotate(-sign * (0.28 + Math.abs(left ? pose.leftElbow : pose.rightElbow) * 0.55));
+    E.rotate(-sign * (0.28 + Math.abs(left ? pose.leftElbow : pose.rightElbow) * 0.55) * (1 - hipHand) - 1.6 * hipHand);
     kg(E, -3.5, 0, 7, 13, 3.5, s, _A, 1.5);
     E.translate(0, 12);
-    E.rotate(-(left ? pose.leftWrist : pose.rightWrist));
+    E.rotate(-(left ? pose.leftWrist : pose.rightWrist) * (1 - hipHand) + 0.9 * hipHand);
     Ag(E, 0, 1, 4.5, 5, e ? "#b8895f" : D, _A, 1.6);
-    const curl = left ? pose.leftCurl : pose.rightCurl;
+    const curl = left ? pose.leftCurl * (1 - hipHand) + 0.1 * hipHand : pose.rightCurl;
     for (let finger = 0; finger < 4; finger++) {
       const bend = left && finger === 0 ? curl * (1 - pose.leftPoint) : curl;
       const x = (finger - 1.5) * 2.1, length = finger === 3 ? 4.3 : 5.6;
@@ -449,6 +514,17 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   E.rotate(-pose.neckTurn);
   E.scale(0.88, 0.88);
   E.translate(0, -45);
+  if (backFacing) {
+    if (h || J) kg(E, -23, 3, 46, 43, 12, J ? "#dfbb82" : "#c2dbe0", _A, 2);
+    else Ag(E, 0, 24, e ? 26 : 23, 25, e ? D : i, _A, 2);
+    if (I.look === "phones" || h || e) {
+      xg(E, [-25, 24, -28, -1, 28, -1, 25, 24], k, 5);
+      kg(E, -29, 18, 7, 17, 4, k, _A, 1.5);
+      kg(E, 22, 18, 7, 17, 4, k, _A, 1.5);
+    }
+    E.restore();
+    return;
+  }
   if (e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
   else if (h || J) if (kg(E, -24, 2, 48, 43, J ? 12 : 15, J ? "#dfbb82" : "#c2dbe0", _A, 2.8), J) xg(E, [-20, 12, 0, 18, 21, 12], "#ab834f", 2), kg(E, -3, 3, 6, 13, 2, "#f8e8bd", null), Ag(E, -9, 25, 4.3, 5.8, _A, null), Ag(E, 10, 25, 4.3, 5.8, _A, null), Ag(E, -10, 23, 1.5, 2, "#fff", null), Ag(E, 9, 23, 1.5, 2, "#fff", null), xg(E, [-6, 35, 2, 42, 10, 34], _A, 2), OC(E, 0, -7, 8, k, 0.15);
   else {
@@ -698,7 +774,7 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
 // integro-box/interdance-src/app.mjs
 async function loadAnimeRenderer(options) {
   if (!globalThis.WebGL2RenderingContext) return null;
-  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-fit1");
+  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-moves1");
   return createAnimePainter(options);
 }
 function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {

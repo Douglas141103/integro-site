@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import * as T from '../integro-box/interdance-src/node_modules/three/build/three.module.js';
 import {createAnimeActor,makeToonRamp,FINGER_NAMES} from '../integro-box/interdance-src/anime-actor.mjs';
-import {animePose,danceAccent,POSE_FPS,DANCE_ROUTINES,versusLayout} from '../integro-box/interdance-src/anime-motion.mjs';
+import {animePose,danceAccent,POSE_FPS,DANCE_ROUTINES,DANCE_CYCLE_BEATS,turnFootwork,versusLayout} from '../integro-box/interdance-src/anime-motion.mjs';
 import {createAnimePainter} from '../integro-box/interdance-src/anime-view.mjs';
 import {stages,avatars} from '../integro-box/interdance-src/engine.mjs';
 
@@ -48,7 +48,7 @@ test('feet reach planted targets with a forward knee and constant limb lengths t
  const actor=createAnimeActor(avatars[0],{document:null}),point=new T.Vector3(),knee=new T.Vector3(),hip=new T.Vector3();
  const moving=new Set();
  try {
-  for(const bpm of [100,140,200])for(const lane of [-1,0,1,2,3])for(let frame=0;frame<=480;frame++) {
+  for(const bpm of [100,140,200])for(const lane of [-1,0,1,2,3])for(let frame=0;frame<=DANCE_CYCLE_BEATS*10;frame++) {
    const seconds=frame*.1*60/bpm,p=actor.pose(seconds,bpm,lane,false,{at:Math.floor(frame/80)*8*60/bpm+.7,duration:.4});
    assert(p.feet.L.lift===0||p.feet.R.lift===0,'one foot must support the body');
    for(const side of ['L','R']) {
@@ -56,7 +56,8 @@ test('feet reach planted targets with a forward knee and constant limb lengths t
     const target=new T.Vector3(p.feet[side].x,p.feet[side].y,p.feet[side].z);
     assert(point.distanceTo(target)<1e-5,`foot sliding at ${bpm} BPM, lane ${lane}, frame ${frame}`);
     assert(Math.abs(hip.distanceTo(knee)-.46)<1e-5);assert(Math.abs(knee.distanceTo(point)-.46)<1e-5);
-    assert(knee.z>Math.min(hip.z,point.z),'knee must bend forward');
+    const forward=new T.Vector3(0,0,1).applyQuaternion(actor.bones.root.getWorldQuaternion(new T.Quaternion()));
+    assert(knee.clone().sub(hip.clone().add(point).multiplyScalar(.5)).dot(forward)>0,'knee must bend with the body facing');
     if(p.feet[side].lift===0) {
      const sole=actor.bones['foot'+side].localToWorld(new T.Vector3(0,-.1575,0));
      assert(Math.abs(sole.y-.02)<1e-5,'supporting sole must stay on the floor');
@@ -68,18 +69,19 @@ test('feet reach planted targets with a forward knee and constant limb lengths t
  } finally {actor.dispose();}
 });
 
-test('six eight-count phrases vary footwork and gestures without popping at transitions',()=>{
+test('nine eight-count phrases vary footwork and gestures without popping at transitions',()=>{
  const signatures=new Set();
- for(let phrase=0;phrase<6;phrase++){
+ for(let phrase=0;phrase<DANCE_ROUTINES.length;phrase++){
   const p=animePose((phrase*8+1)*60/140,140);
   assert.equal(p.routine,DANCE_ROUTINES[phrase]);
   signatures.add([p.feet.R.x,p.feet.R.z,p.feet.R.y,p.leftArm,p.spineBend].join(','));
  }
- assert.equal(signatures.size,6);
- for(const boundary of [8,16,24,32,40,48,56]){
+ assert.equal(signatures.size,9);
+ for(const boundary of Array.from({length:DANCE_ROUTINES.length+1},(_,i)=>(i+1)*8)){
   const a=animePose((boundary-.00001)*60/140,140),b=animePose((boundary+.00001)*60/140,140);
-  for(const key of Object.keys(a))if(typeof a[key]==='number')assert(Math.abs(a[key]-b[key])<.001,`${key} pops at beat ${boundary}`);
-  for(const side of ['L','R'])for(const key of Object.keys(a.feet[side]))assert(Math.abs(a.feet[side][key]-b.feet[side][key])<.001);
+  const distance=(a,b,angular)=>angular?Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b))):Math.abs(a-b);
+  for(const key of Object.keys(a))if(typeof a[key]==='number')assert(distance(a[key],b[key],key==='facing')<.001,`${key} pops at beat ${boundary}`);
+  for(const side of ['L','R'])for(const key of Object.keys(a.feet[side]))assert(distance(a.feet[side][key],b.feet[side][key],key==='yaw')<.001,`${side}.${key} pops at beat ${boundary}`);
  }
 });
 
@@ -94,7 +96,7 @@ test('all 56 bones drive visible geometry and the thirty finger joints move thro
    }
   });
   assert.equal(used.size,56,'no padding bones without a visible role');
-  for(let beat=0;beat<48;beat+=.25){
+  for(let beat=0;beat<DANCE_CYCLE_BEATS;beat+=.25){
    actor.pose(beat*60/140,140,Math.floor(beat/8)%4);
    for(const b of actor.skeleton.bones){const q=b.quaternion;const before=ranges.get(b.name);if(!before)ranges.set(b.name,{q:q.clone(),change:0});else before.change=Math.max(before.change,before.q.angleTo(q));}
    // Sample every phrase and both arm accents against the offscreen camera.
@@ -118,7 +120,7 @@ test('elbow and knee cross-sections retain their volume through deep bends witho
  try{
   actor.root.traverse(mesh=>{if(mesh.name.endsWith('weighted cloth'))limbs.push({mesh,rest:polygonArea(mesh.geometry.userData.jointRing.map(i=>new T.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i)))});});
   assert.equal(limbs.length,4);let restored=0;
-  for(let beat=.25;beat<48;beat+=.5){
+  for(let beat=.25;beat<DANCE_CYCLE_BEATS;beat+=.5){
    actor.pose(beat*60/140,140,1);
    for(const {mesh,rest} of limbs){
     const area=()=>polygonArea(mesh.geometry.userData.jointRing.map(i=>mesh.getVertexPosition(i,new T.Vector3())));
@@ -129,6 +131,41 @@ test('elbow and knee cross-sections retain their volume through deep bends witho
    }
   }
   assert(restored>100,'correction must visibly improve the flexed joints');
+ }finally{actor.dispose();}
+});
+
+test('squats lower the hips on two planted feet and the free hand actually rests against the moving waist',()=>{
+ const actor=createAnimeActor(avatars[0],{document:null}),hand=new T.Vector3();
+ try{
+  const start=actor.pose(24*60/140,140,-1);
+  const low=actor.pose(26*60/140,140,-1);
+  assert(start.hipY-low.hipY>.20,'squat must be visibly deeper than the idle bounce');
+  assert.equal(low.feet.L.lift,0);assert.equal(low.feet.R.lift,0);
+  for(const side of ['L','R'])assert(Math.abs(actor.bones['foot'+side].localToWorld(new T.Vector3(0,-.1575,0)).y-.02)<1e-5);
+  for(const beat of [9.5,10.5,11.5,12.5,13.5,14.5])for(const lane of [-1,0,1,2,3]){
+   const p=actor.pose(beat*60/140,140,lane);assert(p.hipHand>.99);
+   const target=actor.bones.hips.localToWorld(new T.Vector3(-.255,.235,.13));actor.bones.handL.getWorldPosition(hand);
+   assert(hand.distanceTo(target)<.002,`hand detached from the waist at ${beat}, lane ${lane}`);
+  }
+ }finally{actor.dispose();}
+});
+
+test('a complete turn alternates planted pivots, faces backwards and returns to the original stance',()=>{
+ const actor=createAnimeActor(avatars[0],{document:null});
+ try{
+  for(let quarter=0;quarter<4;quarter++){
+   const side=quarter%2?'R':'L',start=turnFootwork(quarter*2).feet[side];
+   for(let step=0;step<=20;step++){
+    const local=quarter*2+step*1.65/20,p=actor.pose((40+local)*60/140,140,-1);
+    const actual=actor.bones['foot'+side].getWorldPosition(new T.Vector3());
+    assert(Math.hypot(actual.x-start.x,actual.z-start.z)<1e-5,'supporting foot slides during the pivot');
+    assert(Math.abs(actual.y-.1775)<1e-5);assert.equal(p.feet[side].lift,0);
+   }
+  }
+  actor.pose(44*60/140,140,-1);assert(new T.Vector3(0,0,1).applyQuaternion(actor.bones.root.quaternion).z<-.99,'turn must show the back');
+  const end=turnFootwork(8);assert(Math.abs(end.facing-2*Math.PI)<1e-8);
+  assert(Math.hypot(end.travelX,end.travelZ)<1e-8);
+  for(const [side,sign]of [['L',-1],['R',1]])assert(Math.hypot(end.feet[side].x-sign*.205,end.feet[side].z-.045)<1e-8);
  }finally{actor.dispose();}
 });
 

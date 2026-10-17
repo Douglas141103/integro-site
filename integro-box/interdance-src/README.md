@@ -66,3 +66,13 @@ The 56-bone rig keeps its choreography with a narrower, tapered jacket, a define
 `dance-proportions.mjs` keeps geometry-free constants available to the 2D fallback without loading Three.js. The fallback also has a tapered torso, slimmer limbs, smaller shoes/head and longer legs.
 
 Validation adds cross-section area checks throughout deep-bend poses to detect collapse or excessive bulging and verifies that the outline follows the morph. Existing checks retain all 18 character geometry budgets, 56 functional bones, grounded feet, phrase transitions and gameplay behavior. Offline front and oblique CPU projections were inspected. Actual WebGL appearance and mobile frame rate still require real-device verification.
+
+## Full-body gestures — 20261017-dance-moves1
+
+The sequence now has nine eight-count phrases (72 beats). Alongside the existing steps, dancers perform two rhythmic squats on planted feet, hip sway with the free hand resting against the waist, and a full 360-degree turn using four alternating foot pivots. The waist pose appears in the second phrase, the squats in the fourth, and the turn in the sixth.
+
+The turn is derived from the musical clock without accumulating stage drift. Its supporting foot stays at a fixed stage position while the other steps around it; the final foot positions match the initial stance. Knee poles follow body orientation, so the legs bend forward relative to the dancer during rear views. The turn angle and stage translation bypass upper-body easing to avoid reverse spins at the 360/0-degree boundary. Directional accents ease down during the turn without changing scoring.
+
+A two-bone arm solver follows a target on the moving hips, with an outward elbow and a local X hinge compatible with the volume corrective. The left hand opens against the waist and releases smoothly; the right hand retains the microphone. Hair now includes the rear/nape surface revealed by turns. The 2D fallback shows squat depth, a waist gesture, projected turns and a simplified rear head view.
+
+Validation covers all nine phrases and transitions, 10,815 foot-contact poses, a visibly lowered squat with both soles planted, hand-to-waist contact across hit directions, fixed pivot feet, rear-facing rotation, and an exact return to the initial stance. Existing rig, deformation, geometry, camera and gameplay checks are retained. Offline CPU projections of the new gestures and four turn angles were inspected; WebGL lighting and mobile frame rate remain unverified on a real device.
