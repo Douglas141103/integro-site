@@ -4,7 +4,7 @@ import {drawConcert,concertLayout} from './concert.mjs';
 
 async function loadAnimeRenderer(options){
   if(!globalThis.WebGL2RenderingContext)return null;
-  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-stage2');
+  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-rig1');
   return createAnimePainter(options);
 }
 
@@ -84,7 +84,7 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
     if(view==='loading'){generation++;audio.stop();view='detail';}
     if(view==='playing')pause();if(view==='listen')audio.pause();
     returnView=view==='paused'?'paused':['detail','listen'].includes(view)?'detail':'home';
-    overlay('settings',`<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects?'':'selected'}>Completos — poses anime e efeitos</option><option value="reduced" ${progress.reducedEffects?'selected':''}>Reduzidos — poses e setas estáveis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume*100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume*100}"></label><label>Ajuste de sincronização <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se você ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D · jogador 2: ← ↓ ↑ →. No celular, cada jogador tem quatro botões. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>★ 55% · ★★ 75% · ★★★ 92%. Treino e versus não alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button('backSettings','Pronto',true)}${button('fullscreen','Tela cheia')}</div></div>`);
+    overlay('settings',`<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects?'':'selected'}>Completos — dança fluida e efeitos</option><option value="reduced" ${progress.reducedEffects?'selected':''}>Reduzidos — poses e setas estáveis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume*100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume*100}"></label><label>Ajuste de sincronização <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se você ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D · jogador 2: ← ↓ ↑ →. No celular, cada jogador tem quatro botões. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>★ 55% · ★★ 75% · ★★★ 92%. Treino e versus não alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button('backSettings','Pronto',true)}${button('fullscreen','Tela cheia')}</div></div>`);
   }
   function finish(){
     if(finished)return;finished=true;audio.stopSource();clearInputs();hud();

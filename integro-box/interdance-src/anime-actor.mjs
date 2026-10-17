@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {animePose} from './anime-motion.mjs';
+import {createLegSolver} from './dance-kinematics.mjs';
 
 const INK=0x20243e, WHITE=0xfff5e6;
 export function makeToonRamp() {
@@ -61,13 +62,16 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const skin=material('skin',person.skin||'#d2a082'),hair=material('hair',person.hair||'#302c47',hairTexture);
   const ink=material(null,INK),cream=material(null,WHITE),pants=material(null,0x34415f),eyeInk=material(null,INK,null,true),eyeWhite=material(null,WHITE,null,true),iris=material(null,0x715344,null,true);
   const bone=(name,parent,x=0,y=0,z=0)=>{const b=new T.Bone();b.name=name;b.position.set(x,y,z);parent.add(b);return b;};
-  const hips=bone('hips',rig,0,1.04,0),chest=bone('chest',hips,0,.43,0),head=bone('head',chest,0,.61,0);
+  const hips=bone('hips',rig,0,1.04,0),spine=bone('spine',hips,0,.18,0),chest=bone('chest',spine,0,.25,0);
+  const neck=bone('neck',chest,0,.36,0),head=bone('head',neck,0,.25,0);
   head.scale.setScalar(.83);
-  const bones={hips,chest,head};
+  const bones={hips,spine,chest,neck,head};
   for(const [side,sign] of [['L',-1],['R',1]]) {
-    const shoulder=bone('shoulder'+side,chest,sign*.38,.14,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
+    const clavicle=bone('clavicle'+side,chest,sign*.16,.14,0);
+    const shoulder=bone('shoulder'+side,clavicle,sign*.22,0,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
     const thigh=bone('thigh'+side,hips,sign*.17,-.02,0),knee=bone('knee'+side,thigh,0,-.41,0),foot=bone('foot'+side,knee,0,-.41,0);
-    Object.assign(bones,{['shoulder'+side]:shoulder,['elbow'+side]:elbow,['hand'+side]:hand,['thigh'+side]:thigh,['knee'+side]:knee,['foot'+side]:foot});
+    const toe=bone('toe'+side,foot,0,-.055,.18);
+    Object.assign(bones,{['clavicle'+side]:clavicle,['toe'+side]:toe,['shoulder'+side]:shoulder,['elbow'+side]:elbow,['hand'+side]:hand,['thigh'+side]:thigh,['knee'+side]:knee,['foot'+side]:foot});
   }
   rig.updateMatrixWorld(true);const skeleton=new T.Skeleton(Object.values(bones));
   const ball=(x,y,z)=>new T.SphereGeometry(1,20,14).scale(x,y,z);
@@ -102,8 +106,10 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     ellipsoid(bones['shoulder'+side],cloth,0,0,0,.145,.13,.14);
     ellipsoid(bones['hand'+side],skin,0,-.015,.025,.10,.12,.09);
     mesh(bones['hand'+side],box(.19,.055,.18,.02),accent,0,.07,0);
-    mesh(bones['foot'+side],box(.28,.17,.43,.07),cream,0,-.06,.08);
-    mesh(bones['foot'+side],box(.29,.045,.44,.015),ink,0,-.135,.08);
+    mesh(bones['foot'+side],box(.28,.17,.29,.06),cream,0,-.06,.015);
+    mesh(bones['foot'+side],box(.29,.045,.30,.015),ink,0,-.135,.015);
+    mesh(bones['toe'+side],box(.28,.14,.18,.05),cream,0,-.005,.07);
+    mesh(bones['toe'+side],box(.29,.045,.18,.015),ink,0,-.08,.07);
     mesh(bones['foot'+side],box(.25,.07,.26,.025),accent,0,.015,.13);
     for(const y of [.05,.10,.15])detail(bones['foot'+side],[[-.07,.057,y],[0,.065,y-.01],[.07,.057,y]],cream,.009);
   }
@@ -177,17 +183,33 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
 
   const shadow=mesh(root,new T.CircleGeometry(.45,28),new T.MeshBasicMaterial({color:0x1a2039,transparent:true,opacity:.23,depthWrite:false}),0,.02,0,false);resources.add(shadow.material);shadow.rotation.x=0;shadow.scale.y=.16;shadow.position.z=-.2;
   function setPalette(p) {for(const key of ['color','skin','hair','accent'])if(p[key])palette[key].color.set(p[key]);}
-  function pose(seconds,bpm,lane,reduced=false){
-    const p=animePose(seconds,bpm,lane,reduced);hips.position.y=p.hipY;rig.scale.set(1/Math.sqrt(p.squash),p.squash,1/Math.sqrt(p.squash));
-    hips.rotation.z=p.lean;chest.rotation.set(0,p.turn,p.sway);head.rotation.set(.025,-p.turn*.45,-p.sway*.65);
+  const solveLeg=createLegSolver(rig,bones);
+  let previous=null,lastTime=-Infinity;
+  function pose(seconds,bpm,lane,reduced=false,cue={}){
+    const target=animePose(seconds,bpm,lane,reduced,cue);
+    // Blend articulation targets without delaying the musical clock or judgment.
+    // Rewinds/restarts and reduced motion reset immediately to a deterministic pose.
+    const reset=!previous||reduced||seconds<lastTime||seconds-lastTime>.25;
+    const blend=reset?1:1-Math.exp(-Math.max(0,seconds-lastTime)*22);
+    const p={...target};
+    for(const key of Object.keys(target))if(typeof target[key]==='number'&&!['stamp','beat'].includes(key))
+      p[key]=reset?target[key]:T.MathUtils.lerp(previous[key],target[key],blend);
+    previous=p;lastTime=seconds;
+    hips.position.set(p.hipX,p.hipY,p.hipZ);
+    hips.rotation.set(0,p.hipTurn,p.hipRoll);
+    spine.rotation.set(p.spineBend,0,p.spineRoll);
+    chest.rotation.set(-p.spineBend*.35,p.chestTurn,p.chestRoll);
+    neck.rotation.set(p.headNod*.4,p.neckTurn,-p.chestRoll*.5);
+    head.rotation.set(p.headNod,-p.chestTurn*.35,-p.spineRoll*.35);
     for(const [side,sign]of [['L',-1],['R',1]]){
-      bones['shoulder'+side].rotation.set(-.16,0,side==='L'?p.leftArm:p.rightArm);
-      bones['elbow'+side].rotation.x=side==='L'?p.leftElbow:p.rightElbow;
-      bones['shoulder'+side].scale.y=p.stretch;
-      bones['thigh'+side].rotation.set(-.08,-sign*.07,sign*.07-p.sway*.6);
-      bones['knee'+side].rotation.x=side==='L'?p.leftKnee:p.rightKnee;
-      bones['foot'+side].rotation.x=-bones['knee'+side].rotation.x*.55;
+      const left=side==='L';
+      bones['clavicle'+side].rotation.set(0,sign*p.chestTurn*.2,sign*p.clavicleLift);
+      bones['shoulder'+side].rotation.set(left?p.leftShoulder:p.rightShoulder,sign*.08,left?p.leftArm:p.rightArm);
+      bones['elbow'+side].rotation.set(left?p.leftElbow:p.rightElbow,0,sign*.06);
+      bones['hand'+side].rotation.set(-.08,sign*.12,left?p.leftWrist:p.rightWrist);
     }
+    rig.updateWorldMatrix(true,true);
+    for(const side of ['L','R'])solveLeg(side,p.feet[side]);
     hairGroup.rotation.z=p.hairLag;ornament.rotation.z=p.hairLag*.45;
     for(const eye of eyes)eye.scale.y=p.blink?.12:1;mouth.visible=p.singing;smile.visible=!p.singing;
     root.updateMatrixWorld(true);skeleton.update();return p;

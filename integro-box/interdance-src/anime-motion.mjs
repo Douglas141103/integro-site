@@ -1,24 +1,58 @@
-// Only the drawing clock is stepped. Never use this clock for audio or judgment.
-export const POSE_FPS = 12;
-export function animePose(seconds, bpm = 140, lane = -1, reduced = false) {
-  const stamp = reduced ? 0 : Math.floor(Math.max(0, seconds) * POSE_FPS) / POSE_FPS;
-  const beat = stamp * bpm / 60, swing = Math.sin(beat * Math.PI), bounce = Math.sin(beat * Math.PI * 2);
-  const action = !reduced && lane >= 0;
-  const crouch = action && lane === 1 ? .14 : 0, lift = action && lane === 2 ? .12 : 0;
-  return {stamp, beat, sway:reduced ? 0 : swing*.075,
-    hipY:1.04 + (reduced ? 0 : Math.abs(bounce)*.035) - crouch + lift,
-    lean:action ? [-.18,.06,-.035,.18][lane] : swing*.035,
-    turn:reduced ? .12 : .12+Math.sin(beat*Math.PI*.5)*.1,
-    squash:1-crouch*.45+lift*.28,
-    leftArm:action ? [-1.05,-.3,-2.25,.42][lane] : -.36+swing*.3,
-    rightArm:action ? [.4,.2,2.05,1.1][lane] : .38+swing*.3,
-    leftElbow:action ? -.95 : -.25-Math.max(0,swing)*.55,
-    rightElbow:action ? -1.2 : -.45-Math.max(0,-swing)*.55,
-    leftKnee:reduced ? .12 : .14+Math.max(0,swing)*.32+crouch*2,
-    rightKnee:reduced ? .12 : .14+Math.max(0,-swing)*.32+crouch*2,
-    hairLag:reduced ? 0 : Math.sin((beat-.17)*Math.PI)*.08,
-    blink:!action && stamp%4.7>4.54, singing:action,
-    stretch:action && (lane===0||lane===3) ? 1.09 : 1
+// Only character rendering is capped. Audio, input and judgment use the audio clock.
+export const POSE_FPS = 30;
+const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+const smooth = v => {const t=clamp(v);return t*t*(3-2*t);};
+
+// A short attack and a longer release keep a tap from snapping into a rigid pose.
+export function danceAccent(seconds, lane, cue={}) {
+  if(lane<0||lane>3)return 0;
+  if(!Number.isFinite(cue.at))return 1;
+  const age=seconds-cue.at;
+  if(age<0)return 0;
+  const duration=Math.max(.32,Number(cue.duration)||0);
+  return smooth(age/.085)*(1-smooth((age-duration)/.28));
+}
+
+export function animePose(seconds, bpm=140, lane=-1, reduced=false, cue={}) {
+  const stamp=reduced?0:Math.max(0,seconds),beat=stamp*bpm/60;
+  const swing=Math.sin(beat*Math.PI/2),pulse=(1-Math.cos(beat*Math.PI*2))/2;
+  const accent=reduced?0:danceAccent(stamp,lane,cue);
+  const down=lane===1?accent:0,up=lane===2?accent:0;
+  const side=lane===0?-accent:lane===3?accent:0;
+  const energy=reduced?0:1;
+  const feet={};
+  // Alternating step-touch. One foot is always supporting the body; each swing
+  // returns to the same planted position with zero velocity at both endpoints.
+  for(const [name,sign,offset] of [['L',-1,2],['R',1,0]]) {
+    const phase=((beat-offset)%4+4)%4;
+    const arc=phase<1.5?Math.sin(Math.PI*phase/1.5)**2:0;
+    const lift=arc*energy;
+    feet[name]={x:sign*(.205+.12*lift),y:.1775+lift*(.12+.07*up),
+      z:.045+lift*.09,yaw:sign*(.06+lift*.13),pitch:-.12*lift,toe:-.22*lift,lift};
+  }
+  return {stamp,beat,accent,feet,
+    hipX:-swing*.085*energy+side*.045,
+    hipY:.965-.052*pulse*energy-.105*down,
+    hipZ:-.035*down,
+    hipRoll:swing*.065*energy-side*.07,
+    hipTurn:Math.sin(beat*Math.PI/2-.35)*.09*energy,
+    spineBend:.05+Math.sin(beat*Math.PI*2-.4)*.045*energy+down*.15,
+    spineRoll:-swing*.055*energy+side*.08,
+    chestTurn:-Math.sin(beat*Math.PI/2-.2)*.14*energy+side*.16,
+    chestRoll:-swing*.035*energy,
+    neckTurn:Math.sin(beat*Math.PI/2-.45)*.06*energy,
+    headNod:Math.sin(beat*Math.PI*2-.55)*.045*energy,
+    leftArm:-.30-swing*.25*energy-Math.max(0,-side)*.66-up*1.38-down*.16,
+    rightArm:.30-swing*.25*energy+Math.max(0,side)*.66+up*1.38+down*.16,
+    leftShoulder:-.16-Math.max(0,swing)*.26*energy-down*.3,
+    rightShoulder:-.16-Math.max(0,-swing)*.26*energy-down*.3,
+    leftElbow:-.55-(.5+.5*Math.sin(beat*Math.PI/2-.45))*.55*energy-up*.22,
+    rightElbow:-.55-(.5-.5*Math.sin(beat*Math.PI/2-.45))*.55*energy-up*.22,
+    leftWrist:Math.sin(beat*Math.PI/2-.7)*.18*energy-up*.2,
+    rightWrist:-Math.sin(beat*Math.PI/2-.7)*.18*energy-up*.2,
+    clavicleLift:up*.18,
+    hairLag:Math.sin(beat*Math.PI/2-.65)*.075*energy,
+    blink:!reduced&&stamp%4.7>4.54,singing:accent>.35,
   };
 }
 

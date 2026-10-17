@@ -1,3 +1,4 @@
+import {animePose} from './anime-motion.mjs';
 import {drawAnimeStage} from './anime-stage.mjs';
 let characterPainter=null;
 export function setCharacterPainter(painter){characterPainter=painter;}
@@ -237,18 +238,40 @@ export function setCharacterPainter(painter){characterPainter=painter;}
   function VQ(E, A, g, B, I = "#ffffff99") {
     E.save(), E.translate(A, g), E.scale(B, B), E.beginPath(), E.moveTo(-32, 10), E.bezierCurveTo(-45, -2, -25, -18, -14, -9), E.bezierCurveTo(-15, -32, 20, -32, 24, -10), E.bezierCurveTo(50, -15, 50, 14, 28, 15), E.lineTo(-25, 15), E.closePath(), hB(E, I, null), E.restore();
   }
-  function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false) {
-    if(characterPainter?.draw(E,A,g,B,I,C,Q,M))return;
+  function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
+    if(characterPainter?.draw(E,A,g,B,I,C,Q,M,cue))return;
     E.save(), I.monochrome && (E.filter = "grayscale(" + I.monochrome + ")"), E.translate(A, g);
     let Y = B / 104;
     E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
     let w = Q >= 0, G = Math.sin(C * Math.PI * 2), D = I.skin || "#d2a082", i = I.hair || "#302c47", s = I.color || "#89d8e5", k = I.accent || "#d9ef8f", e = I.look === "capybara", h = I.look === "robot", J = I.look === "box";
-    Ag(E, 0, 101, 32, 5, "#18233e33", null), E.translate(Q === 0 ? -3 : Q === 3 ? 3 : 0, G * 1.6 + (Q === 1 ? 4 : Q === 2 ? -4 : 0)), E.rotate(w ? (Q - 1.5) * 0.018 : Math.sin(C * Math.PI) * 0.022);
-    for (let c of [-1, 1]) {
-      let m = Math.max(0, Math.sin(C * Math.PI * 2 + c)) * 2;
-      kg(E, c < 0 ? -17 : 5, 75 - m, 12, 23, 6, "#556988", _A, 2.4), kg(E, c < 0 ? -24 : 3, 92 - m, 24, 11, 5, c < 0 ? k : "#f9efde", _A, 2.4), xg(E, [c < 0 ? -19 : 8, 98 - m, c < 0 ? -11 : 16, 96 - m, c < 0 ? -5 : 25, 98 - m], "#ffffff", 1.8);
+    const pose=animePose(C*60/(I.bpm||140),I.bpm||140,Q,!!cue.reduced,cue);
+    const hx=pose.hipX*36,hy=76+(.965-pose.hipY)*35;
+    // Compatibility mode also has articulated knees, elbows and wrists.
+    Ag(E,0,103,32,5,"#18233e33",null);
+    for(const [side,sign]of [['L',-1],['R',1]]) {
+      const foot=pose.feet[side],x0=hx+sign*10,y0=hy;
+      const fx=sign*12+(foot.x-sign*.205)*42,fy=98-(foot.y-.1775)*45;
+      const kx=(x0+fx)/2+sign*(4+(.965-pose.hipY)*18),ky=(y0+fy)/2;
+      xg(E,[x0,y0,kx,ky,fx,fy],_A,13);xg(E,[x0,y0,kx,ky,fx,fy],'#556988',9);
+      E.save();E.translate(fx,fy);E.rotate(sign*foot.lift*.12);
+      kg(E,-10,-3,22,9,4,sign<0?k:'#f9efde',_A,2);xg(E,[-5,0,0,-1,6,0],'#ffffff',1.5);E.restore();
     }
-    if (E.beginPath(), E.moveTo(-17, 47), E.bezierCurveTo(-27, 49, -25, 71, -22, 82), E.quadraticCurveTo(0, 90, 23, 82), E.bezierCurveTo(24, 69, 26, 51, 15, 47), E.closePath(), hB(E, s, _A, 2.6), xg(E, [-18, 79, 0, 84, 19, 79], k, 4), kg(E, -9, 58, 18, 16, 5, "#fff5dd", null), OC(E, 0, 66, 6, s), E.save(), E.translate(-21, 52), E.rotate(-0.1 + G * 0.1), kg(E, -9, 0, 12, 19, 6, s, _A, 2.3), Ag(E, -3, 20, 6, 7, e ? "#b8895f" : D, _A, 2.1), E.restore(), E.save(), E.translate(21, 53), E.rotate(w ? -0.95 : -0.25), kg(E, -3, 0, 12, 19, 6, s, _A, 2.3), Ag(E, 3, 19, 6, 7, e ? "#b8895f" : D, _A, 2.1), kg(E, 5, 1, 5, 21, 2, "#4b607b", _A, 1.5), Ag(E, 7.5, 0, 8, 10, "#d6e5ea", _A, 2), xg(E, [2, -3, 7, -5, 13, -3], "#ffffff", 1.5), xg(E, [1, 2, 8, 4, 14, 2], "#7a91a6", 1.2), E.restore(), e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
+    E.translate(hx,hy);E.rotate(-pose.spineRoll);E.translate(0,-76);
+    E.beginPath();E.moveTo(-17,47);E.bezierCurveTo(-27,49,-25,71,-22,82);E.quadraticCurveTo(0,90,23,82);E.bezierCurveTo(24,69,26,51,15,47);E.closePath();hB(E,s,_A,2.6);
+    xg(E,[-18,79,0,84,19,79],k,4);kg(E,-9,58,18,16,5,'#fff5dd',null);OC(E,0,66,6,s);
+    for(const sign of [-1,1]) {
+      const left=sign<0;E.save();E.translate(sign*21,53);
+      E.rotate(-(left?pose.leftArm:pose.rightArm));
+      kg(E,-6,0,12,15,6,s,_A,2.2);E.translate(0,13);
+      E.rotate(-sign*(.28+Math.abs(left?pose.leftElbow:pose.rightElbow)*.55));
+      kg(E,-5,0,10,13,5,s,_A,2);E.translate(0,12);
+      E.rotate(-(left?pose.leftWrist:pose.rightWrist));
+      Ag(E,0,1,5.5,6,e?'#b8895f':D,_A,2);
+      if(!left){kg(E,3,-13,4,18,2,'#4b607b',_A,1.3);Ag(E,5,-15,6,7,'#d6e5ea',_A,1.6);}
+      E.restore();
+    }
+    E.translate(0,45);E.rotate(-pose.neckTurn);E.translate(0,-45);
+    if(e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
     else if (h || J) if (kg(E, -24, 2, 48, 43, J ? 12 : 15, J ? "#dfbb82" : "#c2dbe0", _A, 2.8), J) xg(E, [-20, 12, 0, 18, 21, 12], "#ab834f", 2), kg(E, -3, 3, 6, 13, 2, "#f8e8bd", null), Ag(E, -9, 25, 4.3, 5.8, _A, null), Ag(E, 10, 25, 4.3, 5.8, _A, null), Ag(E, -10, 23, 1.5, 2, "#fff", null), Ag(E, 9, 23, 1.5, 2, "#fff", null), xg(E, [-6, 35, 2, 42, 10, 34], _A, 2), OC(E, 0, -7, 8, k, 0.15);
     else {
       kg(E, -19, 13, 38, 21, 9, "#2f4a66", _A, 1.8);

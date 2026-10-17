@@ -2,7 +2,7 @@ import * as T from 'three';
 import {createAnimeActor,makeToonRamp} from './anime-actor.mjs';
 import {POSE_FPS} from './anime-motion.mjs';
 
-// One small offscreen WebGL context, rendered only when a held anime pose changes.
+// One small offscreen WebGL context, rendered at up to 30 fps for fluid articulated dancing.
 // Notes, music, input and the main Canvas keep their own uninterrupted clocks.
 export function createAnimePainter({onUnavailable=()=>{},document=globalThis.document,Renderer=T.WebGLRenderer}={}) {
   if(!globalThis.WebGL2RenderingContext&&Renderer===T.WebGLRenderer)return null;
@@ -18,21 +18,21 @@ export function createAnimePainter({onUnavailable=()=>{},document=globalThis.doc
   const unavailable=()=>{if(!lost&&!disposed){lost=true;onUnavailable();}};
   const onLost=e=>{e.preventDefault();unavailable();};canvas.addEventListener('webglcontextlost',onLost);
   renderer.debug.onShaderError=unavailable;
-  function entry(person) {
-    const key=person.artist+'|'+person.look;
+  function entry(person,mirrored) {
+    const key=person.artist+'|'+person.look+'|'+mirrored;
     let value=actors.get(key);
     if(value){actors.delete(key);actors.set(key,value);return value;}
     if(actors.size>=4){const first=actors.keys().next().value;actors.get(first).actor.dispose();actors.delete(first);}
     const actor=createAnimeActor(person,{ramp,document}),sprite=document.createElement('canvas');sprite.width=384;sprite.height=448;
     value={actor,sprite,context:sprite.getContext('2d'),poseKey:null};actors.set(key,value);return value;
   }
-  function draw(ctx,x,y,size,person,beat=0,lane=-1,mirrored=false) {
+  function draw(ctx,x,y,size,person,beat=0,lane=-1,mirrored=false,cue={}) {
     if(disposed||lost)return false;
     try{
-      const seconds=beat*60/(person.bpm||tempo),value=entry(person),stamp=Math.floor(Math.max(0,seconds)*POSE_FPS);
-      const key=[stamp,lane,reduced,mirrored,person.monochrome>.8].join(':');
+      const seconds=beat*60/(person.bpm||tempo),value=entry(person,mirrored),stamp=reduced?0:Math.floor(Math.max(0,seconds)*POSE_FPS);
+      const key=[stamp,reduced?-1:lane,reduced,mirrored,person.monochrome>.8,reduced?0:cue.at,reduced?0:cue.duration].join(':');
       if(value.poseKey!==key){
-        value.actor.setPalette(person);value.actor.pose(seconds,person.bpm||tempo,lane,reduced);
+        value.actor.setPalette(person);value.actor.pose(seconds,person.bpm||tempo,lane,reduced,cue);
         value.actor.root.rotation.y=mirrored?-.12:.12;
         scene.add(value.actor.root);renderer.render(scene,camera);value.actor.root.removeFromParent();
         if(lost)return false;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import * as T from '../integro-box/interdance-src/node_modules/three/build/three.module.js';
 import {createAnimeActor,makeToonRamp} from '../integro-box/interdance-src/anime-actor.mjs';
-import {animePose,versusLayout} from '../integro-box/interdance-src/anime-motion.mjs';
+import {animePose,danceAccent,POSE_FPS,versusLayout} from '../integro-box/interdance-src/anime-motion.mjs';
 import {createAnimePainter} from '../integro-box/interdance-src/anime-view.mjs';
 import {stages,avatars} from '../integro-box/interdance-src/engine.mjs';
 
@@ -12,15 +12,16 @@ test('all sixteen bosses and both dancers have bounded weighted rigs, edited fac
  for(const person of [...stages,...avatars]){
   const actor=createAnimeActor(person,{ramp,document:null});let skinCount=0,triangles=0;
   try{
-   assert.equal(actor.skeleton.bones.length,15);assert.equal(actor.palette.color.gradientMap,ramp);
+   assert.equal(actor.skeleton.bones.length,21);assert.equal(actor.palette.color.gradientMap,ramp);
    const normals=actor.faceGeometry.attributes.normal;for(let i=0;i<normals.count;i++)assert(Math.abs(new T.Vector3().fromBufferAttribute(normals,i).length()-1)<.00001);
    actor.root.traverse(mesh=>{
     if(!mesh.isMesh)return;triangles+=(mesh.geometry.index?.count||mesh.geometry.attributes.position.count)/3;
     if(mesh.isSkinnedMesh){skinCount++;const weights=mesh.geometry.attributes.skinWeight;assert.equal(mesh.skeleton,actor.skeleton);for(let i=0;i<weights.count;i++){assert(Math.abs(weights.getX(i)+weights.getY(i)-1)<.00001);assert(weights.getX(i)>=0&&weights.getY(i)>=0);}}
    });
    assert.equal(skinCount,8);assert(triangles<65000,person.artist+' exceeded mobile geometry budget: '+triangles);
-   for(const lane of [-1,0,1,2,3]){
-    actor.pose(1.25,person.bpm||140,lane);let minY=Infinity,maxY=-Infinity;
+   for(const lane of [-1,0,1,2,3])for(const seconds of [.15,.5,1.25,2.1]){
+    actor.pose(0,person.bpm||140,-1,true);
+    actor.pose(seconds,person.bpm||140,lane);let minY=Infinity,maxY=-Infinity;
     actor.root.traverse(mesh=>{if(!mesh.isMesh)return;const positions=mesh.geometry.attributes.position;for(let i=0;i<positions.count;i+=9){const point=new T.Vector3().fromBufferAttribute(positions,i);if(mesh.isSkinnedMesh)mesh.applyBoneTransform(i,point);point.applyMatrix4(mesh.matrixWorld);assert([point.x,point.y,point.z].every(Number.isFinite));minY=Math.min(minY,point.y);maxY=Math.max(maxY,point.y);assert(Math.abs(point.x)<1.36&&Math.abs(point.z)<2);}});
     assert(minY>-.18&&maxY<2.99,`${person.artist}: pose ${lane} clipped (${minY}, ${maxY})`);
    }
@@ -29,11 +30,42 @@ test('all sixteen bosses and both dancers have bounded weighted rigs, edited fac
  ramp.dispose();
 });
 
-test('animation holds drawings at 12 fps, reacts to directions and honors reduced motion',()=>{
- assert.deepEqual(animePose(1.001,160,0),animePose(1.07,160,0));assert.notDeepEqual(animePose(1.001,160,0),animePose(1.09,160,0));
+test('continuous motion follows musical beats, eases directional accents and freezes for reduced motion',()=>{
+ assert.equal(POSE_FPS,30);
+ assert.notDeepEqual(animePose(1.001,160,0),animePose(1.02,160,0));
  assert.notEqual(animePose(1,140,0).leftArm,animePose(1,140,3).leftArm);
- assert(animePose(1,140,1).squash<1);assert(animePose(1,140,2).squash>1);
+ assert(animePose(1,140,1).hipY<animePose(1,140,-1).hipY);
+ assert(Math.abs(animePose(1,140,2).leftArm)>Math.abs(animePose(1,140,-1).leftArm));
+ assert.equal(danceAccent(1,0,{at:1}),0);
+ assert(danceAccent(1.1,0,{at:1})>.95);
+ assert(danceAccent(1.48,0,{at:1})>0);
+ assert.equal(danceAccent(1.61,0,{at:1}),0);
+ assert.equal(danceAccent(2,0,{at:1,duration:2}),1);
  assert.deepEqual(animePose(1,140,-1,true),animePose(9,140,3,true));
+});
+
+test('feet reach planted targets with a forward knee and constant limb lengths through all directions and tempos',()=>{
+ const actor=createAnimeActor(avatars[0],{document:null}),point=new T.Vector3(),knee=new T.Vector3(),hip=new T.Vector3();
+ const moving=new Set();
+ try {
+  for(const bpm of [100,140,190])for(const lane of [-1,0,1,2,3])for(let frame=0;frame<120;frame++) {
+   const seconds=frame/30,p=actor.pose(seconds,bpm,lane,false,{at:.7,duration:.4});
+   assert(p.feet.L.lift===0||p.feet.R.lift===0,'one foot must support the body');
+   for(const side of ['L','R']) {
+    actor.bones['thigh'+side].getWorldPosition(hip);actor.bones['knee'+side].getWorldPosition(knee);actor.bones['foot'+side].getWorldPosition(point);
+    const target=new T.Vector3(p.feet[side].x,p.feet[side].y,p.feet[side].z);
+    assert(point.distanceTo(target)<1e-5,`foot sliding at ${bpm} BPM, lane ${lane}, frame ${frame}`);
+    assert(Math.abs(hip.distanceTo(knee)-.41)<1e-5);assert(Math.abs(knee.distanceTo(point)-.41)<1e-5);
+    assert(knee.z>Math.min(hip.z,point.z),'knee must bend forward');
+    if(p.feet[side].lift===0) {
+     const sole=actor.bones['foot'+side].localToWorld(new T.Vector3(0,-.1575,0));
+     assert(Math.abs(sole.y-.02)<1e-5,'supporting sole must stay on the floor');
+    }
+   }
+   for(const name of ['spine','neck','clavicleL','handL','toeL'])if(actor.bones[name].rotation.toArray().slice(0,3).some(v=>Math.abs(v)>.025))moving.add(name);
+  }
+  assert.equal(moving.size,5,'new joints participate in dancing');
+ } finally {actor.dispose();}
 });
 
 test('versus layout reserves visible character space outside both note highways on phone and desktop',()=>{
