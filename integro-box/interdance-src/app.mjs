@@ -4,7 +4,7 @@ import {drawConcert,concertLayout} from './concert.mjs';
 
 async function loadAnimeRenderer(options){
   if(!globalThis.WebGL2RenderingContext)return null;
-  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-rig56');
+  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-fit1');
   return createAnimePainter(options);
 }
 

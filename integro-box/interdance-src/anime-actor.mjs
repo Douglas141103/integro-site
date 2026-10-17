@@ -3,6 +3,8 @@ import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {animePose} from './anime-motion.mjs';
 import {createLegSolver} from './dance-kinematics.mjs';
+import {LEG_LENGTH,HEAD_SCALE} from './dance-proportions.mjs';
+import {ARM_PROFILE,LEG_PROFILE,shapeJacket,createLimbSurface,jointCorrectionInfluence} from './anime-body.mjs';
 
 const INK=0x20243e, WHITE=0xfff5e6;
 export const FINGER_NAMES=Object.freeze(['thumb','index','middle','ring','little']);
@@ -23,13 +25,13 @@ export function editFaceNormals(geometry) {
   }
   n.needsUpdate=true;return geometry;
 }
-function outlineMaterial() {
+function outlineMaterial(width=.007) {
   const m=new T.MeshToonMaterial({color:0x000000,emissive:INK,side:T.BackSide});
   m.onBeforeCompile=shader=>{
     shader.vertexShader=shader.vertexShader.replace('#include <skinning_vertex>',
-      '#include <skinning_vertex>\ntransformed += normalize( objectNormal ) * 0.012;');
+      '#include <skinning_vertex>\ntransformed += normalize( objectNormal ) * '+width.toFixed(4)+';');
   };
-  m.customProgramCacheKey=()=> 'interdance-inverted-hull-v1';return m;
+  m.customProgramCacheKey=()=> 'interdance-inverted-hull-v2-'+width;return m;
 }
 function paintedTexture(kind,document) {
   if(!document)return null;
@@ -54,7 +56,8 @@ function paintedTexture(kind,document) {
 
 export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis.document}={}) {
   const root=new T.Group(),rig=new T.Group();root.name='InterDance anime · '+person.artist;root.add(rig);
-  const resources=new Set(),palette={},outline=outlineMaterial();resources.add(outline);
+  const resources=new Set(),palette={},outline=outlineMaterial(),fingerOutline=outlineMaterial(.003);resources.add(outline);resources.add(fingerOutline);
+  const correctives=[];
   const material=(name,color,map=null,basic=false)=>{
     const m=basic?new T.MeshBasicMaterial({color,map}):new T.MeshToonMaterial({color,map,gradientMap:ramp});
     resources.add(m);if(name)palette[name]=m;return m;
@@ -65,16 +68,17 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   const skin=material('skin',person.skin||'#d2a082'),hair=material('hair',person.hair||'#302c47',hairTexture);
   const ink=material(null,INK),cream=material(null,WHITE),pants=material(null,0x34415f),eyeInk=material(null,INK,null,true),eyeWhite=material(null,WHITE,null,true),iris=material(null,0x715344,null,true);
   const bone=(name,parent,x=0,y=0,z=0)=>{const b=new T.Bone();b.name=name;b.position.set(x,y,z);parent.add(b);return b;};
-  const rootBone=bone('root',rig),hips=bone('hips',rootBone,0,1.04,0),spine=bone('spine',hips,0,.18,0),chest=bone('chest',spine,0,.25,0);
+  const rootBone=bone('root',rig),hips=bone('hips',rootBone,0,1.14,0),spine=bone('spine',hips,0,.18,0),chest=bone('chest',spine,0,.25,0);
   const upperChest=bone('upperChest',chest,0,.14,0),neck=bone('neck',upperChest,0,.22,0),head=bone('head',neck,0,.25,0);
-  head.scale.setScalar(.83);
+  head.scale.setScalar(HEAD_SCALE);
   const jaw=bone('jaw',head,0,-.13,0);
   const bones={root:rootBone,hips,spine,chest,upperChest,neck,head,jaw};
   for(const [side,sign] of [['L',-1],['R',1]])bones['eye'+side]=bone('eye'+side,head,sign*(person.look==='capybara'?.18:.13),.015,person.look==='capybara'?.285:person.look==='robot'?.29:.244);
   for(const [side,sign] of [['L',-1],['R',1]]) {
-    const clavicle=bone('clavicle'+side,upperChest,sign*.16,0,0);
-    const shoulder=bone('shoulder'+side,clavicle,sign*.22,0,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
-    const thigh=bone('thigh'+side,hips,sign*.17,-.02,0),knee=bone('knee'+side,thigh,0,-.41,0),foot=bone('foot'+side,knee,0,-.41,0);
+    const clavicle=bone('clavicle'+side,upperChest,sign*.14,0,0);
+    const shoulder=bone('shoulder'+side,clavicle,sign*.16,0,0),elbow=bone('elbow'+side,shoulder,0,-.32,0),hand=bone('hand'+side,elbow,0,-.28,0);
+    hand.scale.set(.9,.94,.9);
+    const thigh=bone('thigh'+side,hips,sign*.135,-.02,0),knee=bone('knee'+side,thigh,0,-LEG_LENGTH,0),foot=bone('foot'+side,knee,0,-LEG_LENGTH,0);
     const toe=bone('toe'+side,foot,0,-.055,.18);
     Object.assign(bones,{['clavicle'+side]:clavicle,['toe'+side]:toe,['shoulder'+side]:shoulder,['elbow'+side]:elbow,['hand'+side]:hand,['thigh'+side]:thigh,['knee'+side]:knee,['foot'+side]:foot});
     for(let f=0;f<FINGER_NAMES.length;f++){
@@ -99,21 +103,23 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));
     return mesh(parent,new T.TubeGeometry(curve,12,r,5,false),mat,0,0,0,false);
   };
-  const skinnedPart=(geometry,mat,name,outlined=true)=>{
-    resources.add(geometry);
-    for(const m of outlined?[mat,outline]:[mat]) {const part=new T.SkinnedMesh(geometry,m);part.name=m===outline?'skinned-inverted-hull':name;part.frustumCulled=false;rig.add(part);part.bind(skeleton);}
+  const skinnedPart=(geometry,mat,name,outlined=true,hullMaterial=outline)=>{
+    resources.add(geometry);const parts=[];
+    for(const m of outlined?[mat,hullMaterial]:[mat]) {const part=new T.SkinnedMesh(geometry,m);part.name=m===hullMaterial?'skinned-inverted-hull':name;part.frustumCulled=false;rig.add(part);part.bind(skeleton);parts.push(part);}
+    return parts;
   };
   // Continuous weighted sleeves and trousers bend across elbows/knees.
-  function limb(upper,lower,length,radius,mat) {
-    const geometry=new T.CylinderGeometry(radius*.92,radius*.76,length,12,12,false).translate(0,-length/2,0);
-    const position=geometry.attributes.position,indices=[],weights=[],a=skeleton.bones.indexOf(bones[upper]),b=skeleton.bones.indexOf(bones[lower]);
+  function limb(upper,lower,length,profile,mat) {
     const joint=-bones[lower].position.y;
-    for(let i=0;i<position.count;i++){const w=T.MathUtils.smoothstep(-position.getY(i),joint-.10,joint+.10);indices.push(a,b,0,0);weights.push(1-w,w,0,0);}
-    geometry.applyMatrix4(bones[upper].matrixWorld);geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));
-    skinnedPart(geometry,mat,upper+' weighted cloth');
+    const {geometry,blend}=createLimbSurface({length,joint,profile,bindMatrix:bones[upper].matrixWorld});
+    const indices=[],weights=[],a=skeleton.bones.indexOf(bones[upper]),b=skeleton.bones.indexOf(bones[lower]);
+    for(const w of blend){indices.push(a,b,0,0);weights.push(1-w,w,0,0);}
+    geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));
+    correctives.push({bone:bones[lower],parts:skinnedPart(geometry,mat,upper+' weighted cloth')});
   }
   // The jacket follows three spine segments instead of rotating as one block.
   function jacketPart(geometry,mat,name,outlined=true){
+    shapeJacket(geometry);
     const indices=[],weights=[];
     for(let i=0;i<geometry.attributes.position.count;i++){
       const y=geometry.attributes.position.getY(i),lower=y<-.1;
@@ -127,14 +133,15 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
   jacketPart(box(.28,.45,.035,.015).translate(0,-.015,.211),ink,'jacket center',false);
   for(const side of [-1,1])jacketPart(box(.12,.42,.045,.025).rotateZ(side*-.14).translate(side*.22,.005,.216),cream,'jacket panel',false);
   jacketPart(box(.10,.065,.045,.008).translate(-.24,.11,.25),accent,'jacket badge',false);
-  mesh(hips,box(.49,.23,.30),pants,0,0,0);
-  mesh(upperChest,new T.TorusGeometry(.18,.055,6,18),accent,0,.12,0).rotation.x=Math.PI/2;
-  mesh(spine,box(.65,.08,.39,.025),accent,0,-.09,0);
+  mesh(hips,box(.41,.21,.24,.065),pants,0,0,0);
+  mesh(neck,new T.CylinderGeometry(.065,.075,.18,12),skin,0,-.025,0);
+  mesh(upperChest,new T.TorusGeometry(.13,.035,6,18),accent,0,.12,0).rotation.x=Math.PI/2;
+  mesh(spine,box(.43,.06,.28,.025),accent,0,-.09,0);
   for(const [side,sign] of [['L',-1],['R',1]]) {
-    limb('shoulder'+side,'elbow'+side,.60,.145,cloth);limb('thigh'+side,'knee'+side,.82,.14,pants);
-    ellipsoid(bones['shoulder'+side],cloth,0,0,0,.145,.13,.14);
+    limb('shoulder'+side,'elbow'+side,.60,ARM_PROFILE,cloth);limb('thigh'+side,'knee'+side,LEG_LENGTH*2,LEG_PROFILE,pants);
+    ellipsoid(bones['shoulder'+side],cloth,0,0,0,.097,.095,.087);
     ellipsoid(bones['hand'+side],skin,0,-.04,.025,.085,.085,.055);
-    mesh(bones['hand'+side],box(.19,.055,.18,.02),accent,0,.07,0);
+    mesh(bones['hand'+side],box(.14,.055,.115,.018),accent,0,.055,0);
     // Thirty finger bones deform visible geometry. Merge all fifteen segments
     // per hand into one mesh (+ outline), keeping the draw-call cost constant.
     const fingers=[];
@@ -145,12 +152,12 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
       const indices=[],weights=[];for(let i=0;i<geometry.attributes.position.count;i++){indices.push(skeleton.bones.indexOf(b),0,0,0);weights.push(1,0,0,0);}
       geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));fingers.push(geometry);
     }
-    skinnedPart(mergeGeometries(fingers),skin,'articulated fingers '+side);for(const geometry of fingers)geometry.dispose();
-    mesh(bones['foot'+side],box(.28,.17,.29,.06),cream,0,-.06,.015);
-    mesh(bones['foot'+side],box(.29,.045,.30,.015),ink,0,-.135,.015);
-    mesh(bones['toe'+side],box(.28,.14,.18,.05),cream,0,-.005,.07);
-    mesh(bones['toe'+side],box(.29,.045,.18,.015),ink,0,-.08,.07);
-    mesh(bones['foot'+side],box(.25,.07,.26,.025),accent,0,.015,.13);
+    skinnedPart(mergeGeometries(fingers),skin,'articulated fingers '+side,true,fingerOutline);for(const geometry of fingers)geometry.dispose();
+    mesh(bones['foot'+side],box(.22,.17,.29,.05),cream,0,-.06,.015);
+    mesh(bones['foot'+side],box(.23,.045,.30,.015),ink,0,-.135,.015);
+    mesh(bones['toe'+side],box(.22,.14,.18,.045),cream,0,-.005,.07);
+    mesh(bones['toe'+side],box(.23,.045,.18,.015),ink,0,-.08,.07);
+    mesh(bones['foot'+side],box(.20,.07,.26,.025),accent,0,.015,.13);
     for(const y of [.05,.10,.15])detail(bones['foot'+side],[[-.07,.057,y],[0,.065,y-.01],[.07,.057,y]],cream,.009);
   }
   // A microphone is attached to the hand bone, so it follows all dance poses.
@@ -257,6 +264,11 @@ export function createAnimeActor(person,{ramp=makeToonRamp(),document=globalThis
     }
     rig.updateWorldMatrix(true,true);
     for(const side of ['L','R'])solveLeg(side,p.feet[side]);
+    for(const {bone,parts} of correctives){
+      const bend=2*Math.acos(T.MathUtils.clamp(Math.abs(bone.quaternion.w),0,1));
+      const influence=jointCorrectionInfluence(bend);
+      for(const part of parts)part.morphTargetInfluences[0]=influence;
+    }
     hairGroup.rotation.z=p.hairLag;ornament.rotation.z=p.hairLag*.45;
     jaw.rotation.x=p.jawOpen;
     for(const eye of eyes){eye.scale.y=p.blink?.12:1;eye.rotation.y=p.eyeLook;}

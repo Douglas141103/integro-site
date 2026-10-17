@@ -1,3 +1,6 @@
+// integro-box/interdance-src/dance-proportions.mjs
+var HIP_HEIGHT = 1.05;
+
 // integro-box/interdance-src/anime-motion.mjs
 var clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var smooth = (v) => {
@@ -131,7 +134,7 @@ function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
     routine: DANCE_ROUTINES[phrase],
     rootTurn: Math.sin(beat * Math.PI / 4) * 0.035 * energy,
     hipX: (support * 0.095 - swing * 0.025) * energy + side * 0.035,
-    hipY: 0.95 - 0.048 * pulse * energy - 0.095 * down - Math.max(feet.L.lift, feet.R.lift) * 0.025,
+    hipY: HIP_HEIGHT - 0.048 * pulse * energy - 0.095 * down - Math.max(feet.L.lift, feet.R.lift) * 0.025,
     hipZ: -0.035 * down,
     hipRoll: swing * 0.065 * energy - side * 0.07,
     hipTurn: Math.sin(beat * Math.PI / 2 - 0.35) * 0.09 * energy,
@@ -387,43 +390,45 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
   let w = Q >= 0, G = Math.sin(C * Math.PI * 2), D = I.skin || "#d2a082", i = I.hair || "#302c47", s = I.color || "#89d8e5", k = I.accent || "#d9ef8f", e = I.look === "capybara", h = I.look === "robot", J = I.look === "box";
   const pose = animePose(C * 60 / (I.bpm || 140), I.bpm || 140, Q, !!cue.reduced, cue);
-  const hx = pose.hipX * 36, hy = 76 + (0.965 - pose.hipY) * 35;
+  const hx = pose.hipX * 36, hy = 72 + (HIP_HEIGHT - pose.hipY) * 35;
   Ag(E, 0, 103, 32, 5, "#18233e33", null);
   for (const [side, sign] of [["L", -1], ["R", 1]]) {
-    const foot = pose.feet[side], x0 = hx + sign * 10, y0 = hy;
+    const foot = pose.feet[side], x0 = hx + sign * 8, y0 = hy;
     const fx = sign * 12 + (foot.x - sign * 0.205) * 42, fy = 98 - (foot.y - 0.1775) * 45;
-    const kx = (x0 + fx) / 2 + sign * (4 + (0.965 - pose.hipY) * 18), ky = (y0 + fy) / 2;
-    xg(E, [x0, y0, kx, ky, fx, fy], _A, 13);
-    xg(E, [x0, y0, kx, ky, fx, fy], "#556988", 9);
+    const kx = (x0 + fx) / 2 + sign * (3 + (HIP_HEIGHT - pose.hipY) * 18), ky = (y0 + fy) / 2;
+    xg(E, [x0, y0, kx, ky], _A, 10);
+    xg(E, [x0, y0, kx, ky], "#556988", 7);
+    xg(E, [kx, ky, fx, fy], _A, 8);
+    xg(E, [kx, ky, fx, fy], "#556988", 5.5);
     E.save();
     E.translate(fx, fy);
     E.rotate(sign * foot.lift * 0.12);
-    kg(E, -10, -3, 22, 9, 4, sign < 0 ? k : "#f9efde", _A, 2);
-    xg(E, [-5, 0, 0, -1, 6, 0], "#ffffff", 1.5);
+    kg(E, -8, -3, 18, 9, 4, sign < 0 ? k : "#f9efde", _A, 1.5);
+    xg(E, [-4, 0, 0, -1, 5, 0], "#ffffff", 1.2);
     E.restore();
   }
   E.translate(hx, hy);
   E.rotate(-pose.spineRoll);
   E.translate(0, -76);
   E.beginPath();
-  E.moveTo(-17, 47);
-  E.bezierCurveTo(-27, 49, -25, 71, -22, 82);
-  E.quadraticCurveTo(0, 90, 23, 82);
-  E.bezierCurveTo(24, 69, 26, 51, 15, 47);
+  E.moveTo(-15, 47);
+  E.bezierCurveTo(-21, 49, -17, 66, -16, 77);
+  E.quadraticCurveTo(0, 82, 16, 77);
+  E.bezierCurveTo(17, 66, 21, 49, 15, 47);
   E.closePath();
-  hB(E, s, _A, 2.6);
-  xg(E, [-18, 79, 0, 84, 19, 79], k, 4);
-  kg(E, -9, 58, 18, 16, 5, "#fff5dd", null);
-  OC(E, 0, 66, 6, s);
+  hB(E, s, _A, 1.8);
+  xg(E, [-15, 76, 0, 79, 15, 76], k, 3);
+  kg(E, -7, 56, 14, 15, 4, "#fff5dd", null);
+  OC(E, 0, 63, 5, s);
   for (const sign of [-1, 1]) {
     const left = sign < 0;
     E.save();
-    E.translate(sign * 21, 53);
+    E.translate(sign * 18, 52);
     E.rotate(-(left ? pose.leftArm : pose.rightArm));
-    kg(E, -6, 0, 12, 15, 6, s, _A, 2.2);
+    kg(E, -4.5, 0, 9, 15, 4.5, s, _A, 1.6);
     E.translate(0, 13);
     E.rotate(-sign * (0.28 + Math.abs(left ? pose.leftElbow : pose.rightElbow) * 0.55));
-    kg(E, -5, 0, 10, 13, 5, s, _A, 2);
+    kg(E, -3.5, 0, 7, 13, 3.5, s, _A, 1.5);
     E.translate(0, 12);
     E.rotate(-(left ? pose.leftWrist : pose.rightWrist));
     Ag(E, 0, 1, 4.5, 5, e ? "#b8895f" : D, _A, 1.6);
@@ -442,6 +447,7 @@ function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
   }
   E.translate(0, 45);
   E.rotate(-pose.neckTurn);
+  E.scale(0.88, 0.88);
   E.translate(0, -45);
   if (e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
   else if (h || J) if (kg(E, -24, 2, 48, 43, J ? 12 : 15, J ? "#dfbb82" : "#c2dbe0", _A, 2.8), J) xg(E, [-20, 12, 0, 18, 21, 12], "#ab834f", 2), kg(E, -3, 3, 6, 13, 2, "#f8e8bd", null), Ag(E, -9, 25, 4.3, 5.8, _A, null), Ag(E, 10, 25, 4.3, 5.8, _A, null), Ag(E, -10, 23, 1.5, 2, "#fff", null), Ag(E, 9, 23, 1.5, 2, "#fff", null), xg(E, [-6, 35, 2, 42, 10, 34], _A, 2), OC(E, 0, -7, 8, k, 0.15);
@@ -692,7 +698,7 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
 // integro-box/interdance-src/app.mjs
 async function loadAnimeRenderer(options) {
   if (!globalThis.WebGL2RenderingContext) return null;
-  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-rig56");
+  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-fit1");
   return createAnimePainter(options);
 }
 function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {

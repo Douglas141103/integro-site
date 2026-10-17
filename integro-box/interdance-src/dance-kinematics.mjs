@@ -7,7 +7,7 @@ export function createLegSolver(rig, bones) {
   const direction=new T.Vector3(),pole=new T.Vector3(),kneePoint=new T.Vector3();
   const segment=new T.Vector3(),parentRotation=new T.Quaternion();
   const rotation=new T.Quaternion(),rigRotation=new T.Quaternion(),euler=new T.Euler();
-  const upperLength=.41,lowerLength=.41;
+  const upperLength=bones.kneeL.position.length(),lowerLength=bones.footL.position.length();
   return (side,target)=>{
     const thigh=bones['thigh'+side],knee=bones['knee'+side],foot=bones['foot'+side];
     rig.updateWorldMatrix(true,false);

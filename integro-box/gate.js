@@ -42,7 +42,7 @@ try {
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
   if(!unloaded)await import('./egg-cloud.js?v=20261016-intgem1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
-  if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-rig56');installInterDance();}
+  if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-fit1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');

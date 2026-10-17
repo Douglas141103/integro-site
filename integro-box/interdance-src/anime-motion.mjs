@@ -1,3 +1,4 @@
+import {HIP_HEIGHT} from './dance-proportions.mjs';
 // Only character rendering is capped. Audio, input and judgment use the audio clock.
 export const POSE_FPS = 30;
 const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
@@ -63,7 +64,7 @@ export function animePose(seconds, bpm=140, lane=-1, reduced=false, cue={}) {
   return {stamp,beat,accent,feet,routine:DANCE_ROUTINES[phrase],
     rootTurn:Math.sin(beat*Math.PI/4)*.035*energy,
     hipX:(support*.095-swing*.025)*energy+side*.035,
-    hipY:.95-.048*pulse*energy-.095*down-Math.max(feet.L.lift,feet.R.lift)*.025,
+    hipY:HIP_HEIGHT-.048*pulse*energy-.095*down-Math.max(feet.L.lift,feet.R.lift)*.025,
     hipZ:-.035*down,
     hipRoll:swing*.065*energy-side*.07,
     hipTurn:Math.sin(beat*Math.PI/2-.35)*.09*energy,

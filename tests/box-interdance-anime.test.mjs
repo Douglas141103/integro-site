@@ -22,7 +22,7 @@ test('all sixteen bosses and both dancers have bounded weighted rigs, edited fac
    for(const lane of [-1,0,1,2,3])for(const seconds of [.15,.5,1.25,2.1]){
     actor.pose(0,person.bpm||140,-1,true);
     actor.pose(seconds,person.bpm||140,lane);let minY=Infinity,maxY=-Infinity;
-    actor.root.traverse(mesh=>{if(!mesh.isMesh)return;const positions=mesh.geometry.attributes.position;for(let i=0;i<positions.count;i+=9){const point=new T.Vector3().fromBufferAttribute(positions,i);if(mesh.isSkinnedMesh)mesh.applyBoneTransform(i,point);point.applyMatrix4(mesh.matrixWorld);assert([point.x,point.y,point.z].every(Number.isFinite));minY=Math.min(minY,point.y);maxY=Math.max(maxY,point.y);assert(Math.abs(point.x)<1.36&&Math.abs(point.z)<2);}});
+    actor.root.traverse(mesh=>{if(!mesh.isMesh)return;const positions=mesh.geometry.attributes.position;for(let i=0;i<positions.count;i+=9){const point=mesh.getVertexPosition(i,new T.Vector3()).applyMatrix4(mesh.matrixWorld);assert([point.x,point.y,point.z].every(Number.isFinite));minY=Math.min(minY,point.y);maxY=Math.max(maxY,point.y);assert(Math.abs(point.x)<1.36&&Math.abs(point.z)<2);}});
     assert(minY>-.18&&maxY<2.99,`${person.artist}: pose ${lane} clipped (${minY}, ${maxY})`);
    }
   }finally{actor.dispose();}
@@ -55,7 +55,7 @@ test('feet reach planted targets with a forward knee and constant limb lengths t
     actor.bones['thigh'+side].getWorldPosition(hip);actor.bones['knee'+side].getWorldPosition(knee);actor.bones['foot'+side].getWorldPosition(point);
     const target=new T.Vector3(p.feet[side].x,p.feet[side].y,p.feet[side].z);
     assert(point.distanceTo(target)<1e-5,`foot sliding at ${bpm} BPM, lane ${lane}, frame ${frame}`);
-    assert(Math.abs(hip.distanceTo(knee)-.41)<1e-5);assert(Math.abs(knee.distanceTo(point)-.41)<1e-5);
+    assert(Math.abs(hip.distanceTo(knee)-.46)<1e-5);assert(Math.abs(knee.distanceTo(point)-.46)<1e-5);
     assert(knee.z>Math.min(hip.z,point.z),'knee must bend forward');
     if(p.feet[side].lift===0) {
      const sole=actor.bones['foot'+side].localToWorld(new T.Vector3(0,-.1575,0));
@@ -100,11 +100,35 @@ test('all 56 bones drive visible geometry and the thirty finger joints move thro
    // Sample every phrase and both arm accents against the offscreen camera.
    if(beat%2===.5)actor.root.traverse(mesh=>{
     if(!mesh.isMesh)return;const positions=mesh.geometry.attributes.position;
-    for(let i=0;i<positions.count;i+=13){const p=new T.Vector3().fromBufferAttribute(positions,i);if(mesh.isSkinnedMesh)mesh.applyBoneTransform(i,p);p.applyMatrix4(mesh.matrixWorld);assert(p.x> -1.36&&p.x<1.36&&p.y>-.18&&p.y<2.99,`clipping at beat ${beat}: ${mesh.name} (${p.x}, ${p.y})`);}
+    for(let i=0;i<positions.count;i+=13){const p=mesh.getVertexPosition(i,new T.Vector3()).applyMatrix4(mesh.matrixWorld);assert(p.x> -1.36&&p.x<1.36&&p.y>-.18&&p.y<2.99,`clipping at beat ${beat}: ${mesh.name} (${p.x}, ${p.y})`);}
    });
   }
   for(const name of used)assert(ranges.get(name).change>.005,name+' never articulates');
   for(const side of ['L','R'])for(const name of FINGER_NAMES)for(let joint=1;joint<=3;joint++)assert(used.has(name+side+joint));
+ }finally{actor.dispose();}
+});
+
+test('elbow and knee cross-sections retain their volume through deep bends without bulging',()=>{
+ const actor=createAnimeActor(avatars[0],{document:null}),limbs=[];
+ const polygonArea=points=>{
+  const center=points.reduce((sum,p)=>sum.add(p),new T.Vector3()).multiplyScalar(1/points.length),normal=new T.Vector3();
+  for(let i=0;i<points.length;i++)normal.add(new T.Vector3().crossVectors(points[i].clone().sub(center),points[(i+1)%points.length].clone().sub(center)));
+  return normal.length()/2;
+ };
+ try{
+  actor.root.traverse(mesh=>{if(mesh.name.endsWith('weighted cloth'))limbs.push({mesh,rest:polygonArea(mesh.geometry.userData.jointRing.map(i=>new T.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i)))});});
+  assert.equal(limbs.length,4);let restored=0;
+  for(let beat=.25;beat<48;beat+=.5){
+   actor.pose(beat*60/140,140,1);
+   for(const {mesh,rest} of limbs){
+    const area=()=>polygonArea(mesh.geometry.userData.jointRing.map(i=>mesh.getVertexPosition(i,new T.Vector3())));
+    const corrected=area(),influence=mesh.morphTargetInfluences[0];mesh.morphTargetInfluences[0]=0;const uncorrected=area();mesh.morphTargetInfluences[0]=influence;
+    assert(corrected/rest>.85&&corrected/rest<1.12,`${mesh.name}: joint volume ${corrected/rest} at beat ${beat}`);
+    if(corrected>uncorrected*1.08)restored++;
+    const hull=mesh.parent.children.find(p=>p!==mesh&&p.geometry===mesh.geometry);assert.equal(hull.morphTargetInfluences[0],influence,'outline must follow the corrected surface');
+   }
+  }
+  assert(restored>100,'correction must visibly improve the flexed joints');
  }finally{actor.dispose();}
 });
 
