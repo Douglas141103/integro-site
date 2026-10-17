@@ -360,6 +360,6 @@ export function setCharacterPainter(painter){characterPainter=painter;}
     }
     e && drawArrow(E, A * (i ? 0.22 : 0.2), k - 15, 16, e.lane, laneColors[e.lane]), C < 4 * I.song.beat && (E.font = "1000 60px system-ui", E.fillStyle = "#ffedb6", E.fillText(Math.max(1, 4 - Math.floor(C / I.song.beat)), A / 2, g * 0.57));
   }
-  var avatars = [{ artist: "Duda", skin: "#d7a57e", hair: "#3a334d", color: "#8fc5d9", accent: "#e4efac", look: "phones" }, { artist: "Ravi", skin: "#9f7159", hair: "#2c3042", color: "#b8a4de", accent: "#f2cb9d", look: "cap" }], escapeHTML = (E) => String(E).replace(/[&<>"']/g, (A) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[A]), formatTime = (E) => Math.floor(Math.max(0, E) / 60) + ":" + String(Math.floor(Math.max(0, E) % 60)).padStart(2, "0");
+  var avatars = [{ artist: "Duda", skin: "#d7a57e", hair: "#3a334d", color: "#27c6c8", accent: "#b6a5ff", look: "phones" }, { artist: "Ravi", skin: "#9f7159", hair: "#2c3042", color: "#f08065", accent: "#f6e5bf", look: "cap" }], escapeHTML = (E) => String(E).replace(/[&<>"']/g, (A) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[A]), formatTime = (E) => Math.floor(Math.max(0, E) / 60) + ":" + String(Math.floor(Math.max(0, E) % 60)).padStart(2, "0");
 
 export { laneColors, stages, generateSong, sanitizeProgress, RhythmRun, synthesize, DanceAudio, phaseEffects, drawBackground, drawCharacter, drawArrow, drawSolo, avatars, escapeHTML, formatTime, noteMotion };
