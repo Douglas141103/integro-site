@@ -1,3 +1,70 @@
+// integro-box/interdance-src/anime-motion.mjs
+var clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+var smooth = (v) => {
+  const t = clamp(v);
+  return t * t * (3 - 2 * t);
+};
+function danceAccent(seconds, lane, cue = {}) {
+  if (lane < 0 || lane > 3) return 0;
+  if (!Number.isFinite(cue.at)) return 1;
+  const age = seconds - cue.at;
+  if (age < 0) return 0;
+  const duration = Math.max(0.32, Number(cue.duration) || 0);
+  return smooth(age / 0.085) * (1 - smooth((age - duration) / 0.28));
+}
+function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
+  const stamp = reduced ? 0 : Math.max(0, seconds), beat = stamp * bpm / 60;
+  const swing = Math.sin(beat * Math.PI / 2), pulse = (1 - Math.cos(beat * Math.PI * 2)) / 2;
+  const accent = reduced ? 0 : danceAccent(stamp, lane, cue);
+  const down = lane === 1 ? accent : 0, up = lane === 2 ? accent : 0;
+  const side = lane === 0 ? -accent : lane === 3 ? accent : 0;
+  const energy = reduced ? 0 : 1;
+  const feet = {};
+  for (const [name, sign, offset] of [["L", -1, 2], ["R", 1, 0]]) {
+    const phase = ((beat - offset) % 4 + 4) % 4;
+    const arc = phase < 1.5 ? Math.sin(Math.PI * phase / 1.5) ** 2 : 0;
+    const lift = arc * energy;
+    feet[name] = {
+      x: sign * (0.205 + 0.12 * lift),
+      y: 0.1775 + lift * (0.12 + 0.07 * up),
+      z: 0.045 + lift * 0.09,
+      yaw: sign * (0.06 + lift * 0.13),
+      pitch: -0.12 * lift,
+      toe: -0.22 * lift,
+      lift
+    };
+  }
+  return {
+    stamp,
+    beat,
+    accent,
+    feet,
+    hipX: -swing * 0.085 * energy + side * 0.045,
+    hipY: 0.965 - 0.052 * pulse * energy - 0.105 * down,
+    hipZ: -0.035 * down,
+    hipRoll: swing * 0.065 * energy - side * 0.07,
+    hipTurn: Math.sin(beat * Math.PI / 2 - 0.35) * 0.09 * energy,
+    spineBend: 0.05 + Math.sin(beat * Math.PI * 2 - 0.4) * 0.045 * energy + down * 0.15,
+    spineRoll: -swing * 0.055 * energy + side * 0.08,
+    chestTurn: -Math.sin(beat * Math.PI / 2 - 0.2) * 0.14 * energy + side * 0.16,
+    chestRoll: -swing * 0.035 * energy,
+    neckTurn: Math.sin(beat * Math.PI / 2 - 0.45) * 0.06 * energy,
+    headNod: Math.sin(beat * Math.PI * 2 - 0.55) * 0.045 * energy,
+    leftArm: -0.3 - swing * 0.25 * energy - Math.max(0, -side) * 0.66 - up * 1.38 - down * 0.16,
+    rightArm: 0.3 - swing * 0.25 * energy + Math.max(0, side) * 0.66 + up * 1.38 + down * 0.16,
+    leftShoulder: -0.16 - Math.max(0, swing) * 0.26 * energy - down * 0.3,
+    rightShoulder: -0.16 - Math.max(0, -swing) * 0.26 * energy - down * 0.3,
+    leftElbow: -0.55 - (0.5 + 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.55 * energy - up * 0.22,
+    rightElbow: -0.55 - (0.5 - 0.5 * Math.sin(beat * Math.PI / 2 - 0.45)) * 0.55 * energy - up * 0.22,
+    leftWrist: Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 * energy - up * 0.2,
+    rightWrist: -Math.sin(beat * Math.PI / 2 - 0.7) * 0.18 * energy - up * 0.2,
+    clavicleLift: up * 0.18,
+    hairLag: Math.sin(beat * Math.PI / 2 - 0.65) * 0.075 * energy,
+    blink: !reduced && stamp % 4.7 > 4.54,
+    singing: accent > 0.35
+  };
+}
+
 // integro-box/interdance-src/engine.mjs
 var characterPainter = null;
 function setCharacterPainter(painter) {
@@ -214,18 +281,63 @@ function mJ(E, A, g, B) {
   }
   Ag(E, A, g, 3, 3, "#fff1ad", null);
 }
-function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false) {
-  if (characterPainter?.draw(E, A, g, B, I, C, Q, M)) return;
+function drawCharacter(E, A, g, B, I, C = 0, Q = -1, M = false, cue = {}) {
+  if (characterPainter?.draw(E, A, g, B, I, C, Q, M, cue)) return;
   E.save(), I.monochrome && (E.filter = "grayscale(" + I.monochrome + ")"), E.translate(A, g);
   let Y = B / 104;
   E.scale(M ? -Y : Y, Y), E.lineJoin = "round", E.lineCap = "round";
   let w = Q >= 0, G = Math.sin(C * Math.PI * 2), D = I.skin || "#d2a082", i = I.hair || "#302c47", s = I.color || "#89d8e5", k = I.accent || "#d9ef8f", e = I.look === "capybara", h = I.look === "robot", J = I.look === "box";
-  Ag(E, 0, 101, 32, 5, "#18233e33", null), E.translate(Q === 0 ? -3 : Q === 3 ? 3 : 0, G * 1.6 + (Q === 1 ? 4 : Q === 2 ? -4 : 0)), E.rotate(w ? (Q - 1.5) * 0.018 : Math.sin(C * Math.PI) * 0.022);
-  for (let c of [-1, 1]) {
-    let m = Math.max(0, Math.sin(C * Math.PI * 2 + c)) * 2;
-    kg(E, c < 0 ? -17 : 5, 75 - m, 12, 23, 6, "#556988", _A, 2.4), kg(E, c < 0 ? -24 : 3, 92 - m, 24, 11, 5, c < 0 ? k : "#f9efde", _A, 2.4), xg(E, [c < 0 ? -19 : 8, 98 - m, c < 0 ? -11 : 16, 96 - m, c < 0 ? -5 : 25, 98 - m], "#ffffff", 1.8);
+  const pose = animePose(C * 60 / (I.bpm || 140), I.bpm || 140, Q, !!cue.reduced, cue);
+  const hx = pose.hipX * 36, hy = 76 + (0.965 - pose.hipY) * 35;
+  Ag(E, 0, 103, 32, 5, "#18233e33", null);
+  for (const [side, sign] of [["L", -1], ["R", 1]]) {
+    const foot = pose.feet[side], x0 = hx + sign * 10, y0 = hy;
+    const fx = sign * 12 + (foot.x - sign * 0.205) * 42, fy = 98 - (foot.y - 0.1775) * 45;
+    const kx = (x0 + fx) / 2 + sign * (4 + (0.965 - pose.hipY) * 18), ky = (y0 + fy) / 2;
+    xg(E, [x0, y0, kx, ky, fx, fy], _A, 13);
+    xg(E, [x0, y0, kx, ky, fx, fy], "#556988", 9);
+    E.save();
+    E.translate(fx, fy);
+    E.rotate(sign * foot.lift * 0.12);
+    kg(E, -10, -3, 22, 9, 4, sign < 0 ? k : "#f9efde", _A, 2);
+    xg(E, [-5, 0, 0, -1, 6, 0], "#ffffff", 1.5);
+    E.restore();
   }
-  if (E.beginPath(), E.moveTo(-17, 47), E.bezierCurveTo(-27, 49, -25, 71, -22, 82), E.quadraticCurveTo(0, 90, 23, 82), E.bezierCurveTo(24, 69, 26, 51, 15, 47), E.closePath(), hB(E, s, _A, 2.6), xg(E, [-18, 79, 0, 84, 19, 79], k, 4), kg(E, -9, 58, 18, 16, 5, "#fff5dd", null), OC(E, 0, 66, 6, s), E.save(), E.translate(-21, 52), E.rotate(-0.1 + G * 0.1), kg(E, -9, 0, 12, 19, 6, s, _A, 2.3), Ag(E, -3, 20, 6, 7, e ? "#b8895f" : D, _A, 2.1), E.restore(), E.save(), E.translate(21, 53), E.rotate(w ? -0.95 : -0.25), kg(E, -3, 0, 12, 19, 6, s, _A, 2.3), Ag(E, 3, 19, 6, 7, e ? "#b8895f" : D, _A, 2.1), kg(E, 5, 1, 5, 21, 2, "#4b607b", _A, 1.5), Ag(E, 7.5, 0, 8, 10, "#d6e5ea", _A, 2), xg(E, [2, -3, 7, -5, 13, -3], "#ffffff", 1.5), xg(E, [1, 2, 8, 4, 14, 2], "#7a91a6", 1.2), E.restore(), e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
+  E.translate(hx, hy);
+  E.rotate(-pose.spineRoll);
+  E.translate(0, -76);
+  E.beginPath();
+  E.moveTo(-17, 47);
+  E.bezierCurveTo(-27, 49, -25, 71, -22, 82);
+  E.quadraticCurveTo(0, 90, 23, 82);
+  E.bezierCurveTo(24, 69, 26, 51, 15, 47);
+  E.closePath();
+  hB(E, s, _A, 2.6);
+  xg(E, [-18, 79, 0, 84, 19, 79], k, 4);
+  kg(E, -9, 58, 18, 16, 5, "#fff5dd", null);
+  OC(E, 0, 66, 6, s);
+  for (const sign of [-1, 1]) {
+    const left = sign < 0;
+    E.save();
+    E.translate(sign * 21, 53);
+    E.rotate(-(left ? pose.leftArm : pose.rightArm));
+    kg(E, -6, 0, 12, 15, 6, s, _A, 2.2);
+    E.translate(0, 13);
+    E.rotate(-sign * (0.28 + Math.abs(left ? pose.leftElbow : pose.rightElbow) * 0.55));
+    kg(E, -5, 0, 10, 13, 5, s, _A, 2);
+    E.translate(0, 12);
+    E.rotate(-(left ? pose.leftWrist : pose.rightWrist));
+    Ag(E, 0, 1, 5.5, 6, e ? "#b8895f" : D, _A, 2);
+    if (!left) {
+      kg(E, 3, -13, 4, 18, 2, "#4b607b", _A, 1.3);
+      Ag(E, 5, -15, 6, 7, "#d6e5ea", _A, 1.6);
+    }
+    E.restore();
+  }
+  E.translate(0, 45);
+  E.rotate(-pose.neckTurn);
+  E.translate(0, -45);
+  if (e) Ag(E, -16, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, 14, 5, 8, 9, "#b68a61", _A, 2.5), Ag(E, -16, 5, 4, 5, "#dbb089", null), Ag(E, 14, 5, 4, 5, "#dbb089", null), E.beginPath(), E.moveTo(-25, 17), E.bezierCurveTo(-24, -6, 21, -4, 25, 20), E.bezierCurveTo(45, 20, 43, 47, 23, 48), E.lineTo(-7, 48), E.bezierCurveTo(-24, 48, -30, 36, -25, 17), E.closePath(), hB(E, "#be946b", _A, 2.8), Ag(E, 19, 34, 19, 12, "#d9b58b", null), Ag(E, -10, 22, 4, 5, "#fff4df", null), Ag(E, 13, 22, 4, 5, "#fff4df", null), Ag(E, -9, 23, 2.3, 3, _A, null), Ag(E, 14, 23, 2.3, 3, _A, null), Ag(E, 31, 31, 3, 2.6, "#78573f", null), xg(E, [20, 40, 26, 44, 32, 39], _A, 1.8), w && Ag(E, 24, 42, 4, 3, "#745148", null), xg(E, [-28, 24, -33, -3, 26, 1, 28, 22], k, 6), kg(E, -31, 19, 8, 17, 4, k, _A, 2), kg(E, 26, 17, 8, 12, 4, k, _A, 2);
   else if (h || J) if (kg(E, -24, 2, 48, 43, J ? 12 : 15, J ? "#dfbb82" : "#c2dbe0", _A, 2.8), J) xg(E, [-20, 12, 0, 18, 21, 12], "#ab834f", 2), kg(E, -3, 3, 6, 13, 2, "#f8e8bd", null), Ag(E, -9, 25, 4.3, 5.8, _A, null), Ag(E, 10, 25, 4.3, 5.8, _A, null), Ag(E, -10, 23, 1.5, 2, "#fff", null), Ag(E, 9, 23, 1.5, 2, "#fff", null), xg(E, [-6, 35, 2, 42, 10, 34], _A, 2), OC(E, 0, -7, 8, k, 0.15);
   else {
     kg(E, -19, 13, 38, 21, 9, "#2f4a66", _A, 1.8);
@@ -445,16 +557,19 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
     c.fillStyle = ink;
     c.fillRect(0, l.stageBottom + 4, w, h - l.stageBottom - 4);
   }
-  const beat = time / (60 / stage.bpm), opponent = runs[0]?.song.opponent.findLast((n) => n.time <= time && n.time > time - 0.24);
+  const beat = time / (60 / stage.bpm), opponent = runs[0]?.song.opponent.findLast((n) => n.time <= time && time < n.time + Math.max(0.32, n.hold) + 0.28);
   for (let i = 0; i < 2; i++) {
     const p = versus ? avatars2[i] : i === 0 ? stage : avatars2[0], run = runs[versus ? i : 0];
-    const lane = versus || i === 1 ? run && time - run.last.at < 0.2 ? run.last.lane : -1 : opponent?.lane ?? -1;
+    const player = versus || i === 1;
+    const hold = player ? run?.notes.find((n) => n.state === "holding") : null;
+    const cue = player ? hold ? { lane: hold.lane, at: hold.time, duration: hold.hold } : run && run.last.text !== "Continue!" ? { lane: run.last.lane, at: run.last.at } : {} : { lane: opponent?.lane, at: opponent?.time, duration: opponent?.hold };
+    const lane = Number.isInteger(cue.lane) && time >= cue.at && time < cue.at + Math.max(0.32, cue.duration || 0) + 0.28 ? cue.lane : -1;
     const size = preview ? Math.min(h * 0.73, w * 0.32) : l.charSize, feet = preview ? h * 0.88 : l.feetY, x = preview ? w * (i ? 0.72 : 0.28) : l.characterX(i);
     c.fillStyle = "#01051a70";
     c.beginPath();
     c.ellipse(x, feet + 2, size * 0.3, Math.max(3, size * 0.035), 0, 0, Math.PI * 2);
     c.fill();
-    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1);
+    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1, { ...cue, reduced });
     if (!preview) label(c, versus ? "J" + (i + 1) + " \xB7 " + p.artist : i === 0 ? p.artist : "VOC\xCA", x, feet + 17, 9, i === 0 ? "#b6b0eb" : "#8be4dd");
   }
   if (preview) return;
@@ -471,7 +586,7 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
 // integro-box/interdance-src/app.mjs
 async function loadAnimeRenderer(options) {
   if (!globalThis.WebGL2RenderingContext) return null;
-  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-stage2");
+  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-rig1");
   return createAnimePainter(options);
 }
 function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {
@@ -699,7 +814,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     if (view === "playing") pause();
     if (view === "listen") audio.pause();
     returnView = view === "paused" ? "paused" : ["detail", "listen"].includes(view) ? "detail" : "home";
-    overlay("settings", `<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects ? "" : "selected"}>Completos \u2014 poses anime e efeitos</option><option value="reduced" ${progress.reducedEffects ? "selected" : ""}>Reduzidos \u2014 poses e setas est\xE1veis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume * 100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume * 100}"></label><label>Ajuste de sincroniza\xE7\xE3o <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se voc\xEA ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D \xB7 jogador 2: \u2190 \u2193 \u2191 \u2192. No celular, cada jogador tem quatro bot\xF5es. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>\u2605 55% \xB7 \u2605\u2605 75% \xB7 \u2605\u2605\u2605 92%. Treino e versus n\xE3o alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button("backSettings", "Pronto", true)}${button("fullscreen", "Tela cheia")}</div></div>`);
+    overlay("settings", `<div class="dance-settings"><span class="dance-eyebrow">NO SEU RITMO</span><h1>Som, efeitos e controles</h1><label>Efeitos visuais<select id="danceEffects"><option value="full" ${progress.reducedEffects ? "" : "selected"}>Completos \u2014 dan\xE7a fluida e efeitos</option><option value="reduced" ${progress.reducedEffects ? "selected" : ""}>Reduzidos \u2014 poses e setas est\xE1veis</option></select></label><label>Volume <output id="danceVolumeValue">${Math.round(progress.volume * 100)}%</output><input id="danceVolume" type="range" min="0" max="100" value="${progress.volume * 100}"></label><label>Ajuste de sincroniza\xE7\xE3o <output id="danceOffsetValue">${progress.offset} ms</output><input id="danceOffset" type="range" min="-250" max="250" step="10" value="${progress.offset}"></label><p>Se voc\xEA ouve a batida depois que a seta chega, aumente o ajuste. Se ouve antes, diminua. O mesmo ajuste vale para os dois jogadores.</p><div class="dance-help"><b>Solo:</b> WASD ou setas.<br><b>Versus:</b> jogador 1: A S W D \xB7 jogador 2: \u2190 \u2193 \u2191 \u2192. No celular, cada jogador tem quatro bot\xF5es. Segure as notas com cauda. P ou Esc pausa os dois jogadores.<br>\u2605 55% \xB7 \u2605\u2605 75% \xB7 \u2605\u2605\u2605 92%. Treino e versus n\xE3o alteram os recordes solo. O versus funciona no mesmo aparelho.</div><div class="dance-buttons">${button("backSettings", "Pronto", true)}${button("fullscreen", "Tela cheia")}</div></div>`);
   }
   function finish() {
     if (finished) return;
