@@ -1,4 +1,7 @@
 import {supabase,requireFamily} from './access.js?v=20261016-intgem1';
+// Old game links must enter through the catalog before any game installer runs.
+const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft']);
+if(gameAnchors.has(location.hash))history.replaceState(history.state,'',location.pathname+location.search);
 const message=document.getElementById('boxGateMessage');
 const gate=document.getElementById('boxGate');
 const phase=text=>{message.textContent=text;};

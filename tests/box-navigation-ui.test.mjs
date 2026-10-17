@@ -35,6 +35,40 @@ test('loading stages wait for auth and real script completion; failures keep the
  }
 });
 
+test('portal entry shows the catalog for old game links and saved recent games; InterDance opens only on selection',async()=>{
+ const html=await read('integro-box/jogar.html'),gate=(await read('integro-box/gate.js')).replace(/^import .*;\n/gm,'').replaceAll('await import(','await loadModule(');
+ const dance=(await read('integro-box/interdance.js')).replace(/export \{[^}]+\};\s*$/,''),catalog=await read('integro-box/catalog.js');
+ const gameHashes=['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft'];
+ for(const hash of ['',...gameHashes,'#gamesTitle']){
+  const dom=new JSDOM(html,{url:'https://example.test/integro-box/jogar.html?v=old'+hash,runScripts:'outside-only'}),w=dom.window,d=w.document;
+  const gradient={addColorStop(){}},ctx=new Proxy({createLinearGradient:()=>gradient,createRadialGradient:()=>gradient,measureText:()=>({width:50})},{get:(o,k)=>k in o?o[k]:()=>{}});
+  w.HTMLCanvasElement.prototype.getContext=()=>ctx;w.requestAnimationFrame=()=>1;w.cancelAnimationFrame=()=>{};
+  w.history.replaceState({entry:'preserved'},'',w.location.href);
+  w.localStorage.setItem('box:user-a:catalog-recent-v1',JSON.stringify(['interdance']));
+  w.requireFamily=async()=>({id:'user-a'});w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
+  d.getElementById('brandHome').onclick=()=>{d.getElementById('lobby').classList.remove('hidden');d.getElementById('footer').classList.remove('hidden');};
+  const idleModules={mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},startUsage(){},startIntGem:async()=>{}};
+  w.loadModule=async url=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached an installer');return url.includes('/interdance.js')?w.eval('(function(){'+dance+';return {installInterDance};})()'):idleModules;};
+  const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT')queueMicrotask(()=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached a script');if(n.src.includes('catalog.js'))w.eval(catalog);n.onload();});};
+  try{
+   await w.eval('(async()=>{'+gate+'})()');
+   assert.equal(w.location.hash,gameHashes.includes(hash)?'':hash);assert.equal(w.location.search,'?v=old');assert.equal(w.history.state.entry,'preserved');
+   assert(d.getElementById('boxGate').hidden);assert(!d.body.classList.contains('box-locked'));
+   assert.equal(d.getElementById('lobby').dataset.catalogReady,'true');assert(!d.getElementById('lobby').classList.contains('hidden'));
+   assert.equal(w.InterDance.getState().active,false);assert(d.getElementById('danceApp').hidden);assert(!d.querySelector('.catalog-recent').hidden);
+   d.querySelector('[data-catalog-game="interdance"] .catalog-play').click();await settle();
+   assert.equal(w.InterDance.getState().active,true);assert(!d.getElementById('danceApp').hidden);assert(d.getElementById('lobby').classList.contains('hidden'));
+   d.getElementById('danceExit').click();assert.equal(w.InterDance.getState().active,false);assert(!d.getElementById('lobby').classList.contains('hidden'));assert.equal(d.activeElement.id,'playInterDance');
+  }finally{w.BoxInterDance?.stop();w.close();}
+ }
+});
+
+test('public game cards link to the catalog without an automatic game selection',async()=>{
+ const dom=new JSDOM(await read('integro-box/index.html'),{url:'https://example.test/integro-box/'});
+ try{const links=[...dom.window.document.querySelectorAll('.box-game a')];assert(links.length>=4);for(const link of links){assert.equal(new URL(link.href).pathname,'/integro-box/jogar.html');assert.equal(new URL(link.href).hash,'');}}
+ finally{dom.window.close();}
+});
+
 test('rooms drag, restore, resize and fullscreen stay in bounds and never open or request a room after dragging',async()=>{
  const source=(await read('integro-box/multiplayer.js')).replace(/^import .*;\n/,'');
  async function fixture(saved){
