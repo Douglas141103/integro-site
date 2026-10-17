@@ -34,3 +34,21 @@ test('usage migration accepts Blue without exposing records or removing existing
   const permissions=(await f.db.query("select has_table_privilege('authenticated','private.box_usage_sessions','SELECT') allowed")).rows[0];assert.equal(permissions.allowed,false);
  }finally{await f.db.close();}
 });
+
+test('boss HUD, hidden overlays and direction marker survive pause and resume with the real stylesheet',()=>{
+ const dom=new JSDOM('<main id="lobby"></main><section id="blueApp" hidden></section>',{url:'https://example.test/'}),w=dom.window,app=w.document.getElementById('blueApp');
+ const style=w.document.createElement('style');style.textContent=readFileSync(new URL('../integro-box/blue-world.css',import.meta.url),'utf8');w.document.head.append(style);
+ w.BoxStorage={getItem:()=>JSON.stringify({complete:[true,true,true],selected:3}),setItem(){}};
+ let next;globalThis.requestAnimationFrame=fn=>(next=fn,1);globalThis.cancelAnimationFrame=()=>{};
+ const game=mountBlueWorld(app,{makeScene:()=>({setLevel(){},render(){},emit(){},getBossMarker:()=>({x:92,y:40,edge:'right'}),dispose(){}})});
+ game.show();app.querySelector('[data-start="3"]').click();app.querySelector('[data-resume]').click();
+ let now=performance.now()+30;next(now);
+ assert.equal(w.getComputedStyle(app.querySelector('.bw-overlay')).display,'none','menu must not tint or cover play');
+ assert.equal(w.getComputedStyle(app.querySelector('.bw-seeds')).display,'none','boss has roots, not an empty seed counter');
+ assert.equal(app.querySelector('#bwBossSeals').getAttribute('aria-label'),'0 de 3 raízes libertadas');
+ assert.equal(app.querySelector('.bw-boss-marker').textContent,'Bront →');
+ assert.equal(app.querySelector('[data-control="down"] small').textContent,'Agachar');
+ game.pause();assert.equal(w.getComputedStyle(app.querySelector('.bw-boss-marker')).display,'none');
+ app.querySelector('[data-resume]').click();next(now+40);assert(!app.querySelector('.bw-boss-marker').hidden);
+ game.stop();dom.window.close();delete globalThis.requestAnimationFrame;delete globalThis.cancelAnimationFrame;
+});

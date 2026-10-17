@@ -2,11 +2,12 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createBlue,toonRamp,outlineMaterial,PALETTE} from './actor.mjs';
 import {platformAt} from './levels.mjs';
+import {cameraFrame,placeCamera,bossMarker} from './camera.mjs';
 
 const ball=(x,y,z)=>new T.SphereGeometry(1,12,8).scale(x,y,z);
 const rand=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 export function createWorld(run,{document=globalThis.document}={}){
- const scene=new T.Scene();scene.background=new T.Color(run.level.theme==='sanctuary'?0xc7e0dc:0xc3e8e9);scene.fog=new T.Fog(scene.background,28,85);
+ const scene=new T.Scene();scene.background=new T.Color(0xb8e5ef);scene.fog=new T.Fog(scene.background,32,78);
  const world=new T.Group();scene.add(world);const ramp=toonRamp(),resources=new Set([ramp]),materials=new Map(),batches=new Map();
  const mat=(color,basic=false)=>{const key=color+':'+basic;if(!materials.has(key)){const m=basic?new T.MeshBasicMaterial({color}):new T.MeshToonMaterial({color,gradientMap:ramp});materials.set(key,m);resources.add(m);}return materials.get(key);};
  const hull=outlineMaterial(.013);resources.add(hull);
@@ -36,14 +37,15 @@ export function createWorld(run,{document=globalThis.document}={}){
  for(const p of run.level.platforms){
   const color=p.kind==='bridge'?0xb8edc9:p.kind==='root'?0x8c9270:p.kind==='lift'?0xb9ac7b:0x9ba994;
   if(p.kind==='land'){
-   batch(new T.BoxGeometry(p.w,p.h,4.4),0xabbba0,p.x,p.y-p.h/2,-.65);
-   batch(new T.BoxGeometry(p.w+.04,.22,4.5),0x8abc7b,p.x,p.y-.1,-.65);
-   batch(new T.BoxGeometry(p.w,.12,4.42),0xc3d89b,p.x,p.y-.02,-.65);
+   batch(new T.BoxGeometry(p.w,p.h,4.4),0x668977,p.x,p.y-p.h/2,-.65);
+   batch(new T.BoxGeometry(p.w,p.h-1,4.42),0x4f7268,p.x,p.y-(p.h+1)/2,-.65);
+   batch(new T.BoxGeometry(p.w+.04,.22,4.5),0x4a935f,p.x,p.y-.1,-.65);
+   batch(new T.BoxGeometry(p.w,.12,4.42),0x99ce76,p.x,p.y-.02,-.65);
    for(let i=0;i<Math.floor(p.w/1.5);i++){
     const x=p.x-p.w/2+.5+i*1.5;
-    batch(ball(.6,.23,.12),i%2?0x8d9d88:0x9aaa92,x,p.y-.65-rand(i+p.x)*1.1,1.58);
+    batch(ball(.4,.16,.12),i%2?0x80a287:0x739781,x,p.y-.65-rand(i+p.x)*1.1,1.58);
     if(i%2===0)flower(x,p.y,1.05,i);
-    if(i%4===1)tree(x,p.y,-2, .8+rand(i+p.x)*.6,i);
+    if(i%4===1)tree(x,p.y,run.boss?-5:-3.5,run.boss?.85:.8+rand(i+p.x)*.6,i);
     for(let j=0;j<2;j++){const g=new T.ConeGeometry(.045,.22+rand(i+j)*.2,3);g.rotateZ((j-.5)*.4);batch(g,0x76a56d,x+j*.1,p.y+.14,1.3);}
    }
   }else if(p.kind==='root'){
@@ -60,7 +62,7 @@ export function createWorld(run,{document=globalThis.document}={}){
  }
  // Illustrated mill and ruined arches give each route its own landmark.
  const windmills=[];
- for(const x of run.level.theme==='mill'?[16,65,121]:[run.level.length-9]){
+ for(const x of run.boss?[]:run.level.theme==='mill'?[16,65,121]:[run.level.length-9]){
   const y=run.level.theme==='mill'&&x>60?2:0,z=-4.5;
   batch(new T.CylinderGeometry(.75,1.1,5,10),0xe3ddbb,x,y+2,z);
   batch(new T.ConeGeometry(1.2,1.5,10),0x84ac96,x,y+5.1,z);
@@ -89,15 +91,33 @@ export function createWorld(run,{document=globalThis.document}={}){
   const a=mesh(ball(.15,.055,.08),0xb9d88d,-.11,.22,0,g);a.rotation.z=-.5;const b=mesh(ball(.15,.055,.08),0xd6e59d,.1,.24,0,g);b.rotation.z=.5;return g;});
  const enemies=run.enemies.map(e=>{const g=new T.Group();world.add(g);mesh(ball(.36,.32,.29),0x858eaa,0,.3,0,g,true);
   mesh(ball(.3,.08,.27),0xabb9b4,0,.5,0,g);for(const side of [-1,1]){mesh(ball(.07,.1,.04),0xfff3d4,side*.12,.35,.26,g);mesh(ball(.027,.047,.025),PALETTE.ink,side*.12,.34,.3,g);mesh(ball(.13,.06,.15),0x596c7e,side*.2,.06,.06,g);}return g;});
- let boss=null,bossRoot=null;
+ let boss=null,bossRoot=null,bossModel=null,curled=null,attackLane=null,weakHalo=null;
  if(run.boss){
-  boss=new T.Group();world.add(boss);bossRoot=new T.Group();boss.add(bossRoot);
-  mesh(ball(.95,.68,.7),0x7a987e,0,.65,0,bossRoot,true);
-  for(let i=-2;i<=2;i++){const band=new T.TorusGeometry(.69-Math.abs(i)*.04,.045,6,20,Math.PI);band.rotateY(Math.PI/2);mesh(band,0xb7c78d,i*.25,.58,0,bossRoot);}
-  mesh(ball(.34,.28,.32),0xb3b68f,-.82,.35,.13,bossRoot,true);
-  for(const side of [-1,1]){mesh(ball(.14,.28,.12),0x8b9e7e,-.65,.86,side*.22,bossRoot);mesh(ball(.08,.09,.035),0xfff4d8,-.97,.4,side*.26+.12,bossRoot);mesh(ball(.03,.045,.025),PALETTE.ink,-.99,.4,side*.27+.14,bossRoot);mesh(ball(.23,.1,.22),0x637e6d,side*.55,.1,.4,bossRoot);}
-  for(let i=0;i<7;i++)mesh(new T.ConeGeometry(.14,.3,5),i%2?0xb7ca86:0x9bb87a,(rand(i)-.5)*1.4,1.24,(rand(i+20)-.5)*.75,bossRoot);
-  const bud=mesh(new T.IcosahedronGeometry(.22,0),0xa4edf0,.6,.65,.53,bossRoot);boss.userData.bud=bud;
+  boss=new T.Group();boss.name='Bront';world.add(boss);bossRoot=new T.Group();boss.add(bossRoot);
+  bossModel=new T.Group();bossModel.name='Bront standing';bossModel.position.y=-.75;bossRoot.add(bossModel);
+  mesh(ball(.95,.68,.7),0x426e65,0,.65,0,bossModel,true);
+  for(let i=-2;i<=2;i++){const band=new T.TorusGeometry(.69-Math.abs(i)*.04,.06,6,20,Math.PI);band.rotateY(Math.PI/2);mesh(band,0xa1c66c,i*.25,.58,0,bossModel);}
+  mesh(ball(.34,.28,.32),0xe3cf9b,-.82,.35,.13,bossModel,true);
+  for(const side of [-1,1]){mesh(ball(.14,.28,.12),0x6a9e73,-.65,.86,side*.22,bossModel);mesh(ball(.08,.09,.035),0xfff4d8,-.97,.4,side*.26+.12,bossModel);mesh(ball(.03,.045,.025),PALETTE.ink,-.99,.4,side*.27+.14,bossModel);mesh(ball(.23,.1,.22),0x3e635c,side*.55,.1,.4,bossModel);}
+  for(let i=0;i<7;i++)mesh(new T.ConeGeometry(.14,.3,5),i%2?0xc2d975:0x8bb757,(rand(i)-.5)*1.4,1.24,(rand(i+20)-.5)*.75,bossModel);
+  const bud=mesh(new T.IcosahedronGeometry(.3,0),0x79f2f4,.6,.65,.62,bossModel,true);bud.material=mat(0x79f2f4,true);boss.userData.bud=bud;
+  // A separate curled silhouette rotates around its centre, never around the feet.
+  curled=new T.Group();curled.name='Bront rolling';bossRoot.add(curled);
+  mesh(ball(.64,.64,.59),0x426e65,0,0,0,curled,true);
+  for(const z of [-.4,0,.4])mesh(new T.TorusGeometry(Math.sqrt(.64**2-z**2),.055,6,24),0xa1c66c,0,0,z,curled);
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;mesh(ball(.14,.09,.08),0xc2d975,Math.cos(a)*.48,Math.sin(a)*.48,.49,curled);}
+  const laneMat=new T.MeshBasicMaterial({color:0xe89458,transparent:true,opacity:.45,depthWrite:false});resources.add(laneMat);
+  attackLane=mesh(new T.BoxGeometry(1,.018,1.15),0xe89458);attackLane.name='Bront attack warning';attackLane.material=laneMat;
+  weakHalo=mesh(new T.TorusGeometry(1.04,.04,6,40),0x8affec);weakHalo.material=mat(0x8affec,true);weakHalo.name='Bront pulse target';
+  // A sanctuary rather than another mill: stepping stones and the dormant lighthouse.
+  for(let i=0;i<13;i++)batch(new T.CylinderGeometry(.37,.42,.06,7),0xd7dec0,1+i*1.5,.035,-.65);
+  for(const x of [-1,21]){tree(x,0,-2.8,1.7,x+10);for(let i=0;i<5;i++)flower(x+(i-2)*.3,0,.7,i);}
+  batch(new T.CylinderGeometry(1.3,1.7,.5,9),0x9ab3a0,17,.25,-6);
+  batch(new T.CylinderGeometry(.65,.92,4.6,9),0xe4e5c5,17,2.6,-6);
+  batch(new T.CylinderGeometry(.98,.85,.25,9),0x56877a,17,4.75,-6);
+  batch(new T.ConeGeometry(1.15,1.1,9),0x3c8076,17,6,-6);
+  for(const x of [16.45,17.55])batch(new T.CylinderGeometry(.08,.08,1.1,6),0xe4e5c5,x,5.3,-5.6);
+  const beacon=mesh(new T.IcosahedronGeometry(.48,1),0xffdf85,17,5.25,-5.85);beacon.name='Orvalho beacon';boss.userData.beacon=beacon;
  }
  const goal=new T.Group();goal.position.set(run.level.end.x,run.level.end.y,0);world.add(goal);
  mesh(new T.CylinderGeometry(.45,.7,.3,10),0xc2c5a4,0,.15,0,goal);
@@ -115,7 +135,7 @@ export function createWorld(run,{document=globalThis.document}={}){
  const waveObjects=Array.from({length:4},()=>{const w=mesh(new T.TorusGeometry(.3,.07,6,16,Math.PI),0xe4b27d);w.visible=false;return w;});
  for(const {color,parts} of batches.values()){const g=mergeGeometries(parts);parts.forEach(g=>g.dispose());mesh(g,color);}
  const blue=createBlue(ramp);scene.add(blue.root);
- scene.add(new T.HemisphereLight(0xf5fff0,0x618b91,.85));const key=new T.DirectionalLight(0xfff2d3,1.7);key.position.set(-3,9,7);scene.add(key);
+ scene.add(new T.HemisphereLight(0xf0faff,0x597d82,.8));const key=new T.DirectionalLight(0xfff9ed,1.15);key.position.set(-3,9,7);scene.add(key);
  // Tiny authored cloth strokes. The texture is generated locally, with no asset/CDN fetch.
  if(document){const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');if(ctx){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,128,128);ctx.fillStyle='#e9b9af';ctx.beginPath();ctx.moveTo(0,60);ctx.lineTo(128,74);ctx.lineTo(128,83);ctx.lineTo(0,68);ctx.fill();ctx.fillStyle='#ffe1cf';ctx.fillRect(0,108,128,8);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;resources.add(t);blue.root.traverse(o=>{if(o.isMesh&&o.name==='Blue coral'){o.material.map=t;o.material.needsUpdate=true;}});}}
  function update(run,time,reduced=false){
@@ -130,7 +150,14 @@ export function createWorld(run,{document=globalThis.document}={}){
   let ground=-4;for(const s of run.surfaces())if(Math.abs(s.x-run.player.x)<s.w/2&&s.y<=run.player.y+.05)ground=Math.max(ground,s.y);
   shadow.position.set(run.player.x,ground+.035,0);shadow.scale.setScalar(Math.max(.45,1-(run.player.y-ground)*.09));
   pulse.visible=run.pulseAge<.45;pulse.position.set(run.pulseX,run.pulseY,.6);pulse.scale.setScalar(.2+run.pulseAge*6);pulseMat.opacity=Math.max(0,.8-run.pulseAge*1.8);
-  if(boss){const b=run.boss;boss.position.set(b.x,.02,0);bossRoot.rotation.z=b.phase==='roll'?-run.time*10:0;bossRoot.scale.y=b.phase==='rest'?.8:1;boss.userData.bud.visible=b.phase==='rest'||b.phase==='freed';}
+  if(boss){const b=run.boss,rolling=b.phase==='roll',resting=b.phase==='rest';boss.position.set(b.x,.02,0);
+   bossRoot.rotation.z=rolling?-run.time*10*b.dir:0;bossRoot.scale.y=resting?.8:1;bossRoot.position.y=rolling?.72:resting?.6:.75;
+   bossModel.visible=!rolling;curled.visible=rolling;bossModel.scale.x=b.dir>0?-1:1;
+   boss.userData.bud.visible=resting||b.phase==='freed';boss.userData.beacon.material=mat(b.phase==='freed'?0xffe6a0:0x699d9c,b.phase==='freed');
+   const target=b.dir<0?run.level.arena.rollLeft:run.level.arena.rollRight;
+   attackLane.visible=b.phase==='warn';attackLane.position.set((b.x+target)/2,.07,0);attackLane.scale.x=Math.max(.1,Math.abs(target-b.x));
+   weakHalo.visible=resting;weakHalo.position.set(b.x,.8,.85);weakHalo.scale.setScalar(reduced?1:1+Math.sin(time*5)*.05);
+  }
   waveObjects.forEach((w,i)=>{const data=run.waves[i];w.visible=!!data;if(data)w.position.set(data.x,.05,.1);});
   particles.forEach((p,i)=>{const age=run.time-burstTime;p.visible=age>=0&&age<.8;if(p.visible){const a=i*2.4;p.position.set(burst.x+Math.cos(a)*age*2,burst.y+Math.sin(a)*age*2+age-age*age*2,.3+Math.sin(i)*age);p.scale.setScalar(1-age/.8);}});
  }
@@ -141,19 +168,18 @@ export class BlueScene{
  constructor(canvas,quality='auto'){
   this.canvas=canvas;this.quality=quality;this.renderer=new T.WebGLRenderer({canvas,antialias:quality!=='low',alpha:false,powerPreference:'high-performance'});
   this.renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,quality==='low'?1:1.6));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.NoToneMapping;
-  this.camera=new T.OrthographicCamera(-11,11,6,-6,.1,120);this.cameraX=3;this.cameraY=2;this.world=null;this.width=0;this.height=0;
+  this.camera=new T.OrthographicCamera(-11,11,6,-6,.1,120);this.frame=null;this.world=null;this.width=0;this.height=0;
  }
- setLevel(run){this.world?.dispose();this.world=createWorld(run);this.cameraX=run.player.x+3;this.cameraY=run.player.y+2;this.width=0;}
+ setLevel(run){this.world?.dispose();this.world=createWorld(run);this.frame=null;this.width=0;}
  render(run,dt,time,reduced=false){
-  const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight);const portrait=w<h;
-  if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.renderer.setSize(w,h,false);const width=portrait?17:Math.max(20,Math.min(28,13*w/h)),height=width*h/w;this.camera.left=-width/2;this.camera.right=width/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.updateProjectionMatrix();}
-  const half=(this.camera.right-this.camera.left)/2;
-  const tx=Math.max(half-2,Math.min(run.level.length-half+2,run.player.x+run.player.facing*2.8));
-  const ty=run.player.y+1.5-(portrait?3.3:0);const lerp=reduced?1:1-Math.exp(-dt*5);
-  this.cameraX+=(tx-this.cameraX)*lerp;this.cameraY+=(ty-this.cameraY)*lerp;
-  this.camera.position.set(this.cameraX,this.cameraY+4,18);this.camera.lookAt(this.cameraX,this.cameraY,0);this.world.update(run,time,reduced);
+  const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),target=cameraFrame(run,w,h,this.frame?.groundY);
+  if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.frame=null;}
+  const lerp=reduced?1:1-Math.exp(-dt*5),previous=this.frame||target;
+  this.frame={...target,x:T.MathUtils.lerp(previous.x,target.x,lerp),y:T.MathUtils.lerp(previous.y,target.y,lerp)};
+  placeCamera(this.camera,this.frame);this.world.update(run,time,reduced);
   this.renderer.render(this.world.scene,this.camera);
  }
  emit(e){this.world?.emit(e);}
+ getBossMarker(run){return run.boss?bossMarker(this.camera,run.boss):null;}
  dispose(){this.world?.dispose();this.world=null;this.renderer.dispose();}
 }

@@ -1,4 +1,4 @@
-import {BlueRun,cleanProgress} from './engine.mjs';
+import {BlueRun,PHYSICS,cleanProgress} from './engine.mjs';
 import {LEVELS,WORLDS} from './levels.mjs';
 import {BlueScene} from './scene.mjs';
 const KEY='blue-world-v1';
@@ -9,9 +9,10 @@ export function mountBlueWorld(app,{makeScene=(canvas,q)=>new BlueScene(canvas,q
  const doc=app.ownerDocument,win=doc.defaultView,$=s=>app.querySelector(s),abort=new win.AbortController();
  app.innerHTML=`<canvas class="bw-canvas" tabindex="0" aria-label="Blue World. Setas ou A e D para andar; Espaço para pular; X para Pulso; seta para baixo para agachar. Escape pausa."></canvas>
  <div class="bw-hud"><div class="bw-status"><span class="bw-world-label">CAMPOS DO ORVALHO</span><strong id="bwStageName"></strong><div class="bw-counters"><span id="bwHearts" aria-label="Vidas"></span><span class="bw-seeds">${icon('seed')}<b id="bwSeeds">0/3</b></span></div></div><div class="bw-tools"><button type="button" data-full aria-label="Tela cheia">${icon('full')}</button><button type="button" data-pause aria-label="Pausar">${icon('pause')}</button></div></div>
- <div class="bw-boss" hidden><span>BRONT · LIBERTE O GUARDIÃO</span><strong id="bwBossHint"></strong><div id="bwBossSeals"></div></div>
+ <div class="bw-boss" hidden><span>BRONT · GUARDIÃO DO ORVALHO</span><strong id="bwBossHint"></strong><div id="bwBossSeals" role="img"></div></div>
+ <div class="bw-boss-marker" hidden></div>
  <div class="bw-hint" role="status" aria-live="polite"></div>
- <div class="bw-controls" aria-label="Controles do jogo"><div class="bw-direction"><button type="button" data-control="left" aria-label="Andar para a esquerda">${icon('left')}</button><button type="button" data-control="down" aria-label="Segurar para agachar">${icon('down')}</button><button type="button" data-control="right" aria-label="Andar para a direita">${icon('right')}</button></div><div class="bw-action"><button type="button" data-control="pulse" class="bw-pulse" aria-label="Pulso Azul">${icon('pulse')}<small>Pulso</small></button><button type="button" data-control="jump" class="bw-jump" aria-label="Pular; segure para saltar mais alto">${icon('jump')}<small>Pular</small></button></div></div>
+ <div class="bw-controls" aria-label="Controles do jogo"><div class="bw-direction"><button type="button" data-control="left" aria-label="Andar para a esquerda">${icon('left')}</button><button type="button" data-control="down" aria-label="Segurar para agachar">${icon('down')}<small>Agachar</small></button><button type="button" data-control="right" aria-label="Andar para a direita">${icon('right')}</button></div><div class="bw-action"><button type="button" data-control="pulse" class="bw-pulse" aria-label="Pulso Azul">${icon('pulse')}<small>Pulso</small><span class="bw-charge" aria-hidden="true"><i></i></span></button><button type="button" data-control="jump" class="bw-jump" aria-label="Pular; segure para saltar mais alto">${icon('jump')}<small>Pular</small></button></div></div>
  <div class="bw-overlay"><div class="bw-sheet" role="dialog" aria-modal="true" aria-labelledby="bwHeading" tabindex="-1"></div></div>`;
  const canvas=$('canvas'),sheet=$('.bw-sheet'),overlay=$('.bw-overlay'),keys=new Set(),pointers=new Map();
  let progress=cleanProgress(null),stored=true,run=null,scene=null,active=false,stopped=false,mode='home',raf=0,last=0,accumulator=0,lastPaint=0,lastHud=0,lastSave=0,toastUntil=0,seenSigns=new Set(),audio=null,musicAt=0,noteIndex=0,previewTime=0;
@@ -27,14 +28,19 @@ export function mountBlueWorld(app,{makeScene=(canvas,q)=>new BlueScene(canvas,q
  function status(){
   if(!run)return;$('#bwStageName').textContent=`1-${run.level.id+1} · ${run.level.name}`;
   $('#bwHearts').innerHTML=Array.from({length:run.maxHealth},(_,i)=>`<i class="${i<run.player.health?'filled':''}">${icon('heart')}</i>`).join('');$('#bwHearts').setAttribute('aria-label',`${run.player.health} de ${run.maxHealth} corações`);
-  $('#bwSeeds').textContent=run.level.boss?'Farol':`${run.level.seeds.filter(s=>run.collected.has(s.id)).length}/3`;
+  $('.bw-seeds').hidden=!!run.boss;$('#bwSeeds').textContent=`${run.level.seeds.filter(s=>run.collected.has(s.id)).length}/3`;
   $('.bw-boss').hidden=!run.boss;
-  if(run.boss){const labels={watch:'Observe Bront e prepare o salto.',warn:'Ele vai rolar. Prepare-se!',roll:'Pule a rolagem!',rest:'Agora! Aproxime-se e use Pulso.',recover:'Uma raiz foi libertada!',freed:'O primeiro farol está aceso!'};$('#bwBossHint').textContent=labels[run.boss.phase];$('#bwBossSeals').innerHTML=Array.from({length:3},(_,i)=>`<i class="${i<run.boss.hits?'lit':''}"></i>`).join('');}
-  const pb=$('[data-control="pulse"]');pb.style.setProperty('--ready',`${100*(1-run.cooldown/.7)}%`);pb.setAttribute('aria-disabled',String(run.cooldown>0));
+  if(run.boss){const labels={watch:'Prepare o salto',warn:'Atenção: ele vai rolar!',roll:'Pule sobre Bront!',rest:'Aproxime-se e use Pulso!',recover:'Raiz libertada!',freed:'Farol restaurado!'};$('#bwBossHint').textContent=labels[run.boss.phase];$('.bw-boss').dataset.phase=run.boss.phase;$('#bwBossSeals').innerHTML=Array.from({length:3},(_,i)=>`<i class="${i<run.boss.hits?'lit':''}"></i>`).join('')+`<small>${run.boss.hits}/3</small>`;$('#bwBossSeals').setAttribute('aria-label',`${run.boss.hits} de 3 raízes libertadas`);}
+  const pb=$('[data-control="pulse"]'),nearBoss=run.boss?.phase==='rest'&&Math.hypot(run.boss.x-run.player.x,run.boss.y+.2-run.player.y)<PHYSICS.pulseRadius;
+  pb.style.setProperty('--ready',`${100*(1-run.cooldown/PHYSICS.pulseCooldown)}%`);pb.setAttribute('aria-disabled',String(run.cooldown>0));pb.classList.toggle('bw-can-pulse',nearBoss&&run.cooldown<=0);
+ }
+ function marker(){const el=$('.bw-boss-marker'),point=run?scene?.getBossMarker?.(run):null;el.hidden=!!mode||!run?.boss||!point;if(el.hidden)return;
+  const phase=run.boss.phase;el.style.left=`${point.x}%`;el.style.top=`${point.y}%`;el.dataset.phase=phase;el.dataset.edge=point.edge;
+  el.textContent=point.edge?`${point.edge==='left'?'← ':''}Bront${point.edge==='right'?' →':''}`:phase==='rest'?'✧ Use Pulso':phase==='warn'?'! Vai rolar':phase==='freed'?'✓ Livre':'Bront';
  }
  function settingMarkup(){return `<div class="bw-settings"><label><input type="checkbox" data-setting="sound" ${progress.sound?'checked':''}> Música e sons</label><label><input type="checkbox" data-setting="assist" ${progress.assist?'checked':''}> Modo assistido</label><label><input type="checkbox" data-setting="reduced" ${progress.reduced?'checked':''}> Reduzir movimento</label><label>Gráficos <select data-quality><option value="auto" ${progress.quality==='auto'?'selected':''}>Automático</option><option value="low" ${progress.quality==='low'?'selected':''}>Leve</option></select></label></div>`;}
  function panel(which){
-  mode=which;clearInput();overlay.hidden=false;app.classList.add('bw-menu');doc.body.classList.remove('blue-running');void audio?.suspend().catch(()=>{});
+  mode=which;clearInput();overlay.hidden=false;app.classList.add('bw-menu');$('.bw-boss-marker').hidden=true;doc.body.classList.remove('blue-running');void audio?.suspend().catch(()=>{});
   const count=progress.seeds.length,resumable=run?.status==='playing';let html='';
   const nav=`<div class="bw-actions">${resumable?button('Continuar aventura','data-resume',true):''}${button('Mapa do Orvalho','data-panel="map"')}${button('Catálogo','data-exit')}</div>`;
   if(which==='home')html=`<div class="bw-home"><div class="bw-home-copy"><span class="bw-eyebrow">UMA AVENTURA NO ARQUIPÉLAGO DE LÚMINA</span><h1 id="bwHeading" class="bw-title">BLUE<span>WORLD</span></h1><p class="bw-lead">Uma pequena gota.<br>Um mundo para reacender.</p><p>Explore jardins suspensos, desperte pontes de luz e ajude Blue a libertar o primeiro farol.</p><div class="bw-actions">${resumable?button('Continuar aventura →','data-resume',true):button(progress.complete[3]?'Explorar novamente →':'Começar aventura →',`data-start="${progress.selected}" data-resume-checkpoint`,true)}${button('Ver o mapa','data-panel="map"')}</div><div class="bw-home-meta"><span>CAPÍTULO 01</span><span>4 FASES</span><span>9 SEMENTES-LUZ</span></div></div><div class="bw-home-art"><img src="./assets/blue-world-cover.webp?v=20261017-blue1" alt="Blue e o jardim dos Campos do Orvalho"><span>O PRIMEIRO FAROL ESPERA POR VOCÊ</span></div></div><div class="bw-bottom">${button('Como jogar','data-panel="help"')}${button('Ajustes','data-panel="settings"')}${button('Voltar ao Integro Box','data-exit')}</div>`;
@@ -59,11 +65,11 @@ export function mountBlueWorld(app,{makeScene=(canvas,q)=>new BlueScene(canvas,q
  function frame(now){if(!active||stopped)return;raf=requestAnimationFrame(frame);const dt=Math.min(.08,Math.max(0,(now-last)/1000));last=now;previewTime+=dt;
   if(!mode&&run){
    accumulator+=dt;while(accumulator>=1/60&&run.status==='playing'){run.update(1/60,input());accumulator-=1/60;}
-   for(const e of run.events.splice(0)){scene?.emit(e);if(e.type==='seed'){tone(880,.2);save();hint('Uma semente-luz encontrada!');}if(e.type==='jump')tone(370,.08,.018);if(e.type==='pulse')tone(540,.18,.02,'triangle');if(e.type==='hurt')tone(125,.15,.025,'triangle');if(e.type==='checkpoint'){tone(660,.25);save();hint('Ponto de retorno guardado · corações restaurados');}if(e.type==='bridge')hint('Ponte acesa! Atravesse até a próxima ilha.',2200);if(e.type==='respawn'){save();hint('Uma nova tentativa. Blue voltou ao ponto de retorno.');}if(e.type==='boss-hit'){tone(740,.3);hint(`${run.boss.hits} de 3 raízes libertadas!`);}if(e.type==='won'){save();panel('won');}}
+   for(const e of run.events.splice(0)){scene?.emit(e);if(e.type==='seed'){tone(880,.2);save();hint('Uma semente-luz encontrada!');}if(e.type==='jump')tone(370,.08,.018);if(e.type==='pulse')tone(540,.18,.02,'triangle');if(e.type==='hurt')tone(125,.15,.025,'triangle');if(e.type==='checkpoint'){tone(660,.25);save();hint('Ponto de retorno guardado · corações restaurados');}if(e.type==='bridge')hint('Ponte acesa! Atravesse até a próxima ilha.',2200);if(e.type==='respawn'){save();hint('Uma nova tentativa. Blue voltou ao ponto de retorno.');}if(e.type==='boss-warn')tone(185,.3,.025,'triangle');if(e.type==='boss-rest')tone(660,.3,.025);if(e.type==='boss-hit'){tone(740,.3);hint(`${run.boss.hits} de 3 raízes libertadas!`);}if(e.type==='won'){save();panel('won');}}
    for(const [i,s] of run.level.signs.entries())if(!seenSigns.has(i)&&Math.abs(run.player.x-s.x)<1.5){seenSigns.add(i);hint(s.text,4600);}
    if(now-lastSave>5000){save();lastSave=now;}music(now);
   }
-  if(now-lastPaint>(progress.quality==='low'?32:14)){scene?.render(run||preview,dt,previewTime,progress.reduced);lastPaint=now;}
+  if(now-lastPaint>(progress.quality==='low'?32:14)){scene?.render(run||preview,Math.min(.1,(now-lastPaint)/1000),previewTime,progress.reduced);marker();lastPaint=now;}
   if(now-lastHud>120){status();lastHud=now;}
   if(now>toastUntil)$('.bw-hint').classList.remove('visible');
  }
@@ -91,7 +97,7 @@ export function mountBlueWorld(app,{makeScene=(canvas,q)=>new BlueScene(canvas,q
  on(doc,'keyup',e=>{if(mapping[e.code])keys.delete(mapping[e.code]);});
  on(win,'blur',()=>{clearInput();if(active&&!mode)panel('pause');});on(doc,'visibilitychange',()=>{if(doc.hidden&&active){save();if(!mode)panel('pause');}});on(win,'pagehide',save);
  on(canvas,'webglcontextlost',e=>{e.preventDefault();if(active){panel('error');scene?.dispose();scene=null;}});
- on(doc.getElementById('brandHome')||app,'click',()=>{if(active)hide();},{capture:true});
+ const home=doc.getElementById('brandHome');if(home)on(home,'click',()=>{if(active)hide();},{capture:true});
  const api={show,hide,pause(){if(active&&!mode)panel('pause');},stop(){stopped=true;hide();abort.abort();void audio?.close().catch(()=>{});},get active(){return active;},getState:()=>({active,mode,progress:cleanProgress(progress),run:run?{level:run.level.id,status:run.status,player:{...run.player},checkpoint:run.checkpoint,boss:run.boss?{...run.boss}:null}:null})};
  win.BoxBlueRuntime={active:()=>active,playing:()=>active&&!mode,pause:api.pause,persist:save};win.IntegroBlue={getState:api.getState};return api;
 }

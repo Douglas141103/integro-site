@@ -2,7 +2,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const PALETTE={ink:0x16384e,blue:0x28aee8,light:0xaceef0,white:0xfff8db,coral:0xf17d71,leaf:0x82bb75};
-export function toonRamp(){const t=new T.DataTexture(new Uint8Array([105,105,105,255,185,185,185,255,255,255,255,255]),3,1);t.minFilter=t.magFilter=T.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;return t;}
+export function toonRamp(){const t=new T.DataTexture(new Uint8Array([85,85,85,255,172,172,172,255,255,255,255,255]),3,1);t.minFilter=t.magFilter=T.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;return t;}
 export function outlineMaterial(width=.012){
  const m=new T.MeshBasicMaterial({color:PALETTE.ink,side:T.BackSide});
  m.onBeforeCompile=s=>{s.vertexShader=s.vertexShader.replace('#include <skinning_vertex>','#include <skinning_vertex>\n#if !defined(USE_ENVMAP) && !defined(USE_SKINNING)\nvec3 objectNormal = vec3(normal);\n#endif\ntransformed += normalize(objectNormal) * '+width.toFixed(4)+';');};
@@ -67,7 +67,7 @@ export function createBlue(ramp=toonRamp()){
   add(sphere(.08,.035,.065),bones['toe'+side],'white',[0,-.025,.02]);
   for(let f=0;f<5;f++)for(let j=0;j<3;j++)add(new T.SphereGeometry(1,8,6).scale(.014,.023,.014),bones[`finger${f}${side}${j}`],'light',[0,-.012,0]);
  }
- const outline=outlineMaterial(.008);resources.add(outline);
+ const outline=outlineMaterial(.012);resources.add(outline);
  for(const [name,geometries] of parts){
   const geometry=mergeGeometries(geometries);geometries.forEach(g=>g.dispose());resources.add(geometry);
   for(const mat of name==='ink'||name==='white'?[materials[name]]:[materials[name],outline]){

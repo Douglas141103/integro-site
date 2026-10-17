@@ -19,14 +19,14 @@ export class BlueRun{
   this.collected=new Set(progress.seeds||[]);this.checkpoint=resume?(progress.checkpoint?.[this.level.id]??-1):-1;
   this.checkpoint=clamp(this.checkpoint,-1,this.level.checkpoints.length-1);this.deaths=0;
   this.enemies=this.level.enemies.map((e,i)=>({...e,x:e.a+(e.b-e.a)/2,dir:i%2?-1:1,stun:0,freed:false}));
-  this.boss=this.level.boss?{x:21,y:0,hits:0,phase:'watch',clock:2.5,dir:-1,hitThisCycle:false}:null;this.waves=[];this.respawn(false);
+  this.boss=this.level.boss?{x:this.level.arena.bossStart,y:0,hits:0,phase:'watch',clock:2.5,dir:-1,hitThisCycle:false}:null;this.waves=[];this.respawn(false);
  }
  respawn(event=true){
   const point=this.level.checkpoints[this.checkpoint]||this.level.spawn;
   this.player={x:point.x,y:point.y,vx:0,vy:0,facing:1,grounded:true,platform:null,crouching:false,health:this.maxHealth,invulnerable:event?1.5:0,coyote:PHYSICS.coyote,jumpBuffer:0,landed:0};
   this.previousInput={};this.bridges={};this.cooldown=0;this.pulseAge=99;this.waves=[];
   for(const e of this.enemies){e.stun=0;e.x=(e.a+e.b)/2;}
-  if(this.boss){this.boss.x=21;this.boss.phase='watch';this.boss.clock=2.5;this.boss.hitThisCycle=false;this.boss.hits=0;}
+  if(this.boss){this.boss.x=this.level.arena.bossStart;this.boss.phase='watch';this.boss.clock=2.5;this.boss.hitThisCycle=false;this.boss.hits=0;}
   if(event){this.deaths++;this.events.push({type:'respawn'});}
  }
  surfaces(t=this.time){return this.level.platforms.filter(p=>p.kind!=='bridge'||(this.bridges[p.group]||0)>0).map(p=>platformAt(p,t));}
@@ -72,7 +72,7 @@ export class BlueRun{
    if(oldX+PHYSICS.radius<=s.x-s.w/2+.05&&p.vx>0){p.x=s.x-s.w/2-PHYSICS.radius;p.vx=0;}
    else if(oldX-PHYSICS.radius>=s.x+s.w/2-.05&&p.vx<0){p.x=s.x+s.w/2+PHYSICS.radius;p.vx=0;}
   }
-  p.x=clamp(p.x,.5,this.level.length+1);p.vy-=PHYSICS.gravity*dt;p.y+=p.vy*dt;p.grounded=false;p.platform=null;
+  p.x=clamp(p.x,this.level.arena?.left??.5,this.level.arena?.right??this.level.length+1);p.vy-=PHYSICS.gravity*dt;p.y+=p.vy*dt;p.grounded=false;p.platform=null;
   for(const s of surfaces){
    if(p.x+PHYSICS.radius<=s.x-s.w/2||p.x-PHYSICS.radius>=s.x+s.w/2)continue;
    const old=platformAt(this.level.platforms.find(q=>q.id===s.id),previousTime);
@@ -94,16 +94,16 @@ export class BlueRun{
   this.previousInput={...input};
  }
  updateBoss(dt){
-  const b=this.boss,p=this.player;b.clock-=dt;
-  if(b.phase==='watch'&&b.clock<=0){b.phase='warn';b.clock=1.25;b.dir=b.x<=7?1:b.x>=23?-1:p.x<b.x?-1:1;this.events.push({type:'boss-warn'});}
+  const b=this.boss,p=this.player,a=this.level.arena;b.clock-=dt;
+  if(b.phase==='watch'&&b.clock<=0){b.phase='warn';b.clock=1.25;b.dir=b.x<=a.rollLeft+1?1:b.x>=a.rollRight-1?-1:p.x<b.x?-1:1;this.events.push({type:'boss-warn'});}
   else if(b.phase==='warn'&&b.clock<=0){b.phase='roll';b.clock=2.4;}
   else if(b.phase==='roll'){
    b.x+=b.dir*(this.assist?6:8)*dt;
-   if(b.x<6||b.x>24||b.clock<=0){b.x=clamp(b.x,6,24);b.phase='rest';b.clock=this.assist?5:3.8;b.hitThisCycle=false;this.events.push({type:'boss-rest'});if(b.hits>0)this.waves.push({x:b.x,dir:-b.dir,life:5});}
+   if(b.x<a.rollLeft||b.x>a.rollRight||b.clock<=0){b.x=clamp(b.x,a.rollLeft,a.rollRight);b.phase='rest';b.clock=this.assist?5:3.8;b.hitThisCycle=false;this.events.push({type:'boss-rest'});if(b.hits>0)this.waves.push({x:b.x,dir:-b.dir,life:5});}
   }else if((b.phase==='rest'||b.phase==='recover')&&b.clock<=0){b.phase='watch';b.clock=1.5;}
   if(b.phase==='roll'&&Math.abs(p.x-b.x)<1.05&&p.y<1.12)this.damage(b.x);
   for(const w of this.waves){w.x+=w.dir*4*dt;w.life-=dt;if(Math.abs(w.x-p.x)<.5&&p.y<.36&&w.life>0)this.damage(w.x);}
-  this.waves=this.waves.filter(w=>w.life>0&&w.x>0&&w.x<30);
+  this.waves=this.waves.filter(w=>w.life>0&&w.x>0&&w.x<this.level.length);
  }
  sync(progress){
   progress.seeds=[...new Set([...progress.seeds,...this.collected])];progress.selected=this.level.id;
