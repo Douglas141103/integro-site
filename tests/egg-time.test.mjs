@@ -27,10 +27,10 @@ test('bubble, freezing, double jump, stamina and speed have different physical e
 test('reduced corral production preserves earned money and fractional accrual through reload',()=>{
  const save=freshSave();Object.assign(save,{coins:1000,incomeEarned:250,incomePending:2.75,creatures:[{id:1,uid:'income-rebalance',world:0,rarity:'common',mutation:'normal',incomeProgress:.25}]});
  let g=new EggAdventure(save);assert.equal(g.save.coins,1000);assert.equal(g.save.incomeEarned,250);assert.equal(g.save.incomePending,2.75);assert.equal(g.save.creatures[0].incomeProgress,.25);
- assert.ok(Math.abs(g.incomeRate()*60-2.8)<1e-10,'common chick now earns 2.8 instead of 4 integros per minute');assert.equal(g.saleValue(0),80);
- advance(g,60);assert.equal(g.save.coins,1005);assert.equal(g.save.incomeEarned,255);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.8)<1e-8);
- g=new EggAdventure(g.save);advance(g,60);assert.equal(g.save.coins,1008);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.6)<1e-8);
- g.save.abilityStock.incomeBoost=1;assert.ok(g.useAbility('incomeBoost'));advance(g,60);assert.equal(g.save.coins,1014);assert.equal(g.save.incomeEarned,264);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.2)<1e-8,'boost doubles the reduced production and retains fractions');
+ assert.ok(Math.abs(g.incomeRate()*60-1.4)<1e-10,'common chick now earns 1.4 instead of 2.8 integros per minute');assert.equal(g.saleValue(0),80);
+ advance(g,60);assert.equal(g.save.coins,1004);assert.equal(g.save.incomeEarned,254);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.4)<1e-8);
+ g=new EggAdventure(g.save);advance(g,60);assert.equal(g.save.coins,1005);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.8)<1e-8);
+ g.save.abilityStock.incomeBoost=1;assert.ok(g.useAbility('incomeBoost'));advance(g,60);assert.equal(g.save.coins,1008);assert.equal(g.save.incomeEarned,258);assert.ok(Math.abs(g.save.creatures[0].incomeProgress-.6)<1e-8,'boost doubles the reduced production and retains fractions');
 });
 test('training, hatching and income boosts double only their advertised production',()=>{
  const train=new EggAdventure();train.save.abilityStock.trainingBoost=1;assert.equal(train.useAbility('trainingBoost'),false);train.mode='train';train.useAbility('trainingBoost');advance(train,1);assert.ok(Math.abs(train.save.trainXP-2)<.001);
