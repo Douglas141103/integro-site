@@ -22,7 +22,7 @@ export const WORLDS=[
 ];
 export const TRAINING_MAX=600;
 // Applies only to new automatic corral income; balances and sale values are retained.
-export const CORRAL_INCOME_MULTIPLIER=.7;
+export const CORRAL_INCOME_MULTIPLIER=.35;
 export const LENGTH=48,CORRAL={x:-5,z:14},TREADMILL={x:5,z:14};
 export const TRACK_HALF_WIDTH=4.75,BASE_HALF_WIDTH=9.4,PLAYER_RADIUS=.4;
 export function corridorHalfWidth(z){const t=Math.max(0,Math.min(1,(z-3)/5));return TRACK_HALF_WIDTH+(BASE_HALF_WIDTH-TRACK_HALF_WIDTH)*t;}
