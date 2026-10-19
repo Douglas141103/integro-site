@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script defer src="./gestao-escolar.js?v=20260517-pre-matricula"></script>
+  <script type="module" src="./family-access.mjs?v=20261019-1"></script>
   <script defer src="./gestao-empresa.js?v=20260505"></script>
   <link rel="stylesheet" href="./gestao-pesquisa-satisfacao.css?v=20260807">
 
@@ -1285,12 +1286,43 @@
 
             <div class="modal-actions">
               <button class="btn btn-primary" type="submit">Salvar alterações</button>
+              <button class="btn-secondary" type="button" id="openFamilyAccess">Criar acesso da família</button>
               <button class="btn-secondary" type="button" id="cancelStudentEdit">Cancelar</button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
+    <dialog id="familyAccessDialog" class="modal" aria-labelledby="familyAccessTitle" style="padding:0;max-width:580px;">
+      <div class="modal-header">
+        <div>
+          <h2 id="familyAccessTitle">Criar acesso da família</h2>
+          <p class="sub">Use os dados já salvos na ficha do aluno.</p>
+        </div>
+        <button type="button" class="btn-small" id="closeFamilyAccess">Fechar</button>
+      </div>
+      <div class="modal-body">
+        <p id="familyAccessSummary"></p>
+        <form id="familyAccessForm">
+          <div class="form-grid one">
+            <div>
+              <label for="familyAccessPassword">Senha inicial</label>
+              <input id="familyAccessPassword" type="password" autocomplete="new-password" minlength="8" required aria-describedby="familyAccessHint" />
+            </div>
+            <div>
+              <label for="familyAccessConfirm">Confirme a senha inicial</label>
+              <input id="familyAccessConfirm" type="password" autocomplete="new-password" minlength="8" required />
+            </div>
+          </div>
+          <p class="small" id="familyAccessHint">Use pelo menos 8 caracteres. A conta dará acesso ao Portal da Família e ao Integro Box. Se o e-mail já tiver uma conta, nenhuma senha será alterada.</p>
+          <div class="modal-actions">
+            <button id="familyAccessSubmit" class="btn btn-primary" type="submit" disabled>Criar login e vincular</button>
+          </div>
+        </form>
+        <div id="familyAccessStatus" class="status" role="status" aria-live="polite"></div>
+      </div>
+    </dialog>
 
     <div id="teacherEditModal" class="modal-backdrop" aria-hidden="true">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="teacherEditTitle">
