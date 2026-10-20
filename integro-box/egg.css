@@ -279,3 +279,13 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
  #eggSheet:has(#eggRankingContent) #eggSheetTitle{font-size:20px}
  #eggSheet:has(#eggRankingContent) #eggSheetBody{padding:12px 16px}
 }
+/* Room interactions keep the ordinary egg action available in the corral. */
+.egg-immersive #eggTrapOpen{padding:7px 10px;gap:5px;font-size:10px;min-height:44px;background:#244f4fe8;white-space:nowrap}
+.egg-immersive #eggTrapOpen[hidden]{display:none}
+.egg-trap-shop-link{margin-bottom:12px}
+.egg-trap-shop .egg-upgrade{display:flex;flex-direction:column;gap:10px}
+.egg-trap-shop .egg-upgrade p{margin:0}
+.egg-trap-shop .egg-upgrade button{min-height:44px}
+.egg-trap-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#d6eee3;color:#255d51;font:800 42px system-ui}
+.egg-trap-balance{display:block;margin:14px 0;color:#285c51}
+@media(max-height:450px) and (orientation:landscape){.egg-immersive .egg-push{min-height:44px}.egg-immersive .egg-action-pad{gap:3px}.egg-immersive .egg-supplies{gap:5px}}

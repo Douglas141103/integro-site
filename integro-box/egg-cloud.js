@@ -1,5 +1,5 @@
 import {supabase} from './access.js?v=20261016-intgem1';
-import {createEggPush} from './egg-push.js?v=20261016-egg20-rides1';
+import {createEggPush} from './egg-push.js?v=20261021-traps1';
 const runtime=()=>window.BoxEggRuntime;
 const room=()=>window.BoxMultiplayer?.roomInfo;
 const errors={not_member:'Entre em uma sala do Pegue o Ovo.',base_required:'Todos os participantes precisam voltar à base.',trade_pending:'Conclua ou cancele a troca atual.',pet_missing:'Essa criatura já não está disponível.',trade_closed:'A troca já foi encerrada.',trade_changed:'O progresso mudou. A troca foi cancelada.',confirmation_required:'Aguarde a confirmação do colega.',wrong_party:'Aguarde a vez do outro participante.',no_save:'O colega precisa sincronizar o progresso primeiro.',race_running:'A corrida dura até 2 minutos. Aguarde o encerramento.',conflict:'O progresso mudou em outro aparelho.',not_owner:'Somente quem criou a sala inicia a corrida.',pet_transferred:'Esse progresso contém uma criatura já transferida.',invalid_save:'Não foi possível validar este progresso.'};
@@ -10,7 +10,7 @@ pushButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 document.querySelector('#eggApp .egg-action-pad').append(pushButton);
 const pushLabel=pushButton.querySelector('small'),stage=document.getElementById('eggStage');
 const push=createEggPush({client:supabase,getRoom:room,getRace:()=>!stopped&&!failed&&!pending&&Date.now()-lastRacePoll<3000?race:null,getRuntime:runtime,getAdapter:()=>window.BoxAdapters?.egg,healthy:()=>window.BoxMultiplayer?.healthy===true,now:()=>Date.now()+clockOffset,
- onState(s){pushButton.hidden=!s.visible;pushButton.disabled=!s.ready;stage.classList.toggle('egg-racing',s.visible);pushButton.style.setProperty('--push-ready',String(1-Math.min(1,s.remaining/3000)));pushLabel.textContent=s.remaining?Math.ceil(s.remaining/1000)+' s':!s.connected?'Conectando':s.target?'Pronto · F':'Chegue perto';pushButton.setAttribute('aria-label',s.remaining?'Empurrão recarregando: '+Math.ceil(s.remaining/1000)+' segundos':s.target?'Empurrar Explorador '+s.target+' (F)':'Aproxime-se de outro corredor para empurrar');},
+ onState(s){pushButton.hidden=!s.visible;pushButton.disabled=!s.ready;stage.classList.toggle('egg-racing',s.visible&&s.racing);pushButton.style.setProperty('--push-ready',String(1-Math.min(1,s.remaining/3000)));pushLabel.textContent=s.remaining?Math.ceil(s.remaining/1000)+' s':!s.connected?'Conectando':s.target?'Pronto · F':'Chegue perto';pushButton.setAttribute('aria-label',s.remaining?'Empurrão recarregando: '+Math.ceil(s.remaining/1000)+' segundos':s.target?'Empurrar Explorador '+s.target+' (F)':'Aproxime-se de outro jogador para empurrar');},
  onEffect(e){if(e.kind==='received'){runtime()?.pushEffect();runtime()?.message('Empurrão! Recupere o equilíbrio e continue.');}if(e.kind==='sent'){runtime()?.pushGesture();runtime()?.message('Você empurrou o Explorador '+e.slot+'!');}if(e.kind==='unavailable')runtime()?.message('O empurrão não foi enviado. Aguarde a conexão.');}
 });window.BoxEggPush=push;pushButton.onclick=()=>void push.push();
 const pushTimer=setInterval(()=>push.tick(),150);
@@ -73,5 +73,5 @@ async function exchange(operation){
  }finally{externalTransaction=false;}
 }
 async function ranking(){if(ready&&!pending&&!externalTransaction&&!stopped)await flushIfNeeded();const data=await rpc('ranking');return {...data,synced:ready&&!dirty&&!blockedSync};}
-window.BoxEggCloud={ranking,dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
+window.BoxEggCloud={traps:(action,extra)=>rpc(action,extra),ranking,dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
 await boot();
