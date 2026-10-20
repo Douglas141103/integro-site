@@ -20,6 +20,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="ranking"]').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');w.document.querySelector('[data-egg-action="resume"]').click();
   key('w');tick(270);key('w',true);key('d');tick(20);key('d',true);assert.equal(state().interaction.type,'nest');
   key('e');assert.equal(state().sheet,'nest');w.document.querySelector('[data-steal="0"]').click();tick(15);assert.equal(state().carrying,0);
   let actor;adapter.scene().traverse(n=>{if(n.name==='EggExplorer'&&n.userData.actor?.carry.children.length)actor=n.userData.actor;});assert(actor);assert(actor.carryBlend>.8);assert.equal(actor.carry.parent,actor.model.bones.chest);

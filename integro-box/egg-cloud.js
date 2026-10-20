@@ -72,5 +72,6 @@ async function exchange(operation){
   localBackup();runtime().apply(result.save);revision=result.revision;dirty=false;rememberRevision();lastSave=Date.now();status='Conversão concluída. Progresso e carteira sincronizados.';return result;
  }finally{externalTransaction=false;}
 }
-window.BoxEggCloud={dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
+async function ranking(){if(ready&&!pending&&!externalTransaction&&!stopped)await flushIfNeeded();const data=await rpc('ranking');return {...data,synced:ready&&!dirty&&!blockedSync};}
+window.BoxEggCloud={ranking,dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
 await boot();
