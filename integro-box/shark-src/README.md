@@ -20,3 +20,13 @@ Automated checks cover the economy, progression, map, corruption recovery, all f
 Final asset: `../assets/catalog-v1/shark.webp`. Generated with the built-in image generation tool using the existing Integro Rush cover as a style reference, then encoded as WebP. The same asset appears in both the public game list and the authenticated catalog.
 
 Prompt: Create a landscape 1536×1024 Shark cover for Integro Box matching the reference's polished colorful 3D cartoon illustration and glossy rounded beveled lettering with dark navy outlines. A lovable turquoise shark with expressive eyes swims through a rich underwater coral garden chasing three smaller colorful fish. Include bubbles, golden pearl coins, cyan sunbeams, pink/orange coral, and distant sunken ship and temple silhouettes. Large central shark, readable at thumbnail size. Exact text: “SHARK” across the lower third and smaller “INTEGRO BOX” above. Full ocean background, safe text margins, no buttons, no gore, no other game names.
+
+### Atualização visual 2
+HUD compacto com controles de toque de pelo menos 44 px, mapa no canto superior,
+e barra de evolução horizontal. Tubarão e cinco espécies de peixes usam 40 juntas
+ponderadas, detalhes faciais integrados ao mesh, padrões próprios e contorno cartoon.
+A natação usa fase contínua, curvas com velocidade angular limitada, aceleração,
+alinhamento e separação de cardumes. A câmera está mais próxima, com iluminação
+ACES e exposição reduzida. Economia e formato do progresso salvo permanecem compatíveis.
+
+Validação: `node --test tests/shark.test.mjs tests/shark-motion.test.mjs tests/shark-ui.test.mjs tests/box-navigation-ui.test.mjs`.

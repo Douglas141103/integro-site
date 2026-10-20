@@ -55,10 +55,10 @@ try {
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
-  if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261020-shark1');installShark();}
-  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261020-shark1');startUsage();}
+  if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261020-shark2');installShark();}
+  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261020-shark2');startUsage();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261020-shark1');
+  if(!unloaded)await script('./catalog.js?v=20261020-shark2');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-box-ui2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

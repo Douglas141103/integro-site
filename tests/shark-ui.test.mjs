@@ -10,7 +10,7 @@ test('home, shop, map, help, purchases and exit work without starting a renderer
  let game;try{const app=w.document.getElementById('sharkApp');game=createSharkGame(app,()=>{exited=true;});game.open();assert.equal(game.state().mode,'home');assert.match(app.querySelector('h1').textContent,/Gigante/);assert.equal(game.state().joints,undefined);
   app.querySelector('[data-panel="shop"]').click();assert.equal(game.state().mode,'shop');assert.equal(app.querySelectorAll('[data-buy]').length,12);app.querySelector('[data-buy="coral"]').click();assert.equal(game.state().progress.skin,'coral');assert.equal(game.state().progress.coins,760);assert.equal(JSON.parse(backing.get('shark-ocean-v1')).skin,'coral');
   app.querySelector('[data-panel="map"]').click();assert.equal(app.querySelectorAll('[data-destination]').length,6);assert.equal(game.state().mode,'map');assert.equal(app.querySelectorAll('.shark-missions>div').length,5);
-  app.querySelector('[data-exit]').click();assert(exited);assert(app.hidden);assert.equal(game.state().active,false);
+  app.querySelector('#sharkPause').click();assert.equal(game.state().mode,'pause');app.querySelector('[data-exit]').click();assert(exited);assert(app.hidden);assert.equal(game.state().active,false);
  }finally{game?.stop();w.close();for(const k of globals){if(old[k]===undefined)delete globalThis[k];else globalThis[k]=old[k];}}
 });
 

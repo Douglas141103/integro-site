@@ -14,7 +14,7 @@ export function makeOcean(scene){
  terrain.setAttribute('color',new T.Float32BufferAttribute(colors,3));terrain.computeVertexNormals();geometries.add(terrain);const floorMat=new T.MeshToonMaterial({vertexColors:true});materials.add(floorMat);const floor=new T.Mesh(terrain,floorMat);scene.add(floor);objects.push(floor);
  for(const [ri,r] of REGIONS.entries()){
   const rocks=[],corals=[],branches=[],leaves=[],pillars=[],tops=[];
-  for(let i=0;i<95;i++){const x=r.x+(rand()-.5)*565,z=r.z+(rand()-.5)*565,s=3+rand()*9;rocks.push({x,y:s*.3-1,z,sx:s,sy:s*.7,sz:s,ry:rand()*6});
+  for(let i=0;i<95;i++){const x=r.x+(rand()-.5)*565,z=r.z+(rand()-.5)*565,s=2+rand()*(ri===0?5:9);if(Math.hypot(x-r.x,z-r.z)<30)continue;rocks.push({x,y:s*.3-1,z,sx:s,sy:s*.7,sz:s,ry:rand()*6});
    for(let j=0;j<3;j++){const bx=x+(rand()-.5)*s*2,bz=z+(rand()-.5)*s*2,h=3+rand()*8;
     if(r.kind==='kelp'){branches.push({x:bx,y:h,z:bz,sx:.6,sy:h*2,sz:.6,rz:(rand()-.5)*.3});for(let k=1;k<4;k++)leaves.push({x:bx+Math.sin(k)*2,y:k*h*.5,z:bz,sx:2.8,sy:1.1,sz:.8,rz:k*.7});}
     else if(r.kind==='ice')pillars.push({x:bx,y:h,z:bz,sx:2+rand()*3,sy:h*2,sz:2+rand()*3,rz:(rand()-.5)*.3});
