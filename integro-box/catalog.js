@@ -56,7 +56,7 @@ const hero=el('section','catalog-feature');const featured=games.find(g=>g.id==='
 const filters=el('nav','catalog-filters');filters.setAttribute('aria-label','Categorias de jogos');for(const cat of ['Todos','Favoritos','Aventura','Criatividade','Corrida','Música','Desafios']){const b=btn('catalog-filter',(cat==='Favoritos'?'★ ':'')+cat,()=>{category=cat;filter();});b.dataset.category=cat;filters.append(b);}
 const titleRow=el('div','catalog-section-title');titleRow.append(el('h2','','Explore os jogos'));const count=el('span');count.setAttribute('role','status');titleRow.append(count);
 const empty=el('div','catalog-empty');empty.hidden=true;empty.append(el('h3','','Nenhum jogo por aqui ainda.'),el('p','','Experimente outra busca ou toque na estrela de uma capa para favoritar.'),btn('catalog-detail','Ver todos os jogos',()=>{category='Todos';query='';search.value='';filter();}));
-function filter(){let n=0;for(const g of games){const match=(category==='Todos'||category==='Favoritos'&&favorites.has(g.id)||g.category===category)&&(!query||norm(g.name+' '+g.category+' '+g.short).includes(query));g.catalogCard.hidden=!match;if(match)n++;}count.textContent=`${n} ${n===1?'jogo':'jogos'}`;empty.hidden=n>0;filters.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));}
+function filter(){let n=0;for(const g of games){const match=(category==='Todos'||category==='Favoritos'&&favorites.has(g.id)||g.category===category)&&(!query||norm(g.name+' '+g.category+' '+g.short+' '+(window.BoxI18n?.t(g.name)||'')+' '+(window.BoxI18n?.t(g.category)||'')+' '+(window.BoxI18n?.t(g.short)||'')).includes(query));g.catalogCard.hidden=!match;if(match)n++;}count.textContent=`${n} ${n===1?'jogo':'jogos'}`;empty.hidden=n>0;filters.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));}
 const legacy=el('div','catalog-legacy');legacy.hidden=true;legacy.inert=true;legacy.append(...lobby.childNodes);
 lobby.replaceChildren(intro,recentSection,filters,titleRow,grid,empty,hero,el('p','catalog-note','Escolha uma aventura. Aprenda brincando.'),legacy);
 lobby.dataset.catalogReady='true';document.body.classList.add('catalog-enabled');syncFavorites();renderRecent();filter();
@@ -73,5 +73,6 @@ if(head){const brand=head.querySelector('.brand-logo');if(brand){brand.src=asset
  account.addEventListener('click',e=>{if(e.target===account){const r=account.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)account.close();}});
  document.body.append(account);const accountButton=btn('catalog-settings','Conta',()=>account.showModal());accountButton.setAttribute('aria-label','Conta e informações');accountButton.setAttribute('aria-haspopup','dialog');accountButton.setAttribute('aria-controls',account.id);head.append(accountButton);}
 
+window.addEventListener('box-language-change',filter);
 window.BoxCatalog={games:games.map(g=>g.id)};
 })();

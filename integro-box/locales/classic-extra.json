@@ -1,0 +1,58 @@
+{
+  "Algo que foge à regra.": [
+    "Something that breaks the rule.",
+    "Etwas, das von der Regel abweicht."
+  ],
+  "Muito bem! A palavra é": [
+    "Well done! The word is",
+    "Sehr gut! Das Wort lautet"
+  ],
+  ". Você encontrou um par!": [
+    ". You found a pair!",
+    ". Du hast ein Paar gefunden!"
+  ],
+  "Vire duas cartas e encontre a tradução. As cartas marcadas com EN são em inglês; DE, em alemão.": [
+    "Turn over two cards and find the translation. Cards marked EN are in English; DE means German.",
+    "Decke zwei Karten auf und finde die Übersetzung. Karten mit EN sind auf Englisch, Karten mit DE auf Deutsch."
+  ],
+  "Este jogo pratica português e inglês. Vire duas cartas e encontre a tradução: EN para inglês e PT para português.": [
+    "This game practices Portuguese and English. Turn over two cards and find the translation: EN for English and PT for Portuguese.",
+    "Dieses Spiel übt Portugiesisch und Englisch. Decke zwei Karten auf und finde die Übersetzung: EN steht für Englisch und PT für Portugiesisch."
+  ],
+  "Alemão": [
+    "German",
+    "Deutsch"
+  ],
+  "alemão": [
+    "German",
+    "Deutsch"
+  ],
+  "Português": [
+    "Portuguese",
+    "Portugiesisch"
+  ],
+  "português": [
+    "Portuguese",
+    "Portugiesisch"
+  ],
+  "Inglês": [
+    "English",
+    "Englisch"
+  ],
+  "inglês": [
+    "English",
+    "Englisch"
+  ],
+  "Carta {0}, alemão": [
+    "Card {0}, German",
+    "Karte {0}, Deutsch"
+  ],
+  "Carta {0}, português": [
+    "Card {0}, Portuguese",
+    "Karte {0}, Portugiesisch"
+  ],
+  "Carta {0}, inglês": [
+    "Card {0}, English",
+    "Karte {0}, Englisch"
+  ]
+}

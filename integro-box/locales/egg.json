@@ -1,0 +1,2726 @@
+{
+  "! Pule ou desvie da área marcada.": [
+    "! Jump or avoid the marked area.",
+    "! Springe oder weiche dem markierten Bereich aus."
+  ],
+  "+0,8 de velocidade por nível.": [
+    "+0.8 speed per level.",
+    "+0,8 Tempo pro Stufe."
+  ],
+  "+2 espaços para ovos e criaturas.": [
+    "+2 spaces for eggs and creatures.",
+    "+2 Plätze für Eier und Kreaturen."
+  ],
+  "+30 de energia para disparar.": [
+    "+30 sprint energy.",
+    "+30 Energie zum Sprinten."
+  ],
+  "+6 de fôlego recuperado por segundo, por nível.": [
+    "+6 stamina recovered per second, per level.",
+    "+6 Ausdauerregeneration pro Sekunde und Stufe."
+  ],
+  "20 · DESTINO CONQUISTADO": [
+    "20 · DESTINATION REACHED",
+    "20 · ZIEL ERREICHT"
+  ],
+  "3 OVOS · RARIDADES E MUTAÇÕES": [
+    "3 EGGS · RARITIES AND MUTATIONS",
+    "3 EIER · SELTENHEITEN UND MUTATIONEN"
+  ],
+  "30 novidades + 8 relíquias da aventura.": [
+    "30 new items + 8 adventure relics.",
+    "30 neue Gegenstände + 8 Abenteuerrelikte."
+  ],
+  "A corrida dura até 2 minutos. Aguarde o encerramento.": [
+    "The race lasts up to 2 minutes. Wait for it to finish.",
+    "Das Rennen dauert bis zu 2 Minuten. Warte auf das Ende."
+  ],
+  "A esteira aumenta sua velocidade permanentemente.": [
+    "The treadmill permanently increases your speed.",
+    "Das Laufband erhöht dein Tempo dauerhaft."
+  ],
+  "A esteira rende o dobro de treino por 60 segundos. Ative sobre a esteira.": [
+    "The treadmill gives double training for 60 seconds. Activate it on the treadmill.",
+    "Das Laufband bringt 60 Sekunden lang doppelte Trainingsfortschritte. Auf dem Laufband aktivieren."
+  ],
+  "A integração online desta atualização aguarda ativação no portal. Seu progresso continua salvo neste aparelho.": [
+    "Online integration for this update is awaiting activation in the portal. Your progress remains saved on this device.",
+    "Die Online-Funktionen dieses Updates warten auf die Freischaltung im Portal. Dein Fortschritt bleibt auf diesem Gerät gespeichert."
+  ],
+  "A troca já foi encerrada.": [
+    "The trade has already ended.",
+    "Der Tausch ist bereits beendet."
+  ],
+  "ATALHOS Q E B · MOCHILA": [
+    "Q AND B SHORTCUTS · BACKPACK",
+    "TASTEN Q UND B · RUCKSACK"
+  ],
+  "Aba larga e uma pena verde para as expedições.": [
+    "A wide brim and a green feather for expeditions.",
+    "Eine breite Krempe und eine grüne Feder für Expeditionen."
+  ],
+  "Abrir Integro Box no portal": [
+    "Open Integro Box in the portal",
+    "Integro Box im Portal öffnen"
+  ],
+  "Abrir curral": [
+    "Open pen",
+    "Gehege öffnen"
+  ],
+  "Abrir salas": [
+    "Open rooms",
+    "Räume öffnen"
+  ],
+  "Aceitar esta troca": [
+    "Accept this trade",
+    "Diesen Tausch annehmen"
+  ],
+  "Acessórios · {9}/{10}": [
+    "Accessories · {9}/{10}",
+    "Accessoires · {9}/{10}"
+  ],
+  "Acompanhar": [
+    "Bring along",
+    "Mitnehmen"
+  ],
+  "Aguardando o colega": [
+    "Waiting for your friend",
+    "Warten auf deinen Mitspieler"
+  ],
+  "Aguarde a confirmação do colega.": [
+    "Wait for your friend to confirm.",
+    "Warte auf die Bestätigung deines Mitspielers."
+  ],
+  "Aguarde a sincronização e volte à base antes de converter.": [
+    "Wait for synchronization and return to base before converting.",
+    "Warte auf die Synchronisierung und kehre vor dem Umtausch zur Basis zurück."
+  ],
+  "Aguarde a vez do outro participante.": [
+    "Wait for the other participant's turn.",
+    "Warte, bis der andere Teilnehmer an der Reihe ist."
+  ],
+  "Além das nuvens": [
+    "Beyond the clouds",
+    "Jenseits der Wolken"
+  ],
+  "Além do porto": [
+    "Beyond the harbor",
+    "Jenseits des Hafens"
+  ],
+  "Amigos": [
+    "Friends",
+    "Freunde"
+  ],
+  "Ampulheta eterna": [
+    "Eternal hourglass",
+    "Ewige Sanduhr"
+  ],
+  "Antecipa a direção": [
+    "Anticipates your direction",
+    "Ahnt deine Richtung voraus"
+  ],
+  "Anéis orbitais, estrelas e uma nebulosa central.": [
+    "Orbital rings, stars and a central nebula.",
+    "Umlaufringe, Sterne und ein Nebel im Zentrum."
+  ],
+  "Apagar e recomeçar": [
+    "Delete and restart",
+    "Löschen und neu beginnen"
+  ],
+  "Apagar este progresso?": [
+    "Delete this progress?",
+    "Diesen Fortschritt löschen?"
+  ],
+  "Apagar progresso deste jogo": [
+    "Delete this game's progress",
+    "Fortschritt dieses Spiels löschen"
+  ],
+  "Aproxime-se de outro corredor para empurrar": [
+    "Get close to another runner to push",
+    "Nähere dich einem anderen Läufer, um ihn zu schubsen"
+  ],
+  "Aproxime-se de um ninho para escolher.": [
+    "Get close to a nest to choose.",
+    "Nähere dich einem Nest, um auszuwählen."
+  ],
+  "Aproxime-se de um ninho, escolha um ovo e leve ao curral.": [
+    "Get close to a nest, choose an egg and bring it to the pen.",
+    "Nähere dich einem Nest, wähle ein Ei und bringe es ins Gehege."
+  ],
+  "Arco-íris": [
+    "Rainbow",
+    "Regenbogen"
+  ],
+  "Armação violeta e lentes luminosas turquesa.": [
+    "Violet frames and glowing turquoise lenses.",
+    "Violette Fassung und leuchtend türkise Gläser."
+  ],
+  "As 20 pistas estão disponíveis na aventura solo. As salas online aguardam a atualização do servidor e permitem até a pista": [
+    "All 20 tracks are available in the solo adventure. Online rooms are awaiting the server update and allow play up to track",
+    "Alle 20 Strecken sind im Solo-Abenteuer verfügbar. Online-Räume warten auf das Serverupdate und erlauben das Spielen bis Strecke"
+  ],
+  "As criaturas produzem o dobro de integros durante 90 segundos de jogo.": [
+    "Creatures produce double Integros for 90 seconds of gameplay.",
+    "Kreaturen produzieren während 90 Sekunden Spielzeit doppelt so viele Integros."
+  ],
+  "As novas criaturas estão salvas neste aparelho. A sincronização delas aguarda a atualização do servidor para 20 pistas.": [
+    "The new creatures are saved on this device. Their synchronization awaits the server update for 20 tracks.",
+    "Die neuen Kreaturen sind auf diesem Gerät gespeichert. Ihre Synchronisierung wartet auf das Serverupdate für 20 Strecken."
+  ],
+  "As novas pistas estão na aventura solo. A sala aguarda a atualização do servidor.": [
+    "The new tracks are in the solo adventure. The room is awaiting the server update.",
+    "Die neuen Strecken sind im Solo-Abenteuer verfügbar. Der Raum wartet auf das Serverupdate."
+  ],
+  "As {0} pistas": [
+    "The {0} tracks",
+    "Die {0} Strecken"
+  ],
+  "Asas Boreais": [
+    "Boreal Wings",
+    "Nordlichtflügel"
+  ],
+  "Asas da fênix": [
+    "Phoenix wings",
+    "Phönixflügel"
+  ],
+  "Asas de abelha": [
+    "Bee wings",
+    "Bienenflügel"
+  ],
+  "Asas de cristal": [
+    "Crystal wings",
+    "Kristallflügel"
+  ],
+  "Asas de dragão": [
+    "Dragon wings",
+    "Drachenflügel"
+  ],
+  "Asas do infinito": [
+    "Infinity wings",
+    "Flügel der Unendlichkeit"
+  ],
+  "Asas do jardim": [
+    "Garden wings",
+    "Gartenflügel"
+  ],
+  "Asas lilás para enfeitar o personagem.": [
+    "Lilac wings to decorate your character.",
+    "Fliederfarbene Flügel als Schmuck für deine Figur."
+  ],
+  "Asas mecânicas": [
+    "Mechanical wings",
+    "Mechanische Flügel"
+  ],
+  "Asas míticas, anéis cósmicos e estrelas douradas.": [
+    "Mythic wings, cosmic rings and golden stars.",
+    "Mythische Flügel, kosmische Ringe und goldene Sterne."
+  ],
+  "Asas turquesa e lilás ao redor dos olhos.": [
+    "Turquoise and lilac wings around the eyes.",
+    "Türkise und fliederfarbene Flügel um die Augen."
+  ],
+  "Atalhos do jogo": [
+    "Game shortcuts",
+    "Spiel-Verknüpfungen"
+  ],
+  "Atleta nível 50": [
+    "Level 50 athlete",
+    "Athlet auf Stufe 50"
+  ],
+  "Atualizado às {0}. Classificação pelos saldos atuais salvos no perfil.": [
+    "Updated at {0}. Ranked by current balances saved in profiles.",
+    "Um {0} aktualisiert. Rangfolge nach den aktuell im Profil gespeicherten Guthaben."
+  ],
+  "Atualizando os saldos do ranking…": [
+    "Updating leaderboard balances…",
+    "Guthaben der Rangliste werden aktualisiert…"
+  ],
+  "Atualizar ranking": [
+    "Refresh leaderboard",
+    "Rangliste aktualisieren"
+  ],
+  "Atualizar saldo": [
+    "Refresh balance",
+    "Guthaben aktualisieren"
+  ],
+  "Aumenta sua velocidade em 25% por 20 segundos.": [
+    "Increases your speed by 25% for 20 seconds.",
+    "Erhöht dein Tempo 20 Sekunden lang um 25%."
+  ],
+  "Auras": [
+    "Auras",
+    "Auren"
+  ],
+  "Auroras": [
+    "Auroras",
+    "Polarlichter"
+  ],
+  "Aventura com amigos": [
+    "Adventure with friends",
+    "Abenteuer mit Freunden"
+  ],
+  "Axolote Pérola": [
+    "Pearl Axolotl",
+    "Perlen-Axolotl"
+  ],
+  "Axolote Rubi": [
+    "Ruby Axolotl",
+    "Rubin-Axolotl"
+  ],
+  "Axolote voador com seis brânquias de cristal.": [
+    "A flying axolotl with six crystal gills.",
+    "Ein fliegender Axolotl mit sechs Kristallkiemen."
+  ],
+  "BASE SEGURA": [
+    "SAFE BASE",
+    "SICHERE BASIS"
+  ],
+  "BOOST": [
+    "BOOST",
+    "BOOST"
+  ],
+  "Baixa gravidade": [
+    "Low gravity",
+    "Niedrige Schwerkraft"
+  ],
+  "Balões de festa": [
+    "Party balloons",
+    "Partyballons"
+  ],
+  "Bambu": [
+    "Bamboo",
+    "Bambus"
+  ],
+  "Bambu móvel": [
+    "Moving bamboo",
+    "Beweglicher Bambus"
+  ],
+  "Barbatana e dentinhos de fantasia.": [
+    "A costume fin and little teeth.",
+    "Eine Kostümflosse und kleine Zähnchen."
+  ],
+  "Barreira da plataforma": [
+    "Platform barrier",
+    "Bahnsteigsperre"
+  ],
+  "Bolha protetora": [
+    "Protective bubble",
+    "Schutzblase"
+  ],
+  "Bolhas e pérolas em órbita ao redor do corredor.": [
+    "Bubbles and pearls orbiting the runner.",
+    "Blasen und Perlen kreisen um den Läufer."
+  ],
+  "Boost de incubação": [
+    "Hatching boost",
+    "Brut-Boost"
+  ],
+  "Boost de treino": [
+    "Training boost",
+    "Trainings-Boost"
+  ],
+  "Boost de velocidade": [
+    "Speed boost",
+    "Tempo-Boost"
+  ],
+  "Boost do curral": [
+    "Pen boost",
+    "Gehege-Boost"
+  ],
+  "Bosque": [
+    "Woodland",
+    "Wald"
+  ],
+  "Bosque Encantado": [
+    "Enchanted Woodland",
+    "Zauberwald"
+  ],
+  "COLEÇÃO ESPECIAL": [
+    "SPECIAL COLLECTION",
+    "BESONDERE SAMMLUNG"
+  ],
+  "COLEÇÃO EXCLUSIVA · PEGUE O OVO": [
+    "EXCLUSIVE COLLECTION · CATCH THE EGG",
+    "EXKLUSIVE SAMMLUNG · SCHNAPP DAS EI"
+  ],
+  "Cabeça": [
+    "Head",
+    "Kopf"
+  ],
+  "Campos do Sol": [
+    "Sun Fields",
+    "Sonnenfelder"
+  ],
+  "Cancelar": [
+    "Cancel",
+    "Abbrechen"
+  ],
+  "Cancelar troca": [
+    "Cancel trade",
+    "Tausch abbrechen"
+  ],
+  "Capa de herói": [
+    "Hero cape",
+    "Heldenumhang"
+  ],
+  "Capacete da aurora": [
+    "Aurora helmet",
+    "Polarlichthelm"
+  ],
+  "Capacete de piloto": [
+    "Pilot helmet",
+    "Pilotenhelm"
+  ],
+  "Capacete espacial": [
+    "Space helmet",
+    "Weltraumhelm"
+  ],
+  "Capacete laranja com faixa e proteção lateral.": [
+    "An orange helmet with a stripe and side protection.",
+    "Ein orangefarbener Helm mit Streifen und Seitenschutz."
+  ],
+  "Capuz tubarão": [
+    "Shark hood",
+    "Hai-Kapuze"
+  ],
+  "Carteira indisponível. Entre na sua conta e tente novamente.": [
+    "Wallet unavailable. Sign in to your account and try again.",
+    "Geldbörse nicht verfügbar. Melde dich an und versuche es erneut."
+  ],
+  "Casco de aventureiro": [
+    "Adventurer shell",
+    "Abenteurerpanzer"
+  ],
+  "Casco em espiral com duas antenas fofas.": [
+    "A spiral shell with two cute antennae.",
+    "Ein Spiralgehäuse mit zwei niedlichen Fühlern."
+  ],
+  "Categorias de itens": [
+    "Item categories",
+    "Gegenstandskategorien"
+  ],
+  "Caverna de Cristal": [
+    "Crystal Cave",
+    "Kristallhöhle"
+  ],
+  "Caçador de auroras": [
+    "Aurora hunter",
+    "Polarlichtjäger"
+  ],
+  "Centrar câmera": [
+    "Center camera",
+    "Kamera zentrieren"
+  ],
+  "Cervinho Folha": [
+    "Leaf Fawn",
+    "Blattkitz"
+  ],
+  "Chapéu cogumelo": [
+    "Mushroom hat",
+    "Pilzhut"
+  ],
+  "Chapéu de capitão": [
+    "Captain's hat",
+    "Kapitänshut"
+  ],
+  "Chapéu de mago": [
+    "Wizard hat",
+    "Zauberhut"
+  ],
+  "Chapéu explorador": [
+    "Explorer hat",
+    "Entdeckerhut"
+  ],
+  "Chegada!": [
+    "Finish!",
+    "Ziel!"
+  ],
+  "Chegue perto": [
+    "Come closer",
+    "Komm näher"
+  ],
+  "Chifres verdes e focinho com detalhes dourados.": [
+    "Green horns and a snout with golden details.",
+    "Grüne Hörner und eine Schnauze mit goldenen Details."
+  ],
+  "Choca em {5} s de jogo": [
+    "Hatches in {5} s of gameplay",
+    "Schlüpft nach {5} s Spielzeit"
+  ],
+  "Cidade das Engrenagens": [
+    "Gear City",
+    "Zahnradstadt"
+  ],
+  "Cidadela do Tempo": [
+    "Time Citadel",
+    "Zitadelle der Zeit"
+  ],
+  "Cinco balões presos à mochila. Sem voo.": [
+    "Five balloons tied to the backpack. No flight.",
+    "Fünf Ballons am Rucksack. Ermöglichen kein Fliegen."
+  ],
+  "Classificação do Pegue o Ovo": [
+    "Catch the Egg standings",
+    "Schnapp das Ei – Rangliste"
+  ],
+  "Clássicos do ninho": [
+    "Nest classics",
+    "Nestklassiker"
+  ],
+  "Coelho Caramelo": [
+    "Caramel Rabbit",
+    "Karamellkaninchen"
+  ],
+  "Cogumelos": [
+    "Mushrooms",
+    "Pilze"
+  ],
+  "Coleção dos vinte": [
+    "Collection of twenty",
+    "Sammlung der Zwanzig"
+  ],
+  "Colocar no HUD": [
+    "Add to HUD",
+    "Zur Spielanzeige hinzufügen"
+  ],
+  "Cometa de cristal": [
+    "Crystal comet",
+    "Kristallkomet"
+  ],
+  "Companheiro pronto!": [
+    "Companion ready!",
+    "Begleiter bereit!"
+  ],
+  "Companheiro voltou ao curral.": [
+    "Your companion returned to the pen.",
+    "Dein Begleiter ist ins Gehege zurückgekehrt."
+  ],
+  "Companheiro: {2}": [
+    "Companion: {2}",
+    "Begleiter: {2}"
+  ],
+  "Compra concluída! O item já está equipado e salvo na sua conta.": [
+    "Purchase complete! The item is equipped and saved in your account.",
+    "Kauf abgeschlossen! Der Gegenstand ist ausgerüstet und in deinem Konto gespeichert."
+  ],
+  "Comprar por": [
+    "Buy for",
+    "Kaufen für"
+  ],
+  "Compre cargas na base e equipe um poder e um boost. Ative pelos ícones do HUD ou Q/B. Abra Poderes no menu para trocar. Há proteção, congelamento, salto duplo, fôlego infinito e boosts de velocidade, treino, incubação e produção. Eles ficam pausados nas corridas online, que mantêm velocidade igual para todos.": [
+    "Buy charges at base and equip one power and one boost. Activate them with the HUD icons or Q/B. Open Powers in the menu to switch. Choose protection, freezing, double jump, unlimited stamina, and speed, training, hatching and production boosts. They are paused during online races, where everyone has the same speed.",
+    "Kaufe Ladungen in der Basis und rüste eine Kraft und einen Boost aus. Aktiviere sie über die Symbole der Spielanzeige oder Q/B. Öffne Kräfte im Menü zum Wechseln. Es gibt Schutz, Einfrieren, Doppelsprung, unendliche Ausdauer sowie Tempo-, Trainings-, Brut- und Produktions-Boosts. In Online-Rennen sind sie pausiert, damit alle das gleiche Tempo haben."
+  ],
+  "Comum": [
+    "Common",
+    "Gewöhnlich"
+  ],
+  "Concha Imperial": [
+    "Imperial Shell",
+    "Kaiserliche Muschel"
+  ],
+  "Concha aberta em leque, com uma pérola no centro.": [
+    "A fan-shaped open shell with a pearl in the center.",
+    "Eine fächerförmig geöffnete Muschel mit einer Perle in der Mitte."
+  ],
+  "Conclua ou cancele a troca atual.": [
+    "Complete or cancel the current trade.",
+    "Schließe den aktuellen Tausch ab oder brich ihn ab."
+  ],
+  "Concluída": [
+    "Completed",
+    "Abgeschlossen"
+  ],
+  "Condutor Integro": [
+    "Integro Conductor",
+    "Integro-Lokführer"
+  ],
+  "Cone estrelado com uma lua na ponta.": [
+    "A starry cone with a moon at the tip.",
+    "Ein sternenbesetzter Kegel mit einem Mond an der Spitze."
+  ],
+  "Conectando": [
+    "Connecting",
+    "Verbindung wird hergestellt"
+  ],
+  "Conecte seu perfil no Integro Box para ver o ranking.": [
+    "Connect your Integro Box profile to see the leaderboard.",
+    "Verbinde dein Integro-Box-Profil, um die Rangliste zu sehen."
+  ],
+  "Confira a criatura do colega": [
+    "Check your friend's creature",
+    "Prüfe die Kreatur deines Mitspielers"
+  ],
+  "Confira a plaqueta do ovo.": [
+    "Check the egg's sign.",
+    "Sieh dir das Schild am Ei an."
+  ],
+  "Confira o item e confirme sua compra.": [
+    "Check the item and confirm your purchase.",
+    "Prüfe den Gegenstand und bestätige deinen Kauf."
+  ],
+  "Confirmar compra": [
+    "Confirm purchase",
+    "Kauf bestätigen"
+  ],
+  "Confirmar e concluir troca": [
+    "Confirm and complete trade",
+    "Tausch bestätigen und abschließen"
+  ],
+  "Confirmar por": [
+    "Confirm for",
+    "Bestätigen für"
+  ],
+  "Confirmar troca": [
+    "Confirm trade",
+    "Tausch bestätigen"
+  ],
+  "Conquista:": [
+    "Achievement:",
+    "Erfolg:"
+  ],
+  "Conquistas e coleção": [
+    "Achievements and collection",
+    "Erfolge und Sammlung"
+  ],
+  "Constelação Real": [
+    "Royal Constellation",
+    "Königliches Sternbild"
+  ],
+  "Constelações e planetas em um visor violeta.": [
+    "Constellations and planets in a violet visor.",
+    "Sternbilder und Planeten in einem violetten Visier."
+  ],
+  "Continuar incubando": [
+    "Keep incubating",
+    "Weiter ausbrüten"
+  ],
+  "Controles e dicas": [
+    "Controls and tips",
+    "Steuerung und Tipps"
+  ],
+  "Conversão concluída. Progresso e carteira sincronizados.": [
+    "Conversion complete. Progress and wallet synchronized.",
+    "Umtausch abgeschlossen. Fortschritt und Geldbörse synchronisiert."
+  ],
+  "Coral": [
+    "Coral",
+    "Koralle"
+  ],
+  "Cordas, braço e caixa de madeira.": [
+    "Strings, a neck and a wooden body.",
+    "Saiten, ein Hals und ein Holzkorpus."
+  ],
+  "Coroa Diamante": [
+    "Diamond Crown",
+    "Diamantkrone"
+  ],
+  "Coroa Nebulosa": [
+    "Nebula Crown",
+    "Nebelkrone"
+  ],
+  "Coroa de Coral": [
+    "Coral Crown",
+    "Korallenkrone"
+  ],
+  "Coroa de cogumelos": [
+    "Mushroom crown",
+    "Pilzkrone"
+  ],
+  "Coroa do jardim": [
+    "Garden crown",
+    "Gartenkrone"
+  ],
+  "Coroa do sol": [
+    "Sun crown",
+    "Sonnenkrone"
+  ],
+  "Coroa do tempo": [
+    "Time crown",
+    "Zeitkrone"
+  ],
+  "Coroa dourada": [
+    "Golden crown",
+    "Goldene Krone"
+  ],
+  "Corra 4% mais rápido carregando o ovo, por nível.": [
+    "Run 4% faster while carrying an egg, per level.",
+    "Laufe pro Stufe 4% schneller, während du ein Ei trägst."
+  ],
+  "Correnteza do recife": [
+    "Reef current",
+    "Riffströmung"
+  ],
+  "Corrida de ida e volta": [
+    "Round-trip race",
+    "Hin- und Rückrennen"
+  ],
+  "Corrida em": [
+    "Race in",
+    "Rennen in"
+  ],
+  "Corrida em zigue-zague": [
+    "Zigzag race",
+    "Zickzackrennen"
+  ],
+  "Corridas, visitas e trocas": [
+    "Races, visits and trades",
+    "Rennen, Besuche und Tauschgeschäfte"
+  ],
+  "Coruja Cronos": [
+    "Chronos Owl",
+    "Chronos-Eule"
+  ],
+  "Coruja Polar": [
+    "Polar Owl",
+    "Polareule"
+  ],
+  "Coruja com olhos dourados e asas que batem suavemente.": [
+    "An owl with golden eyes and gently flapping wings.",
+    "Eine Eule mit goldenen Augen und sanft schlagenden Flügeln."
+  ],
+  "Cosmos": [
+    "Cosmos",
+    "Kosmos"
+  ],
+  "Cosmético permanente.": [
+    "Permanent cosmetic item.",
+    "Dauerhafter kosmetischer Gegenstand."
+  ],
+  "Cosméticos: não aumentam velocidade nem produção. Relíquias já adquiridas no progresso online foram preservadas.": [
+    "Cosmetic items do not increase speed or production. Relics already acquired in your online progress have been preserved.",
+    "Kosmetische Gegenstände erhöhen weder Tempo noch Produktion. Bereits im Online-Fortschritt erworbene Relikte bleiben erhalten."
+  ],
+  "Costas": [
+    "Back",
+    "Rücken"
+  ],
+  "Criador de raridades": [
+    "Rarity breeder",
+    "Züchter seltener Kreaturen"
+  ],
+  "Criatura": [
+    "Creature",
+    "Kreatur"
+  ],
+  "Criatura selecionada": [
+    "Selected creature",
+    "Ausgewählte Kreatur"
+  ],
+  "Cristais da aurora": [
+    "Aurora crystals",
+    "Polarlichtkristalle"
+  ],
+  "Cristal": [
+    "Crystal",
+    "Kristall"
+  ],
+  "Curral": [
+    "Pen",
+    "Gehege"
+  ],
+  "Curral cheio! Venda uma criatura ou compre mais espaços.": [
+    "Pen full! Sell a creature or buy more spaces.",
+    "Gehege voll! Verkaufe eine Kreatur oder kaufe weitere Plätze."
+  ],
+  "Curral decorado:": [
+    "Pen decorated:",
+    "Gehege dekoriert:"
+  ],
+  "Curral maior": [
+    "Larger pen",
+    "Größeres Gehege"
+  ],
+  "Curral produtivo": [
+    "Productive pen",
+    "Produktives Gehege"
+  ],
+  "Curral · {0} m": [
+    "Pen · {0} m",
+    "Gehege · {0} m"
+  ],
+  "Cósmico": [
+    "Cosmic",
+    "Kosmisch"
+  ],
+  "Cúpula branca, visor azul e antena.": [
+    "A white dome, blue visor and antenna.",
+    "Eine weiße Kuppel, ein blaues Visier und eine Antenne."
+  ],
+  "DONO DO OVO": [
+    "EGG OWNER",
+    "BESITZER DES EIS"
+  ],
+  "Decorar": [
+    "Decorate",
+    "Dekorieren"
+  ],
+  "Decorações": [
+    "Decorations",
+    "Dekorationen"
+  ],
+  "Deserto Neon": [
+    "Neon Desert",
+    "Neonwüste"
+  ],
+  "Destino: Estação Integro": [
+    "Destination: Integro Station",
+    "Ziel: Integro-Station"
+  ],
+  "Dispare 10% mais rápido, por nível.": [
+    "Sprint 10% faster per level.",
+    "Sprinte pro Stufe 10% schneller."
+  ],
+  "Dispute com amigos.": [
+    "Compete with friends.",
+    "Tritt gegen Freunde an."
+  ],
+  "Doceria": [
+    "Sweet shop",
+    "Süßwarenladen"
+  ],
+  "Doces": [
+    "Sweets",
+    "Süßigkeiten"
+  ],
+  "Dois anéis de cristal e seis prismas coloridos.": [
+    "Two crystal rings and six colorful prisms.",
+    "Zwei Kristallringe und sechs bunte Prismen."
+  ],
+  "Dois grandes aros e um pequeno bico.": [
+    "Two large rims and a small beak.",
+    "Zwei große Ringe und ein kleiner Schnabel."
+  ],
+  "Dois propulsores prateados com chamas azuis. Visual, sem voo.": [
+    "Two silver thrusters with blue flames. Decorative, no flight.",
+    "Zwei silberne Triebwerke mit blauen Flammen. Rein dekorativ, kein Flug."
+  ],
+  "Dois trilhos e travessas de luz acompanham seus passos.": [
+    "Two rails and glowing sleepers follow your steps.",
+    "Zwei Schienen und leuchtende Schwellen begleiten deine Schritte."
+  ],
+  "Dono: {10} de velocidade": [
+    "Owner: {10} speed",
+    "Besitzer: {10} Tempo"
+  ],
+  "Dourado": [
+    "Golden",
+    "Golden"
+  ],
+  "Dragão Brasa": [
+    "Ember Dragon",
+    "Glutdrache"
+  ],
+  "Dragão Faísca": [
+    "Spark Dragon",
+    "Funkendrache"
+  ],
+  "Dragão pequenino com chifres, cauda e asas flamejantes.": [
+    "A tiny dragon with horns, a tail and flaming wings.",
+    "Ein winziger Drache mit Hörnern, Schwanz und flammenden Flügeln."
+  ],
+  "Duas câmaras de cristal e areia luminosa.": [
+    "Two crystal chambers and glowing sand.",
+    "Zwei Kristallkammern und leuchtender Sand."
+  ],
+  "Duas estrelas douradas com lentes rosadas.": [
+    "Two golden stars with pink lenses.",
+    "Zwei goldene Sterne mit rosa Gläsern."
+  ],
+  "Duas lentes cor-de-rosa em formato de coração.": [
+    "Two pink heart-shaped lenses.",
+    "Zwei rosa herzförmige Gläser."
+  ],
+  "Duas lentes hexagonais com reflexos da aurora.": [
+    "Two hexagonal lenses reflecting the aurora.",
+    "Zwei sechseckige Gläser mit Polarlichtreflexen."
+  ],
+  "Duas velas claras com mastros e faixas azuis.": [
+    "Two pale sails with masts and blue stripes.",
+    "Zwei helle Segel mit Masten und blauen Streifen."
+  ],
+  "Dunas": [
+    "Dunes",
+    "Dünen"
+  ],
+  "Dunas Douradas": [
+    "Golden Dunes",
+    "Goldene Dünen"
+  ],
+  "EQUIPADO": [
+    "EQUIPPED",
+    "AUSGERÜSTET"
+  ],
+  "ESTAÇÃO INTEGRO": [
+    "INTEGRO STATION",
+    "INTEGRO-STATION"
+  ],
+  "ESTEIRA": [
+    "TREADMILL",
+    "LAUFBAND"
+  ],
+  "Ela mostra o treino recomendado e quantos níveis faltam. O cálculo considera seus tênis, luvas e veículo, com 10% de vantagem de velocidade carregando o ovo sem disparar. É uma referência: desvie dos obstáculos durante a fuga.": [
+    "It shows the recommended training and how many levels you still need. The calculation accounts for your shoes, gloves and vehicle, with a 10% speed advantage while carrying the egg without sprinting. It is a guide: avoid obstacles during your escape.",
+    "Es zeigt das empfohlene Training und die noch fehlenden Stufen. Die Berechnung berücksichtigt Schuhe, Handschuhe und Fahrzeug, mit 10% Tempovorteil beim Tragen des Eis ohne Sprinten. Das ist ein Richtwert: Weiche auf der Flucht Hindernissen aus."
+  ],
+  "Elmo Magmático": [
+    "Magma Helm",
+    "Magmahelm"
+  ],
+  "Elmo da tempestade": [
+    "Storm helm",
+    "Sturmhelm"
+  ],
+  "Elmo de lava com chifres dourados e crista central.": [
+    "A lava helm with golden horns and a central crest.",
+    "Ein Lavahelm mit goldenen Hörnern und einem mittigen Kamm."
+  ],
+  "Elmo do dragão": [
+    "Dragon helm",
+    "Drachenhelm"
+  ],
+  "Elmo violeta com dois relâmpagos dourados.": [
+    "A violet helm with two golden lightning bolts.",
+    "Ein violetter Helm mit zwei goldenen Blitzen."
+  ],
+  "Empurrar": [
+    "Push",
+    "Schubsen"
+  ],
+  "Empurrar Explorador": [
+    "Push Explorer",
+    "Entdecker schubsen"
+  ],
+  "Empurrão recarregando:": [
+    "Push recharging:",
+    "Schubser lädt auf:"
+  ],
+  "Empurrão! Recupere o equilíbrio e continue.": [
+    "Pushed! Regain your balance and keep going.",
+    "Geschubst! Finde dein Gleichgewicht wieder und lauf weiter."
+  ],
+  "Entre em uma sala do Pegue o Ovo.": [
+    "Join a Catch the Egg room.",
+    "Tritt einem Raum von Schnapp das Ei bei."
+  ],
+  "Entrega:": [
+    "Delivery:",
+    "Lieferung:"
+  ],
+  "Entregue 3 ovos: {0}/3 · 200 integros": [
+    "Deliver 3 eggs: {0}/3 · 200 Integros",
+    "Liefere 3 Eier: {0}/3 · 200 Integros"
+  ],
+  "Enviar proposta de troca": [
+    "Send trade offer",
+    "Tauschangebot senden"
+  ],
+  "Escolha seu ovo.": [
+    "Choose your egg.",
+    "Wähle dein Ei."
+  ],
+  "Escolha um ovo": [
+    "Choose an egg",
+    "Ei auswählen"
+  ],
+  "Escolha um poder e um boost para os dois atalhos no HUD. Cada uso consome uma carga. O tempo passa só durante o jogo e fica salvo ao sair. Nas corridas online, os efeitos ficam pausados e não podem ser ativados.": [
+    "Choose one power and one boost for the two HUD shortcuts. Each use consumes one charge. Time only passes during gameplay and is saved when you leave. During online races, effects are paused and cannot be activated.",
+    "Wähle eine Kraft und einen Boost für die beiden Tasten der Spielanzeige. Jede Nutzung verbraucht eine Ladung. Die Zeit läuft nur beim Spielen und wird beim Verlassen gespeichert. In Online-Rennen sind die Effekte pausiert und können nicht aktiviert werden."
+  ],
+  "Escolha uma criatura no curral.": [
+    "Choose a creature in the pen.",
+    "Wähle eine Kreatur im Gehege."
+  ],
+  "Escolher atalhos Q e B": [
+    "Choose Q and B shortcuts",
+    "Belegung für Q und B wählen"
+  ],
+  "Escolher ovo · {0}": [
+    "Choose egg · {0}",
+    "Ei auswählen · {0}"
+  ],
+  "Escorpião Neon": [
+    "Neon Scorpion",
+    "Neonskorpion"
+  ],
+  "Escudo ativado! Você tem 3 segundos para abrir distância.": [
+    "Shield activated! You have 3 seconds to get away.",
+    "Schild aktiviert! Du hast 3 Sekunden, um Abstand zu gewinnen."
+  ],
+  "Escudo bolha": [
+    "Bubble shield",
+    "Blasenschild"
+  ],
+  "Esporos do bosque": [
+    "Woodland spores",
+    "Waldsporen"
+  ],
+  "Esporos saltitantes": [
+    "Bouncing spores",
+    "Hüpfende Sporen"
+  ],
+  "Essa criatura já não está disponível.": [
+    "That creature is no longer available.",
+    "Diese Kreatur ist nicht mehr verfügbar."
+  ],
+  "Esse progresso contém uma criatura já transferida.": [
+    "This save contains a creature that has already been transferred.",
+    "Dieser Spielstand enthält eine bereits übertragene Kreatur."
+  ],
+  "Estação Integro": [
+    "Integro Station",
+    "Integro-Station"
+  ],
+  "Esteira profissional": [
+    "Professional treadmill",
+    "Profi-Laufband"
+  ],
+  "Estrelas e diamantes desenham uma constelação no chão.": [
+    "Stars and diamonds form a constellation on the ground.",
+    "Sterne und Diamanten bilden ein Sternbild am Boden."
+  ],
+  "Exibindo os últimos saldos salvos. Seu progresso local ainda aguarda sincronização.": [
+    "Showing the last saved balances. Your local progress is still waiting to sync.",
+    "Die zuletzt gespeicherten Guthaben werden angezeigt. Dein lokaler Fortschritt wartet noch auf die Synchronisierung."
+  ],
+  "Expedição Boreal": [
+    "Boreal Expedition",
+    "Nordlichtexpedition"
+  ],
+  "Expedição do dia": [
+    "Daily expedition",
+    "Tagesexpedition"
+  ],
+  "Expedição do dia: +200 integros!": [
+    "Daily expedition: +200 Integros!",
+    "Tagesexpedition: +200 Integros!"
+  ],
+  "Exploradores do Cosmos": [
+    "Cosmos Explorers",
+    "Kosmos-Entdecker"
+  ],
+  "Faixa do vento": [
+    "Wind headband",
+    "Windstirnband"
+  ],
+  "Faixa vermelha com duas fitas longas.": [
+    "A red headband with two long ribbons.",
+    "Ein rotes Stirnband mit zwei langen Bändern."
+  ],
+  "Faixas de metal violeta e cristais neon.": [
+    "Violet metal strips and neon crystals.",
+    "Violette Metallstreifen und Neonkristalle."
+  ],
+  "Faltam": [
+    "Remaining",
+    "Noch benötigt"
+  ],
+  "Faltam {0} níveis": [
+    "{0} levels remaining",
+    "Noch {0} Stufen"
+  ],
+  "Farol do infinito": [
+    "Infinity lighthouse",
+    "Leuchtturm der Unendlichkeit"
+  ],
+  "Flores, folhas e pétalas coloridas.": [
+    "Flowers, leaves and colorful petals.",
+    "Blumen, Blätter und bunte Blütenblätter."
+  ],
+  "Floresta de Bambu": [
+    "Bamboo Forest",
+    "Bambuswald"
+  ],
+  "Flutue sobre a pista com +{4}% de velocidade. Pule e dispare enquanto pilota. Bônus pausado nas corridas online.": [
+    "Float above the track with +{4}% speed. Jump and sprint while riding. Bonus paused during online races.",
+    "Schwebe mit +{4}% Tempo über die Strecke. Springe und sprinte während der Fahrt. Bonus in Online-Rennen pausiert."
+  ],
+  "Folhas esculpidas e detalhes de flores.": [
+    "Sculpted leaves and floral details.",
+    "Geformte Blätter und Blumendetails."
+  ],
+  "Fones azuis para seu corredor.": [
+    "Blue headphones for your runner.",
+    "Blaue Kopfhörer für deinen Läufer."
+  ],
+  "Fones neon": [
+    "Neon headphones",
+    "Neonkopfhörer"
+  ],
+  "Forja do Vulcão": [
+    "Volcano Forge",
+    "Vulkanschmiede"
+  ],
+  "Fuga impecável": [
+    "Flawless escape",
+    "Makellose Flucht"
+  ],
+  "Fuja!": [
+    "Escape!",
+    "Flieh!"
+  ],
+  "Fênix Relâmpago": [
+    "Lightning Phoenix",
+    "Blitzphönix"
+  ],
+  "Fôlego infinito": [
+    "Unlimited stamina",
+    "Unendliche Ausdauer"
+  ],
+  "Galhadas da floresta": [
+    "Forest antlers",
+    "Waldgeweih"
+  ],
+  "Galhos de cristal verde e lilás sobre a cabeça.": [
+    "Green and lilac crystal branches above your head.",
+    "Grüne und fliederfarbene Kristallzweige über deinem Kopf."
+  ],
+  "Galhos dourados com folhas de jade.": [
+    "Golden branches with jade leaves.",
+    "Goldene Zweige mit Jadeblättern."
+  ],
+  "Galáxias": [
+    "Galaxies",
+    "Galaxien"
+  ],
+  "Ganhe 25% mais treino por segundo, por nível.": [
+    "Gain 25% more training per second, per level.",
+    "Erhalte pro Stufe 25% mehr Trainingsfortschritt je Sekunde."
+  ],
+  "Garrafa esportiva": [
+    "Sports bottle",
+    "Sportflasche"
+  ],
+  "Gato Estelar": [
+    "Stellar Cat",
+    "Sternenkatze"
+  ],
+  "Gelo": [
+    "Ice",
+    "Eis"
+  ],
+  "Gire o celular para o modo paisagem para ampliar o jogo.": [
+    "Rotate your phone to landscape mode for a wider view.",
+    "Drehe dein Handy ins Querformat, um das Spielfeld zu vergrößern."
+  ],
+  "Grande explorador": [
+    "Great explorer",
+    "Großer Entdecker"
+  ],
+  "Grifo Aurora": [
+    "Aurora Griffin",
+    "Polarlichtgreif"
+  ],
+  "Guardar": [
+    "Store",
+    "Verstauen"
+  ],
+  "Guardar companheiro": [
+    "Store companion",
+    "Begleiter ins Gehege bringen"
+  ],
+  "Guardar ovo": [
+    "Store egg",
+    "Ei ablegen"
+  ],
+  "Guarde no curral.": [
+    "Store it in the pen.",
+    "Lege es im Gehege ab."
+  ],
+  "Guardião Galáctico": [
+    "Galactic Guardian",
+    "Galaktischer Wächter"
+  ],
+  "Guardião do tempo": [
+    "Time guardian",
+    "Zeitwächter"
+  ],
+  "Halo estelar": [
+    "Stellar halo",
+    "Sternenhalo"
+  ],
+  "Halo prismático": [
+    "Prismatic halo",
+    "Prismenhalo"
+  ],
+  "Há progresso novo neste aparelho e uma versão diferente no perfil. Mantivemos sua aventura local.": [
+    "There is new progress on this device and a different version in your profile. We kept your local adventure.",
+    "Auf diesem Gerät gibt es neuen Fortschritt und im Profil eine andere Version. Dein lokales Abenteuer bleibt erhalten."
+  ],
+  "INTEGROS · DESEMPATE POR INTGEM": [
+    "INTEGROS · INTGEM BREAKS TIES",
+    "INTEGROS · BEI GLEICHSTAND ENTSCHEIDET INTGEM"
+  ],
+  "Ilhas Cósmicas": [
+    "Cosmic Islands",
+    "Kosmische Inseln"
+  ],
+  "Impulso turbo": [
+    "Turbo boost",
+    "Turboschub"
+  ],
+  "Iniciar corrida da sala": [
+    "Start room race",
+    "Raumrennen starten"
+  ],
+  "Isso zera as integros, criaturas, ovos, treino e melhorias do Pegue o Ovo.": [
+    "This resets your Integros, creatures, eggs, training and upgrades in Catch the Egg.",
+    "Dies setzt deine Integros, Kreaturen, Eier, dein Training und deine Verbesserungen in Schnapp das Ei zurück."
+  ],
+  "Jardim da Aurora": [
+    "Aurora Garden",
+    "Polarlichtgarten"
+  ],
+  "Jardim de bambu": [
+    "Bamboo garden",
+    "Bambusgarten"
+  ],
+  "Jardim dos Cogumelos": [
+    "Mushroom Garden",
+    "Pilzgarten"
+  ],
+  "Jatos de lava": [
+    "Lava jets",
+    "Lavafontänen"
+  ],
+  "LENDÁRIO": [
+    "LEGENDARY",
+    "LEGENDÄR"
+  ],
+  "Lente de cristal com corrente e estrela dourada.": [
+    "A crystal lens with a chain and golden star.",
+    "Eine Kristalllinse mit Kette und goldenem Stern."
+  ],
+  "Lente redonda com corrente dourada.": [
+    "A round lens with a golden chain.",
+    "Eine runde Linse mit goldener Kette."
+  ],
+  "Lente-relógio, ponteiros e engrenagem lateral.": [
+    "A clock lens, hands and a side gear.",
+    "Eine Uhrenlinse mit Zeigern und seitlichem Zahnrad."
+  ],
+  "Lentes de mergulho com tubo e aro de coral.": [
+    "Diving lenses with a tube and coral rim.",
+    "Tauchgläser mit Schlauch und Korallenrand."
+  ],
+  "Lentes duplas e um snorkel amarelo.": [
+    "Twin lenses and a yellow snorkel.",
+    "Zwei Gläser und ein gelber Schnorchel."
+  ],
+  "Lentes espelhadas, proteção branca e flocos.": [
+    "Mirrored lenses, white protection and snowflakes.",
+    "Verspiegelte Gläser, weißer Schutz und Schneeflocken."
+  ],
+  "Lentes turquesa e armação dourada.": [
+    "Turquoise lenses and a golden frame.",
+    "Türkise Gläser und eine goldene Fassung."
+  ],
+  "Lentes verdes protegidas por aros dourados.": [
+    "Green lenses protected by golden rims.",
+    "Grüne Gläser, geschützt durch goldene Ränder."
+  ],
+  "Leve ao curral": [
+    "Bring to the pen",
+    "Ins Gehege bringen"
+  ],
+  "Leve o ovo ao curral": [
+    "Bring the egg to the pen",
+    "Bringe das Ei ins Gehege"
+  ],
+  "Leve um ovo por vez ao curral. Os outros continuam no ninho. Treino recomendado:": [
+    "Bring one egg at a time to the pen. The others stay in the nest. Recommended training:",
+    "Bringe jeweils ein Ei ins Gehege. Die anderen bleiben im Nest. Empfohlenes Training:"
+  ],
+  "Lobo Aurora": [
+    "Aurora Wolf",
+    "Polarlichtwolf"
+  ],
+  "Locomotiva de Bolso": [
+    "Pocket Locomotive",
+    "Taschenlokomotive"
+  ],
+  "Loja do corredor": [
+    "Runner's shop",
+    "Läufershop"
+  ],
+  "Lontra Marinheira": [
+    "Sailor Otter",
+    "Matrosenotter"
+  ],
+  "Luvas de transporte": [
+    "Carrying gloves",
+    "Tragehandschuhe"
+  ],
+  "MELHORIAS": [
+    "UPGRADES",
+    "VERBESSERUNGEN"
+  ],
+  "MUNDOS · VOLTE AO CURRAL": [
+    "WORLDS · RETURN TO THE PEN",
+    "WELTEN · ZURÜCK INS GEHEGE"
+  ],
+  "Mais fôlego": [
+    "More stamina",
+    "Mehr Ausdauer"
+  ],
+  "Manter meu progresso": [
+    "Keep my progress",
+    "Meinen Fortschritt behalten"
+  ],
+  "Manto Real": [
+    "Royal Cloak",
+    "Königlicher Mantel"
+  ],
+  "Manto azul com gola dourada e emblema de diamante.": [
+    "A blue cloak with a golden collar and diamond emblem.",
+    "Ein blauer Mantel mit goldenem Kragen und Diamantemblem."
+  ],
+  "Manto da aurora": [
+    "Aurora cloak",
+    "Polarlichtmantel"
+  ],
+  "Manto em faixas lilás, verde e azul.": [
+    "A cloak with lilac, green and blue bands.",
+    "Ein Mantel mit fliederfarbenen, grünen und blauen Streifen."
+  ],
+  "Manto magnético": [
+    "Magnetic cloak",
+    "Magnetmantel"
+  ],
+  "Mantém o fôlego cheio enquanto você dispara, por 20 segundos.": [
+    "Keeps your stamina full while sprinting for 20 seconds.",
+    "Hält deine Ausdauer beim Sprinten 20 Sekunden lang voll."
+  ],
+  "Maré de Pérolas": [
+    "Pearl Tide",
+    "Perlenflut"
+  ],
+  "Mascotes": [
+    "Pets",
+    "Begleittiere"
+  ],
+  "Medalha do criador": [
+    "Breeder's medal",
+    "Züchtermedaille"
+  ],
+  "Melhorias permanentes": [
+    "Permanent upgrades",
+    "Dauerhafte Verbesserungen"
+  ],
+  "Membranas verdes e hastes douradas.": [
+    "Green membranes and golden rods.",
+    "Grüne Membranen und goldene Streben."
+  ],
+  "Mensageiro dos ovos": [
+    "Egg messenger",
+    "Eierbote"
+  ],
+  "Menu da aventura": [
+    "Adventure menu",
+    "Abenteuermenü"
+  ],
+  "Meus itens": [
+    "My items",
+    "Meine Gegenstände"
+  ],
+  "Missões": [
+    "Missions",
+    "Missionen"
+  ],
+  "Missões e coleção": [
+    "Missions and collection",
+    "Missionen und Sammlung"
+  ],
+  "Mochila a jato": [
+    "Jetpack",
+    "Raketenrucksack"
+  ],
+  "Mochila caracol": [
+    "Snail backpack",
+    "Schneckenrucksack"
+  ],
+  "Mochila cheia": [
+    "Full backpack",
+    "Voller Rucksack"
+  ],
+  "Mochila da Estação Integro": [
+    "Integro Station backpack",
+    "Integro-Station-Rucksack"
+  ],
+  "Mochila de expedição": [
+    "Expedition backpack",
+    "Expeditionsrucksack"
+  ],
+  "Mochila verde com bolso e rolinho de viagem.": [
+    "A green backpack with a pocket and travel roll.",
+    "Ein grüner Rucksack mit Tasche und Reiserolle."
+  ],
+  "Mochila verde com sinalizador e bilhete dourado.": [
+    "A green backpack with a signal light and golden ticket.",
+    "Ein grüner Rucksack mit Signallicht und goldenem Ticket."
+  ],
+  "Mochila · {4}": [
+    "Backpack · {4}",
+    "Rucksack · {4}"
+  ],
+  "Molas de salto": [
+    "Jump springs",
+    "Sprungfedern"
+  ],
+  "Monóculo Real": [
+    "Royal Monocle",
+    "Königliches Monokel"
+  ],
+  "Monóculo elegante": [
+    "Elegant monocle",
+    "Elegantes Monokel"
+  ],
+  "Mova pelo controle ou WASD/setas. Use Espaço/Pular para saltar obstáculos e Shift/Disparar para correr mais rápido. O fôlego recarrega sozinho.": [
+    "Move with the control stick or WASD/arrow keys. Use Space/Jump to leap over obstacles and Shift/Sprint to run faster. Stamina recharges on its own.",
+    "Bewege dich mit dem Steuerknüppel oder WASD/Pfeiltasten. Mit Leertaste/Springen überspringst du Hindernisse, mit Umschalt/Sprinten läufst du schneller. Die Ausdauer regeneriert sich automatisch."
+  ],
+  "Mova pelo direcional ou WASD/setas. Arraste o cenário para olhar. Espaço: pular · Shift: disparar · E: ação · C: atrás · R: centrar · F: empurrar na corrida online · Q: poder · B: boost · Esc: pausa.": [
+    "Move with the control stick or WASD/arrow keys. Drag the scene to look around. Space: jump · Shift: sprint · E: action · C: look behind · R: center · F: push in online races · Q: power · B: boost · Esc: pause.",
+    "Bewege dich mit dem Steuerknüppel oder WASD/Pfeiltasten. Ziehe die Szene, um dich umzusehen. Leertaste: springen · Umschalt: sprinten · E: Aktion · C: zurückblicken · R: zentrieren · F: im Online-Rennen schubsen · Q: Kraft · B: Boost · Esc: Pause."
+  ],
+  "MÍTICO": [
+    "MYTHIC",
+    "MYTHISCH"
+  ],
+  "Máscara Abissal": [
+    "Abyssal Mask",
+    "Tiefseemaske"
+  ],
+  "Máscara Brasa": [
+    "Ember Mask",
+    "Glutmaske"
+  ],
+  "Máscara borboleta": [
+    "Butterfly mask",
+    "Schmetterlingsmaske"
+  ],
+  "Máscara da coruja": [
+    "Owl mask",
+    "Eulenmaske"
+  ],
+  "Máscara das galáxias": [
+    "Galaxy mask",
+    "Galaxienmaske"
+  ],
+  "Máscara de dragão": [
+    "Dragon mask",
+    "Drachenmaske"
+  ],
+  "Máscara de mergulho": [
+    "Diving mask",
+    "Tauchmaske"
+  ],
+  "Máscara de raposa": [
+    "Fox mask",
+    "Fuchsmaske"
+  ],
+  "Máscara do jardim": [
+    "Garden mask",
+    "Gartenmaske"
+  ],
+  "Máscara dos segundos": [
+    "Seconds mask",
+    "Sekundenmaske"
+  ],
+  "Máscara dourada com cristais de rubi.": [
+    "A golden mask with ruby crystals.",
+    "Eine goldene Maske mit Rubinkristallen."
+  ],
+  "Máscara facetada com presas e detalhes incandescentes.": [
+    "A faceted mask with fangs and glowing details.",
+    "Eine facettierte Maske mit Fangzähnen und glühenden Details."
+  ],
+  "Máscara galáctica": [
+    "Galactic mask",
+    "Galaktische Maske"
+  ],
+  "Máscara imperial": [
+    "Imperial mask",
+    "Kaiserliche Maske"
+  ],
+  "NA MOCHILA: {2}/{3}": [
+    "IN BACKPACK: {2}/{3}",
+    "IM RUCKSACK: {2}/{3}"
+  ],
+  "NA SUA COLEÇÃO": [
+    "IN YOUR COLLECTION",
+    "IN DEINER SAMMLUNG"
+  ],
+  "NOVO": [
+    "NEW",
+    "NEU"
+  ],
+  "Na base, vá até o cercado e toque em “Guardar ovo”. Ele choca em {1} s de jogo ativo. O dono não entra na base.": [
+    "At base, go to the enclosure and tap “Store egg”. It hatches in {1} s of active gameplay. The owner cannot enter the base.",
+    "Gehe in der Basis zum Gehege und tippe auf „Ei ablegen“. Es schlüpft nach {1} s aktiver Spielzeit. Der Besitzer kann die Basis nicht betreten."
+  ],
+  "Natural": [
+    "Natural",
+    "Natürlich"
+  ],
+  "Nenhum item nesta seleção. Explore as outras categorias.": [
+    "No items in this selection. Explore the other categories.",
+    "Keine Gegenstände in dieser Auswahl. Entdecke die anderen Kategorien."
+  ],
+  "Neon": [
+    "Neon",
+    "Neon"
+  ],
+  "Ninho aquecido": [
+    "Heated nest",
+    "Beheiztes Nest"
+  ],
+  "Ninho distante": [
+    "Distant nest",
+    "Entferntes Nest"
+  ],
+  "Ninhos renovando": [
+    "Nests replenishing",
+    "Nester werden aufgefüllt"
+  ],
+  "No atalho": [
+    "In shortcut",
+    "Auf einer Taste"
+  ],
+  "No máximo": [
+    "At maximum",
+    "Maximum erreicht"
+  ],
+  "Nova aventura! Siga a pista para encontrar o primeiro ovo.": [
+    "New adventure! Follow the track to find your first egg.",
+    "Neues Abenteuer! Folge der Strecke und finde dein erstes Ei."
+  ],
+  "Novo ovo em {0} s": [
+    "New egg in {0} s",
+    "Neues Ei in {0} s"
+  ],
+  "Nuvens": [
+    "Clouds",
+    "Wolken"
+  ],
+  "NÍVEL": [
+    "LEVEL",
+    "STUFE"
+  ],
+  "NÍVEL {2}/{3}": [
+    "LEVEL {2}/{3}",
+    "STUFE {2}/{3}"
+  ],
+  "Não foi possível carregar o ranking.": [
+    "Could not load the leaderboard.",
+    "Die Rangliste konnte nicht geladen werden."
+  ],
+  "Não foi possível concluir. Confira sua conexão.": [
+    "Could not complete. Check your connection.",
+    "Konnte nicht abgeschlossen werden. Prüfe deine Verbindung."
+  ],
+  "Não foi possível confirmar a conversão. Atualize sua carteira.": [
+    "Could not confirm the conversion. Refresh your wallet.",
+    "Der Umtausch konnte nicht bestätigt werden. Aktualisiere deine Geldbörse."
+  ],
+  "Não foi possível salvar seu progresso antes da conversão. Tente novamente.": [
+    "Could not save your progress before converting. Try again.",
+    "Dein Fortschritt konnte vor dem Umtausch nicht gespeichert werden. Versuche es erneut."
+  ],
+  "Não foi possível validar este progresso.": [
+    "Could not validate this progress.",
+    "Dieser Fortschritt konnte nicht überprüft werden."
+  ],
+  "Nível alcançado": [
+    "Level reached",
+    "Stufe erreicht"
+  ],
+  "O colega aceita e você confirma por último. Prazo: 2 minutos.": [
+    "Your friend accepts, then you give the final confirmation. Time limit: 2 minutes.",
+    "Dein Mitspieler nimmt an, dann bestätigst du zum Abschluss. Zeitlimit: 2 Minuten."
+  ],
+  "O colega precisa sincronizar o progresso primeiro.": [
+    "Your friend needs to sync their progress first.",
+    "Dein Mitspieler muss zuerst seinen Fortschritt synchronisieren."
+  ],
+  "O dono recuperou o ovo! Treine ou melhore seus tênis e tente de novo.": [
+    "The owner got the egg back! Train or upgrade your shoes and try again.",
+    "Der Besitzer hat das Ei zurück! Trainiere oder verbessere deine Schuhe und versuche es erneut."
+  ],
+  "O empurrão não foi enviado. Aguarde a conexão.": [
+    "The push was not sent. Wait for the connection.",
+    "Der Schubser wurde nicht gesendet. Warte auf die Verbindung."
+  ],
+  "O escudo protege automaticamente de uma captura. Toque em Suco para recuperar o fôlego. Compre na base, com integros ganhas no jogo.": [
+    "The shield automatically protects you from one capture. Tap Juice to recover stamina. Buy supplies at base with Integros earned in the game.",
+    "Der Schild schützt dich automatisch davor, einmal gefangen zu werden. Tippe auf Saft, um Ausdauer zurückzugewinnen. Kaufe Vorräte in der Basis mit im Spiel verdienten Integros."
+  ],
+  "O navegador não permitiu salvar. O progresso ficará apenas nesta sessão.": [
+    "The browser did not allow saving. Progress will only last for this session.",
+    "Der Browser hat das Speichern nicht erlaubt. Der Fortschritt bleibt nur für diese Sitzung erhalten."
+  ],
+  "O ovo chegou ao curral! Já está chocando.": [
+    "The egg reached the pen! It is already incubating.",
+    "Das Ei ist im Gehege! Es wird bereits ausgebrütet."
+  ],
+  "O ovo choca 1,5 s mais rápido.": [
+    "The egg hatches 1.5 s faster.",
+    "Das Ei schlüpft 1,5 s schneller."
+  ],
+  "O preço mudou. Cancele e confira o valor atualizado.": [
+    "The price changed. Cancel and check the updated amount.",
+    "Der Preis hat sich geändert. Brich ab und prüfe den aktuellen Betrag."
+  ],
+  "O progresso fica neste navegador. As salas, visitas, trocas e salvamento por perfil estão no portal da família.": [
+    "Progress stays in this browser. Rooms, visits, trades and profile saves are in the family portal.",
+    "Der Fortschritt bleibt in diesem Browser. Räume, Besuche, Tauschgeschäfte und Profilspeicherung findest du im Familienportal."
+  ],
+  "O progresso mudou em outro aparelho.": [
+    "Progress changed on another device.",
+    "Der Fortschritt hat sich auf einem anderen Gerät geändert."
+  ],
+  "O progresso mudou. A troca foi cancelada.": [
+    "Progress changed. The trade was canceled.",
+    "Der Fortschritt hat sich geändert. Der Tausch wurde abgebrochen."
+  ],
+  "O ranking começa com o primeiro progresso salvo. Jogue e atualize para participar.": [
+    "The leaderboard starts with the first saved progress. Play and refresh to join.",
+    "Die Rangliste beginnt mit dem ersten gespeicherten Fortschritt. Spiele und aktualisiere sie, um teilzunehmen."
+  ],
+  "Observatório": [
+    "Observatory",
+    "Sternwarte"
+  ],
+  "Olhe ao redor.": [
+    "Look around.",
+    "Sieh dich um."
+  ],
+  "Onda gravitacional": [
+    "Gravity wave",
+    "Gravitationswelle"
+  ],
+  "Orelhas pontudas e focinho de porcelana.": [
+    "Pointed ears and a porcelain snout.",
+    "Spitze Ohren und eine Porzellanschnauze."
+  ],
+  "Os": [
+    "The",
+    "Die"
+  ],
+  "Os ganhos entram direto no saldo. Total produzido: {1} integros.": [
+    "Earnings go straight into your balance. Total produced: {1} Integros.",
+    "Erträge werden direkt deinem Guthaben gutgeschrieben. Insgesamt produziert: {1} Integros."
+  ],
+  "Os ovos chocam durante o jogo ativo. {3}": [
+    "Eggs hatch during active gameplay. {3}",
+    "Eier schlüpfen während der aktiven Spielzeit. {3}"
+  ],
+  "Os ovos do curral chocam duas vezes mais rápido por 60 segundos.": [
+    "Eggs in the pen hatch twice as fast for 60 seconds.",
+    "Eier im Gehege schlüpfen 60 Sekunden lang doppelt so schnell."
+  ],
+  "Os {0} mundos estão conectados. Não há troca de tela. Os donos ficam mais rápidos a cada mundo.": [
+    "The {0} worlds are connected. There are no screen changes. Owners get faster in each world.",
+    "Die {0} Welten sind miteinander verbunden. Es gibt keine Bildschirmwechsel. Die Besitzer werden in jeder Welt schneller."
+  ],
+  "Ouriço Trufa": [
+    "Truffle Hedgehog",
+    "Trüffeligel"
+  ],
+  "Ovo de {2}": [
+    "{2} egg",
+    "Ei von {2}"
+  ],
+  "Ovo {0} · {1} integros. Leve ao curral!": [
+    "{0} egg · {1} Integros. Bring it to the pen!",
+    "{0}-Ei · {1} Integros. Bring es ins Gehege!"
+  ],
+  "Ovo {0}! Corra para o curral!": [
+    "{0} egg! Run to the pen!",
+    "{0}-Ei! Lauf zum Gehege!"
+  ],
+  "Ovo {1}": [
+    "{1} egg",
+    "{1}-Ei"
+  ],
+  "Ovo {2}": [
+    "{2} egg",
+    "{2}-Ei"
+  ],
+  "Ovo · {0} m": [
+    "Egg · {0} m",
+    "Ei · {0} m"
+  ],
+  "PARA EXPLORAR": [
+    "TO EXPLORE",
+    "ZUM ENTDECKEN"
+  ],
+  "PATINETE VOADOR": [
+    "FLYING SCOOTER",
+    "FLIEGENDER ROLLER"
+  ],
+  "PILOTANDO": [
+    "RIDING",
+    "UNTERWEGS"
+  ],
+  "PODER": [
+    "POWER",
+    "KRAFT"
+  ],
+  "Painéis solares, antena e um núcleo de ametista.": [
+    "Solar panels, an antenna and an amethyst core.",
+    "Solarpaneele, eine Antenne und ein Amethystkern."
+  ],
+  "Panda Jade": [
+    "Jade Panda",
+    "Jadepanda"
+  ],
+  "Para usar a versão do perfil, sua aventura atual será guardada como cópia de recuperação neste aparelho.": [
+    "To use your profile version, your current adventure will be kept as a recovery copy on this device.",
+    "Wenn du die Profilversion verwendest, wird dein aktuelles Abenteuer als Wiederherstellungskopie auf diesem Gerät gespeichert."
+  ],
+  "Patinete Cometa": [
+    "Comet Scooter",
+    "Kometenroller"
+  ],
+  "Patinete Estação Integro": [
+    "Integro Station Scooter",
+    "Integro-Station-Roller"
+  ],
+  "Patinete Galáctico": [
+    "Galactic Scooter",
+    "Galaktischer Roller"
+  ],
+  "Patinete dos Ventos": [
+    "Wind Scooter",
+    "Windroller"
+  ],
+  "Pegar e correr": [
+    "Grab and run",
+    "Schnappen und losrennen"
+  ],
+  "Pegue o Ovo 3D:": [
+    "Catch the Egg 3D:",
+    "Schnapp das Ei 3D:"
+  ],
+  "Penas longas nas cores do fogo.": [
+    "Long feathers in fiery colors.",
+    "Lange Federn in Feuerfarben."
+  ],
+  "Pequenos cogumelos rosados sobre uma coroa de folhas.": [
+    "Small pink mushrooms on a crown of leaves.",
+    "Kleine rosa Pilze auf einer Blätterkrone."
+  ],
+  "Permite um segundo pulo no ar durante 25 segundos.": [
+    "Allows a second jump in midair for 25 seconds.",
+    "Ermöglicht 25 Sekunden lang einen zweiten Sprung in der Luft."
+  ],
+  "Perseguidor a {0} metros": [
+    "Pursuer {0} meters away",
+    "Verfolger in {0} Metern Entfernung"
+  ],
+  "Perseguição direta": [
+    "Direct pursuit",
+    "Direkte Verfolgung"
+  ],
+  "Pilotar": [
+    "Ride",
+    "Fahren"
+  ],
+  "Pilote um veículo.": [
+    "Ride a vehicle.",
+    "Fahre ein Fahrzeug."
+  ],
+  "Pingui de Gelo": [
+    "Ice Penguin",
+    "Eispinguin"
+  ],
+  "Pintinho Imperial": [
+    "Imperial Chick",
+    "Kaiserküken"
+  ],
+  "Pintinho Pipoca": [
+    "Popcorn Chick",
+    "Popcornküken"
+  ],
+  "Pintinho coroado, com bico dourado e pequenas asas.": [
+    "A crowned chick with a golden beak and tiny wings.",
+    "Ein gekröntes Küken mit goldenem Schnabel und kleinen Flügeln."
+  ],
+  "Piso escorregadio": [
+    "Slippery ground",
+    "Rutschiger Boden"
+  ],
+  "Piso, cobertura e plantas do curral.": [
+    "Flooring, canopy and plants for the pen.",
+    "Boden, Überdachung und Pflanzen für das Gehege."
+  ],
+  "Pistas": [
+    "Tracks",
+    "Strecken"
+  ],
+  "Placas articuladas, engrenagens e parafusos.": [
+    "Articulated plates, gears and bolts.",
+    "Bewegliche Platten, Zahnräder und Schrauben."
+  ],
+  "Placas rubras e um grande crescente dourado.": [
+    "Crimson plates and a large golden crescent.",
+    "Rote Platten und eine große goldene Mondsichel."
+  ],
+  "Placas verdes e contorno de areia.": [
+    "Green plates and a sandy outline.",
+    "Grüne Platten und eine sandfarbene Umrandung."
+  ],
+  "Planeta luminoso com três órbitas douradas.": [
+    "A glowing planet with three golden orbits.",
+    "Ein leuchtender Planet mit drei goldenen Umlaufbahnen."
+  ],
+  "Planetas e órbitas cercam um cristal sobre a cabeça.": [
+    "Planets and orbits surround a crystal above your head.",
+    "Planeten und Umlaufbahnen umgeben einen Kristall über deinem Kopf."
+  ],
+  "Poder e boost equipados": [
+    "Power and boost equipped",
+    "Kraft und Boost ausgerüstet"
+  ],
+  "Poderes": [
+    "Powers",
+    "Kräfte"
+  ],
+  "Poderes e boosts": [
+    "Powers and boosts",
+    "Kräfte und Boosts"
+  ],
+  "Poderes e boosts · 8": [
+    "Powers and boosts · 8",
+    "Kräfte und Boosts · 8"
+  ],
+  "Poderes e boosts.": [
+    "Powers and boosts.",
+    "Kräfte und Boosts."
+  ],
+  "Pontas de cristal azul em uma tiara prateada.": [
+    "Blue crystal tips on a silver tiara.",
+    "Blaue Kristallspitzen auf einer silbernen Tiara."
+  ],
+  "Pontas de fogo estilizadas formam uma coroa no chão.": [
+    "Stylized flames form a crown on the ground.",
+    "Stilisierte Flammen bilden eine Krone am Boden."
+  ],
+  "Portais Orbitais": [
+    "Orbital Portals",
+    "Orbitalportale"
+  ],
+  "Portal das Galáxias": [
+    "Galaxy Portal",
+    "Galaxienportal"
+  ],
+  "Portal das galáxias": [
+    "Galaxy portal",
+    "Galaxienportal"
+  ],
+  "Porto": [
+    "Harbor",
+    "Hafen"
+  ],
+  "Porto dos Ventos": [
+    "Harbor of Winds",
+    "Hafen der Winde"
+  ],
+  "Posição": [
+    "Position",
+    "Platz"
+  ],
+  "Poças de caramelo": [
+    "Caramel puddles",
+    "Karamellpfützen"
+  ],
+  "Prado": [
+    "Meadow",
+    "Wiese"
+  ],
+  "Prancha de verão": [
+    "Summer surfboard",
+    "Sommer-Surfbrett"
+  ],
+  "Prancha turquesa com faixa laranja e quilha.": [
+    "A turquoise board with an orange stripe and fin.",
+    "Ein türkises Brett mit orangefarbenem Streifen und Finne."
+  ],
+  "Prensa mecânica": [
+    "Mechanical press",
+    "Mechanische Presse"
+  ],
+  "Preparar troca": [
+    "Prepare trade",
+    "Tausch vorbereiten"
+  ],
+  "Prepare sua mochila.": [
+    "Prepare your backpack.",
+    "Pack deinen Rucksack."
+  ],
+  "Primeira entrega": [
+    "First delivery",
+    "Erste Lieferung"
+  ],
+  "Produção automática": [
+    "Automatic production",
+    "Automatische Produktion"
+  ],
+  "Progresso conectado ao perfil da família.": [
+    "Progress connected to the family profile.",
+    "Fortschritt mit dem Familienprofil verbunden."
+  ],
+  "Progresso salvo no perfil.": [
+    "Progress saved to profile.",
+    "Fortschritt im Profil gespeichert."
+  ],
+  "Pronto · F": [
+    "Ready · F",
+    "Bereit · F"
+  ],
+  "Protege das capturas e dos perigos da pista durante 8 segundos.": [
+    "Protects from captures and track hazards for 8 seconds.",
+    "Schützt 8 Sekunden lang vor dem Gefangenwerden und vor Gefahren auf der Strecke."
+  ],
+  "Protege de uma captura. Ativa sozinho quando o dono encosta.": [
+    "Protects from one capture. Activates automatically when the owner touches you.",
+    "Schützt davor, einmal gefangen zu werden. Aktiviert sich automatisch, wenn der Besitzer dich berührt."
+  ],
+  "Proteção azul com cristais e faixa luminosa.": [
+    "Blue protection with crystals and a glowing stripe.",
+    "Blauer Schutz mit Kristallen und einem leuchtenden Streifen."
+  ],
+  "Pule mais alto para superar obstáculos.": [
+    "Jump higher to clear obstacles.",
+    "Springe höher, um Hindernisse zu überwinden."
+  ],
+  "Pule ou contorne os obstáculos!": [
+    "Jump over or go around obstacles!",
+    "Überspringe oder umfahre Hindernisse!"
+  ],
+  "Pulso congelante": [
+    "Freezing pulse",
+    "Frostimpuls"
+  ],
+  "Pulso de cristal": [
+    "Crystal pulse",
+    "Kristallimpuls"
+  ],
+  "Pulso neon": [
+    "Neon pulse",
+    "Neonimpuls"
+  ],
+  "Pêndulo do tempo": [
+    "Time pendulum",
+    "Zeitpendel"
+  ],
+  "Quatro asas arredondadas com pintas douradas.": [
+    "Four rounded wings with golden dots.",
+    "Vier abgerundete Flügel mit goldenen Punkten."
+  ],
+  "Quatro asas claras com detalhes amarelos.": [
+    "Four pale wings with yellow details.",
+    "Vier helle Flügel mit gelben Details."
+  ],
+  "Quepe Integro": [
+    "Integro cap",
+    "Integro-Mütze"
+  ],
+  "Quepe do Maquinista": [
+    "Engine Driver's Cap",
+    "Lokführermütze"
+  ],
+  "Quepe turquesa com emblema dourado e aba escura.": [
+    "A turquoise cap with a golden emblem and dark brim.",
+    "Eine türkise Mütze mit goldenem Emblem und dunklem Schirm."
+  ],
+  "Quepe verde com aba e emblema dourado da estação.": [
+    "A green cap with a brim and golden station emblem.",
+    "Eine grüne Mütze mit Schirm und goldenem Bahnhofsemblem."
+  ],
+  "RELÍQUIA": [
+    "RELIC",
+    "RELIKT"
+  ],
+  "Rajada das velas": [
+    "Sail gust",
+    "Segelböe"
+  ],
+  "Rajada de areia": [
+    "Sand gust",
+    "Sandböe"
+  ],
+  "Ramos de coral rosado e pequenas pérolas azuis.": [
+    "Pink coral branches and small blue pearls.",
+    "Rosa Korallenzweige und kleine blaue Perlen."
+  ],
+  "Ranking": [
+    "Leaderboard",
+    "Rangliste"
+  ],
+  "Ranking do Pegue o Ovo": [
+    "Catch the Egg leaderboard",
+    "Schnapp das Ei – Rangliste"
+  ],
+  "Raposa Lunar": [
+    "Lunar Fox",
+    "Mondfuchs"
+  ],
+  "Raposa com orelhas pontudas e uma grande cauda estelar.": [
+    "A fox with pointed ears and a large starry tail.",
+    "Ein Fuchs mit spitzen Ohren und einem großen Sternenschweif."
+  ],
+  "Raposa de Areia": [
+    "Sand Fox",
+    "Sandfuchs"
+  ],
+  "Realeza do Ninho": [
+    "Nest Royalty",
+    "Nestadel"
+  ],
+  "Reator Vulcânico": [
+    "Volcanic Reactor",
+    "Vulkanreaktor"
+  ],
+  "Reator de dois núcleos com jatos de cristal, sem voo.": [
+    "A dual-core reactor with crystal jets, no flight.",
+    "Ein Reaktor mit zwei Kernen und Kristallstrahlen, ohne Flugfunktion."
+  ],
+  "Receba 10% a mais por criatura vendida, por nível.": [
+    "Earn 10% more for each creature sold, per level.",
+    "Erhalte pro Stufe 10% mehr für jede verkaufte Kreatur."
+  ],
+  "Recebe:": [
+    "Receives:",
+    "Erhält:"
+  ],
+  "Receber": [
+    "Claim",
+    "Abholen"
+  ],
+  "Recife de Coral": [
+    "Coral Reef",
+    "Korallenriff"
+  ],
+  "Recompensa recebida": [
+    "Reward claimed",
+    "Belohnung abgeholt"
+  ],
+  "Recupera todo o fôlego. Toque em Suco durante a corrida.": [
+    "Restores all stamina. Tap Juice during the run.",
+    "Stellt die gesamte Ausdauer wieder her. Tippe während des Laufens auf Saft."
+  ],
+  "Recuperação de fôlego +8/s": [
+    "Stamina recovery +8/s",
+    "Ausdauerregeneration +8/s"
+  ],
+  "Reduz pela metade a velocidade do guardião por 6 segundos.": [
+    "Halves the guardian's speed for 6 seconds.",
+    "Halbiert das Tempo des Wächters für 6 Sekunden."
+  ],
+  "Reino das Auroras": [
+    "Aurora Kingdom",
+    "Polarlichtreich"
+  ],
+  "Reino de Gelo": [
+    "Ice Kingdom",
+    "Eiskönigreich"
+  ],
+  "Relâmpagos do santuário": [
+    "Sanctuary lightning",
+    "Blitze des Heiligtums"
+  ],
+  "Relíquia": [
+    "Relic",
+    "Relikt"
+  ],
+  "Relíquias da aventura": [
+    "Adventure relics",
+    "Abenteuerrelikte"
+  ],
+  "Relógio cercado por engrenagens douradas.": [
+    "A clock surrounded by golden gears.",
+    "Eine Uhr, umgeben von goldenen Zahnrädern."
+  ],
+  "Retomando o envio do progresso deste aparelho.": [
+    "Resuming progress upload from this device.",
+    "Das Hochladen des Fortschritts von diesem Gerät wird fortgesetzt."
+  ],
+  "Robozinho flutuante com antena e braços articulados.": [
+    "A little floating robot with an antenna and articulated arms.",
+    "Ein kleiner schwebender Roboter mit Antenne und beweglichen Armen."
+  ],
+  "Robô Bilhete": [
+    "Ticket Robot",
+    "Ticketroboter"
+  ],
+  "Robô Faísca": [
+    "Spark Robot",
+    "Funkenroboter"
+  ],
+  "Robôs": [
+    "Robots",
+    "Roboter"
+  ],
+  "Rosto": [
+    "Face",
+    "Gesicht"
+  ],
+  "SEU CURRAL": [
+    "YOUR PEN",
+    "DEIN GEHEGE"
+  ],
+  "SKATE VOADOR": [
+    "FLYING SKATEBOARD",
+    "FLIEGENDES SKATEBOARD"
+  ],
+  "SUAS INTGEM": [
+    "YOUR INTGEM",
+    "DEINE INTGEM"
+  ],
+  "Sair da esteira": [
+    "Leave treadmill",
+    "Laufband verlassen"
+  ],
+  "Sala conectada! Abra Amigos para correr, visitar e trocar.": [
+    "Room connected! Open Friends to race, visit and trade.",
+    "Raum verbunden! Öffne Freunde, um Rennen zu fahren, Besuche zu machen und zu tauschen."
+  ],
+  "Sala · Explorador": [
+    "Room · Explorer",
+    "Raum · Entdecker"
+  ],
+  "Saldo atualizado.": [
+    "Balance updated.",
+    "Guthaben aktualisiert."
+  ],
+  "Salto duplo": [
+    "Double jump",
+    "Doppelsprung"
+  ],
+  "Salto duplo!": [
+    "Double jump!",
+    "Doppelsprung!"
+  ],
+  "Salvar no perfil agora": [
+    "Save to profile now",
+    "Jetzt im Profil speichern"
+  ],
+  "Salve seu progresso no perfil para entrar no ranking.": [
+    "Save your progress to your profile to join the leaderboard.",
+    "Speichere deinen Fortschritt im Profil, um in die Rangliste aufgenommen zu werden."
+  ],
+  "Santuário das Tempestades": [
+    "Storm Sanctuary",
+    "Sturmheiligtum"
+  ],
+  "Satélite Portátil": [
+    "Portable Satellite",
+    "Tragbarer Satellit"
+  ],
+  "Secreto": [
+    "Secret",
+    "Geheim"
+  ],
+  "Segredo revelado": [
+    "Secret revealed",
+    "Geheimnis gelüftet"
+  ],
+  "Seis espécies": [
+    "Six species",
+    "Sechs Arten"
+  ],
+  "Seis mundos": [
+    "Six worlds",
+    "Sechs Welten"
+  ],
+  "Seis penas facetadas em cada asa. São decorativas.": [
+    "Six faceted feathers on each wing. Decorative only.",
+    "Sechs facettierte Federn an jedem Flügel. Rein dekorativ."
+  ],
+  "Seis pétalas luminosas giram sob seus pés.": [
+    "Six glowing petals spin beneath your feet.",
+    "Sechs leuchtende Blütenblätter drehen sich unter deinen Füßen."
+  ],
+  "Selecionado": [
+    "Selected",
+    "Ausgewählt"
+  ],
+  "Sem conexão com o perfil. Seu progresso continua salvo neste aparelho.": [
+    "Not connected to your profile. Your progress remains saved on this device.",
+    "Keine Verbindung zum Profil. Dein Fortschritt bleibt auf diesem Gerät gespeichert."
+  ],
+  "Sete faixas coloridas em uma moldura azul.": [
+    "Seven colorful bands in a blue frame.",
+    "Sieben bunte Streifen in einem blauen Rahmen."
+  ],
+  "Sete pontas douradas e uma grande joia azul.": [
+    "Seven golden points and a large blue jewel.",
+    "Sieben goldene Spitzen und ein großer blauer Edelstein."
+  ],
+  "Seu jogo está pausado. {0} de {1} criaturas descobertas · {2} ovos entregues.": [
+    "Your game is paused. {0} of {1} creatures discovered · {2} eggs delivered.",
+    "Dein Spiel ist pausiert. {0} von {1} Kreaturen entdeckt · {2} Eier geliefert."
+  ],
+  "Seu primeiro ovo está esperando!": [
+    "Your first egg is waiting!",
+    "Dein erstes Ei wartet!"
+  ],
+  "Seu próprio estilo.": [
+    "Your own style.",
+    "Dein eigener Stil."
+  ],
+  "Siga a pista, pegue um ovo e traga até o cercado.": [
+    "Follow the track, grab an egg and bring it to the enclosure.",
+    "Folge der Strecke, schnapp dir ein Ei und bringe es ins Gehege."
+  ],
+  "Siga a pista.": [
+    "Follow the track.",
+    "Folge der Strecke."
+  ],
+  "Siga o ninho da corrida": [
+    "Head for the race nest",
+    "Laufe zum Rennnest"
+  ],
+  "Skate Aurora": [
+    "Aurora Skateboard",
+    "Polarlicht-Skateboard"
+  ],
+  "Skate Brisa": [
+    "Breeze Skateboard",
+    "Brisen-Skateboard"
+  ],
+  "Skate Integro": [
+    "Integro Skateboard",
+    "Integro-Skateboard"
+  ],
+  "Skate Neon": [
+    "Neon Skateboard",
+    "Neon-Skateboard"
+  ],
+  "Sol": [
+    "Sun",
+    "Sonne"
+  ],
+  "Somente quem criou a sala inicia a corrida.": [
+    "Only the room creator can start the race.",
+    "Nur der Ersteller des Raums kann das Rennen starten."
+  ],
+  "Sua posição: {0}º": [
+    "Your position: {0}",
+    "Dein Platz: {0}"
+  ],
+  "Suco de energia": [
+    "Energy juice",
+    "Energiesaft"
+  ],
+  "Suco usado! Seu fôlego está completo.": [
+    "Juice used! Your stamina is full.",
+    "Saft getrunken! Deine Ausdauer ist wieder voll."
+  ],
+  "TREINO RECOMENDADO": [
+    "RECOMMENDED TRAINING",
+    "EMPFOHLENES TRAINING"
+  ],
+  "Tartaruga Cristal": [
+    "Crystal Turtle",
+    "Kristallschildkröte"
+  ],
+  "Tempestade": [
+    "Storm",
+    "Sturm"
+  ],
+  "Templo das Nuvens": [
+    "Cloud Temple",
+    "Wolkentempel"
+  ],
+  "Tempo": [
+    "Time",
+    "Zeit"
+  ],
+  "Tentar conectar ao perfil": [
+    "Try connecting to profile",
+    "Verbindung zum Profil versuchen"
+  ],
+  "Tesouros do Recife": [
+    "Reef Treasures",
+    "Riffschätze"
+  ],
+  "Tiara Boreal": [
+    "Boreal Tiara",
+    "Nordlichttiara"
+  ],
+  "Tiara de gelo": [
+    "Ice tiara",
+    "Eistiara"
+  ],
+  "Todos os participantes precisam voltar à base.": [
+    "All participants must return to base.",
+    "Alle Teilnehmer müssen zur Basis zurückkehren."
+  ],
+  "Traga ovos e descubra novas combinações!": [
+    "Bring eggs and discover new combinations!",
+    "Bringe Eier und entdecke neue Kombinationen!"
+  ],
+  "Treinando! A cada barra completa, sua velocidade aumenta.": [
+    "Training! Your speed increases every time the bar fills up.",
+    "Training läuft! Mit jedem gefüllten Balken steigt dein Tempo."
+  ],
+  "Treinar na esteira": [
+    "Train on treadmill",
+    "Auf dem Laufband trainieren"
+  ],
+  "Treino concluído. Sua velocidade está maior!": [
+    "Training complete. You're faster now!",
+    "Training abgeschlossen. Dein Tempo ist gestiegen!"
+  ],
+  "Treino nível {0}! Velocidade: {1}.": [
+    "Training level {0}! Speed: {1}.",
+    "Trainingsstufe {0}! Tempo: {1}."
+  ],
+  "Treino recomendado:": [
+    "Recommended training:",
+    "Empfohlenes Training:"
+  ],
+  "Treino recomendado: {12}": [
+    "Recommended training: {12}",
+    "Empfohlenes Training: {12}"
+  ],
+  "Treino {0}/{1}": [
+    "Training {0}/{1}",
+    "Training {0}/{1}"
+  ],
+  "Tricórnio com emblema dourado e pena.": [
+    "A tricorn with a golden emblem and feather.",
+    "Ein Dreispitz mit goldenem Emblem und Feder."
+  ],
+  "Trilhos de Luz": [
+    "Rails of Light",
+    "Lichtschienen"
+  ],
+  "Troca com Explorador": [
+    "Trade with Explorer",
+    "Mit Entdecker tauschen"
+  ],
+  "Troca concluída. Curral atualizado no perfil.": [
+    "Trade complete. Pen updated in your profile.",
+    "Tausch abgeschlossen. Gehege im Profil aktualisiert."
+  ],
+  "Troncos giratórios": [
+    "Spinning logs",
+    "Drehende Baumstämme"
+  ],
+  "Três órbitas cruzadas com pequenos planetas.": [
+    "Three intersecting orbits with small planets.",
+    "Drei sich kreuzende Umlaufbahnen mit kleinen Planeten."
+  ],
+  "Tênis velozes": [
+    "Speedy shoes",
+    "Schnelle Schuhe"
+  ],
+  "UMA CORRIDA CONTÍNUA": [
+    "ONE CONTINUOUS RUN",
+    "EIN DURCHGEHENDER LAUF"
+  ],
+  "Um anel luminoso sobre a cabeça.": [
+    "A glowing ring above your head.",
+    "Ein leuchtender Ring über deinem Kopf."
+  ],
+  "Um cogumelo vermelho com pintinhas claras.": [
+    "A red mushroom with pale dots.",
+    "Ein roter Pilz mit hellen Punkten."
+  ],
+  "Um cometa com cauda de cristais azuis.": [
+    "A comet with a blue crystal tail.",
+    "Ein Komet mit einem Schweif aus blauen Kristallen."
+  ],
+  "Um planeta luminoso cercado por três órbitas douradas.": [
+    "A glowing planet surrounded by three golden orbits.",
+    "Ein leuchtender Planet, umgeben von drei goldenen Umlaufbahnen."
+  ],
+  "Um relógio rodeado de engrenagens reais em 3D.": [
+    "A clock surrounded by real 3D gears.",
+    "Eine Uhr, umgeben von echten 3D-Zahnrädern."
+  ],
+  "Uma aventura.": [
+    "An adventure.",
+    "Ein Abenteuer."
+  ],
+  "Uma capa vermelha para a aventura.": [
+    "A red cape for the adventure.",
+    "Ein roter Umhang für das Abenteuer."
+  ],
+  "Uma coroa com pedras coloridas.": [
+    "A crown with colorful stones.",
+    "Eine Krone mit bunten Steinen."
+  ],
+  "Uma coroa mítica com um grande disco solar.": [
+    "A mythic crown with a large sun disk.",
+    "Eine mythische Krone mit einer großen Sonnenscheibe."
+  ],
+  "Uma lente planetária com anéis inclinados.": [
+    "A planetary lens with tilted rings.",
+    "Eine Planetenlinse mit geneigten Ringen."
+  ],
+  "Uma pausa na aventura": [
+    "A break in the adventure",
+    "Eine Abenteuerpause"
+  ],
+  "Uma pequena locomotiva com rodas e chaminé nas costas.": [
+    "A small locomotive with wheels and a chimney on your back.",
+    "Eine kleine Lokomotive mit Rädern und Schornstein auf deinem Rücken."
+  ],
+  "Usar agora": [
+    "Use now",
+    "Jetzt verwenden"
+  ],
+  "Usar progresso do perfil": [
+    "Use profile progress",
+    "Profilfortschritt verwenden"
+  ],
+  "Use até um item de cada categoria ao mesmo tempo.": [
+    "Use up to one item from each category at a time.",
+    "Verwende gleichzeitig höchstens einen Gegenstand aus jeder Kategorie."
+  ],
+  "VISITADA": [
+    "VISITED",
+    "BESUCHT"
+  ],
+  "Vale Vulcânico": [
+    "Volcanic Valley",
+    "Vulkantal"
+  ],
+  "Vale dos Doces": [
+    "Candy Valley",
+    "Süßigkeitental"
+  ],
+  "Valor da criatura · {5}×": [
+    "Creature value · {5}×",
+    "Kreaturenwert · {5}×"
+  ],
+  "Valor: {5} integros": [
+    "Value: {5} Integros",
+    "Wert: {5} Integros"
+  ],
+  "Velas do porto": [
+    "Harbor sails",
+    "Hafensegel"
+  ],
+  "Velocidade +5%": [
+    "Speed +5%",
+    "Tempo +5%"
+  ],
+  "Velocidade de corrida": [
+    "Running speed",
+    "Lauftempo"
+  ],
+  "Venda criaturas para ganhar integros.": [
+    "Sell creatures to earn Integros.",
+    "Verkaufe Kreaturen, um Integros zu verdienen."
+  ],
+  "Venda e melhore.": [
+    "Sell and upgrade.",
+    "Verkaufe und verbessere."
+  ],
+  "Vendas +10%": [
+    "Sales +10%",
+    "Verkaufserlös +10%"
+  ],
+  "Vender por {12}": [
+    "Sell for {12}",
+    "Für {12} verkaufen"
+  ],
+  "Vento das nuvens": [
+    "Cloud wind",
+    "Wolkenwind"
+  ],
+  "Ver criatura oferecida": [
+    "View offered creature",
+    "Angebotene Kreatur ansehen"
+  ],
+  "Verificando progresso do perfil…": [
+    "Checking profile progress…",
+    "Profilfortschritt wird geprüft…"
+  ],
+  "Verificar sincronização": [
+    "Check synchronization",
+    "Synchronisierung prüfen"
+  ],
+  "Versão do perfil carregada. A cópia local foi preservada.": [
+    "Profile version loaded. Your local copy has been preserved.",
+    "Profilversion geladen. Deine lokale Kopie bleibt erhalten."
+  ],
+  "Veículo guardado.": [
+    "Vehicle stored.",
+    "Fahrzeug verstaut."
+  ],
+  "Veículos · {6}/{7}": [
+    "Vehicles · {6}/{7}",
+    "Fahrzeuge · {6}/{7}"
+  ],
+  "Violão viajante": [
+    "Traveler's guitar",
+    "Reisegitarre"
+  ],
+  "Visitando o curral do colega. Toque em Voltar para sair.": [
+    "Visiting your friend's pen. Tap Back to leave.",
+    "Du besuchst das Gehege deines Mitspielers. Tippe zum Verlassen auf Zurück."
+  ],
+  "Visitar curral": [
+    "Visit pen",
+    "Gehege besuchen"
+  ],
+  "Visor Saturno": [
+    "Saturn Visor",
+    "Saturnvisier"
+  ],
+  "Visor arco-íris": [
+    "Rainbow visor",
+    "Regenbogenvisier"
+  ],
+  "Visor azul com moldura e luzes neon.": [
+    "A blue visor with a frame and neon lights.",
+    "Ein blaues Visier mit Rahmen und Neonlichtern."
+  ],
+  "Visor cibernético": [
+    "Cybernetic visor",
+    "Kybernetisches Visier"
+  ],
+  "Visor com órbitas, estrelas e detalhes de prata.": [
+    "A visor with orbits, stars and silver details.",
+    "Ein Visier mit Umlaufbahnen, Sternen und silbernen Details."
+  ],
+  "Visor de Trilhos": [
+    "Rail Visor",
+    "Schienenvisier"
+  ],
+  "Visor panorâmico com dois trilhos luminosos.": [
+    "A panoramic visor with two glowing rails.",
+    "Ein Panoramavisier mit zwei leuchtenden Schienen."
+  ],
+  "Você": [
+    "You",
+    "Du"
+  ],
+  "Você aceitou · aguardando": [
+    "You accepted · waiting",
+    "Du hast angenommen · warten"
+  ],
+  "Você descobriu todas as {0} criaturas!": [
+    "You discovered all {0} creatures!",
+    "Du hast alle {0} Kreaturen entdeckt!"
+  ],
+  "Você empurrou o Explorador": [
+    "You pushed the Explorer",
+    "Du hast den Entdecker geschubst"
+  ],
+  "Você entrega": [
+    "You give",
+    "Du gibst"
+  ],
+  "Você está seguro. Guarde o ovo no curral.": [
+    "You're safe. Store the egg in the pen.",
+    "Du bist in Sicherheit. Lege das Ei im Gehege ab."
+  ],
+  "Você já atingiu o nível máximo de treino!": [
+    "You already reached the maximum training level!",
+    "Du hast bereits die höchste Trainingsstufe erreicht!"
+  ],
+  "Você já tem esse treino!": [
+    "You already have this training!",
+    "Du hast dieses Training bereits!"
+  ],
+  "Você recebe": [
+    "You receive",
+    "Du erhältst"
+  ],
+  "Você voltou ao seu curral.": [
+    "You returned to your pen.",
+    "Du bist in dein Gehege zurückgekehrt."
+  ],
+  "Volta em {0} s de jogo": [
+    "Returns in {0} s of gameplay",
+    "Kehrt in {0} s Spielzeit zurück"
+  ],
+  "Voltar ao jogo": [
+    "Back to game",
+    "Zurück zum Spiel"
+  ],
+  "Voltar ao meu curral": [
+    "Back to my pen",
+    "Zurück zu meinem Gehege"
+  ],
+  "Voltar às configurações": [
+    "Back to settings",
+    "Zurück zu den Einstellungen"
+  ],
+  "Volte à base e conecte o perfil para trocar.": [
+    "Return to base and connect your profile to trade.",
+    "Kehre zur Basis zurück und verbinde dein Profil, um zu tauschen."
+  ],
+  "Volte à base e conecte o perfil para visitar.": [
+    "Return to base and connect your profile to visit.",
+    "Kehre zur Basis zurück und verbinde dein Profil, um Besuche zu machen."
+  ],
+  "Volte à base para comprar.": [
+    "Return to base to buy.",
+    "Kehre zum Kaufen zur Basis zurück."
+  ],
+  "Volte à base para comprar. Você pode consultar sua coleção aqui.": [
+    "Return to base to buy. You can browse your collection here.",
+    "Kehre zum Kaufen zur Basis zurück. Hier kannst du deine Sammlung ansehen."
+  ],
+  "Volte à base para vender criaturas.": [
+    "Return to base to sell creatures.",
+    "Kehre zur Basis zurück, um Kreaturen zu verkaufen."
+  ],
+  "Volte à base primeiro.": [
+    "Return to base first.",
+    "Kehre zuerst zur Basis zurück."
+  ],
+  "Volte à base!": [
+    "Return to base!",
+    "Zurück zur Basis!"
+  ],
+  "Vulcão": [
+    "Volcano",
+    "Vulkan"
+  ],
+  "Vá ao ninho": [
+    "Go to the nest",
+    "Gehe zum Nest"
+  ],
+  "comprado e equipado!": [
+    "bought and equipped!",
+    "gekauft und ausgerüstet!"
+  ],
+  "faltam {0} níveis": [
+    "{0} levels remaining",
+    "Noch {0} Stufen"
+  ],
+  "integros, criaturas, ovos no curral e treino ficam salvos neste navegador. Uma corrida em andamento recomeça na base ao recarregar.": [
+    "Integros, creatures, eggs in the pen and training are saved in this browser. A run in progress restarts at base when you reload.",
+    "Integros, Kreaturen, Eier im Gehege und Training werden in diesem Browser gespeichert. Ein laufender Versuch beginnt nach dem Neuladen wieder in der Basis."
+  ],
+  "mundos se conectam na mesma pista. Siga em frente para explorar. Cada ovo mostra seu treino recomendado e quantos níveis faltam. A referência considera seus tênis, luvas e veículo: correr com o ovo 10% mais rápido que o dono, sem disparar. Desvie dos obstáculos.": [
+    "worlds are connected along the same track. Keep going to explore. Each egg shows the recommended training and remaining levels. The guide accounts for your shoes, gloves and vehicle: run with the egg 10% faster than the owner without sprinting. Avoid obstacles.",
+    "Welten sind über dieselbe Strecke verbunden. Laufe weiter, um sie zu erkunden. Jedes Ei zeigt das empfohlene Training und die fehlenden Stufen. Der Richtwert berücksichtigt Schuhe, Handschuhe und Fahrzeug: Mit dem Ei ohne Sprinten 10% schneller laufen als der Besitzer. Weiche Hindernissen aus."
+  ],
+  "no atalho do HUD.": [
+    "in the HUD shortcut.",
+    "auf der Taste der Spielanzeige."
+  ],
+  "níveis": [
+    "levels",
+    "Stufen"
+  ],
+  "ovos entregues": [
+    "eggs delivered",
+    "Eier geliefert"
+  ],
+  "pronto para voar!": [
+    "ready to fly!",
+    "bereit zum Fliegen!"
+  ],
+  "{0} ITENS · INTEGROS E INTGEM": [
+    "{0} ITEMS · INTEGROS AND INTGEM",
+    "{0} GEGENSTÄNDE · INTEGROS UND INTGEM"
+  ],
+  "{0} Toque em Atualizar ranking para tentar novamente.": [
+    "{0} Tap Refresh leaderboard to try again.",
+    "{0} Tippe auf Rangliste aktualisieren, um es erneut zu versuchen."
+  ],
+  "{0} integros / min de jogo ativo": [
+    "{0} Integros / min of active gameplay",
+    "{0} Integros / Min. aktiver Spielzeit"
+  ],
+  "{0} itens para comprar": [
+    "{0} items to buy",
+    "{0} Gegenstände zum Kaufen"
+  ],
+  "{0} segundos para ganhar 0,35 de velocidade": [
+    "{0} seconds to gain 0.35 speed",
+    "{0} Sekunden für 0,35 mehr Tempo"
+  ],
+  "{0}: melhoria comprada!": [
+    "{0}: upgrade purchased!",
+    "{0}: Verbesserung gekauft!"
+  ],
+  "{1} itens · {2} na coleção": [
+    "{1} items · {2} in collection",
+    "{1} Gegenstände · {2} in der Sammlung"
+  ],
+  "{4} Não altera a velocidade.": [
+    "{4} Does not change speed.",
+    "{4} Verändert das Tempo nicht."
+  ],
+  "{6} de {7} níveis": [
+    "{6} of {7} levels",
+    "{6} von {7} Stufen"
+  ],
+  "· Abrir mochila": [
+    "· Open backpack",
+    "· Rucksack öffnen"
+  ],
+  "· bônus pausado na corrida online": [
+    "· bonus paused during online races",
+    "· Bonus in Online-Rennen pausiert"
+  ],
+  "Álbum · {4} combinações descobertas": [
+    "Album · {4} combinations discovered",
+    "Album · {4} Kombinationen entdeckt"
+  ],
+  "ÉPICO": [
+    "EPIC",
+    "EPISCH"
+  ],
+  "Óculos Prisma": [
+    "Prism Glasses",
+    "Prismenbrille"
+  ],
+  "Óculos de aviador": [
+    "Aviator goggles",
+    "Fliegerbrille"
+  ],
+  "Óculos de coração": [
+    "Heart glasses",
+    "Herzbrille"
+  ],
+  "Óculos de estrela": [
+    "Star glasses",
+    "Sternenbrille"
+  ],
+  "Óculos de nevasca": [
+    "Blizzard goggles",
+    "Schneesturmbrille"
+  ],
+  "Óculos do condutor": [
+    "Conductor's glasses",
+    "Lokführerbrille"
+  ],
+  "Óculos do deserto neon": [
+    "Neon desert goggles",
+    "Neonwüstenbrille"
+  ],
+  "Órbita de Lava": [
+    "Lava Orbit",
+    "Lavaorbit"
+  ],
+  "● {0} integros disponíveis": [
+    "● {0} Integros available",
+    "● {0} Integros verfügbar"
+  ],
+  "✓ Criatura descoberta": [
+    "✓ Creature discovered",
+    "✓ Kreatur entdeckt"
+  ],
+  "✓ Ovo seguro": [
+    "✓ Egg safe",
+    "✓ Ei in Sicherheit"
+  ],
+  "✓ Sua coleção": [
+    "✓ Your collection",
+    "✓ Deine Sammlung"
+  ]
+}

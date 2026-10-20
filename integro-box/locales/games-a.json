@@ -1,0 +1,2586 @@
+{
+  "! Vida e energia recuperadas.": [
+    "! Health and energy restored.",
+    "! Gesundheit und Energie wiederhergestellt."
+  ],
+  "%. Aguarde a colheita.": [
+    "%. Wait for the harvest.",
+    "%. Warte auf die Ernte."
+  ],
+  "+12% de velocidade por nível.": [
+    "+12% speed per level.",
+    "+12 % Geschwindigkeit pro Stufe."
+  ],
+  "+20% de experiência por nível.": [
+    "+20% experience per level.",
+    "+20 % Erfahrung pro Stufe."
+  ],
+  "+22 de vida máxima": [
+    "+22 maximum health",
+    "+22 maximale Gesundheit"
+  ],
+  "+5 de dano nos golpes e poderes": [
+    "+5 damage for attacks and powers",
+    "+5 Schaden für Angriffe und Kräfte"
+  ],
+  ". Abrir carteira": [
+    ". Open wallet",
+    ". Wallet öffnen"
+  ],
+  ". Abrir detalhes da missão": [
+    ". Open mission details",
+    ". Missionsdetails öffnen"
+  ],
+  ". As escadas ficam voltadas na direção em que você olha.": [
+    ". Stairs face the direction you are looking.",
+    ". Treppen zeigen in deine Blickrichtung."
+  ],
+  ". Baldes, sementes, enxada, alimentos e veículos usam": [
+    ". Buckets, seeds, hoes, food and vehicles use",
+    ". Eimer, Samen, Hacken, Nahrung und Fahrzeuge verwenden"
+  ],
+  ". Cada seta anda um piso. Você pode pausar, remover um comando ou pedir uma dica.": [
+    ". Each arrow moves one tile. You can pause, remove a command or ask for a hint.",
+    ". Jeder Pfeil bewegt dich ein Feld weiter. Du kannst pausieren, einen Befehl entfernen oder einen Tipp anfordern."
+  ],
+  ". Conecte fios à porta, luminária ou pistão.": [
+    ". Connect wires to the door, lamp or piston.",
+    ". Verbinde Kabel mit der Tür, der Lampe oder dem Kolben."
+  ],
+  ". Picaretas usam": [
+    ". Pickaxes use",
+    ". Spitzhacken verwenden"
+  ],
+  "1 · Adição e subtração": [
+    "1 · Addition and subtraction",
+    "1 · Addition und Subtraktion"
+  ],
+  "1 · Palavras curtas": [
+    "1 · Short words",
+    "1 · Kurze Wörter"
+  ],
+  "1. Procure o ✓ verde.": [
+    "1. Look for the green ✓.",
+    "1. Suche nach dem grünen ✓."
+  ],
+  "15 EXPEDIÇÕES · 5 MUNDOS": [
+    "15 EXPEDITIONS · 5 WORLDS",
+    "15 EXPEDITIONEN · 5 WELTEN"
+  ],
+  "15 mundos para descobrir": [
+    "15 worlds to discover",
+    "15 Welten zum Entdecken"
+  ],
+  "16 músicas. Seu próximo palco.": [
+    "16 songs. Your next stage.",
+    "16 Songs. Deine nächste Bühne."
+  ],
+  "2 · Quatro operações": [
+    "2 · Four basic operations",
+    "2 · Vier Grundrechenarten"
+  ],
+  "2 · Vocabulário": [
+    "2 · Vocabulary",
+    "2 · Wortschatz"
+  ],
+  "2. Cresça a cada refeição.": [
+    "2. Grow with every meal.",
+    "2. Wachse mit jeder Mahlzeit."
+  ],
+  "20 caminhos para descobrir": [
+    "20 paths to discover",
+    "20 Wege zum Entdecken"
+  ],
+  "3 · Operações e equações": [
+    "3 · Operations and equations",
+    "3 · Rechenaufgaben und Gleichungen"
+  ],
+  "3. Nade em todas as direções.": [
+    "3. Swim in every direction.",
+    "3. Schwimme in alle Richtungen."
+  ],
+  "4. Fuja dos maiores.": [
+    "4. Escape the bigger ones.",
+    "4. Fliehe vor den Größeren."
+  ],
+  "5. Explore e equipe.": [
+    "5. Explore and gear up.",
+    "5. Erkunde und rüste dich aus."
+  ],
+  "6. Continue sua história.": [
+    "6. Continue your story.",
+    "6. Setze deine Geschichte fort."
+  ],
+  "96 × 96 blocos · fazenda, vila, minas e capivaras": [
+    "96 × 96 blocks · farm, village, mines and capybaras",
+    "96 × 96 Blöcke · Bauernhof, Dorf, Minen und Wasserschweine"
+  ],
+  "A Floresta Esmeralda já está liberada. Nas outras ilhas, vença o guardião e fale com Lia.": [
+    "The Emerald Forest is already unlocked. On the other islands, defeat the guardian and talk to Lia.",
+    "Der Smaragdwald ist bereits freigeschaltet. Besiege auf den anderen Inseln den Wächter und sprich mit Lia."
+  ],
+  "A Grande Avalanche": [
+    "The Great Avalanche",
+    "Die große Lawine"
+  ],
+  "A Terra é um deles.": [
+    "Earth is one of them.",
+    "Die Erde ist einer davon."
+  ],
+  "A lava estava quente! Você voltou ao início sem perder seus itens.": [
+    "The lava was hot! You returned to the start without losing your items.",
+    "Die Lava war heiß! Du bist zum Start zurückgekehrt, ohne deine Gegenstände zu verlieren."
+  ],
+  "A lã ainda está crescendo.": [
+    "The wool is still growing.",
+    "Die Wolle wächst noch."
+  ],
+  "A música e as setas estão pausadas juntas.": [
+    "The music and arrows are paused together.",
+    "Musik und Pfeile sind gemeinsam pausiert."
+  ],
+  "A primeira fruta está na Floresta Esmeralda": [
+    "The first fruit is in the Emerald Forest",
+    "Die erste Frucht liegt im Smaragdwald"
+  ],
+  "A primeira preparação pode levar alguns segundos.": [
+    "The first setup may take a few seconds.",
+    "Die erste Vorbereitung kann einige Sekunden dauern."
+  ],
+  "A próxima cobra já espera por você.": [
+    "Your next snake is already waiting.",
+    "Deine nächste Schlange wartet schon auf dich."
+  ],
+  "A vaca precisa descansar:": [
+    "The cow needs to rest:",
+    "Die Kuh muss sich ausruhen:"
+  ],
+  "A velocidade aumenta aos poucos durante a corrida. Acompanhe o indicador de ritmo e prepare os desvios com antecedência.": [
+    "Speed gradually increases during the run. Watch the pace indicator and plan your dodges ahead.",
+    "Die Geschwindigkeit steigt während des Laufs allmählich an. Beobachte die Tempoanzeige und plane deine Ausweichmanöver rechtzeitig."
+  ],
+  "A Última Expedição": [
+    "The Last Expedition",
+    "Die letzte Expedition"
+  ],
+  "APRENDER": [
+    "LEARN",
+    "LERNEN"
+  ],
+  "AQUECIMENTO": [
+    "WARM-UP",
+    "AUFWÄRMEN"
+  ],
+  "Abertura na parede que deixa a luz entrar.": [
+    "An opening in a wall that lets light in.",
+    "Eine Öffnung in der Wand, die Licht hereinlässt."
+  ],
+  "Abra": [
+    "Open",
+    "Öffnen"
+  ],
+  "Abrindo o jogo": [
+    "Opening the game",
+    "Spiel wird geöffnet"
+  ],
+  "Abrir baú": [
+    "Open chest",
+    "Truhe öffnen"
+  ],
+  "Abrir chat": [
+    "Open chat",
+    "Chat öffnen"
+  ],
+  "Abrir chat,": [
+    "Open chat,",
+    "Chat öffnen,"
+  ],
+  "Abrir detalhes da missão": [
+    "Open mission details",
+    "Missionsdetails öffnen"
+  ],
+  "Abrir loja": [
+    "Open shop",
+    "Shop öffnen"
+  ],
+  "Abrir mapa das seis regiões": [
+    "Open the map of the six regions",
+    "Karte der sechs Regionen öffnen"
+  ],
+  "Acessório para o rei do oceano.": [
+    "An accessory for the king of the ocean.",
+    "Ein Accessoire für den König des Ozeans."
+  ],
+  "Acessórios visuais. Jogue para ganhar moedas.": [
+    "Cosmetic accessories. Play to earn coins.",
+    "Kosmetische Accessoires. Spiele, um Münzen zu verdienen."
+  ],
+  "Acompanhar cobra": [
+    "Follow snake",
+    "Schlange folgen"
+  ],
+  "Adicionar movimentos": [
+    "Add moves",
+    "Bewegungen hinzufügen"
+  ],
+  "Adicionar: {1}": [
+    "Add: {1}",
+    "Hinzufügen: {1}"
+  ],
+  "Afaste o barco um pouco da margem e tente novamente.": [
+    "Move the boat a little farther from the shore and try again.",
+    "Bewege das Boot etwas weiter vom Ufer weg und versuche es erneut."
+  ],
+  "Afaste-se para colocar o bloco.": [
+    "Move back to place the block.",
+    "Gehe zurück, um den Block zu platzieren."
+  ],
+  "Afaste-se um pouco da porta.": [
+    "Move a little farther from the door.",
+    "Entferne dich etwas von der Tür."
+  ],
+  "Agulhas de pedra e nuvens": [
+    "Rock spires and clouds",
+    "Felsnadeln und Wolken"
+  ],
+  "Ainda não é essa palavra. Apague algumas letras e tente outra ordem.": [
+    "That's not the word yet. Erase a few letters and try a different order.",
+    "Das ist noch nicht das richtige Wort. Lösche einige Buchstaben und versuche eine andere Reihenfolge."
+  ],
+  "Ajuda": [
+    "Help",
+    "Hilfe"
+  ],
+  "Ajuda e opções": [
+    "Help and options",
+    "Hilfe und Optionen"
+  ],
+  "Ajuste de sincronização": [
+    "Sync adjustment",
+    "Synchronisierung anpassen"
+  ],
+  "Alavanca": [
+    "Lever",
+    "Hebel"
+  ],
+  "Alavanca pressionada! Portão aberto.": [
+    "Lever pressed! Gate open.",
+    "Hebel betätigt! Tor geöffnet."
+  ],
+  "Alcance a evolução 10": [
+    "Reach evolution 10",
+    "Erreiche Entwicklungsstufe 10"
+  ],
+  "Alcance a evolução 30": [
+    "Reach evolution 30",
+    "Erreiche Entwicklungsstufe 30"
+  ],
+  "Algo que foge à regra. Escreve-se com X, Ç e Ã.": [
+    "Something that breaks the rule. In Portuguese, it is spelled with X, Ç and Ã.",
+    "Etwas, das von der Regel abweicht. Auf Portugiesisch schreibt man es mit X, Ç und Ã."
+  ],
+  "Alimentos": [
+    "Food",
+    "Nahrung"
+  ],
+  "Ametista": [
+    "Amethyst",
+    "Amethyst"
+  ],
+  "Andar {0} de 8": [
+    "Floor {0} of 8",
+    "Etage {0} von 8"
+  ],
+  "Andar:": [
+    "Walk:",
+    "Gehen:"
+  ],
+  "Anfíbio que costuma pular.": [
+    "An amphibian that often jumps.",
+    "Ein Amphibium, das oft springt."
+  ],
+  "Animais": [
+    "Animals",
+    "Tiere"
+  ],
+  "Animais:": [
+    "Animals:",
+    "Tiere:"
+  ],
+  "Animal alimentado!": [
+    "Animal fed!",
+    "Tier gefüttert!"
+  ],
+  "Animal alimentado! Alimente outro adulto da mesma espécie por perto para ter um filhote.": [
+    "Animal fed! Feed another nearby adult of the same species to have a baby.",
+    "Tier gefüttert! Füttere ein weiteres erwachsenes Tier derselben Art in der Nähe, um Nachwuchs zu bekommen."
+  ],
+  "Animal chegou!": [
+    "Animal arrived!",
+    "Tier angekommen!"
+  ],
+  "Animal conhecido pelo pescoço comprido.": [
+    "An animal known for its long neck.",
+    "Ein Tier, das für seinen langen Hals bekannt ist."
+  ],
+  "Animal que mia.": [
+    "An animal that meows.",
+    "Ein Tier, das miaut."
+  ],
+  "Ao perder as vidas, você reaparece com a evolução, moedas e compras preservadas, perdendo apenas 25% do XP atual. Sair ou pausar salva a aventura por conta neste navegador.": [
+    "When you run out of lives, you respawn with your evolution, coins and purchases intact, losing only 25% of your current XP. Exiting or pausing saves the adventure for your account in this browser.",
+    "Wenn du alle Leben verlierst, erscheinen deine Entwicklungsstufe, Münzen und Käufe unverändert wieder. Du verlierst nur 25 % deiner aktuellen XP. Beim Verlassen oder Pausieren wird das Abenteuer für dein Konto in diesem Browser gespeichert."
+  ],
+  "Apagar letra": [
+    "Erase letter",
+    "Buchstaben löschen"
+  ],
+  "Apagar o último comando": [
+    "Delete the last command",
+    "Letzten Befehl löschen"
+  ],
+  "Apetite de gigante": [
+    "Giant appetite",
+    "Riesenappetit"
+  ],
+  "Aprender": [
+    "Learn",
+    "Lernen"
+  ],
+  "Aproxime-se da borda ou do canal.": [
+    "Move closer to the edge or channel.",
+    "Gehe näher an den Rand oder Kanal."
+  ],
+  "Aproxime-se da margem para desembarcar.": [
+    "Move closer to the shore to get off.",
+    "Fahre näher ans Ufer, um auszusteigen."
+  ],
+  "Aproxime-se da margem.": [
+    "Move closer to the shore.",
+    "Gehe näher ans Ufer."
+  ],
+  "Aproxime-se do animal para caçar.": [
+    "Move closer to the animal to hunt.",
+    "Gehe näher an das Tier, um zu jagen."
+  ],
+  "Aproxime-se do animal.": [
+    "Move closer to the animal.",
+    "Gehe näher an das Tier."
+  ],
+  "Aproxime-se do cais de uma ilha liberada para desembarcar.": [
+    "Approach the dock of an unlocked island to get off.",
+    "Fahre zum Anlegesteg einer freigeschalteten Insel, um auszusteigen."
+  ],
+  "Aproxime-se do cais para navegar. Marque uma fruta abaixo para seguir a bússola.": [
+    "Approach the dock to sail. Select a fruit below to follow the compass.",
+    "Gehe zum Anlegesteg, um loszufahren. Wähle unten eine Frucht aus, um dem Kompass zu folgen."
+  ],
+  "Aproxime-se do morador e confira seus itens.": [
+    "Approach the villager and check their items.",
+    "Gehe zum Dorfbewohner und sieh dir seine Gegenstände an."
+  ],
+  "Aproxime-se e mire em uma face livre.": [
+    "Move closer and aim at a free face.",
+    "Gehe näher heran und ziele auf eine freie Fläche."
+  ],
+  "Aproxime-se para embarcar.": [
+    "Move closer to board.",
+    "Gehe näher heran, um einzusteigen."
+  ],
+  "Aproxime-se para interagir": [
+    "Move closer to interact",
+    "Zum Interagieren näher herangehen"
+  ],
+  "Aproxime-se para usar.": [
+    "Move closer to use.",
+    "Gehe näher heran, um es zu benutzen."
+  ],
+  "Após {0}, experimente ir para {1}. O próximo piso está iluminado.": [
+    "After {0}, try going to {1}. The next tile is lit up.",
+    "Versuche nach {0}, zu {1} zu gehen. Das nächste Feld leuchtet."
+  ],
+  "Aquilo de que se precisa.": [
+    "Something that is needed.",
+    "Etwas, das man braucht."
+  ],
+  "Arcos celestes e jardins suspensos": [
+    "Sky arches and hanging gardens",
+    "Himmelsbögen und hängende Gärten"
+  ],
+  "Arcos e rochas vermelhas": [
+    "Arches and red rocks",
+    "Bögen und rote Felsen"
+  ],
+  "Areia": [
+    "Sand",
+    "Sand"
+  ],
+  "Arena inteira": [
+    "Full arena",
+    "Gesamte Arena"
+  ],
+  "Arquipélago Mecânico": [
+    "Mechanical Archipelago",
+    "Mechanischer Archipel"
+  ],
+  "Arquipélago das Nuvens": [
+    "Cloud Archipelago",
+    "Wolkenarchipel"
+  ],
+  "Arquipélago do Caribe": [
+    "Caribbean Archipelago",
+    "Karibischer Archipel"
+  ],
+  "Arquipélago explorado!": [
+    "Archipelago explored!",
+    "Archipel erkundet!"
+  ],
+  "Arraste o cenário para olhar. Ande pelo direcional ou WASD.": [
+    "Drag the scenery to look around. Move with the directional pad or WASD.",
+    "Ziehe die Spielwelt, um dich umzusehen. Bewege dich mit dem Steuerkreuz oder WASD."
+  ],
+  "Artistas no palco": [
+    "Performers on stage",
+    "Künstler auf der Bühne"
+  ],
+  "As frutas encontradas ficam na sua coleção. Troque o poder equipado quando quiser.": [
+    "The fruits you find stay in your collection. Change your equipped power whenever you like.",
+    "Gefundene Früchte bleiben in deiner Sammlung. Du kannst deine ausgerüstete Kraft jederzeit wechseln."
+  ],
+  "As moedas coletadas já são suas.": [
+    "The coins you collected are already yours.",
+    "Die gesammelten Münzen gehören bereits dir."
+  ],
+  "As paredes e o próprio corpo bloqueiam a passagem.": [
+    "Walls and your own body block the way.",
+    "Wände und dein eigener Körper versperren den Weg."
+  ],
+  "As paredes não podem ser atravessadas. Arraste a": [
+    "You cannot go through walls. Drag the",
+    "Du kannst nicht durch Wände gehen. Ziehe die"
+  ],
+  "As rotas automáticas desviam das bombas. Feche o mapa para pilotar.": [
+    "Automatic routes avoid bombs. Close the map to steer.",
+    "Automatische Routen umgehen Bomben. Schließe die Karte, um selbst zu steuern."
+  ],
+  "As {0} ilhas foram exploradas! Você venceu o {1}.": [
+    "All {0} islands have been explored! You defeated {1}.",
+    "Alle {0} Inseln wurden erkundet! Du hast {1} besiegt."
+  ],
+  "Asas Celestiais": [
+    "Celestial Wings",
+    "Himmelsflügel"
+  ],
+  "Asas da Fênix": [
+    "Phoenix Wings",
+    "Phönixflügel"
+  ],
+  "Asas de Gelo": [
+    "Ice Wings",
+    "Eisflügel"
+  ],
+  "Assar carne": [
+    "Cook meat",
+    "Fleisch braten"
+  ],
+  "Assar pão": [
+    "Bake bread",
+    "Brot backen"
+  ],
+  "Assar tijolos": [
+    "Fire bricks",
+    "Ziegel brennen"
+  ],
+  "Asse a carne na fornalha antes de comer.": [
+    "Cook the meat in the furnace before eating.",
+    "Brate das Fleisch im Ofen, bevor du es isst."
+  ],
+  "Ativar Criativo e voar": [
+    "Enable Creative and fly",
+    "Kreativmodus aktivieren und fliegen"
+  ],
+  "Atrai frutas próximas, sem atravessar paredes.": [
+    "Attracts nearby fruits without passing through walls.",
+    "Zieht Früchte in der Nähe an, ohne durch Wände zu gehen."
+  ],
+  "Atrai pérolas a 18 metros.": [
+    "Attracts pearls within 18 meters.",
+    "Zieht Perlen im Umkreis von 18 Metern an."
+  ],
+  "Atravesse as entradas douradas dos túneis para cruzar as divisórias.": [
+    "Go through the golden tunnel entrances to cross the partitions.",
+    "Gehe durch die goldenen Tunneleingänge, um die Trennwände zu überwinden."
+  ],
+  "Atrás da cortina de água, entre duas pedras verdes.": [
+    "Behind the curtain of water, between two green rocks.",
+    "Hinter dem Wasservorhang, zwischen zwei grünen Steinen."
+  ],
+  "Atrás das colunas partidas, no jardim das estrelas.": [
+    "Behind the broken columns, in the garden of stars.",
+    "Hinter den zerbrochenen Säulen im Sternengarten."
+  ],
+  "Até as nuvens": [
+    "Up to the Clouds",
+    "Bis zu den Wolken"
+  ],
+  "Aurora": [
+    "Aurora",
+    "Aurora"
+  ],
+  "Aurora Celestial": [
+    "Celestial Aurora",
+    "Himmlisches Polarlicht"
+  ],
+  "Aurora elétrica": [
+    "Electric Aurora",
+    "Elektrisches Polarlicht"
+  ],
+  "Aurora saltitante": [
+    "Bouncing Aurora",
+    "Hüpfendes Polarlicht"
+  ],
+  "Automático": [
+    "Automatic",
+    "Automatisch"
+  ],
+  "Ave com bico largo e pés adaptados para nadar.": [
+    "A bird with a wide beak and feet adapted for swimming.",
+    "Ein Vogel mit breitem Schnabel und Füßen, die zum Schwimmen geeignet sind."
+  ],
+  "Azul oceano": [
+    "Ocean Blue",
+    "Ozeanblau"
+  ],
+  "BATIDAS": [
+    "BEATS",
+    "BEATS"
+  ],
+  "BAÚ": [
+    "CHEST",
+    "TRUHE"
+  ],
+  "Baiacu": [
+    "Pufferfish",
+    "Kugelfisch"
+  ],
+  "Baixo": [
+    "Down",
+    "Unten"
+  ],
+  "Balde de lava": [
+    "Lava bucket",
+    "Lavaeimer"
+  ],
+  "Balde de leite": [
+    "Milk bucket",
+    "Milcheimer"
+  ],
+  "Balde de água": [
+    "Water bucket",
+    "Wassereimer"
+  ],
+  "Balde usado!": [
+    "Bucket used!",
+    "Eimer benutzt!"
+  ],
+  "Balde vazio": [
+    "Empty bucket",
+    "Leerer Eimer"
+  ],
+  "Baldes": [
+    "Buckets",
+    "Eimer"
+  ],
+  "Baldes:": [
+    "Buckets:",
+    "Eimer:"
+  ],
+  "Banca do marketplace": [
+    "Marketplace stall",
+    "Marktstand"
+  ],
+  "Bancada de fabricação": [
+    "Crafting table",
+    "Werkbank"
+  ],
+  "Barco": [
+    "Boat",
+    "Boot"
+  ],
+  "Barco:": [
+    "Boat:",
+    "Boot:"
+  ],
+  "Barra de ferro": [
+    "Iron bar",
+    "Eisenbarren"
+  ],
+  "Barra de ouro": [
+    "Gold bar",
+    "Goldbarren"
+  ],
+  "Bazar dos navegantes": [
+    "Sailors' Bazaar",
+    "Seefahrerbasar"
+  ],
+  "Baía das Esmeraldas": [
+    "Emerald Bay",
+    "Smaragdbucht"
+  ],
+  "Baía dos Corais": [
+    "Coral Bay",
+    "Korallenbucht"
+  ],
+  "Baú": [
+    "Chest",
+    "Truhe"
+  ],
+  "Baú aberto! +": [
+    "Chest opened! +",
+    "Truhe geöffnet! +"
+  ],
+  "Baú · seus materiais guardados": [
+    "Chest · your stored materials",
+    "Truhe · deine gelagerten Materialien"
+  ],
+  "Bento · minerador": [
+    "Bento · miner",
+    "Bento · Bergmann"
+  ],
+  "Bloco pequeno colocado!": [
+    "Small block placed!",
+    "Kleiner Block platziert!"
+  ],
+  "Blocos pequenos:": [
+    "Small blocks:",
+    "Kleine Blöcke:"
+  ],
+  "Bloqueia um ataque. Leve até 3.": [
+    "Blocks one attack. Carry up to 3.",
+    "Blockiert einen Angriff. Du kannst bis zu 3 mitnehmen."
+  ],
+  "Bodião": [
+    "Wrasse",
+    "Lippfisch"
+  ],
+  "Boi": [
+    "Ox",
+    "Ochse"
+  ],
+  "Bola de fogo": [
+    "Fireball",
+    "Feuerball"
+  ],
+  "Bomba explodiu!": [
+    "Bomb exploded!",
+    "Bombe explodiert!"
+  ],
+  "Bomba à frente! Desvie do círculo vermelho.": [
+    "Bomb ahead! Avoid the red circle.",
+    "Bombe voraus! Weiche dem roten Kreis aus."
+  ],
+  "Boné Coral": [
+    "Coral Cap",
+    "Korallenkappe"
+  ],
+  "Boné Oceano": [
+    "Ocean Cap",
+    "Ozeankappe"
+  ],
+  "Bosque das Peras": [
+    "Pear Grove",
+    "Birnenhain"
+  ],
+  "Bosque dos Cogumelos": [
+    "Mushroom Grove",
+    "Pilzhain"
+  ],
+  "Bounce Tegro — aventura de plataforma 2D": [
+    "Bounce Tegro — 2D platform adventure",
+    "Bounce Tegro — 2D-Plattformabenteuer"
+  ],
+  "Brasa": [
+    "Ember",
+    "Glut"
+  ],
+  "Brilhe em todas as regiões.": [
+    "Shine in every region.",
+    "Strahle in jeder Region."
+  ],
+  "Brisa em sincopa": [
+    "Syncopated Breeze",
+    "Synkopierte Brise"
+  ],
+  "Broto": [
+    "Sprout",
+    "Spross"
+  ],
+  "Buscar primeira fruta": [
+    "Find the first fruit",
+    "Erste Frucht suchen"
+  ],
+  "Busque a primeira fruta na Floresta Esmeralda. O barco já está liberado.": [
+    "Find the first fruit in the Emerald Forest. The boat is already unlocked.",
+    "Suche die erste Frucht im Smaragdwald. Das Boot ist bereits freigeschaltet."
+  ],
+  "BÔNUS DE CHEGADA": [
+    "FINISH BONUS",
+    "ZIELBONUS"
+  ],
+  "Bússola e ilhas próximas": [
+    "Compass and nearby islands",
+    "Kompass und nahe Inseln"
+  ],
+  "CAIS": [
+    "DOCK",
+    "ANLEGESTEG"
+  ],
+  "CAMINHO CONQUISTADO": [
+    "PATH COMPLETED",
+    "WEG GESCHAFFT"
+  ],
+  "CHEFE EM CORES": [
+    "COLORFUL BOSS",
+    "BUNTER BOSS"
+  ],
+  "CHEGADA": [
+    "FINISH",
+    "ZIEL"
+  ],
+  "CRIATIVO · VOO LIVRE": [
+    "CREATIVE · FREE FLIGHT",
+    "KREATIV · FREIES FLIEGEN"
+  ],
+  "Cada fruta faz a cobra crescer. Complete a meta para avançar.": [
+    "Each fruit makes the snake grow. Reach the goal to advance.",
+    "Jede Frucht lässt die Schlange wachsen. Erreiche das Ziel, um weiterzukommen."
+  ],
+  "Cada melhoria custa": [
+    "Each upgrade costs",
+    "Jede Verbesserung kostet"
+  ],
+  "Cadeira": [
+    "Chair",
+    "Stuhl"
+  ],
+  "Cama": [
+    "Bed",
+    "Bett"
+  ],
+  "Caminhada e esquiva mais rápidas": [
+    "Faster walking and dodging",
+    "Schneller gehen und ausweichen"
+  ],
+  "Caminhos que dançam": [
+    "Dancing Paths",
+    "Tanzende Wege"
+  ],
+  "Capacidade de esperar com tranquilidade.": [
+    "The ability to wait calmly.",
+    "Die Fähigkeit, ruhig zu warten."
+  ],
+  "Capacidade de perceber os próprios atos.": [
+    "The ability to be aware of your own actions.",
+    "Die Fähigkeit, sich der eigenen Handlungen bewusst zu sein."
+  ],
+  "Capivara": [
+    "Capybara",
+    "Wasserschwein"
+  ],
+  "Capivara groove": [
+    "Capybara Groove",
+    "Wasserschwein-Groove"
+  ],
+  "Capivara tranquila! Ofereça trigo ou cenoura. Duas adultas alimentadas podem ter filhotes.": [
+    "Calm capybara! Offer wheat or carrots. Two fed adults can have babies.",
+    "Ein friedliches Wasserschwein! Biete Weizen oder Karotten an. Zwei gefütterte erwachsene Tiere können Nachwuchs bekommen."
+  ],
+  "Capivaras, fazenda e novos itens estão no mundo individual.": [
+    "Capybaras, the farm and new items are in the single-player world.",
+    "Wasserschweine, Bauernhof und neue Gegenstände befinden sich in der Einzelspielerwelt."
+  ],
+  "Carnaval de estrelas": [
+    "Star Carnival",
+    "Sternenkarneval"
+  ],
+  "Carne assada": [
+    "Cooked meat",
+    "Gebratenes Fleisch"
+  ],
+  "Carne crua": [
+    "Raw meat",
+    "Rohes Fleisch"
+  ],
+  "Carregamento": [
+    "Loading",
+    "Ladevorgang"
+  ],
+  "Carrinho": [
+    "Minecart",
+    "Lore"
+  ],
+  "Carta {0}, {1}": [
+    "Card {0}, {1}",
+    "Karte {0}, {1}"
+  ],
+  "Carta {1}, {2}": [
+    "Card {1}, {2}",
+    "Karte {1}, {2}"
+  ],
+  "Carvão": [
+    "Coal",
+    "Kohle"
+  ],
+  "Categorias": [
+    "Categories",
+    "Kategorien"
+  ],
+  "Catálogo": [
+    "Catalog",
+    "Katalog"
+  ],
+  "Caçador das marés": [
+    "Tide Hunter",
+    "Gezeitenjäger"
+  ],
+  "Caçador dos recifes": [
+    "Reef Hunter",
+    "Riffjäger"
+  ],
+  "Caçar": [
+    "Hunt",
+    "Jagen"
+  ],
+  "Cenoura": [
+    "Carrot",
+    "Karotte"
+  ],
+  "Centro da cidade": [
+    "City Center",
+    "Stadtzentrum"
+  ],
+  "Cerca": [
+    "Fence",
+    "Zaun"
+  ],
+  "Cercas": [
+    "Fences",
+    "Zäune"
+  ],
+  "Chapéu Explorador": [
+    "Explorer Hat",
+    "Entdeckerhut"
+  ],
+  "Chuva de brasas": [
+    "Ember Rain",
+    "Glutregen"
+  ],
+  "Chuva de confete": [
+    "Confetti Rain",
+    "Konfettiregen"
+  ],
+  "Chuva de estrelas": [
+    "Star Shower",
+    "Sternenregen"
+  ],
+  "Cidade Neon": [
+    "Neon City",
+    "Neonstadt"
+  ],
+  "Cima": [
+    "Up",
+    "Oben"
+  ],
+  "Cinco mundos. Muitas descobertas.": [
+    "Five worlds. Many discoveries.",
+    "Fünf Welten. Viele Entdeckungen."
+  ],
+  "Cinturão de Fogo": [
+    "Ring of Fire",
+    "Feuerring"
+  ],
+  "Circuito": [
+    "Circuit",
+    "Schaltkreis"
+  ],
+  "Circuito azul": [
+    "Blue Circuit",
+    "Blauer Schaltkreis"
+  ],
+  "Cirurgião-azul": [
+    "Blue Tang",
+    "Blauer Paletten-Doktorfisch"
+  ],
+  "Cobra": [
+    "Snake",
+    "Schlange"
+  ],
+  "Cobre": [
+    "Copper",
+    "Kupfer"
+  ],
+  "Coletar 20 blocos": [
+    "Collect 20 blocks",
+    "20 Blöcke sammeln"
+  ],
+  "Colete mais moedas para comprar.": [
+    "Collect more coins to buy.",
+    "Sammle mehr Münzen, um es zu kaufen."
+  ],
+  "Colheita pronta: +3": [
+    "Harvest ready: +3",
+    "Ernte bereit: +3"
+  ],
+  "Coloque ingredientes e madeira como combustível. A fornalha trabalha enquanto você está neste jogo.": [
+    "Add ingredients and wood as fuel. The furnace works while you are in this game.",
+    "Lege Zutaten und Holz als Brennstoff hinein. Der Ofen arbeitet, solange du in diesem Spiel bist."
+  ],
+  "Coloque o barco na água ou o carrinho sobre os trilhos.": [
+    "Place the boat in water or the minecart on the rails.",
+    "Setze das Boot ins Wasser oder die Lore auf die Schienen."
+  ],
+  "Coma 100 peixes": [
+    "Eat 100 fish",
+    "Friss 100 Fische"
+  ],
+  "Coma 15 peixes": [
+    "Eat 15 fish",
+    "Friss 15 Fische"
+  ],
+  "Coma peixes menores, cresça e descubra um oceano cheio de vida.": [
+    "Eat smaller fish, grow and discover an ocean full of life.",
+    "Friss kleinere Fische, wachse und entdecke einen Ozean voller Leben."
+  ],
+  "Comando {5}: {6}. Remover.": [
+    "Command {5}: {6}. Remove.",
+    "Befehl {5}: {6}. Entfernen."
+  ],
+  "Combate:": [
+    "Combat:",
+    "Kampf:"
+  ],
+  "Combine a palavra em inglês com sua tradução.": [
+    "Match the English word with its translation.",
+    "Ordne das englische Wort seiner Übersetzung zu."
+  ],
+  "Começar aventura": [
+    "Start adventure",
+    "Abenteuer starten"
+  ],
+  "Começar · fase": [
+    "Start · level",
+    "Starten · Level"
+  ],
+  "Como construir": [
+    "How to build",
+    "So baust du"
+  ],
+  "Complete a meta de frutas para desbloquear a próxima arena e sua nova cobra. Você pode repetir as fases liberadas.": [
+    "Reach the fruit goal to unlock the next arena and your new snake. You can replay unlocked levels.",
+    "Erreiche das Fruchtziel, um die nächste Arena und deine neue Schlange freizuschalten. Freigeschaltete Level kannst du erneut spielen."
+  ],
+  "Completo": [
+    "Complete",
+    "Vollständig"
+  ],
+  "Completos — dança fluida e efeitos": [
+    "Full — smooth dancing and effects",
+    "Voll — flüssiger Tanz und Effekte"
+  ],
+  "Compra feita com integros!": [
+    "Purchased with Integros!",
+    "Mit Integros gekauft!"
+  ],
+  "Compra feita! O item está na mochila.": [
+    "Purchased! The item is in your backpack.",
+    "Gekauft! Der Gegenstand ist im Rucksack."
+  ],
+  "Compra realizada!": [
+    "Purchase complete!",
+    "Kauf abgeschlossen!"
+  ],
+  "Comprar {2} · {3} ⬡": [
+    "Buy {2} · {3} ⬡",
+    "{2} kaufen · {3} ⬡"
+  ],
+  "Compre com as moedas que você ganha comendo peixes, coletando pérolas e cumprindo missões.": [
+    "Buy with the coins you earn by eating fish, collecting pearls and completing missions.",
+    "Kaufe mit den Münzen, die du durch Fischefressen, Perlensammeln und abgeschlossene Missionen verdienst."
+  ],
+  "Compre, construa e cuide dos animais.": [
+    "Shop, build and care for the animals.",
+    "Kaufe ein, baue und kümmere dich um die Tiere."
+  ],
+  "Conferir": [
+    "Check",
+    "Prüfen"
+  ],
+  "Confete": [
+    "Confetti",
+    "Konfetti"
+  ],
+  "Confira XP, cristais e distância da mesa.": [
+    "Check XP, crystals and your distance from the table.",
+    "Prüfe XP, Kristalle und deinen Abstand zum Tisch."
+  ],
+  "Confira a mochila e mire em um espaço livre com chão. Portas precisam de dois blocos de altura.": [
+    "Check your backpack and aim at an empty space with ground beneath it. Doors need two blocks of height.",
+    "Prüfe deinen Rucksack und ziele auf einen freien Platz mit Boden. Türen benötigen zwei Blöcke Höhe."
+  ],
+  "Confira o comando {0}: ele {1}. Toque nele para remover.": [
+    "Check command {0}: it {1}. Tap it to remove it.",
+    "Prüfe Befehl {0}: Er {1}. Tippe darauf, um ihn zu entfernen."
+  ],
+  "Construa sua casa": [
+    "Build your house",
+    "Baue dein Haus"
+  ],
+  "Construindo arena, túneis e cobra": [
+    "Building the arena, tunnels and snake",
+    "Arena, Tunnel und Schlange werden erstellt"
+  ],
+  "Construindo blocos e árvores": [
+    "Building blocks and trees",
+    "Blöcke und Bäume werden erstellt"
+  ],
+  "Construir com 30 blocos": [
+    "Build with 30 blocks",
+    "Mit 30 Blöcken bauen"
+  ],
+  "Construção": [
+    "Construction",
+    "Bauen"
+  ],
+  "Continuar explorando": [
+    "Keep exploring",
+    "Weiter erkunden"
+  ],
+  "Continuar partida": [
+    "Resume game",
+    "Spiel fortsetzen"
+  ],
+  "Continuar · evolução": [
+    "Continue · evolution",
+    "Fortsetzen · Entwicklungsstufe"
+  ],
+  "Continuar · fase": [
+    "Continue · level",
+    "Fortsetzen · Level"
+  ],
+  "Continue explorando": [
+    "Keep exploring",
+    "Erkunde weiter"
+  ],
+  "Continue tentando:": [
+    "Keep trying:",
+    "Versuche es weiter:"
+  ],
+  "Continue!": [
+    "Keep going!",
+    "Weiter so!"
+  ],
+  "Controle de direção: arraste para nadar": [
+    "Steering control: drag to swim",
+    "Richtungssteuerung: Zum Schwimmen ziehen"
+  ],
+  "Converse para receber integros e liberar a próxima ilha.": [
+    "Talk to receive Integros and unlock the next island.",
+    "Sprich mit ihr, um Integros zu erhalten und die nächste Insel freizuschalten."
+  ],
+  "Coral solar": [
+    "Solar Coral",
+    "Sonnenkoralle"
+  ],
+  "Coração de cristal": [
+    "Crystal Heart",
+    "Kristallherz"
+  ],
+  "Coração do Vulcão": [
+    "Heart of the Volcano",
+    "Herz des Vulkans"
+  ],
+  "Cordilheira da Avalanche": [
+    "Avalanche Range",
+    "Lawinengebirge"
+  ],
+  "Cores": [
+    "Colors",
+    "Farben"
+  ],
+  "Coroa Glacial": [
+    "Glacial Crown",
+    "Eiskrone"
+  ],
+  "Coroa Solar": [
+    "Solar Crown",
+    "Sonnenkrone"
+  ],
+  "Coroa das marés": [
+    "Tide Crown",
+    "Gezeitenkrone"
+  ],
+  "Coroa dos Elementos": [
+    "Crown of the Elements",
+    "Krone der Elemente"
+  ],
+  "Corra para descobrir.": [
+    "Run to discover.",
+    "Lauf los und entdecke."
+  ],
+  "Corra por 15 fases em cinco mundos. Desvie, pule, deslize e colete moedas para equipar seu explorador.": [
+    "Run through 15 levels in five worlds. Dodge, jump, slide and collect coins to equip your explorer.",
+    "Laufe durch 15 Level in fünf Welten. Weiche aus, springe, rutsche und sammle Münzen, um deinen Entdecker auszurüsten."
+  ],
+  "Corrida das pétalas": [
+    "Petal Run",
+    "Blütenlauf"
+  ],
+  "Corrida pausada": [
+    "Run paused",
+    "Lauf pausiert"
+  ],
+  "Costa de Basalto": [
+    "Basalt Coast",
+    "Basaltküste"
+  ],
+  "Costa dos coqueiros": [
+    "Coconut Coast",
+    "Kokospalmenküste"
+  ],
+  "Cratera em Erupção": [
+    "Erupting Crater",
+    "Ausbrechender Krater"
+  ],
+  "Crescendo:": [
+    "Growing:",
+    "Wächst:"
+  ],
+  "Cresça com estilo.": [
+    "Grow in style.",
+    "Wachse mit Stil."
+  ],
+  "Cresça. Vire. Descubra.": [
+    "Grow. Turn. Discover.",
+    "Wachse. Wende. Entdecke."
+  ],
+  "Criativo:": [
+    "Creative:",
+    "Kreativ:"
+  ],
+  "Criativo: blocos ilimitados e voo livre.": [
+    "Creative: unlimited blocks and free flight.",
+    "Kreativ: unbegrenzte Blöcke und freies Fliegen."
+  ],
+  "Cristais e observatório estelar": [
+    "Crystals and a stellar observatory",
+    "Kristalle und Sternwarte"
+  ],
+  "Cristais encontrados": [
+    "Crystals found",
+    "Gefundene Kristalle"
+  ],
+  "Cristal em movimento": [
+    "Moving Crystal",
+    "Beweglicher Kristall"
+  ],
+  "Cristal encontrado!": [
+    "Crystal found!",
+    "Kristall gefunden!"
+  ],
+  "Cuidado com o próprio corpo!": [
+    "Watch out for your own body!",
+    "Pass auf deinen eigenen Körper auf!"
+  ],
+  "Cumes e encostas": [
+    "Peaks and slopes",
+    "Gipfel und Hänge"
+  ],
+  "Curvas de areia": [
+    "Sandy Curves",
+    "Sandkurven"
+  ],
+  "Câmera acompanhando a cobra": [
+    "Camera following the snake",
+    "Kamera folgt der Schlange"
+  ],
+  "Câmera lenta": [
+    "Slow motion",
+    "Zeitlupe"
+  ],
+  "Câmera:": [
+    "Camera:",
+    "Kamera:"
+  ],
+  "Câmera: acompanhar a cobra": [
+    "Camera: follow the snake",
+    "Kamera: der Schlange folgen"
+  ],
+  "Câmera: mostrar arena inteira": [
+    "Camera: show the full arena",
+    "Kamera: gesamte Arena anzeigen"
+  ],
+  "Cânion Rubro": [
+    "Crimson Canyon",
+    "Purpurschlucht"
+  ],
+  "Cânion de Cobre": [
+    "Copper Canyon",
+    "Kupferschlucht"
+  ],
+  "Cânion dourado": [
+    "Golden Canyon",
+    "Goldene Schlucht"
+  ],
+  "DESAFIO": [
+    "CHALLENGE",
+    "HERAUSFORDERUNG"
+  ],
+  "DESLIZAR": [
+    "SLIDE",
+    "RUTSCHEN"
+  ],
+  "DUELO PAUSADO": [
+    "DUEL PAUSED",
+    "DUELL PAUSIERT"
+  ],
+  "De volta ao início do mundo.": [
+    "Back at the start of the world.",
+    "Zurück am Anfang der Welt."
+  ],
+  "Deixe bolhas coloridas ao nadar.": [
+    "Leave colorful bubbles as you swim.",
+    "Hinterlasse beim Schwimmen bunte Blasen."
+  ],
+  "Deixe espaço livre em volta da cadeira.": [
+    "Leave clear space around the chair.",
+    "Lass um den Stuhl herum Platz frei."
+  ],
+  "Desafio": [
+    "Challenge",
+    "Herausforderung"
+  ],
+  "Desafio concluído": [
+    "Challenge completed",
+    "Herausforderung abgeschlossen"
+  ],
+  "Descubra as 6 regiões": [
+    "Discover all 6 regions",
+    "Entdecke alle 6 Regionen"
+  ],
+  "Descubra:": [
+    "Discover:",
+    "Entdecke:"
+  ],
+  "Desembarcar no cais": [
+    "Get off at the dock",
+    "Am Anlegesteg aussteigen"
+  ],
+  "Desfiladeiro de Gelo": [
+    "Ice Gorge",
+    "Eisschlucht"
+  ],
+  "Desligue o pistão antes de remover.": [
+    "Turn off the piston before removing it.",
+    "Schalte den Kolben aus, bevor du ihn entfernst."
+  ],
+  "Deslizar": [
+    "Slide",
+    "Rutschen"
+  ],
+  "Deslize a bolinha:": [
+    "Slide the ball:",
+    "Verschiebe den Ball:"
+  ],
+  "Deslize o dedo para os lados ou use as setas / A e D. Há três caminhos.": [
+    "Swipe sideways or use the arrow keys / A and D. There are three lanes.",
+    "Wische zur Seite oder nutze die Pfeiltasten / A und D. Es gibt drei Spuren."
+  ],
+  "Deslize para baixo, toque em Deslizar ou use S. Passe sob os portões amarelos.": [
+    "Swipe down, tap Slide or press S. Pass under the yellow gates.",
+    "Wische nach unten, tippe auf Rutschen oder drücke S. Gleite unter den gelben Toren hindurch."
+  ],
+  "Deslize para cima, toque em Pular ou use W / Espaço. Pule troncos e buracos.": [
+    "Swipe up, tap Jump or press W / Space. Jump over logs and holes.",
+    "Wische nach oben, tippe auf Springen oder drücke W / Leertaste. Springe über Baumstämme und Löcher."
+  ],
+  "Destino": [
+    "Destination",
+    "Ziel"
+  ],
+  "Destino:": [
+    "Destination:",
+    "Ziel:"
+  ],
+  "Desvie das bombas e procure o cais.": [
+    "Avoid the bombs and look for the dock.",
+    "Weiche den Bomben aus und suche den Anlegesteg."
+  ],
+  "Desvie dos obstáculos, salte sobre abismos e encontre seu caminho entre ilhas, ruínas e vulcões.": [
+    "Dodge obstacles, jump over chasms and find your way through islands, ruins and volcanoes.",
+    "Weiche Hindernissen aus, springe über Abgründe und finde deinen Weg zwischen Inseln, Ruinen und Vulkanen."
+  ],
+  "Detalhado": [
+    "Detailed",
+    "Detailliert"
+  ],
+  "Devagar": [
+    "Slow",
+    "Langsam"
+  ],
+  "Dica": [
+    "Hint",
+    "Tipp"
+  ],
+  "Dificuldade": [
+    "Difficulty",
+    "Schwierigkeit"
+  ],
+  "Direita": [
+    "Right",
+    "Rechts"
+  ],
+  "Dobra os pontos por 12 segundos.": [
+    "Doubles points for 12 seconds.",
+    "Verdoppelt die Punkte für 12 Sekunden."
+  ],
+  "Dois jogadores no mesmo aparelho. WASD × setas, ou dois conjuntos de botões.": [
+    "Two players on the same device. WASD × arrow keys, or two sets of buttons.",
+    "Zwei Spieler auf demselben Gerät. WASD × Pfeiltasten oder zwei Tastengruppen."
+  ],
+  "Dunas e oásis": [
+    "Dunes and oases",
+    "Dünen und Oasen"
+  ],
+  "ESCUTE A BATIDA": [
+    "LISTEN TO THE BEAT",
+    "HÖRE AUF DEN BEAT"
+  ],
+  "ESCUTE O RITMO": [
+    "LISTEN TO THE RHYTHM",
+    "HÖRE AUF DEN RHYTHMUS"
+  ],
+  "ESCUTEM O RITMO": [
+    "LISTEN TO THE RHYTHM",
+    "HÖRT AUF DEN RHYTHMUS"
+  ],
+  "EVOLUÇÃO": [
+    "EVOLUTION",
+    "ENTWICKLUNG"
+  ],
+  "EXPEDIÇÃO 01": [
+    "EXPEDITION 01",
+    "EXPEDITION 01"
+  ],
+  "EXPEDIÇÃO COMPLETA": [
+    "EXPEDITION COMPLETE",
+    "EXPEDITION ABGESCHLOSSEN"
+  ],
+  "EXPEDIÇÃO {0} / 15": [
+    "EXPEDITION {0} / 15",
+    "EXPEDITION {0} / 15"
+  ],
+  "Eclipse": [
+    "Eclipse",
+    "Finsternis"
+  ],
+  "Ecos e elevadores": [
+    "Echoes and elevators",
+    "Echos und Aufzüge"
+  ],
+  "Efeitos visuais": [
+    "Visual effects",
+    "Visuelle Effekte"
+  ],
+  "Empate!": [
+    "It's a tie!",
+    "Unentschieden!"
+  ],
+  "Encantar": [
+    "Enchant",
+    "Verzaubern"
+  ],
+  "Encontrada": [
+    "Found",
+    "Gefunden"
+  ],
+  "Encontrar a fruta": [
+    "Find the fruit",
+    "Frucht suchen"
+  ],
+  "Encontre a fruta": [
+    "Find the fruit",
+    "Finde die Frucht"
+  ],
+  "Encontre na ilha": [
+    "Find it on the island",
+    "Finde sie auf der Insel"
+  ],
+  "Encontre o seu ritmo.": [
+    "Find your rhythm.",
+    "Finde deinen Rhythmus."
+  ],
+  "Encontre uma fruta na segunda ilha": [
+    "Find a fruit on the second island",
+    "Finde eine Frucht auf der zweiten Insel"
+  ],
+  "Encosta gelada": [
+    "Icy Slope",
+    "Vereister Hang"
+  ],
+  "Energia": [
+    "Energy",
+    "Energie"
+  ],
+  "Energia:": [
+    "Energy:",
+    "Energie:"
+  ],
+  "Enfrente o guardião": [
+    "Face the guardian",
+    "Stelle dich dem Wächter"
+  ],
+  "Engrenagens e torres de cobre": [
+    "Gears and copper towers",
+    "Zahnräder und Kupfertürme"
+  ],
+  "Entendi!": [
+    "Got it!",
+    "Verstanden!"
+  ],
+  "Entrada do templo": [
+    "Temple entrance",
+    "Tempeleingang"
+  ],
+  "Entre as pedras": [
+    "Between the Rocks",
+    "Zwischen den Steinen"
+  ],
+  "Entre com a conta da família para jogar.": [
+    "Sign in with the family account to play.",
+    "Melde dich mit dem Familienkonto an, um zu spielen."
+  ],
+  "Entre com sua conta para jogar.": [
+    "Sign in with your account to play.",
+    "Melde dich mit deinem Konto an, um zu spielen."
+  ],
+  "Entre no ritmo.": [
+    "Get into the rhythm.",
+    "Komm in den Rhythmus."
+  ],
+  "Enxada": [
+    "Hoe",
+    "Hacke"
+  ],
+  "Equipada": [
+    "Equipped",
+    "Ausgerüstet"
+  ],
+  "Equipado": [
+    "Equipped",
+    "Ausgerüstet"
+  ],
+  "Escada": [
+    "Stairs",
+    "Treppe"
+  ],
+  "Escadas": [
+    "Stairs",
+    "Treppen"
+  ],
+  "Escalada gelada": [
+    "Icy Climb",
+    "Eisiger Aufstieg"
+  ],
+  "Escolha seu horizonte.": [
+    "Choose your horizon.",
+    "Wähle deinen Horizont."
+  ],
+  "Escolha sua música": [
+    "Choose your song",
+    "Wähle deinen Song"
+  ],
+  "Escolha um destino para visitar. Suas construções continuam no vale original. Os pontos coloridos aparecem no minimapa.": [
+    "Choose a destination to visit. Your buildings stay in the original valley. Colored dots appear on the minimap.",
+    "Wähle ein Reiseziel. Deine Bauwerke bleiben im ursprünglichen Tal. Die farbigen Punkte erscheinen auf der Minikarte."
+  ],
+  "Escolha uma ilha no mapa ou pilote com o controle.": [
+    "Choose an island on the map or steer with the controls.",
+    "Wähle eine Insel auf der Karte oder steuere selbst."
+  ],
+  "Escolher fase": [
+    "Choose level",
+    "Level wählen"
+  ],
+  "Escolher música": [
+    "Choose song",
+    "Song wählen"
+  ],
+  "Escolher outra fase": [
+    "Choose another level",
+    "Anderes Level wählen"
+  ],
+  "Escolher outro jogo": [
+    "Choose another game",
+    "Anderes Spiel wählen"
+  ],
+  "Escolher uma missão": [
+    "Choose a mission",
+    "Mission wählen"
+  ],
+  "Escondida · veja o mapa": [
+    "Hidden · check the map",
+    "Versteckt · sieh auf die Karte"
+  ],
+  "Escudo da floresta": [
+    "Forest Shield",
+    "Waldschild"
+  ],
+  "Escudo da floresta ativo!": [
+    "Forest Shield active!",
+    "Waldschild aktiv!"
+  ],
+  "Escudo pronto para proteger de uma batida!": [
+    "Shield ready to protect you from one hit!",
+    "Schild bereit, um dich vor einem Treffer zu schützen!"
+  ],
+  "Escudo protegeu! Vire para um caminho livre.": [
+    "Shield protected you! Turn toward a clear path.",
+    "Der Schild hat dich geschützt! Wende dich einem freien Weg zu."
+  ],
+  "Esmeralda": [
+    "Emerald",
+    "Smaragd"
+  ],
+  "Espaço / Pular:": [
+    "Space / Jump:",
+    "Leertaste / Springen:"
+  ],
+  "Espere a energia recarregar.": [
+    "Wait for your energy to recharge.",
+    "Warte, bis deine Energie wieder aufgeladen ist."
+  ],
+  "Esquerda": [
+    "Left",
+    "Links"
+  ],
+  "Esquiva:": [
+    "Dodge:",
+    "Ausweichen:"
+  ],
+  "Essas palavras não formam um par. Observe as posições e tente outra vez.": [
+    "Those words don't form a pair. Remember their positions and try again.",
+    "Diese Wörter bilden kein Paar. Merke dir ihre Positionen und versuche es erneut."
+  ],
+  "Esse espaço está ocupado. Mire na face livre do canal ou da borda.": [
+    "That space is occupied. Aim at a free face of the channel or edge.",
+    "Dieser Platz ist belegt. Ziele auf eine freie Fläche des Kanals oder des Randes."
+  ],
+  "Estado da aventura": [
+    "Adventure status",
+    "Abenteuerstatus"
+  ],
+  "Estação lunar": [
+    "Lunar Station",
+    "Mondstation"
+  ],
+  "Este animal ainda é filhote. Deixe crescer.": [
+    "This animal is still a baby. Let it grow.",
+    "Dieses Tier ist noch jung. Lass es wachsen."
+  ],
+  "Este animal não pode ser coletado.": [
+    "This animal cannot be collected.",
+    "Dieses Tier kann nicht eingesammelt werden."
+  ],
+  "Este bloco serve para construir.": [
+    "This block is used for building.",
+    "Dieser Block wird zum Bauen verwendet."
+  ],
+  "Este navegador não oferece áudio para o jogo. Abra em um navegador atualizado.": [
+    "This browser does not support the game's audio. Open it in an updated browser.",
+    "Dieser Browser unterstützt den Spielton nicht. Öffne das Spiel in einem aktuellen Browser."
+  ],
+  "Este recurso está disponível no mundo individual.": [
+    "This feature is available in the single-player world.",
+    "Diese Funktion ist in der Einzelspielerwelt verfügbar."
+  ],
+  "Estilhaço de gelo": [
+    "Ice Shard",
+    "Eissplitter"
+  ],
+  "Estrela do mar": [
+    "Starfish",
+    "Seestern"
+  ],
+  "Estrela encontrada": [
+    "Star found",
+    "Stern gefunden"
+  ],
+  "Estrela encontrada!": [
+    "Star found!",
+    "Stern gefunden!"
+  ],
+  "Estufa nas nuvens": [
+    "Cloud Greenhouse",
+    "Gewächshaus in den Wolken"
+  ],
+  "Evolução máxima": [
+    "Maximum evolution",
+    "Höchste Entwicklungsstufe"
+  ],
+  "Evolução {0} · {1} peixes comidos · {2} regiões descobertas.": [
+    "Evolution {0} · {1} fish eaten · {2} regions discovered.",
+    "Entwicklungsstufe {0} · {1} Fische gefressen · {2} Regionen entdeckt."
+  ],
+  "Evolução {0}! Você cresceu!": [
+    "Evolution {0}! You grew!",
+    "Entwicklungsstufe {0}! Du bist gewachsen!"
+  ],
+  "Executar": [
+    "Run",
+    "Ausführen"
+  ],
+  "Executar de novo": [
+    "Run again",
+    "Erneut ausführen"
+  ],
+  "Executar rota": [
+    "Run route",
+    "Route ausführen"
+  ],
+  "Exercício dos direitos e deveres na sociedade.": [
+    "Exercising rights and responsibilities in society.",
+    "Die Ausübung von Rechten und Pflichten in der Gesellschaft."
+  ],
+  "Experiência": [
+    "Experience",
+    "Erfahrung"
+  ],
+  "Explorar": [
+    "Explore",
+    "Erkunden"
+  ],
+  "Explorar meu mundo": [
+    "Explore my world",
+    "Meine Welt erkunden"
+  ],
+  "Explorar o mapa": [
+    "Explore the map",
+    "Karte erkunden"
+  ],
+  "Explorar todas as fases": [
+    "Explore all levels",
+    "Alle Level erkunden"
+  ],
+  "Explorar: colete blocos para construir.": [
+    "Explore: collect blocks to build.",
+    "Erkunden: Sammle Blöcke zum Bauen."
+  ],
+  "Explore": [
+    "Explore",
+    "Erkunde"
+  ],
+  "Explore o mapa de tesouros ou navegue para outra ilha.": [
+    "Explore the treasure map or sail to another island.",
+    "Erkunde die Schatzkarte oder fahre zu einer anderen Insel."
+  ],
+  "Explore o vale, colete materiais e construa o que imaginar. Há uma vila, minas, montanhas e um rio com capivaras! Prepare a terra, plante, crie filhotes e pilote barcos e carrinhos.": [
+    "Explore the valley, gather materials and build whatever you imagine. There is a village, mines, mountains and a river with capybaras! Prepare the soil, plant crops, raise baby animals and drive boats and minecarts.",
+    "Erkunde das Tal, sammle Materialien und baue, was du dir vorstellst. Es gibt ein Dorf, Minen, Berge und einen Fluss mit Wasserschweinen! Bereite den Boden vor, pflanze, ziehe Jungtiere auf und fahre Boote und Loren."
+  ],
+  "Explore! Abra a mochila para escolher seus itens.": [
+    "Explore! Open your backpack to choose your items.",
+    "Erkunde! Öffne den Rucksack, um deine Gegenstände auszuwählen."
+  ],
+  "Explore:": [
+    "Explore:",
+    "Erkunde:"
+  ],
+  "Explosão solar": [
+    "Solar Burst",
+    "Sonnenexplosion"
+  ],
+  "Expresso da batida": [
+    "Beat Express",
+    "Beat-Express"
+  ],
+  "FINAL DO CHEFE": [
+    "BOSS FINALE",
+    "BOSSFINALE"
+  ],
+  "Fabricar 12 blocos": [
+    "Craft 12 blocks",
+    "12 Blöcke herstellen"
+  ],
+  "Fagulha": [
+    "Spark",
+    "Funke"
+  ],
+  "Faixa da direita": [
+    "Right lane",
+    "Rechte Spur"
+  ],
+  "Faixa da esquerda": [
+    "Left lane",
+    "Linke Spur"
+  ],
+  "Falar com Lia": [
+    "Talk to Lia",
+    "Mit Lia sprechen"
+  ],
+  "Falésias e pedregulhos": [
+    "Cliffs and boulders",
+    "Klippen und Felsbrocken"
+  ],
+  "Família crescendo! Um filhote chegará em 30 segundos.": [
+    "Growing family! A baby will arrive in 30 seconds.",
+    "Die Familie wächst! In 30 Sekunden kommt ein Jungtier."
+  ],
+  "Fase concluída!": [
+    "Level completed!",
+    "Level abgeschlossen!"
+  ],
+  "Fase inválida": [
+    "Invalid level",
+    "Ungültiges Level"
+  ],
+  "Fase {0} · {1}": [
+    "Level {0} · {1}",
+    "Level {0} · {1}"
+  ],
+  "Fase {1} de 20 · {2} gotas · {3}": [
+    "Level {1} of 20 · {2} drops · {3}",
+    "Level {1} von 20 · {2} Tropfen · {3}"
+  ],
+  "Fases": [
+    "Levels",
+    "Level"
+  ],
+  "Fases e recordes salvos neste navegador.": [
+    "Levels and records saved in this browser.",
+    "Level und Rekorde werden in diesem Browser gespeichert."
+  ],
+  "Fazenda": [
+    "Farm",
+    "Bauernhof"
+  ],
+  "Fazenda:": [
+    "Farm:",
+    "Bauernhof:"
+  ],
+  "Feira dos brinquedos": [
+    "Toy Fair",
+    "Spielzeugmarkt"
+  ],
+  "Festival Integro": [
+    "Integro Festival",
+    "Integro-Festival"
+  ],
+  "Filhote alimentado!": [
+    "Baby animal fed!",
+    "Jungtier gefüttert!"
+  ],
+  "Filhote das marés": [
+    "Tide Pup",
+    "Gezeitenjunges"
+  ],
+  "Filhotes:": [
+    "Baby animals:",
+    "Jungtiere:"
+  ],
+  "Fio de energia": [
+    "Power wire",
+    "Stromkabel"
+  ],
+  "Fio de energia. Ligue uma alavanca à porta, luminária ou pistão com fios encostados.": [
+    "Power wire. Connect a lever to a door, lamp or piston with touching wires.",
+    "Stromkabel. Verbinde einen Hebel durch aneinanderliegende Kabel mit einer Tür, Lampe oder einem Kolben."
+  ],
+  "Fliperama espacial": [
+    "Space Arcade",
+    "Weltraum-Spielhalle"
+  ],
+  "Flores que voam": [
+    "Flying Flowers",
+    "Fliegende Blumen"
+  ],
+  "Floresta Esmeralda": [
+    "Emerald Forest",
+    "Smaragdwald"
+  ],
+  "Floresta de Algas": [
+    "Kelp Forest",
+    "Algenwald"
+  ],
+  "Floresta encantada": [
+    "Enchanted Forest",
+    "Zauberwald"
+  ],
+  "Folhas": [
+    "Leaves",
+    "Blätter"
+  ],
+  "Fonte recolhida. A corrente secou.": [
+    "Source collected. The stream dried up.",
+    "Quelle eingesammelt. Der Strom ist versiegt."
+  ],
+  "Forja da Brasa": [
+    "Ember Forge",
+    "Glutschmiede"
+  ],
+  "Fornalha": [
+    "Furnace",
+    "Ofen"
+  ],
+  "Fornalha acesa!": [
+    "Furnace lit!",
+    "Ofen angezündet!"
+  ],
+  "Força": [
+    "Strength",
+    "Stärke"
+  ],
+  "Fragmento lunar": [
+    "Moon Fragment",
+    "Mondfragment"
+  ],
+  "Fruta Aurora": [
+    "Aurora Fruit",
+    "Aurorafrucht"
+  ],
+  "Fruta lendária escondida nas ruínas da Aurora.": [
+    "Legendary fruit hidden in the Aurora ruins.",
+    "Legendäre Frucht, versteckt in den Auroraruinen."
+  ],
+  "Fruta {2}": [
+    "Fruit {2}",
+    "Frucht {2}"
+  ],
+  "Fuga da cratera": [
+    "Crater Escape",
+    "Flucht aus dem Krater"
+  ],
+  "Fuga das Ruínas": [
+    "Escape from the Ruins",
+    "Flucht aus den Ruinen"
+  ],
+  "Fundir ferro": [
+    "Smelt iron",
+    "Eisen schmelzen"
+  ],
+  "Fundir ouro": [
+    "Smelt gold",
+    "Gold schmelzen"
+  ],
+  "Fundir vidro": [
+    "Smelt glass",
+    "Glas schmelzen"
+  ],
+  "Fungos gigantes e esporos de luz": [
+    "Giant mushrooms and glowing spores",
+    "Riesenpilze und leuchtende Sporen"
+  ],
+  "Fôlego recuperado! Você manteve sua evolução e perdeu 25% do XP atual.": [
+    "Breath restored! You kept your evolution and lost 25% of your current XP.",
+    "Wieder Luft bekommen! Deine Entwicklungsstufe bleibt erhalten, und du hast 25 % deiner aktuellen XP verloren."
+  ],
+  "GOTAS": [
+    "DROPS",
+    "TROPFEN"
+  ],
+  "Ganhe XP e moedas. A barra mostra quanto falta para a próxima evolução. Seu corpo cresce e novas presas ficam disponíveis.": [
+    "Earn XP and coins. The bar shows how far you are from the next evolution. Your body grows and new prey becomes available.",
+    "Sammle XP und Münzen. Der Balken zeigt, wie viel dir bis zur nächsten Entwicklungsstufe fehlt. Dein Körper wächst, und neue Beute wird verfügbar."
+  ],
+  "Ganhe estrelas:": [
+    "Earn stars:",
+    "Verdiene Sterne:"
+  ],
+  "Ganhe uma estrela ao chegar, duas com até 2 passos extras e três com o menor caminho. As estrelas são conquistas deste jogo.": [
+    "Earn one star for reaching the goal, two with up to 2 extra steps and three for the shortest route. Stars are achievements in this game.",
+    "Verdiene einen Stern für das Erreichen des Ziels, zwei mit höchstens 2 zusätzlichen Schritten und drei für den kürzesten Weg. Sterne sind Erfolge in diesem Spiel."
+  ],
+  "Geada": [
+    "Frost",
+    "Raureif"
+  ],
+  "Geleira Boreal": [
+    "Boreal Glacier",
+    "Nordgletscher"
+  ],
+  "Geleiras e icebergs": [
+    "Glaciers and icebergs",
+    "Gletscher und Eisberge"
+  ],
+  "Gelo e fogo lado a lado": [
+    "Ice and fire side by side",
+    "Eis und Feuer nebeneinander"
+  ],
+  "Gerando o terreno": [
+    "Generating terrain",
+    "Gelände wird erstellt"
+  ],
+  "Gigante amanhã.": [
+    "A giant tomorrow.",
+    "Morgen ein Riese."
+  ],
+  "Girar personagem para a direita": [
+    "Turn character right",
+    "Figur nach rechts drehen"
+  ],
+  "Girar personagem para a esquerda": [
+    "Turn character left",
+    "Figur nach links drehen"
+  ],
+  "Gire o celular para jogar em paisagem.": [
+    "Rotate your phone to play in landscape.",
+    "Drehe dein Handy, um im Querformat zu spielen."
+  ],
+  "Gire o celular para o modo paisagem.": [
+    "Rotate your phone to landscape mode.",
+    "Drehe dein Handy ins Querformat."
+  ],
+  "Gire seu celular para jogar em paisagem.": [
+    "Rotate your phone to play in landscape.",
+    "Drehe dein Handy, um im Querformat zu spielen."
+  ],
+  "Golpe/J de perto, Poder/Z à distância e Habilidade/X. Segure os botões para repetir quando recarregarem. A mira escolhe o inimigo mais próximo.": [
+    "Attack/J up close, Power/Z at range and Ability/X. Hold the buttons to repeat after cooldown. Aiming selects the nearest enemy.",
+    "Angriff/J aus der Nähe, Kraft/Z aus der Ferne und Fähigkeit/X. Halte die Tasten gedrückt, um nach dem Aufladen erneut anzugreifen. Gezielt wird auf den nächsten Gegner."
+  ],
+  "Gotas coletadas": [
+    "Drops collected",
+    "Gesammelte Tropfen"
+  ],
+  "Grama": [
+    "Grass",
+    "Gras"
+  ],
+  "Grande tornado": [
+    "Great Tornado",
+    "Großer Tornado"
+  ],
+  "Grutas de Cristal": [
+    "Crystal Caves",
+    "Kristallhöhlen"
+  ],
+  "Gráficos": [
+    "Graphics",
+    "Grafik"
+  ],
+  "Guardar 1": [
+    "Store 1",
+    "1 einlagern"
+  ],
+  "Guarde itens neste baú e retire quando quiser. Esvazie-o antes de quebrar.": [
+    "Store items in this chest and take them out whenever you want. Empty it before breaking it.",
+    "Lagere Gegenstände in dieser Truhe und nimm sie jederzeit heraus. Leere sie, bevor du sie abbaust."
+  ],
+  "Guarde itens no baú antes de colher.": [
+    "Store items in the chest before harvesting.",
+    "Lagere Gegenstände in der Truhe, bevor du erntest."
+  ],
+  "Guardião Boreal": [
+    "Boreal Guardian",
+    "Nordwächter"
+  ],
+  "Guardião da Aurora": [
+    "Aurora Guardian",
+    "Aurorawächter"
+  ],
+  "Guardião da Estação": [
+    "Station Guardian",
+    "Stationswächter"
+  ],
+  "Guardião da Forja": [
+    "Forge Guardian",
+    "Schmiedewächter"
+  ],
+  "Guardião da Lua": [
+    "Moon Guardian",
+    "Mondwächter"
+  ],
+  "Guardião da Praia": [
+    "Beach Guardian",
+    "Strandwächter"
+  ],
+  "Guardião da Serra": [
+    "Mountain Guardian",
+    "Bergwächter"
+  ],
+  "Guardião da Tempestade": [
+    "Storm Guardian",
+    "Sturmwächter"
+  ],
+  "Guardião das Cascatas": [
+    "Cascade Guardian",
+    "Kaskadenwächter"
+  ],
+  "Guardião das Dunas": [
+    "Dune Guardian",
+    "Dünenwächter"
+  ],
+  "Guardião das Engrenagens": [
+    "Gear Guardian",
+    "Zahnradwächter"
+  ],
+  "Guardião das Fontes": [
+    "Spring Guardian",
+    "Quellenwächter"
+  ],
+  "Guardião das Raízes": [
+    "Root Guardian",
+    "Wurzelwächter"
+  ],
+  "Guardião de Cristal": [
+    "Crystal Guardian",
+    "Kristallwächter"
+  ],
+  "Guardião de Pedra": [
+    "Stone Guardian",
+    "Steinwächter"
+  ],
+  "Guardião do Cânion": [
+    "Canyon Guardian",
+    "Schluchtenwächter"
+  ],
+  "Guardião do oceano": [
+    "Ocean Guardian",
+    "Ozeanwächter"
+  ],
+  "Guardião dos Corais": [
+    "Coral Guardian",
+    "Korallenwächter"
+  ],
+  "Guardião dos Elementos": [
+    "Element Guardian",
+    "Elementwächter"
+  ],
+  "Guardião dos Esporos": [
+    "Spore Guardian",
+    "Sporenwächter"
+  ],
+  "Guardião dos Ventos": [
+    "Wind Guardian",
+    "Windwächter"
+  ],
+  "Guardião dourado": [
+    "Golden Guardian",
+    "Goldener Wächter"
+  ],
+  "Guardião vencido! Volte até Lia para concluir a missão.": [
+    "Guardian defeated! Return to Lia to complete the mission.",
+    "Wächter besiegt! Kehre zu Lia zurück, um die Mission abzuschließen."
+  ],
+  "Halo Aurora": [
+    "Aurora Halo",
+    "Aurora-Heiligenschein"
+  ],
+  "Haste do pistão": [
+    "Piston rod",
+    "Kolbenstange"
+  ],
+  "Horizonte final": [
+    "Final Horizon",
+    "Letzter Horizont"
+  ],
+  "IMPULSO": [
+    "BOOST",
+    "SCHUB"
+  ],
+  "INTEGRO BOX · AVENTURA NO OCEANO": [
+    "INTEGRO BOX · OCEAN ADVENTURE",
+    "INTEGRO BOX · OZEANABENTEUER"
+  ],
+  "INTEGRO BOX · LÓGICA": [
+    "INTEGRO BOX · LOGIC",
+    "INTEGRO BOX · LOGIK"
+  ],
+  "Ilha Vulcânica": [
+    "Volcanic Island",
+    "Vulkaninsel"
+  ],
+  "Ilha dos Gêiseres": [
+    "Geyser Island",
+    "Geysirinsel"
+  ],
+  "Ilha {5}. {6}{7}": [
+    "Island {5}. {6}{7}",
+    "Insel {5}. {6}{7}"
+  ],
+  "Ilhas & tesouros": [
+    "Islands & treasures",
+    "Inseln & Schätze"
+  ],
+  "Ilhas do Céu": [
+    "Sky Islands",
+    "Himmelsinseln"
+  ],
+  "Ilhas e cascatas": [
+    "Islands and cascades",
+    "Inseln und Kaskaden"
+  ],
+  "Ilimitado": [
+    "Unlimited",
+    "Unbegrenzt"
+  ],
+  "Integro Rush — corrida 3D": [
+    "Integro Rush — 3D runner",
+    "Integro Rush — 3D-Laufspiel"
+  ],
+  "Integro Rush, expedição entre ilhas": [
+    "Integro Rush, an expedition among islands",
+    "Integro Rush, eine Expedition zwischen Inseln"
+  ],
+  "Inverno circular": [
+    "Circular Winter",
+    "Kreisender Winter"
+  ],
+  "Ir até Lia": [
+    "Go to Lia",
+    "Zu Lia gehen"
+  ],
+  "Ir até a arena": [
+    "Go to the arena",
+    "Zur Arena gehen"
+  ],
+  "Ir até a loja": [
+    "Go to the shop",
+    "Zum Shop gehen"
+  ],
+  "Isso apaga somente as frutas, moedas e conquistas desta aventura. Os outros jogos são mantidos.": [
+    "This only deletes the fruits, coins and achievements from this adventure. Your other games are kept.",
+    "Dies löscht nur die Früchte, Münzen und Erfolge dieses Abenteuers. Die anderen Spiele bleiben erhalten."
+  ],
+  "Isso mesmo!": [
+    "That's right!",
+    "Genau richtig!"
+  ],
+  "Item colocado!": [
+    "Item placed!",
+    "Gegenstand platziert!"
+  ],
+  "Item indisponível.": [
+    "Item unavailable.",
+    "Gegenstand nicht verfügbar."
+  ],
+  "Item removido:": [
+    "Item removed:",
+    "Gegenstand entfernt:"
+  ],
+  "Jardim Celestial": [
+    "Celestial Garden",
+    "Himmelsgarten"
+  ],
+  "Jardim Vulcânico": [
+    "Volcanic Garden",
+    "Vulkangarten"
+  ],
+  "Jardim das Nuvens": [
+    "Cloud Garden",
+    "Wolkengarten"
+  ],
+  "Jardim das colunas": [
+    "Column Garden",
+    "Säulengarten"
+  ],
+  "Jardim das ideias": [
+    "Garden of Ideas",
+    "Garten der Ideen"
+  ],
+  "Jardim suspenso": [
+    "Hanging Garden",
+    "Hängender Garten"
+  ],
+  "Jardins Suspensos": [
+    "Hanging Gardens",
+    "Hängende Gärten"
+  ],
+  "Jardins do Sol": [
+    "Sun Gardens",
+    "Sonnengärten"
+  ],
+  "Jogador {0} venceu!": [
+    "Player {0} won!",
+    "Spieler {0} hat gewonnen!"
+  ],
+  "Jogador {0}: {1}": [
+    "Player {0}: {1}",
+    "Spieler {0}: {1}"
+  ],
+  "Jogador {1} · {2}": [
+    "Player {1} · {2}",
+    "Spieler {1} · {2}"
+  ],
+  "Jogar Bounce Tegro": [
+    "Play Bounce Tegro",
+    "Bounce Tegro spielen"
+  ],
+  "Jogar Integro Rush": [
+    "Play Integro Rush",
+    "Integro Rush spielen"
+  ],
+  "Jogar a dois": [
+    "Play with two players",
+    "Zu zweit spielen"
+  ],
+  "Jogar de novo": [
+    "Play again",
+    "Noch einmal spielen"
+  ],
+  "Jogar novamente": [
+    "Play again",
+    "Erneut spielen"
+  ],
+  "Jogar solo": [
+    "Play solo",
+    "Allein spielen"
+  ],
+  "Já está alimentado! Aguarde": [
+    "Already fed! Wait",
+    "Schon gefüttert! Warte"
+  ],
+  "Já existe uma corrente aqui. Mire em outra borda.": [
+    "There is already a stream here. Aim at another edge.",
+    "Hier fließt bereits ein Strom. Ziele auf einen anderen Rand."
+  ],
+  "LIA · MISSÃO": [
+    "LIA · MISSION",
+    "LIA · MISSION"
+  ],
+  "LOJA": [
+    "SHOP",
+    "SHOP"
+  ],
+  "LOJA DAS MARÉS": [
+    "TIDE SHOP",
+    "GEZEITENSHOP"
+  ],
+  "Labirinto brilhante": [
+    "Glowing Maze",
+    "Leuchtendes Labyrinth"
+  ],
+  "Labirinto lunar": [
+    "Lunar Maze",
+    "Mondlabyrinth"
+  ],
+  "Lago congelado": [
+    "Frozen Lake",
+    "Zugefrorener See"
+  ],
+  "Lago dos reflexos": [
+    "Reflection Lake",
+    "Spiegelsee"
+  ],
+  "Lago · Usar para encher o balde": [
+    "Lake · Use to fill the bucket",
+    "See · Benutzen, um den Eimer zu füllen"
+  ],
+  "Lagoas e vapor": [
+    "Lagoons and steam",
+    "Lagunen und Dampf"
+  ],
+  "Lava despejada! Ela escorre pelas bordas.": [
+    "Lava poured! It flows over the edges.",
+    "Lava ausgegossen! Sie fließt über die Ränder."
+  ],
+  "Laço de afeto entre amigos.": [
+    "A bond of affection between friends.",
+    "Eine liebevolle Verbindung zwischen Freunden."
+  ],
+  "Lenda azul": [
+    "Blue Legend",
+    "Blaue Legende"
+  ],
+  "Lenda das profundezas": [
+    "Legend of the Depths",
+    "Legende der Tiefen"
+  ],
+  "Lendária": [
+    "Legendary",
+    "Legendär"
+  ],
+  "Letra {1}": [
+    "Letter {1}",
+    "Buchstabe {1}"
+  ],
+  "Leve": [
+    "Light",
+    "Leicht"
+  ],
+  "Leve picaretas. Carvão, ferro, ouro e cristais aguardam.": [
+    "Bring pickaxes. Coal, iron, gold and crystals await.",
+    "Nimm Spitzhacken mit. Kohle, Eisen, Gold und Kristalle warten auf dich."
+  ],
+  "Leve trigo ou cenoura! Observe os animais e pilote um barco.": [
+    "Bring wheat or carrots! Watch the animals and steer a boat.",
+    "Nimm Weizen oder Karotten mit! Beobachte die Tiere und steuere ein Boot."
+  ],
+  "Lia · agricultora": [
+    "Lia · farmer",
+    "Lia · Bäuerin"
+  ],
+  "Libere esta ilha para explorar.": [
+    "Unlock this island to explore.",
+    "Schalte diese Insel frei, um sie zu erkunden."
+  ],
+  "Ligar ou desligar som": [
+    "Turn sound on or off",
+    "Ton ein- oder ausschalten"
+  ],
+  "Limite de detalhes atingido. Reaproveite os blocos existentes.": [
+    "Detail limit reached. Reuse existing blocks.",
+    "Detaillimit erreicht. Verwende vorhandene Blöcke erneut."
+  ],
+  "Limpar a rota e voltar ao início": [
+    "Clear the route and return to the start",
+    "Route löschen und zum Start zurückkehren"
+  ],
+  "Linha {5}, coluna {6}: {7}": [
+    "Row {5}, column {6}: {7}",
+    "Zeile {5}, Spalte {6}: {7}"
+  ],
+  "Loja das marés": [
+    "Tide Shop",
+    "Gezeitenshop"
+  ],
+  "Loja e coleção": [
+    "Shop and collection",
+    "Shop und Sammlung"
+  ],
+  "Lugar com uma coleção organizada de livros.": [
+    "A place with an organized collection of books.",
+    "Ein Ort mit einer geordneten Büchersammlung."
+  ],
+  "Lugar de estudar e aprender com a turma.": [
+    "A place to study and learn with your class.",
+    "Ein Ort, an dem du mit deiner Klasse lernst."
+  ],
+  "Lugar onde moramos.": [
+    "The place where we live.",
+    "Der Ort, an dem wir wohnen."
+  ],
+  "Luminária": [
+    "Lamp",
+    "Lampe"
+  ],
+  "Luminária acesa.": [
+    "Lamp on.",
+    "Lampe an."
+  ],
+  "Luminária apagada.": [
+    "Lamp off.",
+    "Lampe aus."
+  ],
+  "Lunar": [
+    "Lunar",
+    "Mond"
+  ],
+  "Luz da aurora": [
+    "Aurora Light",
+    "Polarlicht"
+  ],
+  "Luzes da caverna": [
+    "Cave Lights",
+    "Höhlenlichter"
+  ],
+  "Lã": [
+    "Wool",
+    "Wolle"
+  ],
+  "MAR": [
+    "SEA",
+    "MEER"
+  ],
+  "MERGULHO INTERROMPIDO": [
+    "DIVE INTERRUPTED",
+    "TAUCHGANG UNTERBROCHEN"
+  ],
+  "MINAS DE CRISTAL": [
+    "CRYSTAL MINES",
+    "KRISTALLMINEN"
+  ],
+  "MISSÃO: ENCONTRAR A ESTRELA": [
+    "MISSION: FIND THE STAR",
+    "MISSION: FINDE DEN STERN"
+  ],
+  "MOEDAS": [
+    "COINS",
+    "MÜNZEN"
+  ],
+  "MOEDAS NA CORRIDA": [
+    "COINS THIS RUN",
+    "MÜNZEN IN DIESEM LAUF"
+  ],
+  "MONTANHAS NEVADAS": [
+    "SNOWY MOUNTAINS",
+    "VERSCHNEITE BERGE"
+  ],
+  "MUITO BEM!": [
+    "WELL DONE!",
+    "SEHR GUT!"
+  ],
+  "Machado": [
+    "Axe",
+    "Axt"
+  ],
+  "Madeira": [
+    "Wood",
+    "Holz"
+  ],
+  "Mais uma arena conquistada!": [
+    "Another arena completed!",
+    "Eine weitere Arena geschafft!"
+  ],
+  "Mais uma tentativa! Seus itens continuam com você.": [
+    "One more try! Your items stay with you.",
+    "Noch ein Versuch! Deine Gegenstände bleiben bei dir."
+  ],
+  "Mais velocidade no barco": [
+    "More boat speed",
+    "Mehr Bootsgeschwindigkeit"
+  ],
+  "Manter progresso": [
+    "Keep progress",
+    "Fortschritt behalten"
+  ],
+  "Mapa 5 por 5. Robô na linha {0}, coluna {1}. Estrela na linha {2}, coluna {3}. Obstáculos (linha, coluna): {4}.": [
+    "5 by 5 map. Robot at row {0}, column {1}. Star at row {2}, column {3}. Obstacles (row, column): {4}.",
+    "5-mal-5-Karte. Roboter in Zeile {0}, Spalte {1}. Stern in Zeile {2}, Spalte {3}. Hindernisse (Zeile, Spalte): {4}."
+  ],
+  "Mapa das 20 ilhas, com sua posição, bombas e quatro frutas raras": [
+    "Map of the 20 islands, showing your position, bombs and four rare fruits",
+    "Karte der 20 Inseln mit deiner Position, Bomben und vier seltenen Früchten"
+  ],
+  "Mapa das fases": [
+    "Level map",
+    "Levelkarte"
+  ],
+  "Mapa e barco": [
+    "Map and boat",
+    "Karte und Boot"
+  ],
+  "Mapa e desembarque": [
+    "Map and landing",
+    "Karte und Landgang"
+  ],
+  "Mapa e missões": [
+    "Map and missions",
+    "Karte und Missionen"
+  ],
+  "Mapa e novas aventuras": [
+    "Map and new adventures",
+    "Karte und neue Abenteuer"
+  ],
+  "Mar das Ilhas": [
+    "Sea of Islands",
+    "Inselmeer"
+  ],
+  "Mar de nuvens": [
+    "Sea of Clouds",
+    "Wolkenmeer"
+  ],
+  "Margem do rio": [
+    "Riverbank",
+    "Flussufer"
+  ],
+  "Marketplace Integro": [
+    "Integro Marketplace",
+    "Integro-Marktplatz"
+  ],
+  "Marketplace · comprar e vender": [
+    "Marketplace · buy and sell",
+    "Marktplatz · kaufen und verkaufen"
+  ],
+  "Maré": [
+    "Tide",
+    "Gezeiten"
+  ],
+  "Maré luminosa": [
+    "Glowing Tide",
+    "Leuchtende Gezeiten"
+  ],
+  "Mata alta e cascatas": [
+    "Tall forest and cascades",
+    "Hoher Wald und Kaskaden"
+  ],
+  "Mata e cachoeira": [
+    "Forest and waterfall",
+    "Wald und Wasserfall"
+  ],
+  "Material fabricado!": [
+    "Material crafted!",
+    "Material hergestellt!"
+  ],
+  "Mecanismos": [
+    "Mechanisms",
+    "Mechanismen"
+  ],
+  "Melancia": [
+    "Watermelon",
+    "Wassermelone"
+  ],
+  "Melhoria completa": [
+    "Upgrade complete",
+    "Verbesserung abgeschlossen"
+  ],
+  "Memória em ação!": [
+    "Memory in action!",
+    "Gedächtnis in Aktion!"
+  ],
+  "Menta tropical": [
+    "Tropical Mint",
+    "Tropische Minze"
+  ],
+  "Mergulhar": [
+    "Dive",
+    "Tauchen"
+  ],
+  "Mergulhar agora": [
+    "Dive now",
+    "Jetzt tauchen"
+  ],
+  "Mesa": [
+    "Table",
+    "Tisch"
+  ],
+  "Mesa de encantamentos": [
+    "Enchanting table",
+    "Zaubertisch"
+  ],
+  "Mesma pontuação. Que tal uma revanche?": [
+    "Same score. How about a rematch?",
+    "Gleiche Punktzahl. Wie wäre es mit einer Revanche?"
+  ],
+  "Meu explorador": [
+    "My explorer",
+    "Mein Entdecker"
+  ],
+  "Meu mundo": [
+    "My world",
+    "Meine Welt"
+  ],
+  "Minas de cristal": [
+    "Crystal Mines",
+    "Kristallminen"
+  ],
+  "Minerando:": [
+    "Mining:",
+    "Abbau:"
+  ],
+  "Mineração": [
+    "Mining",
+    "Bergbau"
+  ],
+  "Mineração:": [
+    "Mining:",
+    "Bergbau:"
+  ],
+  "Minério de carvão": [
+    "Coal ore",
+    "Kohleerz"
+  ],
+  "Minério de cristal": [
+    "Crystal ore",
+    "Kristallerz"
+  ]
+}

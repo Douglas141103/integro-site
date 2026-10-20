@@ -28,6 +28,7 @@ function lock(){
 function script(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Não foi possível carregar os jogos. Recarregue a página.'));document.body.append(s);});}
 try {
  const user=await requireFamily();
+ if(window.BoxI18n)await window.BoxI18n.ready;
  if(user){
   window.BoxStorage={getItem:k=>localStorage.getItem('box:'+user.id+':'+k),setItem:(k,v)=>localStorage.setItem('box:'+user.id+':'+k,v),removeItem:k=>localStorage.removeItem('box:'+user.id+':'+k)};
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
@@ -36,7 +37,7 @@ try {
   mountPlayerProfile(user);
   const {startPresence}=await import('./presence.js?v=20261016-intgem1');
   if(!unloaded)startPresence(user);
-  await script('./classic-games.js?v=20261017-robot1');
+  await script('./classic-games.js?v=20261020-i18n1');
   await script('./robot-core.js?v=20261017-robot1');
   await script('./robot-game.js?v=20261017-robot1');
   await script('./craft.js?v=20261015-craft6');
@@ -58,7 +59,7 @@ try {
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261020-shark2');installShark();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261020-shark2');startUsage();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261020-shark2');
+  if(!unloaded)await script('./catalog.js?v=20261020-i18n1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261016-box-ui2');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

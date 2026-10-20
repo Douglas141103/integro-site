@@ -1,0 +1,72 @@
+{
+  "pegue-o-ovo": {
+    "en": {
+      "src": "./assets/catalog-i18n/pegue-o-ovo-en.svg",
+      "title": "Catch the Egg"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/pegue-o-ovo-de.svg",
+      "title": "Schnapp das Ei"
+    }
+  },
+  "meu-bairro": {
+    "en": {
+      "src": "./assets/catalog-i18n/meu-bairro-en.svg",
+      "title": "My Neighborhood"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/meu-bairro-de.svg",
+      "title": "Meine Nachbarschaft"
+    }
+  },
+  "rua-das-descobertas": {
+    "en": {
+      "src": "./assets/catalog-i18n/rua-das-descobertas-en.svg",
+      "title": "Discovery Street"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/rua-das-descobertas-de.svg",
+      "title": "Entdeckerstraße"
+    }
+  },
+  "torre-da-matematica": {
+    "en": {
+      "src": "./assets/catalog-i18n/torre-da-matematica-en.svg",
+      "title": "Math Tower"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/torre-da-matematica-de.svg",
+      "title": "Matheturm"
+    }
+  },
+  "ponte-das-palavras": {
+    "en": {
+      "src": "./assets/catalog-i18n/ponte-das-palavras-en.svg",
+      "title": "Word Bridge"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/ponte-das-palavras-de.svg",
+      "title": "Wortbrücke"
+    }
+  },
+  "rota-do-robo": {
+    "en": {
+      "src": "./assets/catalog-i18n/rota-do-robo-en.svg",
+      "title": "Robot Route"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/rota-do-robo-de.svg",
+      "title": "Roboterroute"
+    }
+  },
+  "memoria-em-ingles": {
+    "en": {
+      "src": "./assets/catalog-i18n/memoria-em-ingles-en.svg",
+      "title": "English Memory"
+    },
+    "de": {
+      "src": "./assets/catalog-i18n/memoria-em-ingles-de.svg",
+      "title": "Englisch-Memory"
+    }
+  }
+}
