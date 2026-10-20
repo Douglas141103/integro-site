@@ -3,6 +3,7 @@
 const lobby=document.getElementById('lobby');
 if(!lobby||lobby.dataset.catalogReady)return;
 const games=[
+ ['shark','Shark','#playShark','Aventura','Um oceano 3D cartoon: coma peixes menores, cresça, explore seis regiões e equipe seu tubarão.'],
  ['integro-rush','Integro Rush','#playRush','Corrida','15 expedições 3D, cinco mundos e 24 acessórios. Pule, deslize e explore.'],
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
  ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','20 pistas, 64 acessórios, skates e patinetes voadores para sua aventura.'],

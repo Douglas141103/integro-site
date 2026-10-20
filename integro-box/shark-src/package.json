@@ -1,0 +1,1 @@
+{"name":"integro-shark","private":true,"type":"module","scripts":{"build":"node build.mjs","test":"node --test ../../tests/shark.test.mjs"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.10"}}

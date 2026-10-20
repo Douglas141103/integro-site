@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261019-egg-income35';
+  const VERSION = '20261020-shark1';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
@@ -33,6 +33,7 @@
       for (const adapter of Object.values(window.BoxAdapters || {})) adapter.persist?.();
       window.BoxGoSnake?.persist();
       window.BoxRush?.persist();
+      window.BoxShark?.persist();
       window.BoxInterDance?.persist();
       window.dispatchEvent(new Event('pagehide'));
       // Local game hooks persist first; then synchronize the family profile.

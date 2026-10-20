@@ -1,0 +1,72 @@
+import * as T from 'three';
+import {createFish} from './fish.mjs';
+import {makeOcean} from './ocean.mjs';
+import {REGIONS,SHOP,regionAt,lengthFor,canEat,eat,damage,respawn,discover,claimMissions} from './rules.mjs';
+const clamp=T.MathUtils.clamp;
+const palette=[0xffbf68,0xf299c0,0x9c9bf0,0x83dbc1,0x71c7f3,0xf89179];
+export class SharkScene{
+ constructor(canvas,progress,notify){
+  this.canvas=canvas;this.p=progress;this.notify=notify;this.time=0;this.health=3;this.invincible=5;this.stamina=100;this.bite=0;this.yaw=.65;this.pitch=.46;this.zoom=1;this.region=regionAt(progress.position.x,progress.position.z);this.waypoint=null;this.fish=[];this.pearls=[];this.bursts=[];
+  this.renderer=new T.WebGLRenderer({canvas,antialias:progress.quality!=='low',alpha:false,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,progress.quality==='low'?1:1.6));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.setClearColor(REGIONS[this.region].water);
+  this.scene=new T.Scene();this.scene.background=new T.Color(REGIONS[this.region].water);this.scene.fog=new T.Fog(REGIONS[this.region].water,75,330);this.camera=new T.PerspectiveCamera(52,1,.2,700);
+  this.scene.add(new T.HemisphereLight(0xc1fff5,0x194263,2.5));const sun=new T.DirectionalLight(0xfff3d8,3);sun.position.set(30,100,40);this.scene.add(sun);const fill=new T.DirectionalLight(0x8ffaff,1);fill.position.set(-60,20,-50);this.scene.add(fill);
+  this.ocean=makeOcean(this.scene);this.player=createFish({shark:true});this.scene.add(this.player.group);this.position=new T.Vector3(progress.position.x,progress.position.y,progress.position.z);this.player.group.position.copy(this.position);this.heading=0;this.applyStyle();
+  this.pearlGeo=new T.SphereGeometry(.75,10,7);this.pearlMaterial=new T.MeshToonMaterial({color:0xffe6a3,emissive:0xd99037,emissiveIntensity:.4});this.burstGeo=new T.IcosahedronGeometry(.17,0);this.burstMaterial=new T.MeshBasicMaterial({color:0xc4fff4,transparent:true,opacity:.85});
+  const count=progress.quality==='low'?34:matchMedia('(pointer:coarse)').matches?46:64;
+  for(let i=0;i<count;i++){const rig=createFish({color:palette[i%palette.length],shark:i%9===0,variant:i});this.scene.add(rig.group);const f={rig,index:i,phase:Math.random()*6,dir:Math.random()*Math.PI*2,level:0};this.fish.push(f);this.spawn(f,true);}
+  // An approachable starter school is always in view for the first meal.
+  this.fish.slice(0,8).forEach((f,i)=>{f.level=Math.max(0,progress.level-1);f.rig.group.scale.setScalar(lengthFor(f.level)/4);f.rig.group.position.set(this.position.x+7+i*3,this.position.y+Math.sin(i)*2,this.position.z+Math.cos(i)*7);});
+  for(let i=0;i<32;i++){const mesh=new T.Mesh(this.pearlGeo,this.pearlMaterial);this.scene.add(mesh);const pearl={mesh,phase:Math.random()*6};this.pearls.push(pearl);this.placePearl(pearl);}
+  this.ring=new T.Mesh(new T.TorusGeometry(1,.025,6,48),new T.MeshBasicMaterial({color:0x90ffe4,transparent:true,opacity:.65}));this.ring.rotation.x=Math.PI/2;this.scene.add(this.ring);
+  this.camera.position.copy(this.position).add(new T.Vector3(12,12,18));this.resize();this.update(0,{x:0,z:0,y:0},false);
+ }
+ resize(){const w=this.canvas.clientWidth||innerWidth,h=this.canvas.clientHeight||innerHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
+ applyStyle(){const item=SHOP.find(i=>i.id===this.p.skin);this.player.tint(item?.color||0x65cfea);this.player.crown.visible=this.p.accessories.includes('crown');}
+ spawn(f,first=false){const a=Math.random()*Math.PI*2,r=first?18+Math.random()*95:75+Math.random()*65;const reg=REGIONS[this.region];const roll=Math.random();
+  f.level=roll<.70?Math.max(0,this.p.level-1-Math.floor(Math.random()*4)):Math.min(60,Math.max(this.p.level+1+Math.floor(Math.random()*5),reg.level+Math.floor(Math.random()*5)));
+  f.rig.group.position.set(clamp(this.position.x+Math.cos(a)*r,-880,880),clamp(this.position.y+(Math.random()-.5)*30,8,88),clamp(this.position.z+Math.sin(a)*r,-580,580));f.rig.group.scale.setScalar(lengthFor(f.level)/4);f.rig.group.visible=true;f.cooldown=0;
+ }
+ placePearl(p){const a=Math.random()*Math.PI*2,r=12+Math.random()*110;p.mesh.position.set(clamp(this.position.x+Math.cos(a)*r,-875,875),clamp(this.position.y+(Math.random()-.5)*35,8,90),clamp(this.position.z+Math.sin(a)*r,-575,575));}
+ burst(pos,color=0xc4fff4){for(let i=0;i<8;i++){const m=new T.Mesh(this.burstGeo,this.burstMaterial);m.position.copy(pos);m.scale.setScalar(1+this.p.level*.06);this.scene.add(m);this.bursts.push({mesh:m,v:new T.Vector3(Math.random()-.5,Math.random(),Math.random()-.5).multiplyScalar(5),life:.7});}if(color!==0xc4fff4)this.burstMaterial.color.set(color);else this.burstMaterial.color.set(0xc4fff4);}
+ moveCamera(dx,dy){this.yaw-=dx*.005;this.pitch=clamp(this.pitch+dy*.004,.12,1.08);}
+ update(dt,input,playing=true){
+  dt=clamp(dt,0,.04);this.time+=dt;const t=this.time,p=this.p,len=lengthFor(p.level);this.invincible=Math.max(0,this.invincible-dt);this.bite=Math.max(0,this.bite-dt*4);
+  const mx=input.x||0,mz=input.z||0,my=input.y||0,amount=Math.min(1,Math.hypot(mx,mz)),boost=playing&&input.boost&&this.stamina>2&&(amount>0||my!==0);
+  if(playing){
+   this.stamina=clamp(this.stamina+(boost?-27:18)*dt,0,100);const speed=(18+p.level*.10)*(1+p.upgrades.speed*.12)*(boost?2.5:1);
+   const vx=Math.cos(this.yaw)*mx-Math.sin(this.yaw)*mz,vz=-Math.sin(this.yaw)*mx-Math.cos(this.yaw)*mz,norm=Math.max(1,Math.hypot(vx,vz));
+   this.position.x=clamp(this.position.x+vx/norm*speed*dt,-875,875);this.position.z=clamp(this.position.z+vz/norm*speed*dt,-575,575);this.position.y=clamp(this.position.y+my*speed*.7*dt,Math.max(5,len*.35),95);
+   if(amount>.06){const target=Math.atan2(-vz,vx);this.heading+=Math.atan2(Math.sin(target-this.heading),Math.cos(target-this.heading))*Math.min(1,dt*8);}
+   this.player.group.rotation.z=T.MathUtils.lerp(this.player.group.rotation.z,my*.22,dt*5);
+   Object.assign(p.position,{x:this.position.x,y:this.position.y,z:this.position.z});const reg=regionAt(this.position.x,this.position.z);
+   if(reg!==this.region){this.region=reg;const fresh=discover(p,reg);this.notify('region',`${REGIONS[reg].name}${fresh?' · +100 moedas':''}`);this.checkMissions();}
+  }
+  const water=new T.Color(REGIONS[this.region].water);this.scene.background.lerp(water,Math.min(1,dt*1.5));this.scene.fog.color.copy(this.scene.background);
+  this.player.group.position.copy(this.position);this.player.group.position.y+=Math.sin(t*1.9)*.10;this.player.group.rotation.y=this.heading;this.player.group.scale.lerp(new T.Vector3().setScalar(len/4),Math.min(1,dt*3));this.player.animate(t,boost?1.65:.8+amount*.4,this.bite);this.player.group.visible=this.invincible<=0||Math.sin(t*17)>-.5;
+  const targetPos=this.position.clone().add(new T.Vector3(0,len*.12,0));const dist=(15+len*2.6)*this.zoom;const camPos=targetPos.clone().add(new T.Vector3(Math.sin(this.yaw)*Math.cos(this.pitch),Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch)).multiplyScalar(dist));camPos.y=Math.max(5,camPos.y);this.camera.position.lerp(camPos,playing?Math.min(1,dt*6):1);this.camera.lookAt(targetPos);
+  for(const f of this.fish){
+   const pos=f.rig.group.position,d=pos.distanceTo(this.position),edible=canEat(p.level,f.level);if(d>190){this.spawn(f);continue;}
+   if(playing){let dir=f.dir+Math.sin(t*.4+f.phase)*.15,speed=edible?2.6+f.level*.08:4.5;
+    if(d<(edible?len+8:28)&&this.invincible<=0){const target=Math.atan2(this.position.z-pos.z,this.position.x-pos.x)+(edible?Math.PI:0);dir=target;speed=edible?9:12;}
+    pos.x+=Math.cos(dir)*speed*dt;pos.z+=Math.sin(dir)*speed*dt;pos.y=clamp(pos.y+Math.sin(t*.8+f.phase)*dt*.7,6,93);if(pos.x>880||pos.x< -880||pos.z>580||pos.z< -580){f.dir+=Math.PI;pos.x=clamp(pos.x,-879,879);pos.z=clamp(pos.z,-579,579);}f.rig.group.rotation.y=-dir;
+    const preyLength=lengthFor(f.level),collision=edible?len*.40+preyLength*.15:len*.20+preyLength*.35;
+    if(d<collision){if(edible){const reward=eat(p,f.level);if(reward){this.bite=1;this.burst(pos);this.notify(reward.evolved?'evolve':'eat',reward.evolved?`Evolução ${p.level}! Você cresceu!`:`+${reward.xp} XP  ·  +${reward.coins} moedas`);this.checkMissions();this.spawn(f);}}
+     else if(this.invincible<=0&&f.level>p.level){const result=damage(p,this.health);this.health=result.health;this.invincible=4;this.burst(this.position,0xffcc9e);this.notify('hurt',result.blocked?'Sua bolha bloqueou o ataque!':'Peixe maior! Fuja com o impulso.');const away=this.position.clone().sub(pos).normalize();this.position.addScaledVector(away,5);if(!this.health){respawn(p);this.position.set(p.position.x,p.position.y,p.position.z);this.health=3;this.invincible=7;this.fish.forEach(f=>this.spawn(f));this.notify('respawn','Fôlego recuperado! Você manteve sua evolução e perdeu 25% do XP atual.');}}
+    }
+   }
+   f.rig.group.visible=d<170;f.rig.animate(t+f.phase,edible?1.25:.8);
+  }
+  for(const q of this.pearls){q.mesh.position.y+=Math.sin(t*2+q.phase)*dt*.2;q.mesh.rotation.y=t;const d=q.mesh.position.distanceTo(this.position);if(d>180)this.placePearl(q);else if(playing){if(p.upgrades.magnet&&d<18)q.mesh.position.lerp(this.position,dt*4);if(d<Math.max(1.8,len*.34)){p.coins+=8;this.burst(q.mesh.position,0xffe6a3);this.notify('pearl','+8 moedas');this.placePearl(q);}}}
+  for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i];b.life-=dt;b.mesh.position.addScaledVector(b.v,dt);b.mesh.scale.multiplyScalar(1-dt);if(b.life<=0){this.scene.remove(b.mesh);this.bursts.splice(i,1);}}
+  if(playing&&p.accessories.includes('trail')&&amount>.2&&Math.floor(t*7)!==this.lastTrail){this.lastTrail=Math.floor(t*7);this.burst(this.position.clone().add(new T.Vector3(-Math.cos(this.heading),0,Math.sin(this.heading)).multiplyScalar(len*.45)),0xb8bcff);}
+  this.ring.position.copy(this.position);this.ring.position.y-=len*.25+.3;this.ring.scale.setScalar(len*.65);this.ring.visible=playing;this.ocean.update(t,this.position);this.renderer.render(this.scene,this.camera);
+ }
+ checkMissions(){for(const m of claimMissions(this.p))this.notify('mission',`${m.name} · +${m.reward} moedas!`);}
+ labels(){const width=this.canvas.clientWidth,height=this.canvas.clientHeight;return this.fish.map(f=>{const pos=f.rig.group.position,d=pos.distanceTo(this.position);if(d>70+lengthFor(this.p.level))return null;const v=pos.clone().add(new T.Vector3(0,lengthFor(f.level)*.45+1,0)).project(this.camera);if(v.z< -1||v.z>1||Math.abs(v.x)>.95||Math.abs(v.y)>.9)return null;return {x:(v.x*.5+.5)*width,y:(-.5*v.y+.5)*height,level:f.level,edible:canEat(this.p.level,f.level),distance:d};}).filter(Boolean).sort((a,b)=>a.distance-b.distance).slice(0,20);}
+ map(canvas){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);for(const [i,r] of REGIONS.entries()){ctx.fillStyle=r.color+'55';ctx.fillRect((i%3)*w/3,Math.floor(i/3)*h/2,w/3-2,h/2-2);ctx.fillStyle='#dcfff3';ctx.font='bold 11px sans-serif';ctx.fillText(String(i+1),(i%3)*w/3+8,Math.floor(i/3)*h/2+16);}
+  const xy=(x,z)=>[(x+900)/1800*w,(z+600)/1200*h];if(this.p.upgrades.radar)for(const f of this.fish){ctx.fillStyle=canEat(this.p.level,f.level)?'#b0ff9a':'#ff777e';const [x,y]=xy(f.rig.group.position.x,f.rig.group.position.z);ctx.fillRect(x-1,y-1,2.5,2.5);}
+  if(this.waypoint!==null){const r=REGIONS[this.waypoint],[x,y]=xy(r.x,r.z);ctx.strokeStyle='#ffdf86';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.stroke();const [px,py]=xy(this.position.x,this.position.z);ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);}
+  const [x,y]=xy(this.position.x,this.position.z);ctx.fillStyle='#fff';ctx.strokeStyle='#133f50';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
+ }
+ dispose(){this.ocean.dispose();this.player.dispose();this.fish.forEach(f=>f.rig.dispose());this.pearlGeo.dispose();this.pearlMaterial.dispose();this.burstGeo.dispose();this.burstMaterial.dispose();this.ring.geometry.dispose();this.ring.material.dispose();this.renderer.dispose();}
+}
