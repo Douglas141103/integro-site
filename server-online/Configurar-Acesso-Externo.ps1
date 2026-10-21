@@ -1,10 +1,15 @@
-param([Parameter(Mandatory=$true)][string]$PublicHost,[Parameter(Mandatory=$true)][string]$PublicIp,[string]$DnsServer='d.sec.dns.br')
+param([Parameter(Mandatory=$true)][string]$PublicHost,[Parameter(Mandatory=$true)][string]$PublicIp,[Parameter(Mandatory=$true)][string]$WanIp,[string]$DnsServer='d.sec.dns.br')
 $ErrorActionPreference = 'Stop'
 $administrator = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $administrator.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Abra o PowerShell como administrador antes de executar este script.' }
 if ($PublicHost -notmatch '^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$') { throw 'Informe um domínio válido.' }
 $ipValue = $null
 if (-not [System.Net.IPAddress]::TryParse($PublicIp,[ref]$ipValue) -or $ipValue.AddressFamily -ne 'InterNetwork') { throw 'Informe um IPv4 público válido.' }
+$wanValue = $null
+if (-not [System.Net.IPAddress]::TryParse($WanIp,[ref]$wanValue) -or $wanValue.AddressFamily -ne 'InterNetwork') { throw 'Informe o IPv4 WAN exibido no painel do roteador.' }
+$wanBytes = $wanValue.GetAddressBytes()
+if (($wanBytes[0] -eq 100 -and $wanBytes[1] -ge 64 -and $wanBytes[1] -le 127) -or $wanBytes[0] -eq 10 -or ($wanBytes[0] -eq 172 -and $wanBytes[1] -ge 16 -and $wanBytes[1] -le 31) -or ($wanBytes[0] -eq 192 -and $wanBytes[1] -eq 168)) { throw 'O roteador está atrás de CGNAT ou outro NAT. Solicite IPv4 público à operadora ou prepare um relay antes de ativar o acesso externo.' }
+if ($WanIp -ne $PublicIp) { throw 'O IP WAN do roteador difere do IPv4 público. Confirme o roteamento com a operadora antes de continuar.' }
 $currentPublicIp = (Invoke-WebRequest -Uri 'https://api.ipify.org' -UseBasicParsing -TimeoutSec 10).Content.Trim()
 if ($currentPublicIp -ne $PublicIp) { throw 'O IP informado difere do IP público atual desta conexão.' }
 $addresses = @(Resolve-DnsName -Name $PublicHost -Type A -Server $DnsServer -ErrorAction Stop | Where-Object Type -eq A | ForEach-Object IPAddress)
