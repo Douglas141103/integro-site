@@ -31,7 +31,7 @@ export function regionAt(x,z){return (z<0?0:3)+clamp(Math.floor((x+900)/600),0,2
 export const priceFor=(p,item)=>item.price*(1+(p.upgrades[item.id]||0));
 export function clean(data){
  let raw;try{raw=typeof data==='string'?JSON.parse(data):data;}catch{}raw=raw&&typeof raw==='object'?raw:{};
- const p={version:1,level:Math.max(1,int(raw.level,60)),xp:0,coins:int(raw.coins),eaten:int(raw.eaten),algaeEaten:int(raw.algaeEaten),shields:int(raw.shields,3),upgrades:{},owned:['ocean'],skin:'ocean',accessories:[],discovered:[0],claimed:[],position:{x:-600,y:24,z:-300},sound:raw.sound!==false,quality:raw.quality==='low'?'low':'auto',cameraZoom:Number.isFinite(raw.cameraZoom)?clamp(raw.cameraZoom,0,3):1};
+ const p={version:1,level:Math.max(1,int(raw.level,60)),xp:0,coins:int(raw.coins),eaten:int(raw.eaten),algaeEaten:int(raw.algaeEaten),cageCasts:Array.isArray(raw.cageCasts)?[...new Set(raw.cageCasts.filter(id=>typeof id==='string'&&/^[a-f0-9-]{36}$/i.test(id)))].slice(-256):[],shields:int(raw.shields,3),upgrades:{},owned:['ocean'],skin:'ocean',accessories:[],discovered:[0],claimed:[],position:{x:-600,y:24,z:-300},sound:raw.sound!==false,quality:raw.quality==='low'?'low':'auto',cameraZoom:Number.isFinite(raw.cameraZoom)?clamp(raw.cameraZoom,0,3):1};
  p.xp=Math.min(int(raw.xp),needXP(p.level)-1);
  for(const item of SHOP){if(item.type==='upgrade')p.upgrades[item.id]=int(raw.upgrades?.[item.id],item.max);if(['skin','accessory'].includes(item.type)&&raw.owned?.includes?.(item.id)&&!p.owned.includes(item.id))p.owned.push(item.id);}
  if(SHOP.some(i=>i.id===raw.skin&&i.type==='skin')&&p.owned.includes(raw.skin))p.skin=raw.skin;
@@ -70,3 +70,9 @@ export function discover(p,index){if(p.discovered.includes(index))return false;p
 export function claimMissions(p){const got=[];for(const m of MISSIONS){const value=m.stat==='regions'?p.discovered.length:p[m.stat];if(value>=m.target&&!p.claimed.includes(m.id)){p.claimed.push(m.id);p.coins+=m.reward;got.push(m);}}return got;}
 export function damage(p,health){if(p.shields>0){p.shields--;return {health,blocked:true};}return {health:Math.max(0,health-1),blocked:false};}
 export function respawn(p){p.xp=Math.floor(p.xp*.75);const r=REGIONS[regionAt(p.position.x,p.position.z)];p.position={x:r.x,y:24,z:r.z};return p.position;}
+
+export function applyCageCatch(p,cast){
+ if(p.cageCasts.includes(cast.id))return null;
+ let xp=0,count=0;for(const level of cast.levels){const reward=eat(p,level);if(reward){xp+=reward.xp;count++;}}
+ p.cageCasts.push(cast.id);p.cageCasts=p.cageCasts.slice(-256);return{xp,count};
+}

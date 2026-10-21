@@ -23,3 +23,52 @@
 #sharkApp.shark-menu .shark-camera-controls{visibility:hidden}
 @media(max-width:600px){#sharkApp .shark-camera-controls{right:10px;top:calc(max(12px,env(safe-area-inset-top)) + 183px)}}
 @media(max-height:520px) and (min-width:601px){#sharkApp .shark-camera-controls{top:calc(max(12px,env(safe-area-inset-top)) + 142px)}}
+/* Shark HUD 3: compact navigation, optional camera tools and a fishing shortcut. */
+#sharkApp .shark-evolution{padding:7px 9px;max-width:230px;border-radius:13px;background:#073d50c9;box-shadow:none}
+#sharkApp .shark-level>span{width:32px;height:35px;font-size:21px;border-radius:10px}
+#sharkApp .shark-tools .shark-wallet{padding:8px 10px;border:0;background:#063d51b8}
+#sharkApp .shark-zone{top:calc(max(12px,env(safe-area-inset-top)) + 61px)}
+#sharkApp .shark-zone b{font-size:12px}#sharkApp .shark-vitals{top:calc(max(12px,env(safe-area-inset-top)) + 80px)}
+#sharkApp .shark-minimap{width:68px;top:calc(max(12px,env(safe-area-inset-top)) + 57px);right:14px;padding:4px;border-radius:10px;border-color:#c2fff130;background:#063d51a8}
+#sharkApp .shark-minimap span{font-size:7px;letter-spacing:0;margin-top:2px}
+#sharkApp .shark-camera-controls{right:14px;top:calc(max(12px,env(safe-area-inset-top)) + 126px);display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+#sharkApp #sharkCameraToggle{width:44px;height:44px;padding:10px;border:1px solid #c2fff145;border-radius:13px;background:#063d51b8;color:#e8fff7}
+#sharkApp .shark-camera-controls>div{box-shadow:0 8px 25px #02293655;background:#063d51ef}
+#sharkApp .shark-cage-open{position:absolute;right:14px;top:calc(max(12px,env(safe-area-inset-top)) + 177px);z-index:2;display:flex;align-items:center;gap:3px;min-width:44px;min-height:44px;padding:8px;border:1px solid #ffe2a777;border-radius:13px;background:#124a54cf;color:#ffe2a7}
+#sharkApp .shark-cage-open svg{width:26px;height:26px}.shark-cage-open span{font-size:11px;font-weight:800}
+#sharkApp.shark-menu .shark-cage-open{visibility:hidden}
+#sharkApp .shark-cage-shop h3{font-size:16px;margin:20px 0 10px;color:#e8fff0}
+#sharkApp .shark-cage-shop p{font-size:13px;line-height:1.5}
+#sharkApp .shark-cage-balance{display:block;color:#baf5f1;font-size:15px}
+#sharkApp .shark-cage-status{color:#ffe2a7!important;min-height:20px;margin:10px 0}
+.shark-cage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.shark-cage-card{display:flex;flex-direction:column;gap:9px;padding:16px;border:1px solid #b0e5d949;border-radius:16px;background:#174f61}
+.shark-cage-icon{color:#ffdf9a}.shark-cage-icon svg{width:40px;height:40px}
+.shark-cage-card h4{margin:0;font-size:16px;color:#f2fff5}.shark-cage-card>strong{font-size:12px;color:#cfeddb}.shark-cage-card>span{font-size:12px;color:#a3cecd}.shark-cage-card button{margin-top:auto!important;background:#c6f88f!important;color:#194b42!important}
+.shark-cage-owned{display:grid;gap:8px}.shark-cage-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #9cd7ce44;border-radius:14px;background:#12495e}
+.shark-cage-row>div:nth-child(2){flex:1}.shark-cage-row strong,.shark-cage-row span{display:block;font-size:13px}.shark-cage-row span{color:#d7f39f;font-size:12px;margin-top:5px}.shark-cage-row button{padding:11px 14px;min-height:44px}
+.shark-shop-switch{margin:14px 0}
+@media(max-width:600px){
+ #sharkApp .shark-top{top:max(8px,env(safe-area-inset-top));left:10px;right:10px}
+ #sharkApp .shark-evolution{max-width:none;padding:6px 7px}.shark-progress-heading>span{font-size:8px}
+ #sharkApp .shark-level>span{width:30px;height:33px;font-size:20px}
+ #sharkApp .shark-tools .shark-wallet{position:absolute;left:0;right:auto;top:92px;width:auto;padding:0;background:none;color:#ffdf9b;font-size:11px;border-radius:0}
+ #sharkApp .shark-zone{top:calc(max(8px,env(safe-area-inset-top)) + 54px);left:12px}
+ #sharkApp .shark-vitals{top:calc(max(8px,env(safe-area-inset-top)) + 71px);left:12px;font-size:10px}
+ #sharkApp .shark-vitals>span:first-child{font-size:14px}
+ #sharkApp .shark-zone span{margin-top:48px;font-size:9px;max-width:160px}
+ #sharkApp .shark-minimap{right:10px;top:calc(max(8px,env(safe-area-inset-top)) + 55px);width:64px}
+ #sharkApp .shark-camera-controls{right:10px;top:calc(max(8px,env(safe-area-inset-top)) + 121px)}
+ #sharkApp .shark-cage-open{right:10px;top:calc(max(8px,env(safe-area-inset-top)) + 172px)}
+ #sharkApp .shark-lower{bottom:max(14px,env(safe-area-inset-bottom))}#sharkApp #sharkJoystick{width:82px;height:82px}#sharkApp #sharkJoystick>span{top:31px}#sharkApp #sharkBoost{width:65px;height:65px}
+ #sharkApp.shark-home #sharkSheet{max-height:96%}.shark-home .shark-cover{height:clamp(135px,25dvh,210px)}
+ #sharkApp .shark-home-copy{padding:18px}#sharkApp .shark-home-copy h1{font-size:27px!important;margin:12px 0!important;line-height:1.1}
+ #sharkApp .shark-home-copy>p{font-size:13px;line-height:1.45;margin:10px 0}.shark-home-copy .shark-kicker{font-size:8px;letter-spacing:1.5px}
+ #sharkApp .shark-home-copy .shark-actions{margin:16px 0 10px;gap:8px}#sharkApp .shark-home-copy .shark-button{min-height:44px;padding:11px 10px;font-size:12px!important}#sharkApp .shark-home-copy .shark-actions>.primary{padding:14px}
+ #sharkApp .shark-home-facts{display:none}#sharkApp .shark-home-copy .shark-note{font-size:10px!important;margin-bottom:0}
+ .shark-cage-grid{grid-template-columns:1fr}.shark-cage-card{display:grid;grid-template-columns:40px 1fr;gap:6px 12px;padding:12px}.shark-cage-card .shark-cage-icon{grid-row:1/4}.shark-cage-card h4,.shark-cage-card>strong,.shark-cage-card>span{grid-column:2}.shark-cage-card button{grid-column:1/-1;min-height:44px}
+ .shark-cage-row{gap:8px;padding:10px 8px}.shark-cage-row strong{font-size:11px}.shark-cage-row .shark-cage-icon svg{width:28px;height:28px}
+}
+@media(max-height:520px) and (min-width:601px){#sharkApp .shark-cage-open{top:calc(max(8px,env(safe-area-inset-top)) + 173px)}#sharkApp .shark-home-facts{display:none}#sharkApp .shark-home-copy .shark-actions{gap:7px}.shark-cage-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+#sharkApp .shark-camera-controls>div{position:absolute;right:50px;top:0}

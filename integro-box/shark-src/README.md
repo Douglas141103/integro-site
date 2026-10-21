@@ -39,3 +39,15 @@ instâncias, com geometria compartilhada, para limitar o custo de renderização
 Zoom de 0 a 3, botões −/+, roda, pinça e atalho do olho. Zoom 0 ativa a câmera
 nos olhos do tubarão, com corpo e anel ocultos, direção de nado coerente e
 preferência salva por conta no navegador. Testes: `tests/shark-algae-camera.test.mjs`.
+
+### Gaiolas IntGem e HUD 3
+Gaiolas pequenas/médias/grandes custam 1/2/3 IntGem e capturam até 3/6/10 peixes
+menores em um raio de 55 metros. Cada gaiola permite exatamente cinco pescas.
+Sem peixes disponíveis, a interface não envia uma utilização. Compra, propriedade,
+capacidade, débito e usos são validados no servidor; solicitações têm identificadores
+persistidos para retomada sem cobrança ou uso duplicado. A gaiola permanece na conta
+entre dispositivos; XP e moedas continuam no progresso local do Shark.
+A pesca exibe a gaiola 3D e concede os ganhos normais dos peixes capturados.
+A aplicação local registra recibos para impedir ganhos duplicados em tentativas.
+HUD: minimapa menor, zoom recolhível, acesso a gaiolas e tela inicial mais compacta.
+Testes adicionais: `tests/shark-cages-db.test.mjs tests/shark-cages-client.test.mjs`.

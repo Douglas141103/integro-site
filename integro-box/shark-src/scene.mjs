@@ -1,10 +1,11 @@
+import {createCageEffect} from './cage-model.mjs';
 import {createAlgaeField} from './algae.mjs';
 import {clampZoom,sharkCameraPose,FIRST_PERSON_ZOOM} from './camera.mjs';
 import * as T from 'three';
 import {createFish} from './fish.mjs';
 import {steerFish} from './motion.mjs';
 import {makeOcean} from './ocean.mjs';
-import {REGIONS,SHOP,regionAt,lengthFor,canEat,eat,eatAlgae,damage,respawn,discover,claimMissions} from './rules.mjs';
+import {REGIONS,SHOP,regionAt,lengthFor,canEat,eat,eatAlgae,applyCageCatch,damage,respawn,discover,claimMissions} from './rules.mjs';
 const clamp=T.MathUtils.clamp;
 export class SharkScene{
  constructor(canvas,progress,notify){
@@ -19,9 +20,13 @@ export class SharkScene{
   // An approachable starter school is always in view for the first meal.
   this.fish.slice(0,8).forEach((f,i)=>{f.level=Math.max(0,progress.level-1);f.rig.group.scale.setScalar(lengthFor(f.level)/4);f.rig.group.position.set(this.position.x+7+i*3,this.position.y+Math.sin(i)*2,this.position.z+Math.cos(i)*7);f.depth=f.rig.group.position.y;f.dir=.15;});
   for(let i=0;i<32;i++){const mesh=new T.Mesh(this.pearlGeo,this.pearlMaterial);this.scene.add(mesh);const pearl={mesh,phase:Math.random()*6};this.pearls.push(pearl);this.placePearl(pearl);}
-  this.algae=createAlgaeField(this.scene,progress.quality==='low'?24:36);this.algae.seed(this.position);
+  this.cageEffect=createCageEffect(this.scene);this.algae=createAlgaeField(this.scene,progress.quality==='low'?24:36);this.algae.seed(this.position);
   this.ring=new T.Mesh(new T.TorusGeometry(1,.025,6,48),new T.MeshBasicMaterial({color:0x90ffe4,transparent:true,opacity:.65}));this.ring.rotation.x=Math.PI/2;this.scene.add(this.ring);
   this.camera.position.copy(this.position).add(new T.Vector3(12,12,18));this.resize();this.update(0,{x:0,z:0,y:0},false);
+ }
+ fishForCage(capacity){return this.fish.filter(f=>canEat(this.p.level,f.level)&&f.rig.group.position.distanceTo(this.position)<=55).sort((a,b)=>a.rig.group.position.distanceTo(this.position)-b.rig.group.position.distanceTo(this.position)).slice(0,capacity).map(f=>f.level);}
+ catchCage(cast){const result=applyCageCatch(this.p,cast);if(!result)return;for(const level of cast.levels){const fish=this.fish.find(f=>f.level===level&&f.rig.group.position.distanceTo(this.position)<=55);if(fish)this.spawn(fish);}
+  this.bite=1;this.cageEffect.show(this.position,lengthFor(this.p.level),cast.capacity,this.heading);this.burst(this.position,0xffdc83);this.checkMissions();this.notify('cage',`Pesca: ${result.count} peixes · +${result.xp} XP`);
  }
  resize(){const w=this.canvas.clientWidth||innerWidth,h=this.canvas.clientHeight||innerHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
  applyStyle(){const item=SHOP.find(i=>i.id===this.p.skin);this.player.tint(item?.color||0x65cfea);this.player.crown.visible=this.p.accessories.includes('crown');}
@@ -67,7 +72,7 @@ export class SharkScene{
   for(const q of this.pearls){q.mesh.position.y+=Math.sin(t*2+q.phase)*dt*.2;q.mesh.rotation.y=t;const d=q.mesh.position.distanceTo(this.position);if(d>180)this.placePearl(q);else if(playing){if(p.upgrades.magnet&&d<18)q.mesh.position.lerp(this.position,dt*4);if(d<Math.max(1.8,len*.34)){p.coins+=8;this.burst(q.mesh.position,0xffe6a3);this.notify('pearl','+8 moedas');this.placePearl(q);}}}
   for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i];b.life-=dt;b.mesh.position.addScaledVector(b.v,dt);b.mesh.scale.multiplyScalar(1-dt);if(b.life<=0){this.scene.remove(b.mesh);this.bursts.splice(i,1);}}
   if(playing&&p.accessories.includes('trail')&&amount>.2&&Math.floor(t*7)!==this.lastTrail){this.lastTrail=Math.floor(t*7);this.burst(this.position.clone().add(new T.Vector3(-Math.cos(this.heading),0,Math.sin(this.heading)).multiplyScalar(len*.45)),0xb8bcff);}
-  this.ring.position.copy(this.position);this.ring.position.y-=len*.25+.3;this.ring.scale.setScalar(len*.65);this.ring.visible=playing&&!this.firstPerson;this.ocean.update(t,this.position);this.renderer.render(this.scene,this.camera);
+  this.ring.position.copy(this.position);this.ring.position.y-=len*.25+.3;this.ring.scale.setScalar(len*.65);this.ring.visible=playing&&!this.firstPerson;this.cageEffect.update(dt);this.ocean.update(t,this.position);this.renderer.render(this.scene,this.camera);
  }
  checkMissions(){for(const m of claimMissions(this.p))this.notify('mission',`${m.name} · +${m.reward} moedas!`);}
  labels(){const width=this.canvas.clientWidth,height=this.canvas.clientHeight;return this.fish.map(f=>{const pos=f.rig.group.position,d=pos.distanceTo(this.position);if(d>70+lengthFor(this.p.level))return null;const v=pos.clone().add(new T.Vector3(0,lengthFor(f.level)*.45+1,0)).project(this.camera);if(v.z< -1||v.z>1||Math.abs(v.x)>.95||(-.5*v.y+.5)*height<145||(-.5*v.y+.5)*height>height-120)return null;return {x:(v.x*.5+.5)*width,y:(-.5*v.y+.5)*height,level:f.level,edible:canEat(this.p.level,f.level),distance:d};}).filter(Boolean).sort((a,b)=>a.distance-b.distance).slice(0,12);}
@@ -76,5 +81,5 @@ export class SharkScene{
   if(this.waypoint!==null){const r=REGIONS[this.waypoint],[x,y]=xy(r.x,r.z);ctx.strokeStyle='#ffdf86';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.stroke();const [px,py]=xy(this.position.x,this.position.z);ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);}
   const [x,y]=xy(this.position.x,this.position.z);ctx.fillStyle='#fff';ctx.strokeStyle='#133f50';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
  }
- dispose(){this.algae.dispose();this.ocean.dispose();this.player.dispose();this.fish.forEach(f=>f.rig.dispose());this.pearlGeo.dispose();this.pearlMaterial.dispose();this.burstGeo.dispose();this.burstMaterial.dispose();this.ring.geometry.dispose();this.ring.material.dispose();this.renderer.dispose();}
+ dispose(){this.cageEffect.dispose();this.algae.dispose();this.ocean.dispose();this.player.dispose();this.fish.forEach(f=>f.rig.dispose());this.pearlGeo.dispose();this.pearlMaterial.dispose();this.burstGeo.dispose();this.burstMaterial.dispose();this.ring.geometry.dispose();this.ring.material.dispose();this.renderer.dispose();}
 }
