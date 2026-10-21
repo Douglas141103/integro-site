@@ -3,7 +3,7 @@ const names={bear:'Boca de urso',mine:'Mina terrestre'};
 const icons={bear:'◉',mine:'✹'};
 const errors={insufficient_intgem:'Você precisa de 1 IntGem para comprar.',invalid_trap:'Escolha uma armadilha válida.',request_changed:'Esta solicitação já foi usada. Atualize e tente novamente.',not_member:'Entre em uma sala do Pegue o Ovo.',ground_required:'Pare no chão para colocar a armadilha.',position_pending:'Aguarde a posição sincronizar e tente novamente.',trap_empty:'Você não tem essa armadilha na mochila.',trap_limit:'Você pode deixar até 12 armadilhas na sala. Aguarde uma disparar.'};
 export function createEggTraps({rpc,getRoom,getRuntime,storage,onPlaced=()=>{},onChange=()=>{}}){
- let data={stock:{},traps:[],balance:0},loaded=false,busy=false,polling=false,host=null,status='',roomId=null,epoch=0,signature='';
+ let data={stock:{},traps:[],balance:0},loaded=false,busy=false,polling=false,host=null,status='',roomId=null,epoch=0,signature='',refreshPending=false;
  const seen=new Set(),acks=new Set(),requests=new Map();
  const panelOpen=()=>host?.isConnected&&!host.closest('[hidden]');
  try{for(const [k,v] of JSON.parse(storage?.getItem('egg-trap-requests')||'[]').slice(-16))if(typeof k==='string'&&typeof v==='string')requests.set(k,v);}catch{}
@@ -18,8 +18,8 @@ export function createEggTraps({rpc,getRoom,getRuntime,storage,onPlaced=()=>{},o
   for(const hit of result.hits||[]){acks.add(hit.id);if(seen.has(hit.id))continue;seen.add(hit.id);while(seen.size>100)seen.delete(seen.values().next().value);try{storage?.setItem('egg-trap-hits',JSON.stringify([...seen]));}catch{}getRuntime()?.trapHit(hit);}
   onChange(data);const next=JSON.stringify([data.stock,data.balance,status,!!roomId]);if(next!==signature){signature=next;if(panelOpen())render(host);}
  }
- function syncRoom(){const next=getRoom()?.game==='egg'?getRoom().id:null;if(next===roomId)return;roomId=next;epoch++;acks.clear();data.traps=[];getRuntime()?.traps([]);onChange(data);}
- async function poll(){syncRoom();if(polling||busy||!getRuntime()?.active()||document.hidden||(!roomId&&!panelOpen()))return;polling=true;const generation=epoch,selected=roomId,sent=[...acks].slice(0,32);try{const result=await call('trap_state',{ack:sent});if(generation!==epoch)return;for(const id of sent)acks.delete(id);status='';apply(result,selected);}catch(e){status=e.message;if(panelOpen())render(host);}finally{polling=false;}}
+ function syncRoom(){const next=getRoom()?.game==='egg'?getRoom().id:null;if(next===roomId)return;roomId=next;epoch++;acks.clear();data.traps=[];getRuntime()?.traps([]);}
+ async function poll(force=false){syncRoom();if(polling||busy||!getRuntime()?.active()||document.hidden||(!force&&!refreshPending&&!roomId&&!panelOpen()))return;polling=true;refreshPending=false;const generation=epoch,selected=roomId,sent=[...acks].slice(0,32);try{const result=await call('trap_state',{ack:sent});if(generation!==epoch)return;for(const id of sent)acks.delete(id);status='';apply(result,selected);}catch(e){status=e.message;if(panelOpen())render(host);}finally{polling=false;}}
  async function act(action,kind){if(busy)return false;syncRoom();const selected=roomId,generation=++epoch,key=action+':'+kind+(action==='trap_place'?':'+selected:'');let request=requests.get(key);
   if(!request){request=window.crypto.randomUUID();requests.set(key,request);remember();}busy=true;status='Aguarde…';if(panelOpen())render(host);
   try{const result=await call(action,{kind,...(action==='trap_place'?{position:getRuntime()?.trapPosition()}: {})},request);requests.delete(key);remember();if(generation===epoch){status=action==='trap_buy'?'Armadilha comprada!':'Armadilha colocada. Ela arma em 1 segundo.';apply(result,selected);if(action==='trap_place')onPlaced();}
@@ -36,5 +36,5 @@ export function createEggTraps({rpc,getRoom,getRuntime,storage,onPlaced=()=>{},o
  }
  const timer=window.setInterval(()=>void poll(),500);
  window.addEventListener('box-room-change',()=>{syncRoom();void poll();});
- return{render(element){syncRoom();render(element);void poll();},poll,act,get state(){return data;},stop(){window.clearInterval(timer);getRuntime()?.traps([]);}};
+ return{refresh:()=>{refreshPending=true;return poll(true);},render(element){syncRoom();render(element);void poll();},poll,act,get state(){return data;},stop(){window.clearInterval(timer);getRuntime()?.traps([]);}};
 }

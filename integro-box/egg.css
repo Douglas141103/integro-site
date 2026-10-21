@@ -291,3 +291,32 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 @media(max-height:450px) and (orientation:landscape){.egg-immersive .egg-push{min-height:44px}.egg-immersive .egg-action-pad{gap:3px}.egg-immersive .egg-supplies{gap:5px}}
 .egg-jet-shop{display:grid;gap:14px;max-width:540px;margin:auto}.egg-jet-shop p,.egg-jet-shop h3{margin:0}.egg-jet-shop button{min-height:48px}.egg-jet-shop-icon{margin:auto;width:96px;height:96px;padding:20px;border-radius:28px;background:linear-gradient(145deg,#c7f4df,#9fdfef);color:#235267}.egg-jet-shop-icon svg{width:100%;height:100%}.egg-jet-price{font-weight:800;color:#285d61!important}.egg-jet-button,.egg-jet-home{--ability-color:#7ce5ec}.egg-jet-home>span{position:static!important;font-size:29px!important;background:none!important}.egg-ability-dock.jet-flying>.egg-ability-button:not(.egg-jet-button):not(.egg-jet-home){display:none}.egg-jet-button[hidden],.egg-jet-home[hidden]{display:none}
 @media(max-width:600px) and (orientation:portrait){.egg-stage:has(#eggPush:not([hidden])) .egg-ability-dock{bottom:238px}.egg-ability-dock{gap:7px}.egg-jet-shop-icon{width:80px;height:80px;padding:15px}}
+
+/* Welcome gift: compact, keyboard-accessible and readable in either orientation. */
+.egg-gift-sheet .egg-sheet-card{background:radial-gradient(ellipse at 50% 22%,#fff2bb 0,transparent 58%),#f5f8ef;max-width:650px;border-color:#fff2b6}
+.egg-gift-sheet .egg-sheet-head{margin-bottom:6px}
+.egg-gift{text-align:center;max-width:540px;margin:auto;color:#233e3b}
+.egg-gift h3{font-size:clamp(21px,4vw,29px);line-height:1.15;margin:6px 0 10px}
+.egg-gift-intro{font-size:14px;line-height:1.5;max-width:400px;margin:0 auto 16px}
+.egg-gift-art{height:150px;position:relative;max-width:290px;margin:auto}
+.egg-gift-box{position:absolute;width:124px;height:112px;left:50%;bottom:6px;transform:translateX(-50%) rotate(-5deg);filter:drop-shadow(0 12px 9px #154f3725);animation:egg-gift-bob 2.6s ease-in-out infinite}
+.egg-gift-base{position:absolute;inset:26px 4px 0;background:linear-gradient(130deg,#388b76,#166552);border-radius:5px 5px 16px 16px;border:2px solid #115343}
+.egg-gift-base:after{content:'';position:absolute;inset:0 42px;background:linear-gradient(90deg,#ffcf5f,#ffe8a3,#ffcf5f)}
+.egg-gift-lid{position:absolute;inset:12px -4px auto;height:28px;z-index:2;background:linear-gradient(100deg,#45a28a,#1c7660);border:2px solid #115343;border-radius:6px;transition:transform .6s ease}
+.egg-gift-lid:after{content:'';position:absolute;inset:-2px 46px;background:#ffe19a}
+.egg-gift-lid i,.egg-gift-lid b{position:absolute;width:39px;height:24px;border:7px solid #f5be4e;border-radius:50% 50% 0 50%;top:-25px;left:23px;transform:rotate(18deg)}
+.egg-gift-lid b{left:60px;transform:scaleX(-1) rotate(18deg)}
+.egg-gift-box>span{position:absolute;z-index:3;color:#fff5c8;font-size:28px;right:14px;bottom:17px;transform:rotate(12deg)}
+.egg-gift-spark{position:absolute;font-style:normal;color:#de9c25;font-size:34px;animation:egg-gift-twinkle 2s ease-in-out infinite}.egg-gift-spark.s1{top:24px;left:28px}.egg-gift-spark.s2{right:22px;bottom:26px;animation-delay:.7s;color:#348b78}.egg-gift-spark.s3{top:5px;right:62px;font-size:23px;animation-delay:1.2s}
+.egg-gift.is-open .egg-gift-lid{transform:translate(17px,-32px) rotate(16deg)}
+.egg-gift.is-open .egg-gift-spark{color:#b67500}.egg-gift.is-open .egg-gift-box{animation:none}
+.egg-gift-rewards{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px;margin:14px 0 18px}
+.egg-gift-reward{background:#ffffffba;border:1px solid #bcd8c9;border-radius:16px;padding:13px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;font-size:13px}
+.egg-gift-reward svg{width:37px;height:37px;color:#16715f}.egg-gift-reward-icon{font-size:31px;line-height:37px;color:#16715f}.egg-gift-reward span{font-size:12px;color:#43665c}
+.egg-gift>.egg-primary,.egg-gift>.egg-secondary,.egg-item-empty>button{display:block;width:100%;min-height:46px;margin:8px 0}
+.egg-gift>.egg-primary{background:#236e58;color:#fff;font-size:19px;box-shadow:0 5px 0 #164c3c}
+.egg-gift-status{min-height:20px;font-size:13px;margin:14px 0 0}.egg-item-empty{text-align:center;max-width:420px;margin:auto}.egg-item-empty-icon{font-size:48px;color:#236e58}
+@keyframes egg-gift-bob{50%{transform:translateX(-50%) translateY(-6px) rotate(4deg)}}
+@keyframes egg-gift-twinkle{50%{transform:scale(.8) rotate(15deg);opacity:.65}}
+@media(max-height:550px) and (orientation:landscape){.egg-gift-art{height:90px}.egg-gift-box{transform:translateX(-50%) scale(.64);transform-origin:bottom;animation:none}.egg-gift-rewards{margin:8px 0}.egg-gift-reward{padding:7px}.egg-gift-intro{margin-bottom:6px}.egg-gift-reward svg,.egg-gift-reward-icon{display:none}}
+@media(prefers-reduced-motion:reduce){.egg-gift-box,.egg-gift-spark{animation:none}.egg-gift-lid{transition:none}}

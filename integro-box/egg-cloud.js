@@ -73,5 +73,5 @@ async function exchange(operation){
  }finally{externalTransaction=false;}
 }
 async function ranking(){if(ready&&!pending&&!externalTransaction&&!stopped)await flushIfNeeded();const data=await rpc('ranking');return {...data,synced:ready&&!dirty&&!blockedSync};}
-window.BoxEggCloud={jet:(action,id)=>rpc(action,{p_id:id}),traps:(action,extra)=>rpc(action,extra),ranking,dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
+window.BoxEggCloud={gift:action=>rpc(action),jet:(action,id)=>rpc(action,{p_id:id}),traps:(action,extra)=>rpc(action,extra),ranking,dirty(){dirty=true;if(needsExpansion()){rememberPending();blockedSync=true;status=compatibilityStatus();}},get worldLimit(){return serverWorlds;},render,flush,exchange,get frozen(){return pending||raceFrozen||externalTransaction;},stop(){stopped=true;clearInterval(tick);clearInterval(pushTimer);push.stop();runtime()?.stop();}};
 await boot();
