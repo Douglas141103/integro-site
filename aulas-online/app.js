@@ -88,10 +88,15 @@ $('classes').addEventListener('click',event=>{
   if(button.dataset.action==='end'){await api('end',{lesson_id:l.id});if(state.roomLesson?.id===l.id)await state.room?.disconnect();await refresh();notice('Aula encerrada para todos.');}
   if(button.dataset.action==='deliveries')await showDeliveries(c,l);
   if(['start','join'].includes(button.dataset.action)){
-   if(state.room)await state.room.disconnect();
-   const student=button.closest('.lesson').querySelector('select')?.value;
-   const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});
-   if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
+   if(state.room&&state.roomLesson?.id===l.id){$('classroom').scrollIntoView({behavior:'smooth',block:'start'});return;}
+   if(state.joining)throw Error('Aguarde a entrada na chamada.');
+   state.joining=true;
+   try{
+    if(state.room)await state.room.disconnect();
+    const student=button.closest('.lesson').querySelector('select')?.value;
+    const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});
+    if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
+   }finally{state.joining=false;}
   }
  });
 });
