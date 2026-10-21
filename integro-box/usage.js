@@ -1,5 +1,5 @@
 import {supabase} from './access.js?v=20261016-intgem1';
-const screens={sharkApp:'shark',blueApp:'blueworld',bounceApp:'bounce',rushApp:'rush',danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
+const screens={towerApp:'tower',sharkApp:'shark',blueApp:'blueworld',bounceApp:'bounce',rushApp:'rush',danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
 export function currentGame(doc=document){
  for(const [id,game] of Object.entries(screens)){const el=doc.getElementById(id);if(el&&!el.hidden&&!el.classList.contains('hidden'))return game;}
  const play=doc.getElementById('play');
@@ -16,16 +16,16 @@ export function startUsage({client=supabase}={}){
  function state(){
   const game=currentGame();const room=window.BoxMultiplayer?.usageRoom;
   const visible=!document.hidden;
-  const paused=!!document.querySelector('#integroUpdate:not([hidden]):not([data-compact="true"])')||(game==='shark'&&!!window.BoxShark?.getState()?.mode)||(game==='blueworld'&&!window.BoxBlueRuntime?.playing());
+  const paused=!!document.querySelector('#integroUpdate:not([hidden]):not([data-compact="true"])')||(game==='tower'&&!!window.BoxTower?.getState()?.mode)||(game==='shark'&&!!window.BoxShark?.getState()?.mode)||(game==='blueworld'&&!window.BoxBlueRuntime?.playing());
   return {p_game:game,p_active:visible&&!paused&&Date.now()-lastInput<120000,p_visible:visible,p_room:room?.game===game?room.id:null};
  }
  async function pulse(action='pulse'){
   if(stopped)return;if(busy){queued=true;return;}busy=true;const s=state();lastState=JSON.stringify(s);
   try{
-   const label=s.p_game==='shark'?'Shark':s.p_game==='blueworld'?'Blue World':s.p_game==='rush'?'Integro Rush':'InterDance';
+   const label=s.p_game==='tower'?'TOWER':s.p_game==='shark'?'Shark':s.p_game==='blueworld'?'Blue World':s.p_game==='rush'?'Integro Rush':'InterDance';
    if(unavailable.has(s.p_game)){if(notice)notice.textContent=normal+' Registro do '+label+' temporariamente indisponível.';return;}
    const {data,error}=await client.rpc('box_usage',{p_session:id,p_action:action,p_device:device,...s});
-   if(['interdance','rush','blueworld','shark'].includes(s.p_game)&&/invalid_usage/.test(error?.message||'')){
+   if(['interdance','rush','blueworld','shark','tower'].includes(s.p_game)&&/invalid_usage/.test(error?.message||'')){
     // Old deployments must not attribute unrecorded game time to the previous game.
     unavailable.add(s.p_game);
     await client.rpc('box_usage',{p_session:id,p_action:'end',p_device:device,p_game:'lobby',p_room:null,p_active:false,p_visible:false});

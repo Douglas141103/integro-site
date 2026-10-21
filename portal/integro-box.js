@@ -1,6 +1,6 @@
 import {supabase} from '../integro-box/access.js';
 const $=id=>document.getElementById(id);
-const games={shark:'Shark',blueworld:'Blue World',rush:'Integro Rush',interdance:'InterDance',gosnake:'GoSnake',lobby:'Menu de jogos',house:'Rua das Descobertas',egg:'Pegue o Ovo',bairro:'Meu Bairro',fruit:'Fruit Box',interball:'InterBall',fuitcort:'FuitCort',craft:'IntegroCraft',math:'Torre da Matemática',words:'Palavras',robot:'Robótica',memory:'Memória'};
+const games={tower:'TOWER',shark:'Shark',blueworld:'Blue World',rush:'Integro Rush',interdance:'InterDance',gosnake:'GoSnake',lobby:'Menu de jogos',house:'Rua das Descobertas',egg:'Pegue o Ovo',bairro:'Meu Bairro',fruit:'Fruit Box',interball:'InterBall',fuitcort:'FuitCort',craft:'IntegroCraft',math:'Torre da Matemática',words:'Palavras',robot:'Robótica',memory:'Memória'};
 const roleNames={responsavel:'Responsável',integro_admin:'Administrador',diretor:'Diretor',coordenacao:'Coordenação',professor:'Professor'};
 const deviceNames={desktop:'Computador',mobile:'Celular',tablet:'Tablet'};
 let generation=0,userId=null,page=0,total=0,people=[],loading=false;

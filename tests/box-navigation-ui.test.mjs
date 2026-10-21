@@ -24,7 +24,7 @@ test('loading stages wait for auth and real script completion; failures keep the
  for(const fail of [false,true]){
   const dom=new JSDOM(html,{url:'https://example.test/integro-box/jogar.html',runScripts:'outside-only'}),w=dom.window,d=w.document,loaded=[];let releaseAuth;
   w.requireFamily=()=>new Promise(r=>releaseAuth=r);w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
-  w.loadModule=async()=>({mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},startUsage(){},startIntGem:async()=>{}});
+  w.loadModule=async()=>({mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},installTower(){},startUsage(){},startIntGem:async()=>{}});
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT'){loaded.push(n.src);queueMicrotask(()=>fail&&n.src.includes('egg.js')?n.onerror():n.onload());}};
   try{
    const done=w.eval('(async()=>{'+source+'})()');assert.equal(loaded.length,0);assert(d.body.classList.contains('box-locked'));releaseAuth({id:'user-a'});await done;
@@ -47,7 +47,7 @@ test('portal entry shows the catalog for old game links and saved recent games; 
   w.localStorage.setItem('box:user-a:catalog-recent-v1',JSON.stringify(['interdance']));
   w.requireFamily=async()=>({id:'user-a'});w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
   d.getElementById('brandHome').onclick=()=>{d.getElementById('lobby').classList.remove('hidden');d.getElementById('footer').classList.remove('hidden');};
-  const idleModules={mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},startUsage(){},startIntGem:async()=>{}};
+  const idleModules={mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},installTower(){},startUsage(){},startIntGem:async()=>{}};
   w.loadModule=async url=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached an installer');return url.includes('/interdance.js')?w.eval('(function(){'+dance+';return {installInterDance};})()'):idleModules;};
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT')queueMicrotask(()=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached a script');if(n.src.includes('catalog.js'))w.eval(catalog);n.onload();});};
   try{
