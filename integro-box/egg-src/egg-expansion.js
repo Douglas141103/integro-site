@@ -22,6 +22,10 @@ export const NEW_ACCESSORIES={
  starBeacon:{name:'Farol do infinito',slot:'back',price:650000,desc:'Um planeta luminoso cercado por três órbitas douradas.'}
 };
 export const VEHICLES={
+ carAurora:{name:'Carro Aurora GT',type:'car',price:2000000,bonus:.15,color:0x27bfa9,trim:0xffd875,luxury:true,desc:'Carro esportivo com rodas animadas. Pilote em pé sobre o teto.'},
+ carRoyal:{name:'Carro Imperial',type:'car',price:5000000,bonus:.18,color:0x6d54a3,trim:0xffdc87,luxury:true,desc:'Carro de luxo com acabamento dourado. Pilote sobre o teto.'},
+ jetAurora:{name:'Jatinho Aurora',type:'jet',price:8000000,bonus:.22,color:0xe5f1ed,trim:0x45bdb9,luxury:true,desc:'Mini jatinho flutuante com asas e turbinas. Monte sobre a fuselagem para percorrer a pista.'},
+ jetImperial:{name:'Jatinho Imperial',type:'jet',price:15000000,bonus:.25,color:0x353a63,trim:0xf5ce72,luxury:true,desc:'Jatinho de coleção com detalhes dourados e turbinas azuis. Pilote em pé sobre a fuselagem.'},
  skateBreeze:{name:'Skate Brisa',type:'skate',price:950,bonus:.05,color:0x39c5b1,trim:0xffd477},
  skateNeon:{name:'Skate Neon',type:'skate',price:8500,bonus:.07,color:0xa173ed,trim:0x82f5f0},
  skateAurora:{name:'Skate Aurora',type:'skate',price:65000,bonus:.09,color:0x89d8e2,trim:0xefb1ee},

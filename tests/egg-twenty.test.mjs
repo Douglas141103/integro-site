@@ -13,10 +13,10 @@ test('all six added tracks have unique guardians, eggs, progression and permanen
  }
  const end=new EggAdventure();end.player.z=-958;advance(end,1,{z:-1});assert.equal(end.zone(),19);assert(end.player.z>=-959.2);
 });
-test('eight modest speed upgrades are bought once, equipped at base and persist without unlocking unowned items',()=>{
- assert.equal(Object.keys(VEHICLES).length,8);
+test('twelve mounted vehicles are bought once, equipped at base and persist without unlocking unowned items',()=>{
+ assert.equal(Object.keys(VEHICLES).length,12);
  for(const [id,v]of Object.entries(VEHICLES)){
-  const g=new EggAdventure(),base=g.speed();g.save.coins=v.price;assert(g.buy(id));assert.equal(g.save.coins,0);assert.equal(g.save.vehicle,id);assert.equal(g.buy(id),false);assert.equal(g.speed(),base*(1+v.bonus));assert(v.bonus>=.05&&v.bonus<=.12);
+  const g=new EggAdventure(),base=g.speed();g.save.coins=v.price;assert(g.buy(id));assert.equal(g.save.coins,0);assert.equal(g.save.vehicle,id);assert.equal(g.buy(id),false);assert.equal(g.speed(),base*(1+v.bonus));assert(v.bonus>=.05&&v.bonus<=(v.luxury?.25:.12));
   const restored=new EggAdventure(g.save);assert.equal(restored.save.vehicle,id);assert(restored.equipVehicle(id));assert.equal(restored.speed(),base);assert(restored.equipVehicle(id));restored.player.z=-100;assert.equal(restored.equipVehicle(id),false);restored.raceMode=true;assert.equal(restored.speed(),22);
  }
  assert.equal(cleanSave({version:4,vehicles:['unknown'],vehicle:'skateIntegro'}).vehicle,null);assert.deepEqual(cleanSave({version:4,coins:740,vehicles:['skateBreeze','skateBreeze']}).vehicles,['skateBreeze']);assert.equal(cleanSave({version:4,coins:740}).coins,740);
@@ -32,7 +32,7 @@ test('migration accepts all 20 worlds and vehicles, sanitizes room state, retain
   for(const file of ['20261013210000_box_egg_expansion.sql','20261014220000_box_egg_storm.sql','20261014230000_box_egg_time.sql','20261016170000_box_egg_twenty.sql','20261016170000_box_egg_twenty.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
   const egg=(n,action,args={})=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);return(await tx.query('select public.box_egg($1,$2,$3,$4,$5,$6,$7,$8,$9) r',[action,args.rev??-1,args.save??null,args.room??null,null,null,null,null,args.world??0])).rows[0].r;});
   assert.deepEqual(await egg(1,'capabilities'),{worlds:20,accessories:64,abilities:8,vehicles:8});await assert.rejects(egg(0,'capabilities'));await assert.rejects(egg(8,'save'));
-  const save=new EggAdventure().save;save.upgrades.pen=10;save.vehicles=Object.keys(VEHICLES);save.vehicle='scooterIntegro';save.creatures=WORLDS.map((_,i)=>({id:i+1,uid:'expanded-'+i,world:i,rarity:'common',mutation:'normal'}));save.eggs=[{id:30,world:19,rarity:'secret',mutation:'cosmic',remaining:5}];
+  const save=new EggAdventure().save;save.upgrades.pen=10;save.vehicles=Object.keys(VEHICLES).filter(k=>!VEHICLES[k].luxury);save.vehicle='scooterIntegro';save.creatures=WORLDS.map((_,i)=>({id:i+1,uid:'expanded-'+i,world:i,rarity:'common',mutation:'normal'}));save.eggs=[{id:30,world:19,rarity:'secret',mutation:'cosmic',remaining:5}];
   assert.equal((await egg(1,'save',{rev:0,save})).revision,1);assert.deepEqual((await egg(1,'load')).save,save);
   for(const invalid of[{...save,vehicle:'hacked'},{...save,vehicles:[],vehicle:'skateBreeze'},{...save,vehicles:'skateBreeze'},{...save,eggs:[{world:20,rarity:'common',mutation:'normal'}]},{...save,creatures:[{uid:'bad',world:20,rarity:'common',mutation:'normal'}]}])assert.equal((await egg(1,'save',{rev:1,save:invalid})).error,'invalid_save');
   const room=await call(1,'create',{p_game:'egg'});await call(2,'join',{p_code:room.code});for(const n of[1,2])await call(n,'sync',{p_room:room.id,p_state:{x:0,y:0,z:15,yaw:0,zone:'world',vehicle:n===1?'scooterIntegro':'hacked'}});

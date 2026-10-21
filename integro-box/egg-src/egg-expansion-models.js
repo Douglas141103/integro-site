@@ -69,6 +69,21 @@ export function expansionAccessory(id,g,{ball,cyl,torus,rod,softBox}){
 export function vehicleModel(art,id,definition){
  const g=new T.Group();g.name='vehicle-'+id;const {color,trim,type}=definition;
  const add=(kind,c,x,y,z,sx,sy,sz)=>art.mesh(g,kind,c,x,y,z,sx,sy,sz,'trim');
+ if(type==='car'||type==='jet'){
+  g.userData.wheels=[];
+  if(type==='car'){
+   add('round',color,0,.32,0,1.22,.36,2.12);add('round',color,0,.61,.12,.94,.38,1.02);add('round',0x8bd9e4,0,.62,-.34,.83,.28,.10);add('round',0x304957,0,.82,.12,.76,.035,.64);
+   for(const x of [-.62,.62])for(const z of [-.68,.70]){const wheel=add('cyl',0x263945,x,.22,z,.22,.15,.22);wheel.rotation.z=Math.PI/2;g.userData.wheels.push(wheel);const hub=add('cyl',trim,x*1.06,.22,z,.11,.16,.11);hub.rotation.z=Math.PI/2;}
+   for(const x of [-.40,.40]){add('round',0xf8efbd,x,.39,-1.08,.25,.12,.05);add('round',0xe37b69,x,.38,1.08,.25,.10,.05);}add('round',trim,0,.22,-1.1,.9,.10,.08);add('round',trim,0,.22,1.1,.9,.10,.08);
+   add('round',trim,0,.51,-.77,.10,.035,.55);add('round',trim,0,.84,.12,.08,.02,.63);
+  }else{
+   add('ball',color,0,.24,0,.32,.25,1.375);add('ball',0x7edee7,0,.40,-.60,.245,.125,.325);add('round',trim,0,.48,.10,.40,.06,.60);
+   const left=add('round',color,-.78,.16,.1,1.52,.09,.64),right=add('round',color,.78,.16,.1,1.52,.09,.64);left.rotation.y=-.25;right.rotation.y=.25;
+   add('round',trim,0,.22,1.10,1.13,.075,.39);add('round',color,0,.49,1.06,.10,.65,.46);
+   for(const x of [-.42,.42]){const engine=add('cyl',trim,x,.16,.65,.18,.60,.18);engine.rotation.x=Math.PI/2;const exhaust=add('cone',0x79e8f2,x,.16,1.08,.12,.4,.12);exhaust.rotation.x=Math.PI/2;}
+  }
+  g.traverse(m=>{if(m.isMesh)m.castShadow=true;});return g;
+ }
  add('round',color,0,.11,0,.76,.16,1.55);add('round',0x294b58,0,.205,.01,.56,.035,1.23);
  for(const z of[-.62,.62]){add('round',trim,0,.14,z,.78,.10,.15);for(const x of[-.26,.26]){const engine=add('ring',trim,x,0,z,.13,.13,.13);engine.rotation.x=Math.PI/2;add('cone',0x91e9ed,x,-.10,z,.06,.18,.06).rotation.z=Math.PI;}}
  if(type==='scooter'){add('cyl',0xdce9dc,0,.63,-.46,.045,.84,.045);add('round',color,0,1.05,-.46,.85,.095,.10);for(const x of[-.35,.35])add('round',trim,x,1.05,-.46,.18,.12,.13);add('round',trim,0,.79,-.46,.12,.28,.12);}

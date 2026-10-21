@@ -30,7 +30,7 @@ export class EggExplorer {
   const p=player||{x:0,y:0,z:0,vy:0};dt=clamp(dt,0,.05);if(!dt)return;this.elapsed+=dt;
   if(flying&&!this.jetVisual)this.jetVisual=createEggJetpackModel(this.model.bones.chest);this.jetVisual?.update({visible:flying,flying,time:this.elapsed,reducedMotion});this.pack.visible=!flying&&!this.backEquipped;for(const m of this.wear.children)if(m.userData.slot==='back')m.visible=!flying;
   const vehicleId=!flying&&!training&&VEHICLES[vehicle]?vehicle:null;if(vehicleId!==this.vehicleId){this.ride?.removeFromParent();this.vehicleId=vehicleId;this.ride=vehicleId?vehicleModel(this.art,vehicleId,VEHICLES[vehicleId]):null;if(this.ride)this.g.add(this.ride);}
-  this.space.position.y=this.ride?.52+Math.sin(this.elapsed*4)*.018:0;if(this.ride){this.ride.position.y=this.space.position.y-.22;this.ride.rotation.z=Math.sin(this.elapsed*2)*.015;}
+  const rideType=VEHICLES[vehicleId]?.type;this.space.position.y=this.ride?(rideType==='car'?.84:rideType==='jet'?.94:.52)+Math.sin(this.elapsed*4)*.018:0;if(this.ride){this.ride.position.y=rideType==='car'?.02:rideType==='jet'?.45:this.space.position.y-.22;this.ride.rotation.z=Math.sin(this.elapsed*2)*.015;for(const wheel of this.ride.userData.wheels||[])wheel.rotation.x-=dt*speed*moving*3;}
   if(p.vy>0&&(!this.previous||p.vy>this.previous.vy+.2||this.previous.y===0))this.takeoff=Math.max(1,p.vy);
   const airborne=p.y>.002||p.vy>0,phase=clamp((1-p.vy/this.takeoff)*.5,0,.99),idle=!training&&(moving<.02||this.ride)&&!airborne;
   this.model.update({x:0,lane:0,jump:airborne?(1-phase)*1.05:0,y:0,slide:0,invincible:0,speed:18*clamp(speed/9,.8,2.1),level:{speed:18}},dt,{preview:idle,previewYaw:0,externalVelocityY:p.vy/.82,time:this.elapsed,reducedMotion});
@@ -39,7 +39,7 @@ export class EggExplorer {
   const b=this.model.bones,w=this.carryBlend;
   if(this.ride){
    b.hips.position.y=.72-Math.max(0,Math.sin(this.model.landAge/.22*Math.PI))*(this.model.landAge<.22?.07:0);b.spine.rotation.x=-.10;b.chest.rotation.z=this.ride.rotation.z;b.head.rotation.x=.08;
-   this.model.root.updateMatrixWorld(true);const q=this.space.getWorldQuaternion(new T.Quaternion()),skate=VEHICLES[vehicleId].type==='skate';
+   this.model.root.updateMatrixWorld(true);const q=this.space.getWorldQuaternion(new T.Quaternion()),skate=VEHICLES[vehicleId].type!=='scooter';
    for(const [side,sign]of[['L',-1],['R',1]]){const target=new T.Vector3(sign*.20,.115,skate?sign*.28:sign*.18).applyMatrix4(this.space.matrixWorld);this.model.legs[side].solve(target,q);b['shoulder'+side].rotation.set(skate?.18:1.05,0,skate?sign*.38:sign*.05);b['elbow'+side].rotation.x=skate?.45:.2;}
   }
   if(flying){b.spine.rotation.x=.12;b.chest.rotation.z=Math.sin(this.elapsed*2)*.025;for(const side of ['L','R']){if(b['thigh'+side])b['thigh'+side].rotation.x=-.12;b['knee'+side].rotation.x=.35;b['shoulder'+side].rotation.z=side==='L'?.25:-.25;}}

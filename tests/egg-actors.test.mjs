@@ -46,12 +46,12 @@ test('remote explorers validate slots, interpolate, obey boundaries and release 
  let sharedDisposed=false;actor.art.toonRamp.addEventListener('dispose',()=>sharedDisposed=true);adapter.clearPeers();assert.equal(scene.children.length,base);assert.equal(sharedDisposed,false);
 });
 
-test('all eight vehicles support both feet through turns and jumps and dismount on the treadmill',()=>{
+test('all twelve vehicles support both feet through turns and jumps and dismount on the treadmill',()=>{
  const a=world.hero(scene),p={x:3,y:0,z:-940,vy:0};a.g.position.set(p.x,p.y,p.z);a.g.rotation.y=2.1;
  try{for(const [id,v]of Object.entries(VEHICLES)){
   for(const height of [0,1.5,0]){p.y=height;p.vy=height?2:0;a.g.position.y=height;for(let i=0;i<35;i++)a.update(1/60,{player:p,moving:1,speed:18,vehicle:id});a.g.updateMatrixWorld(true);
-   assert.equal(a.vehicleId,id);assert(a.ride);for(const leg of Object.values(a.model.legs)){const local=a.g.worldToLocal(position(leg.foot));assert(Math.abs(local.x)<.3);assert(Math.abs(local.z)<.55);const ankleAboveDeck=local.y-(a.ride.position.y+.2225);assert(ankleAboveDeck>.05&&ankleAboveDeck<.13,'ankles keep soles on deck');}
-   const size=geometryBounds(a.g).getSize(new T.Vector3());assert(size.y<3.2&&size.x<2.5&&size.z<3);if(v.type==='scooter'&&!height)for(const side of ['L','R']){const hand=a.g.worldToLocal(position(a.model.bones['hand'+side]));assert(Math.abs(hand.z+.46)<.12);assert(Math.abs(hand.y-a.ride.position.y-1.05)<.12);}
+   assert.equal(a.vehicleId,id);assert(a.ride);for(const leg of Object.values(a.model.legs)){const local=a.g.worldToLocal(position(leg.foot));assert(Math.abs(local.x)<.3);assert(Math.abs(local.z)<.55);const ankleAboveDeck=local.y-(a.ride.position.y+(v.type==='car'?.8375:v.type==='jet'?.51:.2225));assert(ankleAboveDeck>.05&&ankleAboveDeck<.13,'ankles keep soles on deck');}
+   const size=geometryBounds(a.g).getSize(new T.Vector3());assert(size.y<3.2&&size.x<(v.luxury?4:2.5)&&size.z<(v.luxury?4:3),id+' '+size.toArray().join(','));if(v.type==='scooter'&&!height)for(const side of ['L','R']){const hand=a.g.worldToLocal(position(a.model.bones['hand'+side]));assert(Math.abs(hand.z+.46)<.12);assert(Math.abs(hand.y-a.ride.position.y-1.05)<.12);}
   }
   a.update(1/60,{player:p,moving:1,training:true,vehicle:id});assert.equal(a.ride,null);assert.equal(a.space.position.y,0);a.update(1/60,{player:p,vehicle:id});assert(a.ride);
  }a.update(1/60,{player:p,vehicle:'invalid'});assert.equal(a.ride,null);}finally{a.dispose();}

@@ -43,20 +43,20 @@ try {
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261021-gift1');
+  await script('./egg.js?v=20261021-economy1');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261016-fruit20-toon1');
   phase('Conectando amigos e salas…');
-  await import('./multiplayer.js?v=20261021-gift1');
+  await import('./multiplayer.js?v=20261021-economy1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
-  if(!unloaded)await import('./egg-cloud.js?v=20261021-gift1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261021-economy1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-moves1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
-  if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-fishing2');installShark();}
+  if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261020-shark2');startUsage();}
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261020-i18n1');

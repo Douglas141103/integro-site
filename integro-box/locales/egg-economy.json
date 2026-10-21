@@ -1,0 +1,182 @@
+{
+  "Aviso da economia": [
+    "Economy notice",
+    "Hinweis zur Spielwirtschaft"
+  ],
+  "Conversão de equilíbrio": [
+    "Economy balancing conversion",
+    "Umtausch zur Stabilisierung"
+  ],
+  "Para controlar a inflação do Pegue o Ovo e manter a economia equilibrada, realizamos uma conversão no seu saldo.": [
+    "To control inflation in Grab the Egg and keep its economy balanced, we converted part of your balance.",
+    "Um die Inflation in Schnapp dir das Ei zu begrenzen und die Spielwirtschaft auszugleichen, haben wir einen Teil deines Guthabens umgetauscht."
+  ],
+  "{0} Integros → {1} IntGems": [
+    "{0} Integros → {1} IntGems",
+    "{0} Integros → {1} IntGems"
+  ],
+  "Os IntGems já foram creditados na sua conta. Você pode continuar sua aventura normalmente.": [
+    "The IntGems have already been credited to your account. You can continue your adventure as usual.",
+    "Die IntGems wurden deinem Konto bereits gutgeschrieben. Du kannst dein Abenteuer wie gewohnt fortsetzen."
+  ],
+  "Entendi, continuar jogando": [
+    "Got it, keep playing",
+    "Verstanden, weiterspielen"
+  ],
+  "Confirmando leitura…": [
+    "Confirming acknowledgement…",
+    "Bestätigung wird gespeichert…"
+  ],
+  "Não foi possível confirmar. Tente novamente.": [
+    "Could not confirm. Please try again.",
+    "Bestätigung fehlgeschlagen. Bitte versuche es erneut."
+  ],
+  "Imposto de renda descontado": [
+    "Income tax deducted",
+    "Einkommensteuer abgezogen"
+  ],
+  "Sua faixa de imposto mudou": [
+    "Your tax bracket changed",
+    "Deine Steuerstufe hat sich geändert"
+  ],
+  "O imposto do jogo incide apenas sobre a renda nova dos bichinhos. A apuração ocorre a cada 5 minutos de jogo ativo; pausar ou sair preserva a contagem.": [
+    "The game tax applies only to new creature income. It is settled every 5 minutes of active play; pausing or leaving preserves the timer.",
+    "Die Spielsteuer gilt nur für neue Einnahmen deiner Tiere. Sie wird alle 5 Minuten aktiver Spielzeit abgerechnet. Pausen und Verlassen des Spiels erhalten den Zähler."
+  ],
+  "Ver faixas e extrato": [
+    "View brackets and statement",
+    "Steuerstufen und Übersicht ansehen"
+  ],
+  "Imposto de renda %": [
+    "Income tax %",
+    "Einkommensteuer %"
+  ],
+  "Renda apurada": [
+    "Income assessed",
+    "Erfasste Einnahmen"
+  ],
+  "Economia e imposto de renda": [
+    "Economy and income tax",
+    "Spielwirtschaft und Einkommensteuer"
+  ],
+  "Até 1 milhão: isento. Acima de 1 até 5 milhões: 20%. Acima de 5 até 10 milhões: 35%. Acima de 10 milhões: 50%.": [
+    "Up to 1 million: exempt. Over 1 to 5 million: 20%. Over 5 to 10 million: 35%. Over 10 million: 50%.",
+    "Bis 1 Million: steuerfrei. Über 1 bis 5 Millionen: 20 %. Über 5 bis 10 Millionen: 35 %. Über 10 Millionen: 50 %."
+  ],
+  "Faixa atual: {0}%": [
+    "Current bracket: {0}%",
+    "Aktuelle Steuerstufe: {0} %"
+  ],
+  "Próxima apuração em {0} s de jogo ativo.": [
+    "Next settlement in {0} seconds of active play.",
+    "Nächste Abrechnung nach {0} Sekunden aktiver Spielzeit."
+  ],
+  "Reservado para imposto: {0} Integros.": [
+    "Reserved for tax: {0} Integros.",
+    "Für Steuern reserviert: {0} Integros."
+  ],
+  "Disponível para compras: {0} Integros.": [
+    "Available to spend: {0} Integros.",
+    "Für Einkäufe verfügbar: {0} Integros."
+  ],
+  "A parte reservada permanece no saldo até a cobrança, mas não pode ser gasta. Vendas de criaturas, missões e IntGems não entram neste imposto.": [
+    "The reserved amount stays in your balance until settlement, but cannot be spent. Creature sales, missions and IntGems are not subject to this tax.",
+    "Der reservierte Betrag bleibt bis zur Abrechnung im Guthaben, kann aber nicht ausgegeben werden. Tierverkäufe, Missionen und IntGems unterliegen dieser Steuer nicht."
+  ],
+  "Extrato de imposto de renda": [
+    "Income tax statement",
+    "Einkommensteuerübersicht"
+  ],
+  "Nenhuma apuração concluída.": [
+    "No completed settlements.",
+    "Noch keine abgeschlossene Abrechnung."
+  ],
+  "Período {0} · −{1} Integros": [
+    "Period {0} · −{1} Integros",
+    "Zeitraum {0} · −{1} Integros"
+  ],
+  "Ver carros e jatinhos": [
+    "View cars and jets",
+    "Autos und Jets ansehen"
+  ],
+  "Imposto de renda": [
+    "Income tax",
+    "Einkommensteuer"
+  ],
+  "Faixas, contador e extrato": [
+    "Brackets, timer and statement",
+    "Steuerstufen, Zähler und Übersicht"
+  ],
+  "Carros e jatinhos": [
+    "Cars and jets",
+    "Autos und Jets"
+  ],
+  "Veículos de alto valor": [
+    "High-value vehicles",
+    "Hochwertige Fahrzeuge"
+  ],
+  "Nova faixa: imposto de renda de {0}% sobre os novos ganhos do curral, apurado a cada 5 minutos de jogo.": [
+    "New bracket: {0}% income tax on new corral earnings, settled every 5 minutes of play.",
+    "Neue Steuerstufe: {0} % Einkommensteuer auf neue Gehegeeinnahmen, abgerechnet alle 5 Minuten Spielzeit."
+  ],
+  "Você voltou à faixa isenta. A renda já apurada mantém o imposto do período.": [
+    "You are back in the exempt bracket. Income already assessed keeps its tax for this period.",
+    "Du bist wieder in der steuerfreien Stufe. Bereits erfasste Einnahmen behalten die Steuer dieses Zeitraums."
+  ],
+  "Imposto de renda {0}%: −{1} Integros": [
+    "Income tax {0}%: −{1} Integros",
+    "Einkommensteuer {0} %: −{1} Integros"
+  ],
+  "Carro Aurora GT": [
+    "Aurora GT Car",
+    "Aurora GT Auto"
+  ],
+  "Carro Imperial": [
+    "Imperial Car",
+    "Imperial-Auto"
+  ],
+  "Jatinho Aurora": [
+    "Aurora Jet",
+    "Aurora-Jet"
+  ],
+  "Jatinho Imperial": [
+    "Imperial Jet",
+    "Imperial-Jet"
+  ],
+  "CARRO DE LUXO": [
+    "LUXURY CAR",
+    "LUXUSAUTO"
+  ],
+  "JATINHO": [
+    "MINI JET",
+    "MINI-JET"
+  ],
+  "Carro esportivo com rodas animadas. Pilote em pé sobre o teto.": [
+    "Sports car with animated wheels. Ride standing on the roof.",
+    "Sportwagen mit animierten Rädern. Fahre im Stehen auf dem Dach."
+  ],
+  "Carro de luxo com acabamento dourado. Pilote sobre o teto.": [
+    "Luxury car with gold trim. Ride on its roof.",
+    "Luxusauto mit goldenen Verzierungen. Fahre auf dem Dach."
+  ],
+  "Mini jatinho flutuante com asas e turbinas. Monte sobre a fuselagem para percorrer a pista.": [
+    "Floating mini jet with wings and engines. Ride on its fuselage along the track.",
+    "Schwebender Mini-Jet mit Flügeln und Triebwerken. Fahre auf dem Rumpf entlang der Strecke."
+  ],
+  "Jatinho de coleção com detalhes dourados e turbinas azuis. Pilote em pé sobre a fuselagem.": [
+    "Collector jet with gold details and blue engines. Ride standing on its fuselage.",
+    "Sammler-Jet mit goldenen Details und blauen Triebwerken. Fahre im Stehen auf dem Rumpf."
+  ],
+  "Flutue sobre a pista.": [
+    "Float above the track.",
+    "Schwebe über der Strecke."
+  ],
+  "Atualize a página para ativar as novas regras da economia.": [
+    "Refresh the page to activate the new economy rules.",
+    "Lade die Seite neu, um die neuen Wirtschaftsregeln zu aktivieren."
+  ],
+  "Não foi possível validar a apuração do imposto. Atualize o jogo.": [
+    "Could not validate the tax settlement. Refresh the game.",
+    "Die Steuerabrechnung konnte nicht geprüft werden. Lade das Spiel neu."
+  ]
+}
