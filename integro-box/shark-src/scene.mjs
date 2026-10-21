@@ -8,7 +8,8 @@ import {makeOcean} from './ocean.mjs';
 import {REGIONS,SHOP,regionAt,lengthFor,canEat,eat,eatAlgae,applyCageCatch,damage,respawn,discover,claimMissions} from './rules.mjs';
 const clamp=T.MathUtils.clamp;
 export class SharkScene{
- constructor(canvas,progress,notify){
+ constructor(canvas,progress,notify,capture=async()=>false){
+  this.capture=capture;this.fishing=null;this.reservedFish=null;this.captureBusy=false;this.captureRetry=0;this.fishingSpawnAt=0;this.disposed=false;
   this.canvas=canvas;this.p=progress;this.notify=notify;this.time=0;this.health=3;this.invincible=5;this.stamina=100;this.bite=0;this.yaw=.65;this.pitch=progress.cameraZoom<=FIRST_PERSON_ZOOM?0:.24;this.zoom=clampZoom(progress.cameraZoom);this.region=regionAt(progress.position.x,progress.position.z);this.waypoint=null;this.fish=[];this.pearls=[];this.bursts=[];
   this.renderer=new T.WebGLRenderer({canvas,antialias:progress.quality!=='low',alpha:false,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,progress.quality==='low'?1:1.6));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.05;this.renderer.setClearColor(REGIONS[this.region].water);
   this.scene=new T.Scene();this.scene.background=new T.Color(REGIONS[this.region].water);this.scene.fog=new T.Fog(REGIONS[this.region].water,75,330);this.camera=new T.PerspectiveCamera(57,1,.2,700);
@@ -24,9 +25,13 @@ export class SharkScene{
   this.ring=new T.Mesh(new T.TorusGeometry(1,.025,6,48),new T.MeshBasicMaterial({color:0x90ffe4,transparent:true,opacity:.65}));this.ring.rotation.x=Math.PI/2;this.scene.add(this.ring);
   this.camera.position.copy(this.position).add(new T.Vector3(12,12,18));this.resize();this.update(0,{x:0,z:0,y:0},false);
  }
- fishForCage(capacity){return this.fish.filter(f=>canEat(this.p.level,f.level)&&f.rig.group.position.distanceTo(this.position)<=55).sort((a,b)=>a.rig.group.position.distanceTo(this.position)-b.rig.group.position.distanceTo(this.position)).slice(0,capacity).map(f=>f.level);}
- catchCage(cast){const result=applyCageCatch(this.p,cast);if(!result)return;for(const level of cast.levels){const fish=this.fish.find(f=>f.level===level&&f.rig.group.position.distanceTo(this.position)<=55);if(fish)this.spawn(fish);}
-  this.bite=1;this.cageEffect.show(this.position,lengthFor(this.p.level),cast.capacity,this.heading);this.burst(this.position,0xffdc83);this.checkMissions();this.notify('cage',`Pesca: ${result.count} peixes · +${result.xp} XP`);
+ setFishing(run){this.fishing=run;this.cageEffect.set(run);}
+ cagePosition(){return{x:clamp(this.position.x+Math.cos(this.heading)*10,-875,875),y:this.position.y,z:clamp(this.position.z-Math.sin(this.heading)*10,-575,575)};}
+ catchCage(cast){const result=applyCageCatch(this.p,cast);if(!result)return;
+  this.bite=1;this.burst(this.position,0xffdc83);this.checkMissions();this.notify('cage',`Pesca: ${result.count} peixes · +${result.xp} XP`);
+ }
+ captureFish(f){this.reservedFish=f;this.captureBusy=true;const level=f.level;
+  void this.capture(level).then(ok=>{if(this.disposed)return;if(ok){this.spawn(f);this.reservedFish=null;}this.captureRetry=this.time+3;}).catch(()=>{this.captureRetry=this.time+3;}).finally(()=>{this.captureBusy=false;});
  }
  resize(){const w=this.canvas.clientWidth||innerWidth,h=this.canvas.clientHeight||innerHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
  applyStyle(){const item=SHOP.find(i=>i.id===this.p.skin);this.player.tint(item?.color||0x65cfea);this.player.crown.visible=this.p.accessories.includes('crown');}
@@ -58,10 +63,22 @@ export class SharkScene{
   if(pose.firstPerson||this.wasFirstPerson!==pose.firstPerson)this.camera.position.copy(pose.eye);else this.camera.position.lerp(pose.eye,playing?Math.min(1,dt*6):1);this.camera.lookAt(pose.target);this.wasFirstPerson=pose.firstPerson;
   this.algae.update(dt,t,this.position,playing,Math.max(2.2,len*.46),pos=>{const reward=eatAlgae(p);this.bite=1;this.burst(pos,0xb6f97c);this.notify(reward.evolved?'evolve':'algae',reward.evolved?`Evolução ${p.level}! Você cresceu!`:`Alga nutritiva · +${reward.xp} XP`);this.checkMissions();});
 
+  const fishing=this.fishing,cagePos=fishing?new T.Vector3(fishing.position.x,fishing.position.y,fishing.position.z):null;
+  if(this.reservedFish&&!this.captureBusy&&(!fishing||fishing.levels.length>=fishing.capacity)){this.spawn(this.reservedFish);this.reservedFish=null;}
+  if(this.reservedFish&&!this.captureBusy&&playing&&t>=this.captureRetry)this.captureFish(this.reservedFish);
+  // Keep the deployed location populated even when the shark explores another region.
+  if(playing&&cagePos&&fishing.levels.length<fishing.capacity&&t>=this.fishingSpawnAt){
+   this.fishingSpawnAt=t+5;const nearby=this.fish.filter(f=>canEat(p.level,f.level)&&f.rig.group.position.distanceTo(cagePos)<60);
+   if(nearby.length<3){const f=this.fish.find(f=>f!==this.reservedFish&&f.rig.group.position.distanceTo(cagePos)>70);if(f){const angle=t*2.4;f.level=Math.max(0,p.level-1);f.rig.group.scale.setScalar(lengthFor(f.level)/4);f.rig.group.position.set(clamp(cagePos.x+Math.cos(angle)*45,-875,875),cagePos.y,clamp(cagePos.z+Math.sin(angle)*45,-575,575));f.depth=cagePos.y;}}
+  }
   for(const f of this.fish){
-   const pos=f.rig.group.position,d=pos.distanceTo(this.position),edible=canEat(p.level,f.level);if(d>190){this.spawn(f);continue;}
+   if(f===this.reservedFish){f.rig.animate(t+f.phase,.4,0,0);continue;}
+   const pos=f.rig.group.position,d=pos.distanceTo(this.position),edible=canEat(p.level,f.level);if(d>190&&(!cagePos||pos.distanceTo(cagePos)>70)){this.spawn(f);continue;}
    let swim={speed:f.speed,turn:0};
-   if(playing){swim=steerFish(f,this.fish,{x:this.position.x,y:this.position.y,z:this.position.z,level:p.level,length:len,protected:this.invincible>0},dt,t);
+   if(playing&&cagePos&&fishing.levels.length<fishing.capacity&&edible&&pos.distanceTo(cagePos)<60){
+    const delta=cagePos.clone().sub(pos),distance=delta.length();pos.addScaledVector(delta.normalize(),Math.min(distance,dt*6));f.rig.group.rotation.y=Math.atan2(-delta.z,delta.x);
+    if(distance<3&&!this.reservedFish&&t>=this.captureRetry)this.captureFish(f);
+   }else if(playing){swim=steerFish(f,this.fish,{x:this.position.x,y:this.position.y,z:this.position.z,level:p.level,length:len,protected:this.invincible>0},dt,t);
     const preyLength=lengthFor(f.level),collision=edible?len*.40+preyLength*.15:len*.20+preyLength*.35;
     if(d<collision){if(edible){const reward=eat(p,f.level);if(reward){this.bite=1;this.burst(pos);this.notify(reward.evolved?'evolve':'eat',reward.evolved?`Evolução ${p.level}! Você cresceu!`:`+${reward.xp} XP  ·  +${reward.coins} moedas`);this.checkMissions();this.spawn(f);}}
      else if(this.invincible<=0&&f.level>p.level){const result=damage(p,this.health);this.health=result.health;this.invincible=4;this.burst(this.position,0xffcc9e);this.notify('hurt',result.blocked?'Sua bolha bloqueou o ataque!':'Peixe maior! Fuja com o impulso.');const away=this.position.clone().sub(pos).normalize();this.position.addScaledVector(away,5);if(!this.health){respawn(p);this.position.set(p.position.x,p.position.y,p.position.z);this.health=3;this.invincible=7;this.fish.forEach(f=>this.spawn(f));this.notify('respawn','Fôlego recuperado! Você manteve sua evolução e perdeu 25% do XP atual.');}}
@@ -79,7 +96,8 @@ export class SharkScene{
  map(canvas){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);for(const [i,r] of REGIONS.entries()){ctx.fillStyle=r.color+'55';ctx.fillRect((i%3)*w/3,Math.floor(i/3)*h/2,w/3-2,h/2-2);ctx.fillStyle='#dcfff3';ctx.font='bold 11px sans-serif';ctx.fillText(String(i+1),(i%3)*w/3+8,Math.floor(i/3)*h/2+16);}
   const xy=(x,z)=>[(x+900)/1800*w,(z+600)/1200*h];if(this.p.upgrades.radar)for(const f of this.fish){ctx.fillStyle=canEat(this.p.level,f.level)?'#b0ff9a':'#ff777e';const [x,y]=xy(f.rig.group.position.x,f.rig.group.position.z);ctx.fillRect(x-1,y-1,2.5,2.5);}
   if(this.waypoint!==null){const r=REGIONS[this.waypoint],[x,y]=xy(r.x,r.z);ctx.strokeStyle='#ffdf86';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.stroke();const [px,py]=xy(this.position.x,this.position.z);ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);}
+  if(this.fishing){const [cx,cy]=xy(this.fishing.position.x,this.fishing.position.z);ctx.fillStyle='#ffdc83';ctx.fillRect(cx-3,cy-3,6,6);}
   const [x,y]=xy(this.position.x,this.position.z);ctx.fillStyle='#fff';ctx.strokeStyle='#133f50';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
  }
- dispose(){this.cageEffect.dispose();this.algae.dispose();this.ocean.dispose();this.player.dispose();this.fish.forEach(f=>f.rig.dispose());this.pearlGeo.dispose();this.pearlMaterial.dispose();this.burstGeo.dispose();this.burstMaterial.dispose();this.ring.geometry.dispose();this.ring.material.dispose();this.renderer.dispose();}
+ dispose(){this.disposed=true;this.cageEffect.dispose();this.algae.dispose();this.ocean.dispose();this.player.dispose();this.fish.forEach(f=>f.rig.dispose());this.pearlGeo.dispose();this.pearlMaterial.dispose();this.burstGeo.dispose();this.burstMaterial.dispose();this.ring.geometry.dispose();this.ring.material.dispose();this.renderer.dispose();}
 }

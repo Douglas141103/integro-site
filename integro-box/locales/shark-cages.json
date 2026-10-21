@@ -1,38 +1,206 @@
 {
- "Gaiolas de pesca": ["Fishing cages", "Fangkäfige"],
- "PESCA · INTGEM": ["FISHING · INTGEM", "FISCHFANG · INTGEM"],
- "Gaiolas · IntGem": ["Cages · IntGem", "Fangkäfige · IntGem"],
- "Gaiolas · a partir de 1 IntGem": ["Cages · from 1 IntGem", "Fangkäfige · ab 1 IntGem"],
- "Mostrar controles da câmera": ["Show camera controls", "Kamerasteuerung anzeigen"],
- "Cada gaiola dura 5 pescas. Captura apenas peixes menores próximos, até a capacidade por uso. Sem peixes por perto, nenhum uso é gasto.": ["Each cage lasts 5 fishing trips. It catches nearby smaller fish, up to its capacity per use. If no fish are nearby, no use is spent.", "Jeder Käfig hält 5 Fangeinsätze. Er fängt kleinere Fische in der Nähe, bis zu seiner Kapazität pro Einsatz. Sind keine Fische in der Nähe, wird kein Einsatz verbraucht."],
- "Suas gaiolas": ["Your cages", "Deine Fangkäfige"],
- "Comprar gaiolas": ["Buy cages", "Fangkäfige kaufen"],
- "Gaiola pequena": ["Small cage", "Kleiner Fangkäfig"],
- "Gaiola média": ["Medium cage", "Mittlerer Fangkäfig"],
- "Gaiola grande": ["Large cage", "Großer Fangkäfig"],
- "Até {0} peixes por pesca": ["Up to {0} fish per catch", "Bis zu {0} Fische pro Einsatz"],
- "{0}/5 usos restantes": ["{0}/5 uses left", "{0}/5 Einsätze übrig"],
- "5 usos por gaiola": ["5 uses per cage", "5 Einsätze pro Käfig"],
- "Comprar · {0} IntGem": ["Buy · {0} IntGem", "Kaufen · {0} IntGem"],
- "Pescar": ["Catch fish", "Fische fangen"],
- "Pesca: {0} peixes · +{1} XP": ["Catch: {0} fish · +{1} XP", "Fang: {0} Fische · +{1} EP"],
- "Pesca concluída!": ["Catch complete!", "Fang abgeschlossen!"],
- "Escolha sua primeira gaiola abaixo.": ["Choose your first cage below.", "Wähle unten deinen ersten Fangkäfig."],
- "Gaiola comprada! Você tem 5 pescas.": ["Cage purchased! You have 5 uses.", "Fangkäfig gekauft! Du hast 5 Einsätze."],
- "Esta gaiola já completou as 5 pescas. Compre outra na loja.": ["This cage has completed all 5 uses. Buy another in the shop.", "Dieser Käfig hat alle 5 Einsätze verbraucht. Kaufe einen neuen im Shop."],
- "Esta gaiola completou 5 pescas. Escolha outra na loja.": ["This cage completed 5 uses. Choose another in the shop.", "Dieser Käfig hat 5 Einsätze verbraucht. Wähle einen neuen im Shop."],
- "Nenhum peixe menor por perto. Aproxime-se de um cardume; nenhum uso foi gasto.": ["No smaller fish nearby. Swim closer to a school; no use was spent.", "Keine kleineren Fische in der Nähe. Schwimme näher an einen Schwarm; kein Einsatz wurde verbraucht."],
- "Concluir solicitação pendente": ["Complete pending request", "Ausstehende Anfrage abschließen"],
- "Não foi possível carregar suas gaiolas. Tente novamente.": ["Your cages could not be loaded. Please try again.", "Deine Fangkäfige konnten nicht geladen werden. Versuche es erneut."],
- "Não foi possível confirmar a pesca. Tente novamente.": ["Your catch could not be confirmed. Please try again.", "Dein Fang konnte nicht bestätigt werden. Versuche es erneut."],
- "Não foi possível salvar a pesca. Libere espaço no navegador e tente novamente.": ["Your catch could not be saved. Free up browser storage and try again.", "Dein Fang konnte nicht gespeichert werden. Gib Browserspeicher frei und versuche es erneut."],
- "Você não tem IntGem suficiente.": ["You don't have enough IntGem.", "Du hast nicht genug IntGem."],
- "Esta gaiola não está na sua conta.": ["This cage is not in your account.", "Dieser Fangkäfig gehört nicht zu deinem Konto."],
- "Use suas gaiolas antes de comprar mais.": ["Use your cages before buying more.", "Verbrauche deine Fangkäfige, bevor du weitere kaufst."],
- "Conclua a solicitação pendente antes de tentar outra.": ["Complete the pending request before starting another.", "Schließe die ausstehende Anfrage ab, bevor du eine neue startest."],
- "Aproxime-se de peixes menores para pescar.": ["Swim closer to smaller fish to catch them.", "Schwimme näher an kleinere Fische, um sie zu fangen."],
- "Atualizar gaiolas": ["Refresh cages", "Fangkäfige aktualisieren"],
- "Não foi possível conectar. Tente novamente.": ["Could not connect. Please try again.", "Verbindung fehlgeschlagen. Versuche es erneut."],
- "Aguarde a conexão com sua conta.": ["Wait for your account to connect.", "Warte, bis dein Konto verbunden ist."],
- "Confirmando…": ["Confirming…", "Wird bestätigt…"]
+  "Gaiolas de pesca": [
+    "Fishing cages",
+    "Fangkäfige"
+  ],
+  "PESCA · INTGEM": [
+    "FISHING · INTGEM",
+    "FISCHFANG · INTGEM"
+  ],
+  "Gaiolas · IntGem": [
+    "Cages · IntGem",
+    "Fangkäfige · IntGem"
+  ],
+  "Gaiolas · a partir de 1 IntGem": [
+    "Cages · from 1 IntGem",
+    "Fangkäfige · ab 1 IntGem"
+  ],
+  "Mostrar controles da câmera": [
+    "Show camera controls",
+    "Kamerasteuerung anzeigen"
+  ],
+  "Cada gaiola dura 5 pescas. Captura apenas peixes menores próximos, até a capacidade por uso. Sem peixes por perto, nenhum uso é gasto.": [
+    "Each cage lasts 5 fishing trips. It catches nearby smaller fish, up to its capacity per use. If no fish are nearby, no use is spent.",
+    "Jeder Käfig hält 5 Fangeinsätze. Er fängt kleinere Fische in der Nähe, bis zu seiner Kapazität pro Einsatz. Sind keine Fische in der Nähe, wird kein Einsatz verbraucht."
+  ],
+  "Suas gaiolas": [
+    "Your cages",
+    "Deine Fangkäfige"
+  ],
+  "Comprar gaiolas": [
+    "Buy cages",
+    "Fangkäfige kaufen"
+  ],
+  "Gaiola pequena": [
+    "Small cage",
+    "Kleiner Fangkäfig"
+  ],
+  "Gaiola média": [
+    "Medium cage",
+    "Mittlerer Fangkäfig"
+  ],
+  "Gaiola grande": [
+    "Large cage",
+    "Großer Fangkäfig"
+  ],
+  "Até {0} peixes por pesca": [
+    "Up to {0} fish per catch",
+    "Bis zu {0} Fische pro Einsatz"
+  ],
+  "{0}/5 usos restantes": [
+    "{0}/5 uses left",
+    "{0}/5 Einsätze übrig"
+  ],
+  "5 usos por gaiola": [
+    "5 uses per cage",
+    "5 Einsätze pro Käfig"
+  ],
+  "Comprar · {0} IntGem": [
+    "Buy · {0} IntGem",
+    "Kaufen · {0} IntGem"
+  ],
+  "Pescar": [
+    "Catch fish",
+    "Fische fangen"
+  ],
+  "Pesca: {0} peixes · +{1} XP": [
+    "Catch: {0} fish · +{1} XP",
+    "Fang: {0} Fische · +{1} EP"
+  ],
+  "Pesca concluída!": [
+    "Catch complete!",
+    "Fang abgeschlossen!"
+  ],
+  "Escolha sua primeira gaiola abaixo.": [
+    "Choose your first cage below.",
+    "Wähle unten deinen ersten Fangkäfig."
+  ],
+  "Gaiola comprada! Você tem 5 pescas.": [
+    "Cage purchased! You have 5 uses.",
+    "Fangkäfig gekauft! Du hast 5 Einsätze."
+  ],
+  "Esta gaiola já completou as 5 pescas. Compre outra na loja.": [
+    "This cage has completed all 5 uses. Buy another in the shop.",
+    "Dieser Käfig hat alle 5 Einsätze verbraucht. Kaufe einen neuen im Shop."
+  ],
+  "Esta gaiola completou 5 pescas. Escolha outra na loja.": [
+    "This cage completed 5 uses. Choose another in the shop.",
+    "Dieser Käfig hat 5 Einsätze verbraucht. Wähle einen neuen im Shop."
+  ],
+  "Nenhum peixe menor por perto. Aproxime-se de um cardume; nenhum uso foi gasto.": [
+    "No smaller fish nearby. Swim closer to a school; no use was spent.",
+    "Keine kleineren Fische in der Nähe. Schwimme näher an einen Schwarm; kein Einsatz wurde verbraucht."
+  ],
+  "Concluir solicitação pendente": [
+    "Complete pending request",
+    "Ausstehende Anfrage abschließen"
+  ],
+  "Não foi possível carregar suas gaiolas. Tente novamente.": [
+    "Your cages could not be loaded. Please try again.",
+    "Deine Fangkäfige konnten nicht geladen werden. Versuche es erneut."
+  ],
+  "Não foi possível confirmar a pesca. Tente novamente.": [
+    "Your catch could not be confirmed. Please try again.",
+    "Dein Fang konnte nicht bestätigt werden. Versuche es erneut."
+  ],
+  "Não foi possível salvar a pesca. Libere espaço no navegador e tente novamente.": [
+    "Your catch could not be saved. Free up browser storage and try again.",
+    "Dein Fang konnte nicht gespeichert werden. Gib Browserspeicher frei und versuche es erneut."
+  ],
+  "Você não tem IntGem suficiente.": [
+    "You don't have enough IntGem.",
+    "Du hast nicht genug IntGem."
+  ],
+  "Esta gaiola não está na sua conta.": [
+    "This cage is not in your account.",
+    "Dieser Fangkäfig gehört nicht zu deinem Konto."
+  ],
+  "Use suas gaiolas antes de comprar mais.": [
+    "Use your cages before buying more.",
+    "Verbrauche deine Fangkäfige, bevor du weitere kaufst."
+  ],
+  "Conclua a solicitação pendente antes de tentar outra.": [
+    "Complete the pending request before starting another.",
+    "Schließe die ausstehende Anfrage ab, bevor du eine neue startest."
+  ],
+  "Aproxime-se de peixes menores para pescar.": [
+    "Swim closer to smaller fish to catch them.",
+    "Schwimme näher an kleinere Fische, um sie zu fangen."
+  ],
+  "Atualizar gaiolas": [
+    "Refresh cages",
+    "Fangkäfige aktualisieren"
+  ],
+  "Não foi possível conectar. Tente novamente.": [
+    "Could not connect. Please try again.",
+    "Verbindung fehlgeschlagen. Versuche es erneut."
+  ],
+  "Aguarde a conexão com sua conta.": [
+    "Wait for your account to connect.",
+    "Warte, bis dein Konto verbunden ist."
+  ],
+  "Confirmando…": [
+    "Confirming…",
+    "Wird bestätigt…"
+  ],
+  "Resgate a comida da gaiola atual antes de colocar outra.": [
+    "Collect the food from your current cage before placing another.",
+    "Hole das Futter aus deinem aktuellen Käfig ab, bevor du einen weiteren aufstellst."
+  ],
+  "Aguarde a gaiola completar a capacidade.": [
+    "Wait until the cage is full.",
+    "Warte, bis der Käfig voll ist."
+  ],
+  "Gaiola cheia! Resgate a comida.": [
+    "Cage full! Collect the food.",
+    "Käfig voll! Futter abholen."
+  ],
+  "Esta comida já foi resgatada.": [
+    "This food has already been collected.",
+    "Dieses Futter wurde bereits abgeholt."
+  ],
+  "Atualize a página para usar a nova pesca.": [
+    "Refresh the page to use the updated fishing system.",
+    "Lade die Seite neu, um das neue Angelsystem zu nutzen."
+  ],
+  "Entre no oceano para colocar sua gaiola.": [
+    "Enter the ocean to place your cage.",
+    "Betritt den Ozean, um deinen Käfig aufzustellen."
+  ],
+  "Comida resgatada!": [
+    "Food collected!",
+    "Futter abgeholt!"
+  ],
+  "Gaiola colocada! Ela fica no local até encher.": [
+    "Cage placed! It stays here until full.",
+    "Käfig aufgestellt! Er bleibt hier, bis er voll ist."
+  ],
+  "Peixe capturado!": [
+    "Fish caught!",
+    "Fisch gefangen!"
+  ],
+  "Coloque a gaiola no oceano. Ela fica no local capturando peixes menores até encher. Depois, toque em Resgatar comida. Cada colocação gasta 1 dos 5 usos.": [
+    "Place the cage in the ocean. It stays in place catching smaller fish until full. Then tap Collect food. Each placement uses 1 of its 5 uses.",
+    "Stelle den Käfig im Ozean auf. Er bleibt dort und fängt kleinere Fische, bis er voll ist. Tippe dann auf Futter abholen. Jedes Aufstellen verbraucht 1 von 5 Einsätzen."
+  ],
+  "Gaiola no oceano": [
+    "Cage in the ocean",
+    "Käfig im Ozean"
+  ],
+  "Resgatar comida": [
+    "Collect food",
+    "Futter abholen"
+  ],
+  "Gaiola pescando…": [
+    "Cage catching fish…",
+    "Käfig fängt Fische…"
+  ],
+  "{0}/{1} peixes": [
+    "{0}/{1} fish",
+    "{0}/{1} Fische"
+  ],
+  "Colocar gaiola": [
+    "Place cage",
+    "Käfig aufstellen"
+  ]
 }

@@ -72,3 +72,7 @@
 @media(max-height:520px) and (min-width:601px){#sharkApp .shark-cage-open{top:calc(max(8px,env(safe-area-inset-top)) + 173px)}#sharkApp .shark-home-facts{display:none}#sharkApp .shark-home-copy .shark-actions{gap:7px}.shark-cage-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 #sharkApp .shark-camera-controls>div{position:absolute;right:50px;top:0}
+
+/* Persistent fishing: readable progress without covering the swimming controls. */
+.shark-fishing{position:absolute;right:16px;top:192px;z-index:4;display:flex;flex-direction:column;gap:3px;min-width:130px;padding:10px 13px;border:1px solid #98dfc477;border-radius:16px;background:#073e50ed;color:#dffff1;box-shadow:0 4px 14px #002d3933;font:inherit;cursor:pointer}.shark-fishing span{font-size:12px}.shark-fishing strong{font-size:13px}.shark-fishing:enabled{background:#c5fa88;color:#154445}.shark-fishing:disabled{opacity:1;cursor:default}.shark-fishing[hidden],.shark-menu .shark-fishing{display:none}.shark-cage-active{display:grid;gap:10px;padding:16px;border:1px solid #c5fa8877;border-radius:18px;background:#154e55}.shark-cage-active h3{margin:0}.shark-cage-active strong{color:#c5fa88}
+@media(max-width:600px){.shark-fishing{top:174px;right:12px;min-width:120px;padding:8px 10px}}
