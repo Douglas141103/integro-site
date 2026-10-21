@@ -42,6 +42,7 @@ function shouldNeverCache(url) {
     path.startsWith("/portal/") ||
     path.startsWith("/portal-professor/") ||
     path.startsWith("/portal-familia/") ||
+    path.startsWith("/aulas-online/") ||
     path.startsWith("/assets/instagram/") ||
     path === "/portal/config.js" ||
     path.endsWith(".js") ||

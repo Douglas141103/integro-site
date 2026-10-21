@@ -1,0 +1,1 @@
+{"name":"integro-aulas-server","private":true,"type":"module","version":"1.0.0","scripts":{"start":"node server.mjs","setup":"node setup.mjs","test":"node --test server.test.mjs"}}

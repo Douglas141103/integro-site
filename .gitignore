@@ -1,1 +1,4 @@
 node_modules/
+server-online/runtime/
+server-online/logs/
+server-online/bin/

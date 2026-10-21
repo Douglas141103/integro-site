@@ -1,0 +1,47 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {PGlite} from '@electric-sql/pglite';
+const uid=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('online classroom authorization, four-pupil cap, lifecycle and private feedback',async()=>{
+ const db=new PGlite();
+ try{
+ await db.exec(`create schema auth;create schema storage;create role anon;create role authenticated;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+ grant usage on schema auth to authenticated;
+ create table public.profiles(id uuid primary key,full_name text,role text,active boolean default true);
+ create table public.students(id uuid primary key,full_name text,active boolean default true);
+ create table public.student_guardians(student_id uuid,guardian_profile_id uuid);
+ create table public.student_teachers(student_id uuid,teacher_profile_id uuid);
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(bucket_id text,name text);alter table storage.objects enable row level security;
+ insert into public.profiles values('${uid(1)}','Admin','integro_admin',true),('${uid(2)}','Professor','professor',true),('${uid(3)}','Família 1','responsavel',true),('${uid(4)}','Família 2','responsavel',true),('${uid(5)}','Outro professor','professor',true);
+ insert into public.students select ('00000000-0000-4000-8000-'||lpad(s::text,12,'0'))::uuid,'Aluno '||s,true from generate_series(10,14)s;
+ insert into public.student_guardians values('${uid(10)}','${uid(3)}'),('${uid(11)}','${uid(4)}');
+ insert into public.student_teachers select id,'${uid(2)}'::uuid from public.students;`);
+ await db.exec(await readFile(new URL('../supabase/online-classrooms.sql',import.meta.url),'utf8'));
+ const call=(n,a,d={})=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);return(await tx.query('select public.online_portal($1,$2) result',[a,d])).rows[0].result;});
+ await assert.rejects(call(0,'list'),/conta/);
+ const c=await call(1,'class_create',{title:'Turma teste',teacher_id:uid(2)});
+ await assert.rejects(call(3,'class_create',{title:'Não permitido',teacher_id:uid(2)}));
+ for(let n=10;n<14;n++)await call(2,'enroll',{class_id:c.id,student_id:uid(n)});
+ await assert.rejects(call(2,'enroll',{class_id:c.id,student_id:uid(14)}),/quatro/);
+ await assert.rejects(call(5,'enroll',{class_id:c.id,student_id:uid(14)}));
+ assert.equal((await call(3,'list')).classes[0].students.length,1);
+ assert.equal((await call(5,'list')).classes.length,0);
+ const l=await call(2,'lesson_create',{class_id:c.id,title:'Aula',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+5400000).toISOString()});
+ await assert.rejects(call(3,'join_context',{lesson_id:l.id,student_id:uid(10)}),/Aguarde/);
+ await call(2,'lesson_status',{lesson_id:l.id,status:'live'});
+ assert.equal((await call(3,'join_context',{lesson_id:l.id,student_id:uid(10)})).identity,'student-'+uid(10));
+ await assert.rejects(call(3,'join_context',{lesson_id:l.id,student_id:uid(11)}));
+ await assert.rejects(call(2,'unenroll',{class_id:c.id,student_id:uid(10)}),/encerrar/);
+ const s=await call(3,'submission_create',{lesson_id:l.id,student_id:uid(10),title:'Caderno'});
+ await assert.rejects(call(4,'submission_review',{submission_id:s.id,status:'returned',feedback:'fraude'}));
+ await call(2,'submission_review',{submission_id:s.id,status:'reviewing',feedback:'Rascunho privado'});
+ assert.equal((await call(3,'submissions',{lesson_id:l.id}))[0].feedback,'');
+ assert.equal((await call(4,'submissions',{lesson_id:l.id})).length,0);
+ await call(2,'submission_review',{submission_id:s.id,status:'returned',feedback:'Muito bem.'});
+ assert.equal((await call(3,'submissions',{lesson_id:l.id}))[0].feedback,'Muito bem.');
+ await db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[uid(4)]);assert.equal((await tx.query('select private.online_file_allowed($1,false) allowed',[s.id+'/original/foto.jpg'])).rows[0].allowed,false);await assert.rejects(tx.query('select * from private.online_submissions'));});
+ await call(2,'lesson_status',{lesson_id:l.id,status:'ended'});
+ await assert.rejects(call(3,'join_context',{lesson_id:l.id,student_id:uid(10)}),/encerrada/);
+ await assert.rejects(call(2,'lesson_status',{lesson_id:l.id,status:'live'}),/outra aula/);
+ }finally{await db.close();}
+});

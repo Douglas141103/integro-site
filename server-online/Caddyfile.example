@@ -1,0 +1,10 @@
+# Depois de apontar aulas.institutointegro.com.br para o IP da conexão:
+aulas.institutointegro.com.br {
+ @api path /api/*
+ handle @api {
+  reverse_proxy 127.0.0.1:8787
+ }
+ handle {
+  reverse_proxy 127.0.0.1:7880
+ }
+}
