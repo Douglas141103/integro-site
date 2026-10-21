@@ -1,6 +1,6 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/+esm';
-import {Room,RoomEvent,Track,VideoPresets} from 'https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.esm.mjs';
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
+import {DirectRoom,directView} from './direct-room.mjs';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,6 +8,10 @@ const config=window.INTEGRO_SUPABASE;
 const db=createClient(config.url,config.anonKey);
 const local=['127.0.0.1','localhost'].includes(location.hostname);
 const server=local?'http://127.0.0.1:8787':window.INTEGRO_ONLINE?.serverUrl?.replace(/\/$/,'');
+const direct=window.INTEGRO_ONLINE?.mode==='direct';
+const clientId=crypto.randomUUID();
+let Room,RoomEvent,Track,VideoPresets;
+async function callDirect(action,data={}){const {data:result,error}=await db.rpc('online_call',{p_action:action,p_data:{client_id:clientId,...data}}).abortSignal(AbortSignal.timeout(12000));if(error)throw error;return result;}
 const labels={scheduled:'Agendada',live:'Sala aberta',ended:'Encerrada',cancelled:'Cancelada',received:'Recebida',reviewing:'Em correção',returned:'Devolvida'};
 const state={classes:[],options:null,role:null,lesson:null,selectedClass:null,room:null,roomLesson:null,teacher:false,online:false,refreshing:false};
 const notice=(message,error=false)=>{$('notice').textContent=message;$('notice').className='notice'+(error?' error':'');};
@@ -16,6 +20,7 @@ const inputDate=value=>{const d=new Date(value);return new Date(d-d.getTimezoneO
 const options=items=>items.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
 async function rpc(action,data={}){const {data:result,error}=await db.rpc('online_portal',{p_action:action,p_data:data});if(error)throw error;return result;}
 async function api(action,data){
+ if(direct)return callDirect(action,data);
  if(!server)throw Error('O acesso externo à sala está em preparação. O agendamento e as entregas já podem ser usados.');
  const {data:{session}}=await db.auth.getSession();if(!session)throw Error('Entre novamente no portal.');
  const response=await fetch(server+'/api/'+action,{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(data),signal:AbortSignal.timeout(20000)});
@@ -23,6 +28,7 @@ async function api(action,data){
 }
 async function health(){
  state.online=false;
+ if(direct){try{state.online=Boolean(window.RTCPeerConnection&&navigator.mediaDevices&&(await callDirect('health')).ok);}catch{}return;}
  if(server){try{const r=await fetch(server+'/api/health',{signal:AbortSignal.timeout(4000)});state.online=r.ok;}catch{}}
 }
 function render(){
@@ -49,7 +55,7 @@ async function refresh(quiet=false){
   if(state.options&&!$('class-form').elements.teacher_id.options.length)$('class-form').elements.teacher_id.innerHTML=options(state.options.teachers);
   const previouslyOnline=state.online;await health();
   if(!quiet||changed||previouslyOnline!==state.online)render();
-  if(!quiet)notice(state.online?'Servidor de aulas disponível. Escolha um encontro abaixo.':server?'O servidor de vídeo está indisponível. Você pode consultar a agenda, enviar atividades e acompanhar devolutivas.':'Acesso externo ao vídeo em preparação. Agenda, fotos do caderno e devolutivas estão disponíveis.');
+  if(!quiet)notice(state.online?(direct?'Chamada pelo navegador disponível. Escolha seu encontro abaixo.':'Servidor de aulas disponível. Escolha um encontro abaixo.'):direct?'Não foi possível preparar a chamada. Use um navegador atualizado e clique em Atualizar. Agenda e atividades continuam disponíveis.':server?'O servidor de vídeo está indisponível. Você pode consultar a agenda, enviar atividades e acompanhar devolutivas.':'Acesso externo ao vídeo em preparação. Agenda, fotos do caderno e devolutivas estão disponíveis.');
  }finally{state.refreshing=false;}
 }
 async function act(button,fn){
@@ -82,11 +88,25 @@ $('classes').addEventListener('click',event=>{
   if(button.dataset.action==='end'){await api('end',{lesson_id:l.id});if(state.roomLesson?.id===l.id)await state.room?.disconnect();await refresh();notice('Aula encerrada para todos.');}
   if(button.dataset.action==='deliveries')await showDeliveries(c,l);
   if(['start','join'].includes(button.dataset.action)){
+   if(state.room)await state.room.disconnect();
    const student=button.closest('.lesson').querySelector('select')?.value;
-   const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});await connectRoom(result,l);await refresh(true);
+   const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});
+   if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
   }
  });
 });
+async function connectDirect(result,lesson){
+ $('videos').replaceChildren();$('audio').replaceChildren();state.roomLesson=lesson;state.teacher=result.isTeacher;
+ const room=new DirectRoom({call:callDirect,admission:result,context:{lesson_id:lesson.id,client_id:clientId},view:directView({
+  videos:$('videos'),audio:$('audio'),status:text=>{$('connection').textContent=text;},
+  controls:p=>{$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';},
+  closed:text=>{if(state.room!==room)return;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice(text);}
+ })});
+ state.room=room;$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher||!navigator.mediaDevices.getDisplayMedia;$('end').hidden=!result.isTeacher;
+ $('mic').textContent='Ligar microfone';$('camera').textContent='Ligar câmera';$('screen').textContent='Compartilhar tela';
+ try{await room.start();}catch(error){await room.disconnect();throw error;}
+ $('classroom').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function participantTile(participant){
  const id='participant-'+participant.identity;
  let el=document.getElementById(id);
@@ -97,6 +117,7 @@ function attachTrack(track,participant){
  if(track.kind===Track.Kind.Video){const tile=participantTile(participant);tile.append(media);}else $('audio').append(media);
 }
 async function connectRoom(result,lesson){
+ ({Room,RoomEvent,Track,VideoPresets}=await import('https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.esm.mjs'));
  if(state.room)await state.room.disconnect();$('videos').replaceChildren();$('audio').replaceChildren();
  const room=new Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:VideoPresets.h360.resolution},publishDefaults:{videoCodec:'vp8',videoSimulcastLayers:[VideoPresets.h180,VideoPresets.h360]}});
  state.room=room;state.roomLesson=lesson;state.teacher=result.isTeacher;

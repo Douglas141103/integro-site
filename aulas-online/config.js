@@ -1,2 +1,2 @@
-// A URL pública será definida após a configuração de HTTPS e da conexão de entrada.
-window.INTEGRO_ONLINE = { serverUrl: '' };
+// Direct browser media; authenticated portal signaling, no public PC endpoint.
+window.INTEGRO_ONLINE = { mode: 'direct', serverUrl: '' };
