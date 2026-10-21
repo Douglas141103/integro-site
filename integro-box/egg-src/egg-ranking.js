@@ -66,3 +66,26 @@ export function mountEggRanking(host, load) {
   update.onclick = refresh;
   void refresh();
 }
+
+// One request shared by the HUD and the open standings panel. Poll only while visible.
+export function createEggRankingHUD({button,load,ready,active,open,now=()=>performance.now()}) {
+  const badge=button.querySelector('[data-rank-position]');
+  let pending=null,next=0;
+  function show(position,state='ready') {
+    const valid=Number.isSafeInteger(position)&&position>0;
+    badge.textContent=valid?position.toLocaleString('pt-BR')+'º':state==='loading'?'…':'—';
+    const label=valid?`Ranking · sua posição: ${position.toLocaleString('pt-BR')}º`:state==='error'?'Ranking · posição indisponível':state==='loading'?'Ranking · carregando posição':'Ranking · sem posição';
+    button.title=label;button.setAttribute('aria-label',label);button.dataset.rankState=state;
+  }
+  function refresh() {
+    if(pending)return pending;
+    next=now()+60000;
+    pending=Promise.resolve().then(load).then(data=>{show(data.mine?.position);return data;},error=>{show(null,'error');throw error;}).finally(()=>{pending=null;});
+    return pending;
+  }
+  button.onclick=()=>open();show(null,'loading');
+  return {load:refresh,tick(){
+    if(!active()||!ready()||now()<next||pending)return;
+    void refresh().catch(()=>{});
+  }};
+}

@@ -1,0 +1,42 @@
+{
+  "Abrir ranking": [
+    "Open rankings",
+    "Rangliste öffnen"
+  ],
+  "Ranking · sua posição: {0}º": [
+    "Rankings · your position: {0}",
+    "Rangliste · dein Platz: {0}"
+  ],
+  "Ranking · carregando posição": [
+    "Rankings · loading position",
+    "Rangliste · Platz wird geladen"
+  ],
+  "Ranking · posição indisponível": [
+    "Rankings · position unavailable",
+    "Rangliste · Platz nicht verfügbar"
+  ],
+  "Ranking · sem posição": [
+    "Rankings · not ranked yet",
+    "Rangliste · noch nicht platziert"
+  ],
+  "Integros disponíveis insuficientes.": [
+    "Not enough available Integros.",
+    "Nicht genügend verfügbare Integros."
+  ],
+  "Toque na barra ou no botão para comprar o próximo nível.": [
+    "Tap the bar or button to buy the next level.",
+    "Tippe auf den Balken oder die Schaltfläche, um die nächste Stufe zu kaufen."
+  ],
+  "Compra não concluída. Confira o saldo disponível e o limite do item.": [
+    "Purchase not completed. Check your available balance and the item limit.",
+    "Kauf nicht abgeschlossen. Prüfe dein verfügbares Guthaben und das Limit des Gegenstands."
+  ],
+  "{0} · {1} de {2} níveis · Comprar próximo nível · {3} integros": [
+    "{0} · {1} of {2} levels · Buy next level · {3} Integros",
+    "{0} · {1} von {2} Stufen · Nächste Stufe kaufen · {3} Integros"
+  ],
+  "{0} · {1} de {2} níveis · No máximo": [
+    "{0} · {1} of {2} levels · Maximum reached",
+    "{0} · {1} von {2} Stufen · Maximum erreicht"
+  ]
+}

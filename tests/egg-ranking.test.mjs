@@ -58,3 +58,22 @@ test('ranking handles loading, safe player names, own position, refresh and netw
  assert.match(host.querySelector('[role=status]').textContent,/Sem conexão/);assert.equal(host.querySelector('button').disabled,false);
  dom.window.close();
 });
+
+test('HUD shares one request with panel, refreshes position and suspends hidden/offline polling',async()=>{
+ const {createEggRankingHUD}=await import('../integro-box/egg-src/egg-ranking.js');
+ const dom=new JSDOM('<button><span data-rank-position></span></button>'),button=dom.window.document.querySelector('button');
+ let clock=0,active=true,ready=true,calls=0,opened=0,resolve;
+ const hud=createEggRankingHUD({button,now:()=>clock,active:()=>active,ready:()=>ready,open:()=>opened++,load:()=>{calls++;return new Promise(r=>resolve=r);}});
+ hud.tick();hud.tick();const panel=hud.load();await Promise.resolve();assert.equal(calls,1);resolve({mine:{position:5}});await panel;
+ assert.equal(button.textContent,'5º');assert.match(button.getAttribute('aria-label'),/5º/);button.click();assert.equal(opened,1);
+ clock=59999;hud.tick();assert.equal(calls,1);clock=60000;active=false;hud.tick();active=true;ready=false;hud.tick();assert.equal(calls,1);
+ ready=true;hud.tick();await Promise.resolve();assert.equal(calls,2);resolve({mine:{position:1024}});await hud.load();assert.equal(button.textContent,'1.024º');
+ const manual=hud.load();await Promise.resolve();resolve({mine:null});await manual;assert.equal(button.textContent,'—');dom.window.close();
+});
+test('HUD recovers from synchronous connection failure without keeping a false rank',async()=>{
+ const {createEggRankingHUD}=await import('../integro-box/egg-src/egg-ranking.js');
+ const dom=new JSDOM('<button><span data-rank-position></span></button>'),button=dom.window.document.querySelector('button');let fail=true;
+ const hud=createEggRankingHUD({button,load:()=>{if(fail)throw Error('offline');return{mine:{position:3}};},active:()=>true,ready:()=>true,open:()=>{},now:()=>0});
+ await assert.rejects(hud.load());assert.equal(button.textContent,'—');assert.equal(button.dataset.rankState,'error');
+ fail=false;await hud.load();assert.equal(button.textContent,'3º');dom.window.close();
+});

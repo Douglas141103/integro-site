@@ -20,7 +20,8 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
-  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="ranking"]').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');w.document.querySelector('[data-egg-action="resume"]').click();
+  w.BoxEggCloud={ready:true,dirty(){},ranking:async()=>({mine:{position:5,integros:100,intgem:2},rows:[],total:0,updated_at:new Date().toISOString()})};tick(10);await new Promise(setImmediate);assert.equal(w.document.querySelector('#eggRanking [data-rank-position]').textContent,'5º');
+  w.document.getElementById('eggRanking').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');w.document.querySelector('[data-egg-action="resume"]').click();
   key('w');tick(270);key('w',true);key('d');tick(20);key('d',true);assert.equal(state().interaction.type,'nest');
   key('e');assert.equal(state().sheet,'nest');w.document.querySelector('[data-steal="0"]').click();tick(15);assert.equal(state().carrying,0);
   let actor;adapter.scene().traverse(n=>{if(n.name==='EggExplorer'&&n.userData.actor?.carry.children.length)actor=n.userData.actor;});assert(actor);assert(actor.carryBlend>.8);assert.equal(actor.carry.parent,actor.model.bones.chest);
@@ -56,6 +57,18 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   tick(10);await new Promise(r=>setImmediate(r));tick(10);assert.equal(state().sheet,'gift');assert.deepEqual(giftCalls,['gift_state']);assert.match(w.document.getElementById('eggGiftContent').textContent,/5 recargas de voo/);
   w.document.querySelector('[data-gift-open]').click();await new Promise(r=>setImmediate(r));assert.equal(flights,16);assert.equal(w.document.querySelector('.egg-jet-button span').textContent,'×16');assert(w.document.querySelector('.egg-gift.is-open'));w.document.querySelector('[data-gift-open]').click();assert.equal(state().sheet,null);
   flights=1;w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="jetpack"]').click();await new Promise(r=>setImmediate(r));w.document.querySelectorAll('#eggJetContent button')[1].click();await new Promise(r=>setImmediate(r));tick(90);assert.equal(state().sheet,null,'last charge does not interrupt flight');w.document.querySelector('.egg-jet-home').click();tick(240);await new Promise(r=>setImmediate(r));tick(10);assert.equal(state().sheet,'empty');assert.match(w.document.getElementById('eggEmptyContent').textContent,/Acabou o item/);w.document.querySelector('#eggEmptyContent button').click();assert.equal(state().sheet,'jetpack');w.document.getElementById('eggCloseSheet').click();
+  // A touch on the level bar must purchase level five, charge once and persist it.
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:50000});
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();w.document.querySelector('[data-shop-tab="gear"]').click();
+  for(const [id,base] of [['boots',80],['energy',90],['pen',150]]){
+   const before=w.BoxEggRuntime.save();w.BoxEggRuntime.apply({...before,upgrades:{...before.upgrades,[id]:4}});
+   const bar=w.document.querySelector('.egg-level-buy[data-buy="'+id+'"]');assert.equal(bar.disabled,false);bar.click();
+   const purchased=w.BoxEggRuntime.save();assert.equal(purchased.upgrades[id],5);assert.equal(purchased.coins,before.coins-Math.round(base*5**1.5));
+   assert.equal(JSON.parse(w.localStorage.getItem('integro-box-eggs-v1')).upgrades[id],5);
+  }
+  assert(w.document.querySelector('.egg-level-buy[data-buy="energy"]').disabled,'maximum level is not purchased again');
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:0});assert(w.document.querySelector('.egg-level-buy[data-buy="boots"]').disabled);assert.match(w.document.getElementById('eggSheetBody').textContent,/Integros disponíveis insuficientes/);
+  w.document.getElementById('eggCloseSheet').click();
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });

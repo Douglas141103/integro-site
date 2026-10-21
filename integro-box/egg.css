@@ -322,3 +322,21 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 @media(prefers-reduced-motion:reduce){.egg-gift-box,.egg-gift-spark{animation:none}.egg-gift-lid{transition:none}}
 
 .egg-economy-notice{text-align:center;max-width:620px;margin:auto;display:grid;gap:14px}.egg-economy-notice h3{font-size:clamp(24px,5vw,34px);margin:0;color:#173d37}.egg-economy-notice p{margin:0;line-height:1.55}.egg-economy-symbol{width:72px;height:72px;margin:auto;display:grid;place-items:center;border-radius:24px;background:linear-gradient(135deg,#c2f4de,#e9d995);color:#23594c;font-size:38px;font-weight:900}.egg-economy-conversion{padding:20px 12px;border:1px solid #c1d8cb;border-radius:18px;background:#e7f3df;color:#245544;font-size:clamp(19px,4vw,28px)}.egg-economy-note{font-size:13px;color:#50665e}.egg-tax-debit{color:#9a4936;font-size:27px}.egg-tax-table{width:100%;border-collapse:collapse;text-align:left;background:#edf3e9;color:#24463c;margin:12px 0}.egg-tax-table th,.egg-tax-table td{padding:10px;border-bottom:1px solid #c4d2c7}.egg-tax-table th{font-size:13px}.egg-tax-receipt{padding:12px;border:1px solid #cbd7c7;border-radius:16px;margin:10px 0}.egg-economy-account{display:grid;gap:8px}.egg-economy-account>p{margin:4px 0}.egg-economy-account>strong{color:#21604e;font-size:22px}
+
+/* Standings stay in the HUD; the badge always reflects the server response. */
+.egg-immersive .egg-ranking-button{position:relative;color:#ffe09a;background:#254357e6;border-color:#f3d58b}
+.egg-ranking-button [data-rank-position]{position:absolute;top:-7px;right:-7px;min-width:24px;min-height:24px;box-sizing:border-box;padding:3px 5px;display:grid;place-items:center;border-radius:999px;background:#ffd36a;border:2px solid #294753;color:#203740;font-size:11px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums;text-shadow:none}
+.egg-ranking-button[data-rank-state=error] [data-rank-position]{background:#d4e1e2}
+.egg-upgrade .egg-level-buy{min-height:44px;align-items:center;padding:8px 0;margin-bottom:5px;background:transparent;border:0;box-shadow:none;cursor:pointer}
+.egg-upgrade .egg-level-buy:hover:not(:disabled){background:#edf6e9}
+.egg-upgrade .egg-level-buy:disabled{background:transparent;cursor:default}
+.egg-level-buy i{height:8px;pointer-events:none}
+.egg-purchase-hint{display:block;margin-top:8px;line-height:1.4}
+[data-purchase-status]:empty{display:none}
+@media(max-width:520px) and (orientation:portrait){
+ .egg-immersive .egg-hud-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+ .egg-immersive .egg-navigation{max-width:none}
+ .egg-immersive .egg-hud-tools{display:grid;grid-template-columns:repeat(3,44px);gap:8px 6px}
+ .egg-immersive .egg-money{grid-column:1/-1;justify-self:end;min-height:24px}
+ .egg-immersive .egg-chase{top:109px}
+}
