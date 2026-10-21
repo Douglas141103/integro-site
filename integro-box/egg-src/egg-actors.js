@@ -1,3 +1,4 @@
+import {createEggJetpackModel} from './egg-jetpack-model.js';
 import {VEHICLES} from './egg-expansion.js';
 import {vehicleModel} from './egg-expansion-models.js';
 import * as T from 'three';
@@ -25,9 +26,10 @@ export class EggExplorer {
   this.pack=new T.Group();for(const child of [...b.back.children])this.pack.add(child);b.back.add(this.pack);
   this.elapsed=0;this.previous=null;this.takeoff=8;this.carryBlend=0;this.g.userData.actor=this;
  }
- update(dt,{player,moving=0,training=false,carrying=false,speed=9,push=false,reducedMotion=false,vehicle=null}={}){
+ update(dt,{player,moving=0,training=false,carrying=false,speed=9,push=false,reducedMotion=false,vehicle=null,flying=false}={}){
   const p=player||{x:0,y:0,z:0,vy:0};dt=clamp(dt,0,.05);if(!dt)return;this.elapsed+=dt;
-  const vehicleId=!training&&VEHICLES[vehicle]?vehicle:null;if(vehicleId!==this.vehicleId){this.ride?.removeFromParent();this.vehicleId=vehicleId;this.ride=vehicleId?vehicleModel(this.art,vehicleId,VEHICLES[vehicleId]):null;if(this.ride)this.g.add(this.ride);}
+  if(flying&&!this.jetVisual)this.jetVisual=createEggJetpackModel(this.model.bones.chest);this.jetVisual?.update({visible:flying,flying,time:this.elapsed,reducedMotion});this.pack.visible=!flying&&!this.backEquipped;for(const m of this.wear.children)if(m.userData.slot==='back')m.visible=!flying;
+  const vehicleId=!flying&&!training&&VEHICLES[vehicle]?vehicle:null;if(vehicleId!==this.vehicleId){this.ride?.removeFromParent();this.vehicleId=vehicleId;this.ride=vehicleId?vehicleModel(this.art,vehicleId,VEHICLES[vehicleId]):null;if(this.ride)this.g.add(this.ride);}
   this.space.position.y=this.ride?.52+Math.sin(this.elapsed*4)*.018:0;if(this.ride){this.ride.position.y=this.space.position.y-.22;this.ride.rotation.z=Math.sin(this.elapsed*2)*.015;}
   if(p.vy>0&&(!this.previous||p.vy>this.previous.vy+.2||this.previous.y===0))this.takeoff=Math.max(1,p.vy);
   const airborne=p.y>.002||p.vy>0,phase=clamp((1-p.vy/this.takeoff)*.5,0,.99),idle=!training&&(moving<.02||this.ride)&&!airborne;
@@ -40,11 +42,12 @@ export class EggExplorer {
    this.model.root.updateMatrixWorld(true);const q=this.space.getWorldQuaternion(new T.Quaternion()),skate=VEHICLES[vehicleId].type==='skate';
    for(const [side,sign]of[['L',-1],['R',1]]){const target=new T.Vector3(sign*.20,.115,skate?sign*.28:sign*.18).applyMatrix4(this.space.matrixWorld);this.model.legs[side].solve(target,q);b['shoulder'+side].rotation.set(skate?.18:1.05,0,skate?sign*.38:sign*.05);b['elbow'+side].rotation.x=skate?.45:.2;}
   }
+  if(flying){b.spine.rotation.x=.12;b.chest.rotation.z=Math.sin(this.elapsed*2)*.025;for(const side of ['L','R']){if(b['thigh'+side])b['thigh'+side].rotation.x=-.12;b['knee'+side].rotation.x=.35;b['shoulder'+side].rotation.z=side==='L'?.25:-.25;}}
   for(const [side,sign]of[['L',1],['R',-1]]){const arm=b['shoulder'+side],elbow=b['elbow'+side];arm.rotation.x=T.MathUtils.lerp(arm.rotation.x,.87,w);arm.rotation.z=T.MathUtils.lerp(arm.rotation.z,sign*.35,w);elbow.rotation.x=T.MathUtils.lerp(elbow.rotation.x,1.18,w);if(push){arm.rotation.x=1.35;elbow.rotation.x=.20;}}
   b.chest.rotation.y*=1-w*.7;this.model.root.updateMatrixWorld(true);this.previous={y:p.y,vy:p.vy};
  }
  equip(equipped,makeAccessory){
-  this.clearWear();this.hat.visible=!equipped.head||equipped.head==='headphones';this.pack.visible=!equipped.back;
+  this.clearWear();this.backEquipped=!!equipped.back;this.hat.visible=!equipped.head||equipped.head==='headphones';this.pack.visible=!equipped.back;
   const m=this.model;
   for(const id of Object.values(equipped)){const def=ACCESSORIES[id];if(!def)continue;const holder=new T.Group(),asset=makeAccessory(holder,id),slot=def.slot;
    const name=slot==='head'?'cap':slot==='face'?'head':'back',index=m.index[name];
@@ -53,11 +56,11 @@ export class EggExplorer {
    holder.traverse(part=>{if(part.isMesh)parts.push(coloredGeometry(part,new T.Matrix4().multiplyMatrices(bind,part.matrixWorld)));});
    const geo=mergeGeometries(parts);parts.forEach(g=>g.dispose());if(!geo)continue;const indices=[],weights=[];
    for(let i=0;i<geo.attributes.position.count;i++){indices.push(index,0,0,0);weights.push(1,0,0,0);}geo.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));geo.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));
-   const mesh=new T.SkinnedMesh(geo,vertexMaterial(this.art));mesh.name=id;mesh.frustumCulled=false;mesh.castShadow=true;this.wear.add(mesh);mesh.bind(m.skeleton,new T.Matrix4());addOutline(mesh,this.art,m.skeleton);
+   const mesh=new T.SkinnedMesh(geo,vertexMaterial(this.art));mesh.name=id;mesh.userData.slot=slot;mesh.frustumCulled=false;mesh.castShadow=true;this.wear.add(mesh);mesh.bind(m.skeleton,new T.Matrix4());addOutline(mesh,this.art,m.skeleton).userData.slot=slot;
   }
  }
  clearWear(){for(const mesh of this.wear.children)if(!mesh.userData.contour)mesh.geometry.dispose();this.wear.clear();}
- dispose(){this.clearWear();this.model.dispose();this.g.removeFromParent();}
+ dispose(){this.jetVisual?.dispose();this.clearWear();this.model.dispose();this.g.removeFromParent();}
 }
 
 const SPECIES={

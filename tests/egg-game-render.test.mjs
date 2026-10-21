@@ -46,6 +46,12 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   w.document.querySelector('[data-equip="crown"]').click();await Promise.resolve();await Promise.resolve();
   assert.equal(w.BoxEggRuntime.save().equipped.head,'crown');assert.equal(gemEquipment.head,undefined);
   assert.equal(w.document.querySelector('[data-equip="crown"]').textContent,'Guardar');w.document.getElementById('eggCloseSheet').click();tick(2);
+  let flights=12,flight=null;const jetCalls=[];w.BoxEggCloud.jet=async(action,id)=>{jetCalls.push(action);if(action==='jet_launch'){flights--;flight={id,until:new Date(Date.now()+45000).toISOString()};}if(action==='jet_land')flight=null;return {charges:flights,balance:15,flight,now:new Date().toISOString()};};
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="jetpack"]').click();await new Promise(r=>setImmediate(r));
+  assert.match(w.document.getElementById('eggJetContent').textContent,/15 IntGem/);w.document.querySelectorAll('#eggJetContent button')[1].click();await new Promise(r=>setImmediate(r));tick(90);
+  assert.equal(state().jetFlight.id,flight.id);assert.equal(state().player.y,8);assert.equal(actor.vehicleId,null,'vehicle is stowed while flying');assert.equal(actor.jetVisual.root.visible,true);assert.equal(actor.pack.visible,false);assert.equal(flights,11);
+  w.document.querySelector('.egg-jet-home').click();tick(240);await new Promise(r=>setImmediate(r));assert.equal(state().jetFlight,null);assert.equal(state().player.y,0);assert.equal(state().player.z,14);assert.equal(actor.jetVisual.root.visible,false);assert.equal(jetCalls.filter(a=>a==='jet_launch').length,1);assert.equal(jetCalls.filter(a=>a==='jet_land').length,1);
+  adapter.setPeers([{slot:2,state:{x:2,y:8,z:10,yaw:0,zone:'world',jetpack:true}}]);tick(3);let airbornePeer;adapter.scene().traverse(n=>{if(n.userData.actor?.jetVisual?.root.visible)airbornePeer=n.userData.actor;});assert(airbornePeer,'peers see the flying jetpack');adapter.clearPeers();
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });
