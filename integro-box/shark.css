@@ -13,3 +13,13 @@
 @media(pointer:coarse){#sharkApp .shark-pad>small{display:none}#sharkApp .shark-depth-controls small{display:none}#sharkApp .shark-depth-controls>button{height:44px;width:44px}}
 @media(max-height:520px) and (min-width:601px){#sharkApp .shark-minimap{width:82px}#sharkApp .shark-lower{bottom:12px}#sharkApp #sharkJoystick{width:80px;height:80px}#sharkApp #sharkJoystick>span{top:30px}#sharkApp #sharkBoost{width:65px;height:65px}#sharkApp .shark-pad>small{display:none}}
 #sharkApp.shark-menu .shark-zone{visibility:hidden}
+/* Camera controls stay below the minimap, away from swim and depth controls. */
+#sharkApp .shark-camera-controls{position:absolute;right:14px;top:calc(max(12px,env(safe-area-inset-top)) + 158px);z-index:3;text-align:center}
+#sharkApp .shark-camera-controls>div{display:flex;gap:4px;padding:3px;border-radius:15px;background:#063d51cc;border:1px solid #c2fff144}
+#sharkApp .shark-camera-controls button{display:grid;place-items:center;width:44px;height:44px;padding:10px;border:0;border-radius:11px;background:transparent;color:#e8fff7;font-size:25px;touch-action:manipulation}
+#sharkApp .shark-camera-controls button:hover{background:#1d7181}#sharkApp .shark-camera-controls button[aria-pressed=true]{background:#c6f88f;color:#194b42}
+#sharkApp .shark-camera-controls svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8}
+#sharkApp .shark-camera-controls>span{display:block;margin-top:5px;font-size:10px;color:#e8fff7;text-shadow:0 1px 4px #003744}
+#sharkApp.shark-menu .shark-camera-controls{visibility:hidden}
+@media(max-width:600px){#sharkApp .shark-camera-controls{right:10px;top:calc(max(12px,env(safe-area-inset-top)) + 183px)}}
+@media(max-height:520px) and (min-width:601px){#sharkApp .shark-camera-controls{top:calc(max(12px,env(safe-area-inset-top)) + 142px)}}

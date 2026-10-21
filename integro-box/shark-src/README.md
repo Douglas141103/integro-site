@@ -30,3 +30,12 @@ alinhamento e separação de cardumes. A câmera está mais próxima, com ilumin
 ACES e exposição reduzida. Economia e formato do progresso salvo permanecem compatíveis.
 
 Validação: `node --test tests/shark.test.mjs tests/shark-motion.test.mjs tests/shark-ui.test.mjs tests/box-navigation-ui.test.mjs`.
+
+### Algas e câmera
+Algas comestíveis flutuam em todas as regiões, inclusive perto do início. Dão XP
+sem contar como peixes nas missões; o bônus de crescimento também se aplica.
+Cada alga reaparece após 18 segundos de jogo ativo. O campo usa três lotes de
+instâncias, com geometria compartilhada, para limitar o custo de renderização.
+Zoom de 0 a 3, botões −/+, roda, pinça e atalho do olho. Zoom 0 ativa a câmera
+nos olhos do tubarão, com corpo e anel ocultos, direção de nado coerente e
+preferência salva por conta no navegador. Testes: `tests/shark-algae-camera.test.mjs`.

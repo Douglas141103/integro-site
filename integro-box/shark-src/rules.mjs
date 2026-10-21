@@ -31,7 +31,7 @@ export function regionAt(x,z){return (z<0?0:3)+clamp(Math.floor((x+900)/600),0,2
 export const priceFor=(p,item)=>item.price*(1+(p.upgrades[item.id]||0));
 export function clean(data){
  let raw;try{raw=typeof data==='string'?JSON.parse(data):data;}catch{}raw=raw&&typeof raw==='object'?raw:{};
- const p={version:1,level:Math.max(1,int(raw.level,60)),xp:0,coins:int(raw.coins),eaten:int(raw.eaten),shields:int(raw.shields,3),upgrades:{},owned:['ocean'],skin:'ocean',accessories:[],discovered:[0],claimed:[],position:{x:-600,y:24,z:-300},sound:raw.sound!==false,quality:raw.quality==='low'?'low':'auto'};
+ const p={version:1,level:Math.max(1,int(raw.level,60)),xp:0,coins:int(raw.coins),eaten:int(raw.eaten),algaeEaten:int(raw.algaeEaten),shields:int(raw.shields,3),upgrades:{},owned:['ocean'],skin:'ocean',accessories:[],discovered:[0],claimed:[],position:{x:-600,y:24,z:-300},sound:raw.sound!==false,quality:raw.quality==='low'?'low':'auto',cameraZoom:Number.isFinite(raw.cameraZoom)?clamp(raw.cameraZoom,0,3):1};
  p.xp=Math.min(int(raw.xp),needXP(p.level)-1);
  for(const item of SHOP){if(item.type==='upgrade')p.upgrades[item.id]=int(raw.upgrades?.[item.id],item.max);if(['skin','accessory'].includes(item.type)&&raw.owned?.includes?.(item.id)&&!p.owned.includes(item.id))p.owned.push(item.id);}
  if(SHOP.some(i=>i.id===raw.skin&&i.type==='skin')&&p.owned.includes(raw.skin))p.skin=raw.skin;
@@ -58,6 +58,13 @@ export function eat(p,preyLevel){
  while(p.level<MAX_LEVEL&&p.xp>=needXP(p.level)){p.xp-=needXP(p.level);p.level++;}
  if(p.level===MAX_LEVEL)p.xp=0;
  return {xp,coins,evolved:p.level>before};
+}
+export function eatAlgae(p){
+ const xp=Math.round((4+Math.floor((p.level-1)/4))*(1+.2*p.upgrades.growth)),before=p.level;
+ p.algaeEaten=(p.algaeEaten||0)+1;p.xp+=xp;
+ while(p.level<MAX_LEVEL&&p.xp>=needXP(p.level)){p.xp-=needXP(p.level);p.level++;}
+ if(p.level===MAX_LEVEL)p.xp=0;
+ return{xp,coins:0,evolved:p.level>before};
 }
 export function discover(p,index){if(p.discovered.includes(index))return false;p.discovered.push(index);p.coins+=100;return true;}
 export function claimMissions(p){const got=[];for(const m of MISSIONS){const value=m.stat==='regions'?p.discovered.length:p[m.stat];if(value>=m.target&&!p.claimed.includes(m.id)){p.claimed.push(m.id);p.coins+=m.reward;got.push(m);}}return got;}
