@@ -2,6 +2,7 @@ import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
 import {DirectRoom,directView} from './direct-room.mjs?v=20261021-tools1';
 import {mountCollaboration} from './collaboration.mjs?v=20261021-tools1';
+import {mountRoomPanels} from './room-panels.mjs?v=20261021-student1';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -106,12 +107,13 @@ async function connectDirect(result,lesson){
  const room=new DirectRoom({call:callDirect,admission:result,context:{lesson_id:lesson.id,client_id:clientId},view:directView({
   videos:$('videos'),audio:$('audio'),status:text=>{$('connection').textContent=text;},
   controls:p=>{$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';},
-  closed:text=>{if(state.room!==room)return;state.collabDispose?.();state.collabDispose=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice(text);}
+  closed:text=>{if(state.room!==room)return;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice(text);}
  })});
  state.room=room;$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
  $('screen').disabled=!navigator.mediaDevices.getDisplayMedia;
  $('screen-help').textContent=result.isTeacher?(navigator.mediaDevices.getDisplayMedia?'Compartilhar tela: escolha uma aba, janela ou tela e confirme no navegador.':'Este navegador não permite compartilhar tela. Use um navegador de computador compatível.'):'';
  state.collabDispose=mountCollaboration($('collaboration'),room);
+ state.panelsDispose=mountRoomPanels($('classroom'));
  $('mic').textContent='Ligar microfone';$('camera').textContent='Ligar câmera';$('screen').textContent='Compartilhar tela';
  try{await room.start();}catch(error){await room.disconnect();throw error;}
  $('classroom').scrollIntoView({behavior:'smooth',block:'start'});
