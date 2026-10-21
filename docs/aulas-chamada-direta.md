@@ -32,7 +32,17 @@ O auditor relata RLS sem políticas nas tabelas privadas, intencional para negar
 
 Teste local no navegador: cinco participantes sintéticos, áudio e câmera bidirecionais em todos os pares e tela do professor recebida pelos quatro alunos. Nenhuma câmera/microfone real usado. Validação externa com professor e aluno continua pendente.
 
-## Referências
+## Chat, quadro e tela (21/10/2026)
+
+Durante a chamada, `collaboration.mjs` oferece chat da turma e quadro com caneta, borracha, texto, cores, espessura, desfazer e exportação PNG. O professor libera ou bloqueia a escrita dos alunos e é o único que pode limpar o quadro inteiro. Alunos podem desfazer apenas os próprios traços; o professor pode desfazer o último traço de qualquer participante. A tela compartilhada aparece em destaque, com opção Ampliar tela. Em navegadores sem captura de tela, o botão do professor fica desabilitado com explicação.
+
+Os recursos usam RTCDataChannel ordenado, negociado no mesmo par WebRTC autenticado. O professor organiza os eventos e distribui atualizações, sempre usando a identidade do par validada pelo portal, sem confiar em nomes/papéis enviados na mensagem. Só mensagens vindas do par do professor podem alterar o estado compartilhado dos alunos. Entrada tardia recebe uma cópia do quadro e das últimas 100 mensagens; há limites de tamanho, frequência e fila, e os pontos são normalizados. Nenhuma tabela ou política Supabase foi alterada para essas ferramentas.
+
+Chat e quadro existem apenas na memória da chamada; saída/reentrada do professor começa um quadro e chat novos. Não há persistência automática, nem histórico para acesso posterior. A interface informa esse limite e oferece Salvar imagem. O limite do quadro é de 800 segmentos/itens; quando cheio, o professor pode salvar e limpar.
+
+Verificação: testes de papéis, identidade, sincronização, desfazer, limites e normalização; teste em navegador com cinco participantes recebendo áudio/vídeo/tela e trocando chat/desenhos, incluindo entrada tardia e limpeza. Atualizar a página de todos após sair da chamada para carregar a versão nova; não recarregar uma aula em curso automaticamente.
+
+### Fontes
 
 - https://webrtc.org/getting-started/peer-connections
 - https://webrtc.org/getting-started/turn-server

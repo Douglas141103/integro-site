@@ -81,7 +81,7 @@ test('camera requested only on click, stopped on exit, and late permission canno
 
 test('answerer uses offered transceivers rather than creating unused sending slots',async()=>{
  const sent=[],offered=['audio','camera','screen'].map(slot=>({direction:'recvonly',sender:{replaceTrack:async track=>sent.push([slot,track]),getParameters:()=>({encodings:[]})}}));
- const pc={addTransceiver(){throw Error('Answerer must not pre-create transceivers');},setRemoteDescription:async()=>{},getTransceivers:()=>offered,createAnswer:async()=>({type:'answer',sdp:'v=0'}),setLocalDescription:async()=>{},iceGatheringState:'complete',localDescription:{toJSON:()=>({type:'answer',sdp:'v=0'})},close(){}};
+ const pc={createDataChannel:()=>({readyState:'connecting'}),addTransceiver(){throw Error('Answerer must not pre-create transceivers');},setRemoteDescription:async()=>{},getTransceivers:()=>offered,createAnswer:async()=>({type:'answer',sdp:'v=0'}),setLocalDescription:async()=>{},iceGatheringState:'complete',localDescription:{toJSON:()=>({type:'answer',sdp:'v=0'})},close(){}};
  const view={participant(){},status(){},closed(){}};
  const room=new DirectRoom({call:async()=>({ok:true}),admission:{member_id:'z',isTeacher:true},context:{},view,rtcFactory:()=>pc,mediaDevices:{}});
  const peer=room.addPeer({id:'a',name:'Pupil',isTeacher:false});room.tracks.audio={stop(){}};

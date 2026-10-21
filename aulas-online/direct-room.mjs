@@ -5,6 +5,7 @@ export class DirectRoom {
   this.call=call;this.self=admission;this.context={...context,member_id:admission.member_id};
   this.view=view;this.rtcFactory=rtcFactory;this.mediaDevices=mediaDevices;
   this.peers=new Map();this.tracks={};this.cursor=0;this.closed=false;this.lastPoll=Date.now();
+  this.dataListeners=new Set();
   this.localParticipant={
    setMicrophoneEnabled:enabled=>this.setMedia('audio',enabled),
    setCameraEnabled:enabled=>this.setMedia('camera',enabled),
@@ -31,7 +32,7 @@ export class DirectRoom {
  async sync(data){
   if(this.closed)return;
   const others=data.peers.filter(p=>p.id!==this.self.member_id);
-  for(const [id,peer] of this.peers)if(!others.some(p=>p.id===id)){peer.pc.close();clearTimeout(peer.timeout);this.peers.delete(id);this.view.remove(id);}
+  for(const [id,peer] of this.peers)if(!others.some(p=>p.id===id)){peer.pc.close();clearTimeout(peer.timeout);this.peers.delete(id);this.view.remove(id);for(const listener of this.dataListeners)listener.close?.(peer.person);}
   for(const person of others){
    if(this.peers.has(person.id))continue;
    const peer=this.addPeer(person);
@@ -54,6 +55,22 @@ export class DirectRoom {
   const pc=this.rtcFactory({iceServers:[{urls:'stun:stun.cloudflare.com:3478'},{urls:'stun:stun.l.google.com:19302'}],bundlePolicy:'max-bundle'});
   const peer={pc,person,queue:Promise.resolve(),senders:[],failed:false,retries:0};
   this.peers.set(person.id,peer);this.view.participant(person.id,person.name,false);
+  // Negotiated, ordered channel uses the same authenticated DTLS peer connection.
+  peer.channel=pc.createDataChannel('integro-classroom-v1',{negotiated:true,id:0,ordered:true});peer.outbox=[];peer.queuedBytes=0;
+  peer.channel.bufferedAmountLowThreshold=65536;
+  peer.flush=()=>{
+   while(!this.closed&&peer.channel.readyState==='open'&&peer.outbox.length&&peer.channel.bufferedAmount<131072){
+    const text=peer.outbox.shift();peer.queuedBytes-=text.length;
+    try{peer.channel.send(text);}catch{peer.channel.close();break;}
+   }
+  };
+  peer.channel.onbufferedamountlow=peer.flush;
+  peer.channel.onopen=()=>{for(const listener of this.dataListeners)listener.open?.(person);peer.flush();};
+  peer.channel.onclose=()=>{peer.outbox=[];peer.queuedBytes=0;for(const listener of this.dataListeners)listener.close?.(person);};
+  peer.channel.onmessage=event=>{
+   if(this.closed||this.peers.get(person.id)!==peer||typeof event.data!=='string'||event.data.length>16384)return;
+   try{const message=JSON.parse(event.data);for(const listener of this.dataListeners)listener.message?.(person,message);}catch{/* Ignore malformed data, not media. */}
+  };
   // Fixed media slots permit camera/mic/share switches without renegotiation.
   for(const slot of this.self.member_id<person.id?slots:[]){
    const transceiver=pc.addTransceiver(slot==='audio'?'audio':'video',{direction:'sendrecv',sendEncodings:[slot==='audio'?{maxBitrate:40000}:{maxBitrate:slot==='screen'?600000:350000,maxFramerate:slot==='screen'?10:15}]});
@@ -140,10 +157,17 @@ export class DirectRoom {
   if(results.some(r=>r.status==='rejected'))this.view.status('Um participante perdeu a conexão. Saia e entre na aula novamente.');
  }
  async startAudio(){await this.view.audio();}
+ onData(listener){this.dataListeners.add(listener);for(const peer of this.peers.values())if(peer.channel?.readyState==='open')listener.open?.(peer.person);return ()=>this.dataListeners.delete(listener);}
+ sendData(id,message){
+  const peer=this.peers.get(id);if(this.closed||peer?.channel?.readyState!=='open')return false;
+  const text=JSON.stringify(message);if(text.length>16384)return false;
+  if(peer.queuedBytes+text.length>2097152){peer.channel.close();return false;}
+  peer.outbox.push(text);peer.queuedBytes+=text.length;peer.flush();return true;
+ }
  async disconnect(reason='Você saiu da sala. As atividades continuam disponíveis.'){
   if(this.closed)return;this.closed=true;clearTimeout(this.timer);clearInterval(this.watchdog);
   for(const p of this.peers.values()){clearTimeout(p.timeout);p.pc.close();}
-  this.peers.clear();Object.values(this.tracks).forEach(t=>t?.stop());this.tracks={};this.view.closed(reason);
+  this.peers.clear();this.dataListeners.clear();Object.values(this.tracks).forEach(t=>t?.stop());this.tracks={};this.view.closed(reason);
   try{await this.call('leave',this.context);}catch{/* Lease expiry also releases the seat. */}
  }
 }
@@ -160,7 +184,9 @@ export function directView({videos,audio,status,controls,closed}){
   track(id,slot,track,local){
    if(slot==='screen'){
     screens.get(id)?.remove();screens.delete(id);
-    if(track){const tile=document.createElement('div');tile.className='video-tile shared-screen';const label=document.createElement('span');label.textContent=(names.get(id)||'Professor')+' — tela';tile.append(label);videos.append(tile);screens.set(id,tile);}
+    if(track){const tile=document.createElement('div');tile.className='video-tile shared-screen';const label=document.createElement('span');label.textContent=(names.get(id)||'Professor')+' — tela';
+     const expand=document.createElement('button');expand.className='expand-screen secondary';expand.textContent='Ampliar tela';expand.onclick=()=>tile.requestFullscreen?.().catch(()=>status('Não foi possível ampliar a tela neste navegador.'));
+     tile.append(label,expand);videos.prepend(tile);screens.set(id,tile);}
    }
    const container=slot==='audio'?audio:slot==='screen'?screens.get(id):tiles.get(id);if(!container||slot==='audio'&&local)return;
    const existing=[...container.querySelectorAll('video,audio')].find(el=>el.dataset.slot===slot&&el.dataset.peer===id);existing?.remove();
