@@ -56,3 +56,11 @@ test('a trap drops the carried egg intact and permits recovery without duplicati
  const g=new EggAdventure();g.player.x=3.2;g.player.z=-25;assert.equal(g.steal(0),true);const e={...g.carriedEgg};assert.equal(g.dropCarriedEgg(),true);assert.equal(g.carrying,null);assert.equal(g.droppedEgg.rarity,e.rarity);assert.equal(g.nestEggs[0][0].availableAt,Infinity);
  assert.notEqual(g.interaction().type,'pickup');g.time+=2;assert.equal(g.interact(),'pickup');assert.equal(g.carriedEgg.world,e.world);assert.equal(g.droppedEgg,null);assert.equal(g.dropCarriedEgg(),true);g.clearDroppedEgg();assert.equal(g.droppedEgg,null);assert.equal(g.nestEggs[0][0].availableAt,g.time+5);
 });
+
+test('fast peer movement retains server appearance and ignores cosmetics claimed in broadcasts',()=>{
+ const f=fixture(),[a]=f.users,appearance={premium:{head:'egg_station_head'},accessories:{back:'wings'}};
+ const peer={slot:2,state:{x:0,y:0,z:-10,yaw:0,appearance}};
+ f.emit({v:2,kind:'pose',room:'room-1',scope:f.race.id,from:2,at:f.now(),seq:999,playing:true,x:1,y:0,z:-10,yaw:0,appearance:{premium:{head:'egg_royal_head'}}});
+ const rendered=a.api.peers([peer])[0];assert.equal(rendered.state.appearance,appearance);assert.notEqual(rendered.state.x,0);
+ for(const u of f.users)u.api.stop();
+});

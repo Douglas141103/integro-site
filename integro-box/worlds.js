@@ -28346,6 +28346,7 @@ void main() {
     const remote = new Map();
     const colors = [0x80d9ac, 0xffce78, 0xbba5ff, 0x79dbea];
     function dispose(entry) {
+      entry.cosmetics?.dispose();
       entry.node.removeFromParent();
       entry.node.traverse(child => {
         child.geometry?.dispose();
@@ -28382,9 +28383,10 @@ void main() {
             ctx.fillStyle='#ffffff';ctx.font='bold 25px Arial';ctx.textAlign='center';ctx.fillText('Explorador '+peer.slot,128,41);
             const texture=new nB(canvas);texture.colorSpace=Eg;
             const label=new oC(new CC({map:texture,depthWrite:false}));label.position.y=2.05;label.scale.set(2.2,.55,1);node.add(label);
-            node.position.set(s.x,s.y,s.z);scene.add(node);entry={node,limbs,state:s};remote.set(peer.slot,entry);
+            node.position.set(s.x,s.y,s.z);scene.add(node);entry={node,limbs,state:s,cosmetics:window.BoxRoomCosmetics?.create(node,id)};remote.set(peer.slot,entry);
           }
           entry.state=s;
+          entry.cosmetics?.update(s.appearance,performance.now()/1000);
         }
         for(const [slot,entry] of remote) if(!ids.has(slot)){dispose(entry);remote.delete(slot);}
       },
@@ -28393,6 +28395,7 @@ void main() {
         const local=api.state();if(!local)return;
         for(const entry of remote.values()) {
           const s=entry.state;entry.node.visible=s.zone===local.zone;
+          entry.cosmetics?.update(s.appearance,performance.now()/1000);
           const dist=entry.node.position.distanceTo(new $(s.x,s.y,s.z));
           entry.node.position.lerp(new $(s.x,s.y,s.z),Math.min(1,dt*8));
           entry.node.rotation.y+=Math.atan2(Math.sin(s.yaw-entry.node.rotation.y),Math.cos(s.yaw-entry.node.rotation.y))*Math.min(1,dt*10);

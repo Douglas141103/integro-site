@@ -1,5 +1,5 @@
 import {supabase} from './access.js?v=20261016-intgem1';
-import {createEggPush} from './egg-push.js?v=20261021-jet1';
+import {createEggPush} from './egg-push.js?v=20261021-roomitems1';
 const runtime=()=>window.BoxEggRuntime;
 const room=()=>window.BoxMultiplayer?.roomInfo;
 const errors={economy_update_required:'Atualize a página para ativar as novas regras da economia.',invalid_tax:'Não foi possível validar a apuração do imposto. Atualize o jogo.',not_member:'Entre em uma sala do Pegue o Ovo.',base_required:'Todos os participantes precisam voltar à base.',trade_pending:'Conclua ou cancele a troca atual.',pet_missing:'Essa criatura já não está disponível.',trade_closed:'A troca já foi encerrada.',trade_changed:'O progresso mudou. A troca foi cancelada.',confirmation_required:'Aguarde a confirmação do colega.',wrong_party:'Aguarde a vez do outro participante.',no_save:'O colega precisa sincronizar o progresso primeiro.',race_running:'A corrida dura até 2 minutos. Aguarde o encerramento.',conflict:'O progresso mudou em outro aparelho.',not_owner:'Somente quem criou a sala inicia a corrida.',pet_transferred:'Esse progresso contém uma criatura já transferida.',invalid_save:'Não foi possível validar este progresso.'};
