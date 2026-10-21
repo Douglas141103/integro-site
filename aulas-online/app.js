@@ -1,7 +1,7 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/+esm';
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
-import {DirectRoom,directView} from './direct-room.mjs?v=20261021-tools1';
-import {mountCollaboration} from './collaboration.mjs?v=20261021-tools1';
+import {DirectRoom,directView} from './direct-room.mjs?v=20261021-devices1';
+import {mountCollaboration} from './collaboration.mjs?v=20261021-devices1';
 import {mountRoomPanels} from './room-panels.mjs?v=20261021-student1';
 
 const $=id=>document.getElementById(id);
@@ -13,7 +13,7 @@ const server=local?'http://127.0.0.1:8787':window.INTEGRO_ONLINE?.serverUrl?.rep
 const direct=window.INTEGRO_ONLINE?.mode==='direct';
 const clientId=crypto.randomUUID();
 let Room,RoomEvent,Track,VideoPresets;
-async function callDirect(action,data={}){const {data:result,error}=await db.rpc('online_call',{p_action:action,p_data:{client_id:clientId,...data}}).abortSignal(AbortSignal.timeout(12000));if(error)throw error;return result;}
+async function callDirect(action,data={}){const {data:result,error}=await db.rpc('online_call',{p_action:action,p_data:{client_id:clientId,...data,protocol:2}}).abortSignal(AbortSignal.timeout(12000));if(error)throw error;return result;}
 const labels={scheduled:'Agendada',live:'Sala aberta',ended:'Encerrada',cancelled:'Cancelada',received:'Recebida',reviewing:'Em correção',returned:'Devolvida'};
 const state={classes:[],options:null,role:null,lesson:null,selectedClass:null,room:null,roomLesson:null,teacher:false,online:false,refreshing:false};
 const notice=(message,error=false)=>{$('notice').textContent=message;$('notice').className='notice'+(error?' error':'');};
@@ -104,12 +104,15 @@ $('classes').addEventListener('click',event=>{
 });
 async function connectDirect(result,lesson){
  $('videos').replaceChildren();$('audio').replaceChildren();state.roomLesson=lesson;state.teacher=result.isTeacher;
+ const secondDevice=result.isTeacher&&result.coordinator_id&&result.coordinator_id!==result.member_id;
  const room=new DirectRoom({call:callDirect,admission:result,context:{lesson_id:lesson.id,client_id:clientId},view:directView({
-  videos:$('videos'),audio:$('audio'),status:text=>{$('connection').textContent=text;},
+  videos:$('videos'),audio:$('audio'),audioMuted:!!secondDevice,status:text=>{$('connection').textContent=text;},
   controls:p=>{$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';},
   closed:text=>{if(state.room!==room)return;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice(text);}
  })});
  state.room=room;$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
+ room.audioMuted=!!secondDevice;$('mute-sound').hidden=false;$('mute-sound').textContent=room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';
+ $('device-help').hidden=!result.isTeacher;$('device-help').textContent='Você pode usar computador e celular com a mesma conta, em até dois dispositivos. Para evitar eco, use microfone e som em apenas um deles. Sair da sala desconecta só este aparelho; Encerrar aula encerra para todos.'+(secondDevice?' O som deste segundo aparelho começou desligado.':'');
  $('screen').disabled=!navigator.mediaDevices.getDisplayMedia;
  $('screen-help').textContent=result.isTeacher?(navigator.mediaDevices.getDisplayMedia?'Compartilhar tela: escolha uma aba, janela ou tela e confirme no navegador.':'Este navegador não permite compartilhar tela. Use um navegador de computador compatível.'):'';
  state.collabDispose=mountCollaboration($('collaboration'),room);
@@ -153,7 +156,8 @@ $('leave').onclick=()=>state.room?.disconnect();
 $('mic').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setMicrophoneEnabled(!p.isMicrophoneEnabled);$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';});
 $('camera').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setCameraEnabled(!p.isCameraEnabled);$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';});
 $('screen').onclick=event=>act(event.currentTarget,async()=>{if(!state.room||!state.teacher)return;const p=state.room.localParticipant;await p.setScreenShareEnabled(!p.isScreenShareEnabled);$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';});
-$('sound').onclick=event=>act(event.currentTarget,async()=>{await state.room?.startAudio();notice('Áudio da sala ativado.');});
+$('sound').onclick=event=>act(event.currentTarget,async()=>{if(state.room?.setAudioMuted){await state.room.setAudioMuted(false);$('mute-sound').textContent='Silenciar som neste aparelho';}await state.room?.startAudio();notice('Áudio da sala ativado.');});
+$('mute-sound').onclick=event=>act(event.currentTarget,async()=>{if(!state.room?.setAudioMuted)return;await state.room.setAudioMuted(!state.room.audioMuted);$('mute-sound').textContent=state.room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';});
 $('end').onclick=event=>act(event.currentTarget,async()=>{if(!state.roomLesson)return;await api('end',{lesson_id:state.roomLesson.id});await state.room?.disconnect();await refresh();notice('Aula encerrada para todos os participantes.');});
 
 async function showDeliveries(c,l){

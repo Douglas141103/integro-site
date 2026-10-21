@@ -7,6 +7,7 @@ create table private.online_call_members (
  student_id uuid references public.students(id),
  identity text not null, name text not null, is_teacher boolean not null,
  client_id uuid not null, seen_at timestamptz not null default now(),
+ joined_at timestamptz not null default clock_timestamp(), protocol integer not null default 1,
  unique(lesson_id,identity)
 );
 create index online_call_members_user on private.online_call_members(user_id);
@@ -32,7 +33,7 @@ language plpgsql security definer set search_path='' as $$
 declare
  u uuid:=auth.uid(); lid uuid:=(p_data->>'lesson_id')::uuid;
  client uuid:=(p_data->>'client_id')::uuid; ctx jsonb; member private.online_call_members;
- lesson private.online_lessons; peer uuid; roster jsonb; messages jsonb;
+ lesson private.online_lessons; peer uuid; roster jsonb; messages jsonb; coordinator uuid; teacher boolean; seat text;
 begin
  if u is null or not exists(select 1 from public.profiles where id=u and active is not false) then
   raise exception 'Entre com sua conta do portal.';
@@ -60,7 +61,10 @@ begin
  if p_action='leave' then
   select * into member from private.online_call_members where lesson_id=lid and id=(p_data->>'member_id')::uuid and user_id=u and client_id=client;
   if found then
-   delete from private.online_call_members where lesson_id=lid and (id=member.id or member.is_teacher);
+   delete from private.online_call_members where id=member.id;
+   if member.is_teacher and not exists(select 1 from private.online_call_members where lesson_id=lid and is_teacher) then
+    delete from private.online_call_members where lesson_id=lid;
+   end if;
   end if;
   return jsonb_build_object('ok',true);
  end if;
@@ -70,15 +74,33 @@ begin
   if not (ctx->>'is_teacher')::boolean and not exists(select 1 from private.online_call_members where lesson_id=lid and is_teacher) then
    raise exception 'Aguarde o professor entrar na chamada.';
   end if;
-  select * into member from private.online_call_members where lesson_id=lid and identity=ctx->>'identity';
+  teacher:=(ctx->>'is_teacher')::boolean;
+  seat:=ctx->>'identity';
+  if teacher then
+   select * into member from private.online_call_members where lesson_id=lid and is_teacher and user_id=u and client_id=client;
+   seat:=seat||':device:'||client::text;
+  else
+   select * into member from private.online_call_members where lesson_id=lid and identity=seat;
+  end if;
   if found and (member.user_id<>u or member.client_id<>client) then
    raise exception 'Este participante já está na chamada. Feche a outra aba ou aguarde 45 segundos.';
   end if;
   if not found then
-   if (select count(*) from private.online_call_members where lesson_id=lid)>=5 then raise exception 'Sala completa: professor e quatro alunos.'; end if;
-   insert into private.online_call_members(lesson_id,user_id,student_id,identity,name,is_teacher,client_id)
+   if teacher then
+    if (select count(*) from private.online_call_members where lesson_id=lid and is_teacher)>=2 then raise exception 'O professor já está usando dois dispositivos. Saia de um deles ou aguarde 45 segundos.'; end if;
+    if exists(select 1 from private.online_call_members where lesson_id=lid and is_teacher and user_id<>u) then raise exception 'Entre com a mesma conta do professor que abriu esta sala.'; end if;
+    if exists(select 1 from private.online_call_members where lesson_id=lid and is_teacher)
+      and (coalesce((p_data->>'protocol')::integer,1)<2 or exists(select 1 from private.online_call_members where lesson_id=lid and protocol<2)) then
+     raise exception 'Atualize a página nos dispositivos que já estão na sala antes de entrar com o segundo aparelho.';
+    end if;
+   elsif (select count(*) from private.online_call_members where lesson_id=lid and not is_teacher)>=4 then raise exception 'Sala completa: quatro alunos.';
+   end if;
+   if coalesce((p_data->>'protocol')::integer,1)<2 and (select count(*) from private.online_call_members where lesson_id=lid and is_teacher)>1 then
+    raise exception 'Atualize a página para entrar nesta sala com dois dispositivos do professor.';
+   end if;
+   insert into private.online_call_members(lesson_id,user_id,student_id,identity,name,is_teacher,client_id,protocol)
    values(lid,u,case when (ctx->>'is_teacher')::boolean then null else (p_data->>'student_id')::uuid end,
-    ctx->>'identity',ctx->>'name',(ctx->>'is_teacher')::boolean,client) returning * into member;
+    seat,ctx->>'name',teacher,client,coalesce((p_data->>'protocol')::integer,1)) returning * into member;
   else update private.online_call_members set seen_at=now() where id=member.id; end if;
   if member.is_teacher then perform private.online_portal('lesson_status',jsonb_build_object('lesson_id',lid,'status','live')); end if;
  else
@@ -109,7 +131,8 @@ begin
  into roster from private.online_call_members m where m.lesson_id=lid;
  select coalesce(jsonb_agg(jsonb_build_object('id',s.id,'sender',s.sender,'description',s.description) order by s.id),'[]'::jsonb)
  into messages from private.online_call_signals s where s.recipient=member.id and s.id>coalesce((p_data->>'after')::bigint,0);
- return jsonb_build_object('member_id',member.id,'isTeacher',member.is_teacher,'name',member.name,'peers',roster,'messages',messages);
+ select id into coordinator from private.online_call_members where lesson_id=lid and is_teacher order by joined_at,id limit 1;
+ return jsonb_build_object('member_id',member.id,'isTeacher',member.is_teacher,'name',member.name,'peers',roster,'messages',messages,'coordinator_id',coordinator);
 end $$;
 create function public.online_call(p_action text,p_data jsonb default '{}'::jsonb) returns jsonb
 language sql security invoker set search_path='' as $$ select private.online_call(p_action,p_data) $$;

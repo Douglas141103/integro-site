@@ -16,35 +16,43 @@ export function validAction(a){
  return ['clear','undo'].includes(a.type)||(a.type==='permission'&&typeof a.allowed==='boolean');
 }
 export class ClassroomCollaboration {
- constructor({self,send,peers,changed=()=>{},error=()=>{}}){
+ constructor({self,send,peers,coordinatorId,changed=()=>{},error=()=>{}}){
   this.self=self;this.send=send;this.peers=peers;this.changed=changed;this.error=error;
-  this.state={revision:0,allowed:false,chat:[],board:[]};this.ready=self.isTeacher;this.rates=new Map();this.seen=new Set();
+  this.coordinatorId=coordinatorId??(self.isTeacher?self.id:peers().find(p=>p.isTeacher)?.id);
+  this.state={revision:0,allowed:false,chat:[],board:[]};this.ready=this.isCoordinator;this.rates=new Map();this.seen=new Set();
+ }
+ get isCoordinator(){return this.self.isTeacher&&this.self.id===this.coordinatorId;}
+ setCoordinator(id){
+  if(id===this.coordinatorId)return;
+  this.coordinatorId=id;this.pending=null;this.ready=this.isCoordinator;this.notify();
+  if(this.isCoordinator){for(const person of this.peers())this.open(person);}
+  else if(id)this.send(id,{kind:'sync'});
  }
  notify(){this.changed(this.state,this.ready);}
  open(person){
-  if(this.self.isTeacher){
+  if(this.isCoordinator){
    this.send(person.id,{kind:'begin',revision:this.state.revision,allowed:this.state.allowed});
    for(const item of this.state.board)this.send(person.id,{kind:'board-item',item});
    for(const item of this.state.chat)this.send(person.id,{kind:'chat-item',item});
    this.send(person.id,{kind:'ready'});
-  }
+  }else if(person.id===this.coordinatorId)this.send(person.id,{kind:'sync'});
  }
- closed(person){if(person.isTeacher){this.ready=false;this.notify();}}
+ closed(person){if(person.id===this.coordinatorId){this.ready=false;this.pending=null;this.notify();}}
  submit(action){
   if(!this.ready)throw Error('Aguarde o chat e o quadro conectarem ao professor.');
   if(!validAction(action))throw Error('Confira o conteúdo antes de enviar.');
   const request={kind:'request',id:crypto.randomUUID(),action};
-  if(this.self.isTeacher)this.accept(this.self,request);
+  if(this.isCoordinator)this.accept(this.self,request);
   else{
-   const teacher=this.peers().find(p=>p.isTeacher);
+   const teacher=this.peers().find(p=>p.isTeacher&&p.id===this.coordinatorId);
    if(!teacher||!this.send(teacher.id,request))throw Error('O professor está desconectado. Aguarde e tente novamente.');
   }
  }
  receive(person,msg){
   if(!msg||typeof msg!=='object')return;
-  if(this.self.isTeacher){if(msg.kind==='request')this.accept(person,msg);return;}
+  if(this.isCoordinator){if(msg.kind==='request')this.accept(person,msg);else if(msg.kind==='sync')this.open(person);return;}
   // The sender comes from the authenticated peer, never from message contents.
-  if(!person.isTeacher)return;
+  if(!person.isTeacher||person.id!==this.coordinatorId)return;
   if(msg.kind==='error'){this.error(String(msg.message).slice(0,200));return;}
   if(msg.kind==='begin'&&Number.isSafeInteger(msg.revision)&&typeof msg.allowed==='boolean'){
    this.pending={revision:msg.revision,allowed:msg.allowed,board:[],chat:[]};this.ready=false;
@@ -97,7 +105,7 @@ export function mountCollaboration(root,room){
    else{ctx.lineWidth=a.width;ctx.beginPath();a.points.forEach((p,i)=>ctx[i?'lineTo':'moveTo'](p[0]*canvas.width,p[1]*canvas.height));if(a.points.length===1){ctx.lineTo(a.points[0][0]*canvas.width+.1,a.points[0][1]*canvas.height);}ctx.stroke();}
   }
  };
- model=new ClassroomCollaboration({self,send:(id,msg)=>room.sendData(id,msg),peers:()=>[...room.peers.values()].map(p=>p.person),error,
+ model=new ClassroomCollaboration({self,coordinatorId:room.self.coordinator_id,send:(id,msg)=>room.sendData(id,msg),peers:()=>[...room.peers.values()].map(p=>p.person),error,
   changed(state,ready){
    if(disposed)return;paint(state);
    const allowed=ready&&(self.isTeacher||state.allowed);canvas.setAttribute('aria-disabled',String(!allowed));canvas.style.cursor=allowed?'crosshair':'not-allowed';

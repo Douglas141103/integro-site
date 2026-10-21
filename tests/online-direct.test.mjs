@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
-import {DirectRoom} from '../aulas-online/direct-room.mjs';
+import {DirectRoom,directView} from '../aulas-online/direct-room.mjs';
+import {JSDOM} from 'jsdom';
 const uid=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 test('direct calls enforce role, family, unique seats, private signaling, expiry and end',async()=>{
  const db=new PGlite();
@@ -29,7 +30,7 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   const c=await portal(1,'class_create',{title:'Direct',teacher_id:uid(1)});
   for(let n=10;n<14;n++)await portal(1,'enroll',{class_id:c.id,student_id:uid(n)});
   const l=await portal(1,'lesson_create',{class_id:c.id,title:'Direct',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+5400000).toISOString()});
-  const data=(n,extra={})=>({lesson_id:l.id,client_id:uid(100+n),...extra});
+  const data=(n,extra={})=>({lesson_id:l.id,client_id:uid(100+n),protocol:2,...extra});
   await assert.rejects(rtc(0,'health'),/conta/);
   await assert.rejects(rtc(3,'join',data(3,{student_id:uid(10)})),/Aguarde/);
   await assert.rejects(rtc(2,'start',data(2)),/autorizada/);
@@ -37,6 +38,15 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   const pupils=[];
   for(let n=10;n<14;n++)pupils.push(await rtc(3,'join',data(n,{student_id:uid(n)})));
   assert.equal(pupils[3].peers.length,5);
+  const phone=await rtc(1,'start',data(2));
+  assert.equal(phone.peers.length,6);assert.notEqual(phone.member_id,teacher.member_id);
+  assert.equal(phone.coordinator_id,teacher.member_id);
+  assert.equal((await rtc(1,'start',data(2))).member_id,phone.member_id);
+  await assert.rejects(rtc(1,'start',data(3)),/dois dispositivos/);
+  const phoneContext=data(2,{member_id:phone.member_id});
+  await rtc(1,'leave',phoneContext);
+  assert.equal((await rtc(3,'poll',data(10,{member_id:pupils[0].member_id}))).peers.length,5);
+  await assert.rejects(rtc(1,'start',data(2,{protocol:1})),/Atualize/);
   await assert.rejects(rtc(3,'join',data(14,{student_id:uid(14)})),/autorizada/);
   await assert.rejects(rtc(4,'join',data(44,{student_id:uid(10)})),/já está/);
   await assert.rejects(rtc(3,'start',data(10,{student_id:uid(10)})),/professor/);
@@ -60,13 +70,33 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   await db.query("update private.online_call_members set seen_at=now()-interval '46 seconds' where id=$1",[pupils[0].member_id]);
   assert.equal((await rtc(3,'poll',sm)).closed,true);
   const rejoined=await rtc(4,'join',data(44,{student_id:uid(10)}));assert.notEqual(rejoined.member_id,pupils[0].member_id);
+  const replacement=await rtc(1,'start',data(2));
   await rtc(1,'leave',tm);
+  const continuing=await rtc(3,'poll',data(12,{member_id:pupils[2].member_id}));
+  assert.equal(continuing.closed,undefined);assert.equal(continuing.coordinator_id,replacement.member_id);
+  await rtc(1,'leave',data(2,{member_id:replacement.member_id}));
   assert.equal((await rtc(3,'poll',data(12,{member_id:pupils[2].member_id}))).closed,true);
   await assert.rejects(rtc(3,'join',data(12,{student_id:uid(12)})),/professor/);
-  await rtc(1,'start',data(1));await rtc(1,'end',data(1));
+  await rtc(1,'start',data(1));const lastPhone=await rtc(1,'start',data(2));await rtc(1,'end',data(1));
+  assert.equal((await rtc(1,'poll',data(2,{member_id:lastPhone.member_id}))).closed,true);
   await assert.rejects(rtc(1,'start',data(1)),/encerrada/);
   assert.equal((await db.query('select count(*) n from private.online_call_signals')).rows[0].n,0);
  }finally{await db.close();}
+});
+
+test('second device audio starts muted, can be enabled, and new tracks respect mute',async()=>{
+ const dom=new JSDOM('<div id="videos"></div><div id="audio"></div>');
+ const oldDocument=globalThis.document,oldStream=globalThis.MediaStream;
+ globalThis.document=dom.window.document;globalThis.MediaStream=class {constructor(tracks){this.tracks=tracks;}};
+ dom.window.HTMLMediaElement.prototype.play=async()=>{};
+ try{
+  const audio=document.querySelector('#audio');
+  const view=directView({videos:document.querySelector('#videos'),audio,audioMuted:true,status(){},controls(){},closed(){}});
+  view.track('pupil','audio',{},false);assert.equal(audio.firstChild.muted,true);
+  await view.muteAudio(false);assert.equal(audio.firstChild.muted,false);
+  await view.muteAudio(true);view.track('teacher','audio',{},false);
+  assert.ok([...audio.children].every(el=>el.muted));
+ }finally{globalThis.document=oldDocument;globalThis.MediaStream=oldStream;dom.window.close();}
 });
 
 test('camera requested only on click, stopped on exit, and late permission cannot leak a track',async()=>{

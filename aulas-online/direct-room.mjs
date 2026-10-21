@@ -31,6 +31,7 @@ export class DirectRoom {
  }
  async sync(data){
   if(this.closed)return;
+  if(data.coordinator_id)this.collaboration?.setCoordinator(data.coordinator_id);
   const others=data.peers.filter(p=>p.id!==this.self.member_id);
   for(const [id,peer] of this.peers)if(!others.some(p=>p.id===id)){peer.pc.close();clearTimeout(peer.timeout);this.peers.delete(id);this.view.remove(id);for(const listener of this.dataListeners)listener.close?.(peer.person);}
   for(const person of others){
@@ -157,6 +158,7 @@ export class DirectRoom {
   if(results.some(r=>r.status==='rejected'))this.view.status('Um participante perdeu a conexão. Saia e entre na aula novamente.');
  }
  async startAudio(){await this.view.audio();}
+ async setAudioMuted(muted){await this.view.muteAudio(muted);this.audioMuted=muted;}
  onData(listener){this.dataListeners.add(listener);for(const peer of this.peers.values())if(peer.channel?.readyState==='open')listener.open?.(peer.person);return ()=>this.dataListeners.delete(listener);}
  sendData(id,message){
   const peer=this.peers.get(id);if(this.closed||peer?.channel?.readyState!=='open')return false;
@@ -172,7 +174,7 @@ export class DirectRoom {
  }
 }
 
-export function directView({videos,audio,status,controls,closed}){
+export function directView({videos,audio,status,controls,closed,audioMuted=false}){
  const tiles=new Map(),screens=new Map(),names=new Map();
  return {
   participant(id,name,local){
@@ -192,7 +194,7 @@ export function directView({videos,audio,status,controls,closed}){
    const existing=[...container.querySelectorAll('video,audio')].find(el=>el.dataset.slot===slot&&el.dataset.peer===id);existing?.remove();
    if(!track)return;
    const el=document.createElement(slot==='audio'?'audio':'video');el.dataset.peer=id;el.dataset.slot=slot;
-   el.autoplay=true;el.playsInline=true;el.muted=local||slot!=='audio';el.srcObject=new MediaStream([track]);container.append(el);
+   el.autoplay=true;el.playsInline=true;el.muted=local||slot!=='audio'||audioMuted;el.srcObject=new MediaStream([track]);container.append(el);
    if(slot!=='audio'){
     const target=slot==='screen'?container:el;target.hidden=track.muted;
     track.onmute=()=>{target.hidden=true;};track.onunmute=()=>{target.hidden=false;};
@@ -200,6 +202,7 @@ export function directView({videos,audio,status,controls,closed}){
    el.play().catch(()=>status('Para ouvir a chamada, clique em “Ativar áudio”.'));
   },
   status,controls,closed,
-  async audio(){await Promise.all([...audio.querySelectorAll('audio')].map(el=>el.play()));}
+  async audio(){await Promise.all([...audio.querySelectorAll('audio')].map(el=>el.play()));},
+  async muteAudio(muted){audioMuted=muted;await Promise.all([...audio.querySelectorAll('audio')].map(el=>{el.muted=muted;return muted?Promise.resolve():el.play();}));}
  };
 }

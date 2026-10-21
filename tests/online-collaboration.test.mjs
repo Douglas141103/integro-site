@@ -29,3 +29,28 @@ test('payload bounds, rate limits and input normalization',()=>{
  for(let i=0;i<13;i++)model.submit({type:'chat',text:String(i)});
  assert.equal(model.state.chat.length,12);assert.match(errors[0],/Aguarde/);
 });
+
+test('two teacher devices share one ordered board and chat, with coordinator handoff',()=>{
+ let people=[{id:'pc',name:'Professor',isTeacher:true},{id:'phone',name:'Professor',isTeacher:true},{id:'pupil',name:'Aluno',isTeacher:false}];
+ const models=new Map(),errors=[];
+ for(const self of people)models.set(self.id,new ClassroomCollaboration({self,coordinatorId:'pc',peers:()=>people.filter(p=>p.id!==self.id),send:(id,msg)=>{models.get(id)?.receive(self,structuredClone(msg));return true;},error:e=>errors.push(e)}));
+ const pc=models.get('pc'),phone=models.get('phone'),pupil=models.get('pupil');
+ pc.open(people[1]);pc.open(people[2]);
+ phone.submit(stroke('phone'));pupil.submit({type:'chat',text:'Vejo o quadro'});pc.submit({type:'text',text:'Computador',position:[.5,.5],color:'#245edb'});
+ assert.deepEqual(pc.state,phone.state);assert.deepEqual(phone.state,pupil.state);assert.equal(phone.state.board.length,2);
+ phone.submit({type:'permission',allowed:true});pupil.submit(stroke('student'));
+ const before=structuredClone(pupil.state);
+ pupil.receive(people[1],{kind:'event',event:{revision:before.revision+1,action:{type:'clear'}}});
+ assert.deepEqual(pupil.state,before); // A teacher device is not automatically the coordinator.
+ people=people.filter(p=>p.id!=='pc');
+ phone.closed({id:'pc'});pupil.closed({id:'pc'});
+ // Coordinator learns first; pupil requests a fresh snapshot after its next roster poll.
+ phone.setCoordinator('phone');pupil.setCoordinator('phone');
+ assert.deepEqual(phone.state,pupil.state);assert.deepEqual(pupil.state,before);
+ phone.submit({type:'clear'});pupil.submit({type:'chat',text:'Continuamos no celular'});
+ assert.equal(pupil.state.board.length,0);assert.equal(phone.state.chat.length,2);assert.deepEqual(phone.state,pupil.state);assert.equal(errors.length,0);
+ // Returning computer is a replica; cannot reset the board.
+ const returning={id:'pc-new',name:'Professor',isTeacher:true};people.push(returning);
+ const rejoined=new ClassroomCollaboration({self:returning,coordinatorId:'phone',peers:()=>people.filter(p=>p.id!==returning.id),send:(id,msg)=>{models.get(id)?.receive(returning,structuredClone(msg));return true;}});models.set(returning.id,rejoined);
+ rejoined.open(people[0]);assert.deepEqual(rejoined.state,phone.state);rejoined.submit(stroke('returned'));assert.deepEqual(rejoined.state,pupil.state);
+});
