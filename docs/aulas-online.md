@@ -32,7 +32,7 @@ O modo local ainda não permite alunos externos. O servidor LiveKit no Windows n
 7. Depois da validação externa, preencher `serverUrl` em `aulas-online/config.js` com a URL HTTPS e publicar. Enquanto estiver vazio, o portal informa que o vídeo externo está em preparação.
 8. Definir início com o Windows, energia, horário de operação e teste de upload. A máquina precisa estar ligada e conectada durante a aula. A inicialização automática ainda não foi ativada; o script manual é o controle atual.
 
-Nenhuma alteração de DNS, encaminhamento do roteador, firewall, plano pago ou política de energia foi feita nesta etapa, pois o acesso aos painéis e a conectividade externa ainda não foram confirmados.
+Atualização de 21/10/2026: o registro A `aulas.institutointegro.com.br` foi criado no Registro.br e confirmado tanto no DNS autoritativo quanto em resolvedor público. O computador foi configurado para o endereço público atual, com Caddy nas portas 80/443 e as regras específicas de firewall listadas acima. O encaminhamento no ARRIS ainda depende de login no painel do roteador. O certificado e a aula externa continuam pendentes de validação; a URL de vídeo do portal permanece desativada até essa verificação. Nenhum plano pago, política de energia ou rotina automática foi criado.
 
 ## Dados e autorização
 

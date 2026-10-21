@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$PublicHost,[Parameter(Mandatory=$true)][string]$PublicIp)
+param([Parameter(Mandatory=$true)][string]$PublicHost,[Parameter(Mandatory=$true)][string]$PublicIp,[string]$DnsServer='d.sec.dns.br')
 $ErrorActionPreference = 'Stop'
 $administrator = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $administrator.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Abra o PowerShell como administrador antes de executar este script.' }
@@ -7,7 +7,7 @@ $ipValue = $null
 if (-not [System.Net.IPAddress]::TryParse($PublicIp,[ref]$ipValue) -or $ipValue.AddressFamily -ne 'InterNetwork') { throw 'Informe um IPv4 público válido.' }
 $currentPublicIp = (Invoke-WebRequest -Uri 'https://api.ipify.org' -UseBasicParsing -TimeoutSec 10).Content.Trim()
 if ($currentPublicIp -ne $PublicIp) { throw 'O IP informado difere do IP público atual desta conexão.' }
-$addresses = @(Resolve-DnsName -Name $PublicHost -Type A -ErrorAction Stop | Where-Object Type -eq A | ForEach-Object IPAddress)
+$addresses = @(Resolve-DnsName -Name $PublicHost -Type A -Server $DnsServer -ErrorAction Stop | Where-Object Type -eq A | ForEach-Object IPAddress)
 if ($PublicIp -notin $addresses) { throw 'Primeiro aponte o registro A deste domínio para o IP público atual no Registro.br.' }
 $base = $PSScriptRoot
 $runtime = Join-Path $base 'runtime'
