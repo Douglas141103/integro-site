@@ -236,10 +236,10 @@ async function resolveTeacherRecipientId(studentId) {
   return null;
 }
 
-async function createSignedUrl(filePath) {
+async function createSignedUrl(filePath, options = {}) {
   const { data, error } = await supabase.storage
     .from(config.bucket || 'partner-materials')
-    .createSignedUrl(filePath, 3600);
+    .createSignedUrl(filePath, 3600, options);
 
   if (error) throw error;
 
@@ -257,6 +257,34 @@ async function openMaterial(filePath) {
     setFeedback('');
   } catch (error) {
     setFeedback(error.message || 'Não foi possível abrir o material.', 'error');
+  }
+}
+
+async function downloadMaterial(filePath, button) {
+  if (button.disabled) return;
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Preparando...';
+  button.setAttribute('aria-busy', 'true');
+
+  try {
+    setFeedback('Preparando o download do material...', 'success');
+    const fileName = String(filePath).split('/').pop().replace(/^\d{13}-/, '') || 'material';
+    // Storage sends Content-Disposition: attachment, including for cross-origin PDFs.
+    const signedUrl = await createSignedUrl(filePath, { download: fileName });
+    const link = document.createElement('a');
+    link.href = signedUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setFeedback('Download solicitado. Confira os downloads do seu navegador.', 'success');
+  } catch (error) {
+    setFeedback(error.message || 'Não foi possível baixar o material. Tente novamente.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+    button.removeAttribute('aria-busy');
   }
 }
 
@@ -534,15 +562,23 @@ function renderMaterials(items) {
         <h4>${escapeHtml(item.title)}</h4>
         <div class="item-meta">Atualizado em ${formatDate(item.created_at)}</div>
         <p>${escapeHtml(item.description || 'Material disponível para consulta e download.')}</p>
-        <button class="btn btn-primary open-material" type="button" data-file="${escapeHtml(item.file_path)}">
-          Abrir arquivo
-        </button>
+        <div class="hero-actions">
+          <button class="btn btn-light open-material" type="button" data-file="${escapeHtml(item.file_path)}">
+            Abrir arquivo
+          </button>
+          <button class="btn btn-primary download-material" type="button" data-file="${escapeHtml(item.file_path)}" aria-label="Baixar ${escapeHtml(item.title || 'material')}">
+            Baixar arquivo
+          </button>
+        </div>
       </article>
     `).join('')
     : '<div class="empty-state">Ainda não há materiais individualizados para este aluno.</div>';
 
   list.querySelectorAll('.open-material').forEach(button => {
     button.addEventListener('click', () => openMaterial(button.dataset.file));
+  });
+  list.querySelectorAll('.download-material').forEach(button => {
+    button.addEventListener('click', () => downloadMaterial(button.dataset.file, button));
   });
 }
 
