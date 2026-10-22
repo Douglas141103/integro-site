@@ -58,7 +58,7 @@ try {
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
-  if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261021-tower1');installTower();}
+  if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261022-tower2');installTower();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261021-tower1');startUsage();}
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261021-tower1');
