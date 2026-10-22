@@ -1,8 +1,9 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/+esm';
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
-import {DirectRoom,directView} from './direct-room.mjs?v=20261021-devices1';
-import {mountCollaboration} from './collaboration.mjs?v=20261021-devices1';
-import {mountRoomPanels} from './room-panels.mjs?v=20261021-student1';
+import {DirectRoom,directView} from './direct-room.mjs?v=20261022-room3';
+import {mountCollaboration} from './collaboration.mjs?v=20261022-room3';
+import {mountRoomPanels} from './room-panels.mjs?v=20261022-room3';
+import {decorateRoom,mediaControls,mountParticipants} from './room-hud.mjs?v=20261022-room3';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -13,10 +14,15 @@ const server=local?'http://127.0.0.1:8787':window.INTEGRO_ONLINE?.serverUrl?.rep
 const direct=window.INTEGRO_ONLINE?.mode==='direct';
 const clientId=crypto.randomUUID();
 let Room,RoomEvent,Track,VideoPresets;
-async function callDirect(action,data={}){const {data:result,error}=await db.rpc('online_call',{p_action:action,p_data:{client_id:clientId,...data,protocol:2}}).abortSignal(AbortSignal.timeout(12000));if(error)throw error;return result;}
+async function callDirect(action,data={}){const {data:result,error}=await db.rpc('online_call',{p_action:action,p_data:{client_id:clientId,...data,protocol:3}}).abortSignal(AbortSignal.timeout(12000));if(error)throw error;return result;}
 const labels={scheduled:'Agendada',live:'Sala aberta',ended:'Encerrada',cancelled:'Cancelada',received:'Recebida',reviewing:'Em correção',returned:'Devolvida'};
 const state={classes:[],options:null,role:null,lesson:null,selectedClass:null,room:null,roomLesson:null,teacher:false,online:false,refreshing:false};
-const notice=(message,error=false)=>{$('notice').textContent=message;$('notice').className='notice'+(error?' error':'');};
+function roomFeedback(message,error=false){$('room-feedback').textContent=message;$('room-feedback').hidden=!message;$('room-feedback').className='room-feedback'+(error?' error':'');}
+const notice=(message,error=false)=>{$('notice').textContent=message;$('notice').className='notice'+(error?' error':'');if(state.room)roomFeedback(message,error);};
+decorateRoom($('classroom'));
+function updateMedia(){if(state.room)mediaControls($('classroom'),state.room.localParticipant,Boolean(state.room.self?.micBlocked));}
+function showReentry(text){document.body.classList.remove('in-call');if(document.fullscreenElement===$('classroom'))document.exitFullscreen?.().catch(()=>{});$('rejoin').hidden=!state.reentry;$('rejoin-reason').textContent=text;}
+
 const date=value=>new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
 const inputDate=value=>{const d=new Date(value);return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,16);};
 const options=items=>items.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
@@ -63,7 +69,7 @@ async function refresh(quiet=false){
 async function act(button,fn){
  if(button)button.disabled=true;
  try{await fn();}catch(error){notice(error.message||'Não foi possível concluir. Tente novamente.',true);}
- finally{if(button?.isConnected)button.disabled=false;}
+ finally{if(button?.isConnected)button.disabled=button.id==='mic'&&Boolean(state.room?.self?.micBlocked);}
 }
 $('class-form').addEventListener('submit',event=>{event.preventDefault();act(event.submitter,async()=>{
  const form=event.currentTarget;await rpc('class_create',Object.fromEntries(new FormData(form)));form.reset();await refresh();notice('Turma criada. Matricule até quatro alunos e agende os encontros.');
@@ -87,7 +93,7 @@ $('classes').addEventListener('click',event=>{
   if(button.dataset.action==='unenroll'){await rpc('unenroll',{class_id:c.id,student_id:button.dataset.student});await refresh();}
   if(button.dataset.action==='archive'){await rpc('class_archive',{class_id:c.id});await refresh();}
   if(button.dataset.action==='cancel'){await rpc('lesson_status',{lesson_id:l.id,status:'cancelled'});await refresh();}
-  if(button.dataset.action==='end'){await api('end',{lesson_id:l.id});if(state.roomLesson?.id===l.id)await state.room?.disconnect();await refresh();notice('Aula encerrada para todos.');}
+  if(button.dataset.action==='end'){if(!confirm('Encerrar a aula para todos os participantes?'))return;state.reentry=null;await api('end',{lesson_id:l.id});if(state.roomLesson?.id===l.id)await state.room?.disconnect();await refresh();notice('Aula encerrada para todos.');}
   if(button.dataset.action==='deliveries')await showDeliveries(c,l);
   if(['start','join'].includes(button.dataset.action)){
    if(state.room&&state.roomLesson?.id===l.id){$('classroom').scrollIntoView({behavior:'smooth',block:'start'});return;}
@@ -97,6 +103,7 @@ $('classes').addEventListener('click',event=>{
     if(state.room)await state.room.disconnect();
     const student=button.closest('.lesson').querySelector('select')?.value;
     const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});
+    state.reentry={lesson:l,student_id:student,teacher:result.isTeacher};$('rejoin').hidden=true;
     if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
    }finally{state.joining=false;}
   }
@@ -106,18 +113,20 @@ async function connectDirect(result,lesson){
  $('videos').replaceChildren();$('audio').replaceChildren();state.roomLesson=lesson;state.teacher=result.isTeacher;
  const secondDevice=result.isTeacher&&result.coordinator_id&&result.coordinator_id!==result.member_id;
  const room=new DirectRoom({call:callDirect,admission:result,context:{lesson_id:lesson.id,client_id:clientId},view:directView({
-  videos:$('videos'),audio:$('audio'),audioMuted:!!secondDevice,status:text=>{$('connection').textContent=text;},
-  controls:p=>{$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';},
-  closed:text=>{if(state.room!==room)return;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice(text);}
+  videos:$('videos'),audio:$('audio'),audioMuted:!!secondDevice,status:text=>{$('connection').textContent=text;if(text.includes('Ativar áudio'))$('classroom').querySelector('.room-settings').open=true;},
+  controls:p=>mediaControls($('classroom'),p,Boolean(room.self.micBlocked)),
+  roster:(people,id)=>state.participants?.roster(people,id),
+  moderation:blocked=>{updateMedia();roomFeedback(blocked?'Seu microfone foi silenciado pelo professor.':'Microfone liberado. Clique em Ligar microfone quando quiser falar.');},
+  closed:text=>{if(state.room!==room)return;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.participants?.dispose();state.participants=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();showReentry(text);notice(text);}
  })});
- state.room=room;$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
+ state.room=room;document.body.classList.add('in-call');roomFeedback('');$('rejoin').hidden=true;state.participants=mountParticipants($('classroom'),{getRoom:()=>state.room,feedback:roomFeedback});$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
  room.audioMuted=!!secondDevice;$('mute-sound').hidden=false;$('mute-sound').textContent=room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';
  $('device-help').hidden=!result.isTeacher;$('device-help').textContent='Você pode usar computador e celular com a mesma conta, em até dois dispositivos. Para evitar eco, use microfone e som em apenas um deles. Sair da sala desconecta só este aparelho; Encerrar aula encerra para todos.'+(secondDevice?' O som deste segundo aparelho começou desligado.':'');
  $('screen').disabled=!navigator.mediaDevices.getDisplayMedia;
  $('screen-help').textContent=result.isTeacher?(navigator.mediaDevices.getDisplayMedia?'Compartilhar tela: escolha uma aba, janela ou tela e confirme no navegador.':'Este navegador não permite compartilhar tela. Use um navegador de computador compatível.'):'';
  state.collabDispose=mountCollaboration($('collaboration'),room);
  state.panelsDispose=mountRoomPanels($('classroom'));
- $('mic').textContent='Ligar microfone';$('camera').textContent='Ligar câmera';$('screen').textContent='Compartilhar tela';
+ updateMedia();
  try{await room.start();}catch(error){await room.disconnect();throw error;}
  $('classroom').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -144,21 +153,40 @@ async function connectRoom(result,lesson){
  room.on(RoomEvent.Reconnecting,()=>{$('connection').textContent='Reconectando à aula...';});
  room.on(RoomEvent.Reconnected,()=>{$('connection').textContent='Conectado. Câmera e microfone são opcionais.';});
  room.on(RoomEvent.Disconnected,()=>{
-  if(state.room!==room)return;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();notice('Você saiu da sala. As atividades continuam disponíveis.');
+  if(state.room!==room)return;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();showReentry('Você saiu da sala.');notice('Você saiu da sala. As atividades continuam disponíveis.');
  });
  try{await room.connect(result.url,result.token);}catch(error){await room.disconnect();state.room=null;throw Error('Não foi possível conectar o vídeo. Verifique a conexão e tente novamente.');}
  participantTile(room.localParticipant);room.remoteParticipants.forEach(p=>participantTile(p));
- $('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
- $('mic').textContent='Ligar microfone';$('camera').textContent='Ligar câmera';$('screen').textContent='Compartilhar tela';
+ document.body.classList.add('in-call');$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
+ updateMedia();
  $('connection').textContent='Conectado. Ligue sua câmera e seu microfone quando desejar.';$('classroom').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('leave').onclick=()=>state.room?.disconnect();
-$('mic').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setMicrophoneEnabled(!p.isMicrophoneEnabled);$('mic').textContent=p.isMicrophoneEnabled?'Desligar microfone':'Ligar microfone';});
-$('camera').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setCameraEnabled(!p.isCameraEnabled);$('camera').textContent=p.isCameraEnabled?'Desligar câmera':'Ligar câmera';});
-$('screen').onclick=event=>act(event.currentTarget,async()=>{if(!state.room||!state.teacher)return;const p=state.room.localParticipant;await p.setScreenShareEnabled(!p.isScreenShareEnabled);$('screen').textContent=p.isScreenShareEnabled?'Parar compartilhamento':'Compartilhar tela';});
+$('mic').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setMicrophoneEnabled(!p.isMicrophoneEnabled);updateMedia();});
+$('camera').onclick=event=>act(event.currentTarget,async()=>{if(!state.room)return;const p=state.room.localParticipant;await p.setCameraEnabled(!p.isCameraEnabled);updateMedia();});
+$('screen').onclick=event=>act(event.currentTarget,async()=>{if(!state.room||!state.teacher)return;const p=state.room.localParticipant;await p.setScreenShareEnabled(!p.isScreenShareEnabled);updateMedia();});
 $('sound').onclick=event=>act(event.currentTarget,async()=>{if(state.room?.setAudioMuted){await state.room.setAudioMuted(false);$('mute-sound').textContent='Silenciar som neste aparelho';}await state.room?.startAudio();notice('Áudio da sala ativado.');});
 $('mute-sound').onclick=event=>act(event.currentTarget,async()=>{if(!state.room?.setAudioMuted)return;await state.room.setAudioMuted(!state.room.audioMuted);$('mute-sound').textContent=state.room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';});
-$('end').onclick=event=>act(event.currentTarget,async()=>{if(!state.roomLesson)return;await api('end',{lesson_id:state.roomLesson.id});await state.room?.disconnect();await refresh();notice('Aula encerrada para todos os participantes.');});
+$('end').onclick=event=>act(event.currentTarget,async()=>{if(!state.roomLesson||!confirm('Encerrar esta aula para todos? Para retirar somente um aluno, use Pessoas.'))return;state.reentry=null;await api('end',{lesson_id:state.roomLesson.id});await state.room?.disconnect();await refresh();notice('Aula encerrada para todos os participantes.');});
+
+$('fullscreen').onclick=()=>act($('fullscreen'),async()=>{
+ if(document.fullscreenElement===$('classroom'))await document.exitFullscreen();
+ else if($('classroom').requestFullscreen)await $('classroom').requestFullscreen();
+ else roomFeedback('Para ampliar a sala, vire o celular na horizontal.');
+});
+$('room-files').onclick=event=>act(event.currentTarget,async()=>{
+ const c=state.classes.find(c=>c.lessons.some(l=>l.id===state.roomLesson?.id));
+ if(!c||!state.roomLesson)return;
+ if(document.fullscreenElement)await document.exitFullscreen();
+ await showDeliveries(c,state.roomLesson);
+});
+$('retry-room').onclick=event=>act(event.currentTarget,async()=>{
+ if(!state.reentry||state.joining)return;
+ state.joining=true;
+ try{const entry=state.reentry;const result=await api(entry.teacher?'start':'join',{lesson_id:entry.lesson.id,student_id:entry.student_id});
+  if(direct)await connectDirect(result,entry.lesson);else await connectRoom(result,entry.lesson);
+ }finally{state.joining=false;}
+});
 
 async function showDeliveries(c,l){
  state.selectedClass=c;state.lesson=l;$('delivery-title').textContent=l.title;$('deliveries').hidden=false;

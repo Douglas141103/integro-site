@@ -47,3 +47,19 @@ Validações: testes de isolamento, limite de matrículas, papéis, início/fim,
 - https://docs.livekit.io/transport/self-hosting/ports-firewall/ — portas.
 - https://docs.livekit.io/frontends/reference/tokens-grants/ — permissões de entrada.
 - https://supabase.com/docs/guides/auth/row-level-security — proteção dos dados.
+
+## 22/10/2026 — Controles de participantes e sala responsiva
+
+A configuração atual usa `mode: 'direct'`: WebRTC entre navegadores, sinalização autenticada pela função `online_call` e os arquivos no Supabase. O gateway LiveKit descrito acima permanece como alternativa desativada; os novos controles são do modo direto ativo.
+
+O professor conectado à própria aula pode silenciar, liberar o microfone e retirar alunos pelo painel **Pessoas**. O servidor verifica novamente a conta, o vínculo à aula, a sessão de origem e o participante de destino. Alunos não podem aplicar moderação; outro professor não pode moderar esta sala. Silenciar bloqueia a captura no cliente e o áudio recebido pelos demais clientes atualizados. Liberar nunca ativa o microfone remotamente: o aluno precisa clicar para falar. O estado é propagado na consulta periódica (normalmente até dois segundos). Clientes anteriores ao protocolo 3 precisam atualizar a página para aceitar os controles de microfone.
+
+Retirar revoga apenas o identificador daquela conexão e os sinais associados. Não altera matrícula nem encerra a aula. **Entrar novamente** exige uma nova admissão normal e recebe outro identificador; uma aba antiga não consegue encerrar a sessão nova. O controle não é um banimento. Não foram silenciados ou retirados usuários reais durante a implantação.
+
+A sala concentra câmera, microfone, tela, caderno e saída numa barra persistente. Quadro, chat e participantes preservam os vídeos em miniatura; controles secundários e encerramento geral ficam em **Áudio e opções da sala**. A interface usa ícones com rótulos, estados acessíveis, grades responsivas e confirmação para retirada/encerramento.
+
+Migração: `20261022040914_online_room_moderation.sql`; estrutura de instalação atualizada em `supabase/online-direct.sql`. Testes: `node --test --test-concurrency=1 tests/online-direct.test.mjs tests/online-room-hud.test.mjs tests/online-collaboration.test.mjs tests/online-classrooms.test.mjs`. Cobrem autorização, retirada/reentrada, captura de áudio, permissão pendente, dois aparelhos do professor e navegação entre ferramentas. A conferência visual pelo navegador de prévia foi bloqueada pela política do ambiente; não foi possível realizar chamada audiovisual entre aparelhos reais nesta execução.
+
+Referências de interação consultadas:
+- Google Meet: https://support.google.com/meet/answer/7501121
+- Zoom: https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0065566

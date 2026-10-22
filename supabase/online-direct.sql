@@ -8,6 +8,7 @@ create table private.online_call_members (
  identity text not null, name text not null, is_teacher boolean not null,
  client_id uuid not null, seen_at timestamptz not null default now(),
  joined_at timestamptz not null default clock_timestamp(), protocol integer not null default 1,
+ mic_blocked boolean not null default false,
  unique(lesson_id,identity)
 );
 create index online_call_members_user on private.online_call_members(user_id);
@@ -105,7 +106,7 @@ begin
   if member.is_teacher then perform private.online_portal('lesson_status',jsonb_build_object('lesson_id',lid,'status','live')); end if;
  else
   select * into member from private.online_call_members where lesson_id=lid and id=(p_data->>'member_id')::uuid and user_id=u and client_id=client;
-  if not found then return jsonb_build_object('closed',true,'reason','Sua presença expirou. Entre novamente na aula.'); end if;
+  if not found then return jsonb_build_object('closed',true,'reason','Você foi desconectado desta chamada. Clique em Entrar na aula para voltar.'); end if;
   if lesson.status<>'live' or now()>lesson.ends_at+interval '30 minutes'
    or not exists(select 1 from private.online_classes where id=lesson.class_id and active)
    or not exists(select 1 from private.online_call_members where lesson_id=lid and is_teacher) then
@@ -115,7 +116,24 @@ begin
   -- Recheck guardian/student and teacher authorization on every request.
   perform private.online_portal('join_context',jsonb_build_object('lesson_id',lid,'student_id',member.student_id));
   update private.online_call_members set seen_at=now() where id=member.id;
-  if p_action='signal' then
+  if p_action='moderate' then
+   if not member.is_teacher then raise exception 'Somente o professor desta sala pode administrar participantes.'; end if;
+   peer:=(p_data->>'target_id')::uuid;
+   if coalesce(p_data->>'operation','') not in ('mute','release','remove') then raise exception 'Controle inválido.'; end if;
+   if not exists(select 1 from private.online_call_members where id=peer and lesson_id=lid and not is_teacher) then
+    raise exception 'Aluno indisponível nesta sala.';
+   end if;
+   if p_data->>'operation'='remove' then
+    -- Revoke this connection, not the enrollment. A fresh admission gets a new member ID.
+    delete from private.online_call_members where id=peer and lesson_id=lid and not is_teacher;
+   else
+    if exists(select 1 from private.online_call_members where id=peer and protocol<3) then
+     raise exception 'Peça ao aluno para atualizar a página e entrar novamente antes de usar este controle.';
+    end if;
+    update private.online_call_members set mic_blocked=(p_data->>'operation'='mute') where id=peer and lesson_id=lid and not is_teacher;
+   end if;
+   return jsonb_build_object('ok',true);
+  elsif p_action='signal' then
    peer:=(p_data->>'recipient')::uuid;
    if peer=member.id or not exists(select 1 from private.online_call_members where id=peer and lesson_id=lid) then raise exception 'Participante indisponível.'; end if;
    if coalesce(p_data->'description'->>'type','') not in ('offer','answer')
@@ -127,12 +145,12 @@ begin
    return jsonb_build_object('ok',true);
   elsif p_action<>'poll' then raise exception 'Operação inválida.'; end if;
  end if;
- select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'name',m.name,'isTeacher',m.is_teacher) order by m.id),'[]'::jsonb)
+ select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'name',m.name,'isTeacher',m.is_teacher,'micBlocked',m.mic_blocked) order by m.id),'[]'::jsonb)
  into roster from private.online_call_members m where m.lesson_id=lid;
  select coalesce(jsonb_agg(jsonb_build_object('id',s.id,'sender',s.sender,'description',s.description) order by s.id),'[]'::jsonb)
  into messages from private.online_call_signals s where s.recipient=member.id and s.id>coalesce((p_data->>'after')::bigint,0);
  select id into coordinator from private.online_call_members where lesson_id=lid and is_teacher order by joined_at,id limit 1;
- return jsonb_build_object('member_id',member.id,'isTeacher',member.is_teacher,'name',member.name,'peers',roster,'messages',messages,'coordinator_id',coordinator);
+ return jsonb_build_object('member_id',member.id,'isTeacher',member.is_teacher,'name',member.name,'micBlocked',member.mic_blocked,'peers',roster,'messages',messages,'coordinator_id',coordinator);
 end $$;
 create function public.online_call(p_action text,p_data jsonb default '{}'::jsonb) returns jsonb
 language sql security invoker set search_path='' as $$ select private.online_call(p_action,p_data) $$;

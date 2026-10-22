@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Aulas online | INTEGRO</title><link rel="stylesheet" href="./style.css?v=20261021-student1"></head>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Aulas online | INTEGRO</title><link rel="stylesheet" href="./style.css?v=20261022-room3"></head>
 <body><header><a class="brand" href="/portal-familia/dashboard.html"><img src="/logo-whatsapp.png" alt=""><span>INTEGRO<small>Aulas online</small></span></a><nav><a id="back" href="/portal-familia/dashboard.html">Voltar ao portal</a><span id="user"></span></nav></header>
 <main><section class="hero"><div><p class="eyebrow">REFORÇO ONLINE AO VIVO</p><h1>Aprender juntos.<br>De onde você estiver.</h1><p>Encontre sua próxima aula, envie fotos do caderno e acompanhe as orientações do professor.</p></div><div class="hero-note"><strong>Até 4 alunos</strong><span>por turma, com acompanhamento próximo.</span><span>2 encontros por semana · 1h30 por encontro</span></div></section>
 <p id="notice" class="notice" role="status" aria-live="polite">Conferindo seu acesso...</p>
@@ -8,15 +8,19 @@
 <p class="muted">A chamada acontece aqui no portal, sem instalar aplicativos. Use fones de ouvido e faça um teste de conexão antes da primeira aula. Se a chamada não conectar, experimente outra rede, como os dados móveis.</p>
 <details id="admin" hidden class="card"><summary>Criar turma de aulas online</summary><form id="class-form" class="form-grid"><label>Nome da turma<input name="title" maxlength="120" required placeholder="Ex.: Reforço de matemática — tarde"></label><label>Professor<select name="teacher_id" required></select></label><button>Criar turma</button></form></details>
 <div id="classes" class="classes"></div></section>
-<section id="classroom" hidden class="card classroom"><div class="section-title"><div><p class="eyebrow">SALA DE AULA</p><h2 id="room-title"></h2><p id="connection" role="status"></p></div><button id="leave" class="danger">Sair da sala</button></div>
-<div id="room-shortcuts" class="room-shortcuts" role="group" aria-label="Acessar ferramentas da aula" hidden>
- <button type="button" data-room-panel="call" aria-controls="videos" aria-pressed="true">Voltar à chamada</button>
- <button type="button" data-room-panel="board" aria-controls="board-panel" aria-pressed="false">Abrir quadro</button>
- <button type="button" data-room-panel="chat" aria-controls="chat-panel" aria-pressed="false">Abrir chat</button>
- <small>A chamada continua enquanto você usa o quadro ou o chat.</small>
-</div>
-<div id="videos" class="videos"></div><div id="audio"></div><div class="controls"><button id="mic" class="secondary">Ligar microfone</button><button id="camera" class="secondary">Ligar câmera</button><button id="screen" hidden>Compartilhar tela</button><button id="sound" class="secondary">Ativar áudio</button><button id="end" class="danger" hidden>Encerrar aula para todos</button></div><p id="screen-help" class="muted"></p><p class="muted">Câmera e microfone só serão ligados quando você escolher. As aulas não são gravadas automaticamente.</p>
-<button id="mute-sound" class="secondary" hidden>Silenciar som neste aparelho</button><p id="device-help" class="muted" hidden></p>
+<section id="rejoin" hidden class="card rejoin-card"><div><h2>Voltar à chamada</h2><p id="rejoin-reason" class="muted"></p></div><button id="retry-room">Entrar novamente</button></section>
+<section id="classroom" hidden class="card classroom">
+ <div class="room-header"><div><p class="eyebrow"><span class="live-dot"></span> SALA AO VIVO</p><h2 id="room-title"></h2><p id="connection" class="muted" role="status"></p></div><button id="fullscreen" class="secondary icon-button" data-icon="expand" aria-label="Expandir sala">Expandir</button></div>
+ <div id="room-shortcuts" class="room-shortcuts" role="group" aria-label="Ferramentas da aula" hidden>
+  <button type="button" data-icon="camera" data-room-panel="call" aria-controls="videos" aria-pressed="true">Chamada</button>
+  <button type="button" data-icon="board" data-room-panel="board" aria-controls="board-panel" aria-pressed="false">Quadro</button>
+  <button type="button" data-icon="chat" data-room-panel="chat" aria-controls="chat-panel" aria-pressed="false">Chat</button>
+  <button type="button" data-icon="people" data-room-panel="people" aria-controls="participants-panel" aria-pressed="false">Pessoas</button>
+ </div>
+ <p id="room-feedback" class="room-feedback" role="status" aria-live="polite" hidden></p>
+ <div id="room-stage" class="room-stage" data-panel="call">
+  <div id="videos" class="videos"></div><div id="audio" hidden></div>
+  <section id="participants-panel" class="participants-panel" hidden aria-labelledby="participants-title"><div class="panel-heading"><h3 id="participants-title">Na sala</h3><span id="participant-count" class="badge">0</span></div><p class="muted">Controles do professor ficam ao lado de cada aluno. Retirar da chamada permite entrar novamente.</p><div id="participants-list"></div></section>
 <section id="collaboration" hidden>
  <p id="collab-status" class="muted" role="status">Conectando chat e quadro...</p>
  <div class="class-tools">
@@ -37,7 +41,14 @@
   </section>
  </div>
  <p class="muted">Chat e quadro ficam disponíveis enquanto o professor estiver nesta chamada. Não são salvos automaticamente; use Salvar imagem para guardar o quadro.</p>
-</section></section>
+</section>
+ </div>
+ <div class="room-dock" role="group" aria-label="Controles da chamada">
+  <div class="dock-media"><button id="mic" data-icon="mic" class="secondary" aria-pressed="false">Ligar microfone</button><button id="camera" data-icon="camera" class="secondary" aria-pressed="false">Ligar câmera</button><button id="screen" data-icon="screen" class="secondary" aria-pressed="false" hidden>Compartilhar tela</button></div>
+  <div class="dock-tools"><button id="room-files" data-icon="file" class="secondary">Caderno</button><button id="leave" data-icon="leave" class="danger">Sair</button></div>
+ </div>
+ <details class="room-settings"><summary>Áudio e opções da sala</summary><div class="settings-actions"><button id="sound" class="secondary">Ativar áudio</button><button id="mute-sound" class="secondary" hidden>Silenciar som neste aparelho</button><button id="end" class="danger" hidden>Encerrar aula para todos</button></div><p id="screen-help" class="muted"></p><p id="device-help" class="muted" hidden></p><p class="muted">Câmera e microfone começam desligados. As aulas não são gravadas automaticamente.</p></details>
+</section>
 <section id="deliveries" hidden class="card"><div class="section-title"><div><p class="eyebrow">CADERNO E DEVOLUTIVAS</p><h2 id="delivery-title"></h2></div><button id="close-deliveries" class="secondary">Fechar</button></div>
 <form id="submission-form" class="form-grid" hidden><label>Aluno<select name="student_id" required></select></label><label>Atividade<input name="title" maxlength="160" required placeholder="Ex.: Exercícios da aula"></label><label class="wide">Recado para o professor<textarea name="message" maxlength="5000" rows="2"></textarea></label><label class="wide">Fotos do caderno ou PDF (até 10 arquivos, 10 MB cada)<input name="files" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple required></label><button>Enviar atividade</button></form><div id="submissions"></div></section>
-</main><footer>Instituto Integro · Acompanhamento próximo, mesmo a distância.</footer><script src="/portal/config.js"></script><script src="./config.js?v=20261021-student1"></script><script type="module" src="./app.js?v=20261021-devices1"></script></body></html>
+</main><footer>Instituto Integro · Acompanhamento próximo, mesmo a distância.</footer><script src="/portal/config.js"></script><script src="./config.js?v=20261022-room3"></script><script type="module" src="./app.js?v=20261022-room3"></script></body></html>

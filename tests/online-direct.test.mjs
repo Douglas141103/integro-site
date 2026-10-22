@@ -24,13 +24,14 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
    insert into public.student_guardians values('${uid(10)}','${uid(4)}');`);
   await db.exec(await readFile(new URL('../supabase/online-classrooms.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../supabase/online-direct.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261022040914_online_room_moderation.sql',import.meta.url),'utf8'));
   const call=(n,fn,a,d={})=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);return(await tx.query(`select public.${fn}($1,$2) result`,[a,d])).rows[0].result;});
   const portal=(n,a,d)=>call(n,'online_portal',a,d);
   const rtc=(n,a,d)=>call(n,'online_call',a,d);
   const c=await portal(1,'class_create',{title:'Direct',teacher_id:uid(1)});
   for(let n=10;n<14;n++)await portal(1,'enroll',{class_id:c.id,student_id:uid(n)});
   const l=await portal(1,'lesson_create',{class_id:c.id,title:'Direct',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+5400000).toISOString()});
-  const data=(n,extra={})=>({lesson_id:l.id,client_id:uid(100+n),protocol:2,...extra});
+  const data=(n,extra={})=>({lesson_id:l.id,client_id:uid(100+n),protocol:3,...extra});
   await assert.rejects(rtc(0,'health'),/conta/);
   await assert.rejects(rtc(3,'join',data(3,{student_id:uid(10)})),/Aguarde/);
   await assert.rejects(rtc(2,'start',data(2)),/autorizada/);
@@ -52,6 +53,23 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   await assert.rejects(rtc(3,'start',data(10,{student_id:uid(10)})),/professor/);
   await assert.rejects(rtc(3,'end',data(10)),/professor/);
   const tm=data(1,{member_id:teacher.member_id});const sm=data(10,{member_id:pupils[0].member_id});
+  await assert.rejects(rtc(3,'moderate',{...sm,target_id:pupils[1].member_id,operation:'mute'}),/professor/);
+  await assert.rejects(rtc(2,'moderate',{...tm,target_id:pupils[1].member_id,operation:'mute'}).then(r=>{if(r.closed)throw Error('closed');}),/closed/);
+  await assert.rejects(rtc(1,'moderate',{...tm,target_id:teacher.member_id,operation:'remove'}),/indisponível/);
+  await assert.rejects(rtc(1,'moderate',{...tm,target_id:uid(999),operation:'mute'}),/indisponível/);
+  await assert.rejects(rtc(1,'moderate',{...tm,target_id:pupils[0].member_id,operation:'unmute'}),/inválido/);
+  await rtc(1,'moderate',{...tm,target_id:pupils[0].member_id,operation:'mute'});
+  assert.equal((await rtc(3,'poll',sm)).micBlocked,true);
+  assert.equal((await rtc(1,'poll',tm)).peers.find(p=>p.id===pupils[0].member_id).micBlocked,true);
+  await rtc(1,'moderate',{...tm,target_id:pupils[0].member_id,operation:'release'});
+  assert.equal((await rtc(3,'poll',sm)).micBlocked,false);
+  const kickedContext=data(13,{member_id:pupils[3].member_id});
+  await rtc(1,'moderate',{...tm,target_id:pupils[3].member_id,operation:'remove'});
+  assert.equal((await rtc(3,'poll',kickedContext)).closed,true);
+  const back=await rtc(3,'join',data(13,{student_id:uid(13)}));assert.notEqual(back.member_id,pupils[3].member_id);
+  await rtc(3,'leave',kickedContext); // Old tab cannot close the new connection.
+  assert.equal((await rtc(3,'poll',data(13,{member_id:back.member_id}))).closed,undefined);
+  pupils[3]=back;
   const desc={type:'offer',sdp:'v=0'};
   await rtc(1,'signal',{...tm,recipient:pupils[0].member_id,description:desc,sender:pupils[1].member_id});
   const polled=await rtc(3,'poll',sm);assert.equal(polled.messages[0].sender,teacher.member_id);
@@ -118,4 +136,35 @@ test('answerer uses offered transceivers rather than creating unused sending slo
  await room.receive(peer,{type:'offer',sdp:'v=0'});
  assert.equal(peer.senders.length,3);assert.equal(sent[0][1],room.tracks.audio);assert.ok(offered.every(t=>t.direction==='sendrecv'));
  await room.disconnect();
+});
+
+test('teacher mute stops capture, blocks reacquisition, and release never opens a microphone',async()=>{
+ let opened=0,stopped=0;const controls=[],moderation=[];
+ const view={participant(){},status(){},controls:p=>controls.push(p.isMicrophoneEnabled),moderation:b=>moderation.push(b),track(){},closed(){},remove(){},roster(){},blockAudio(){}};
+ const room=new DirectRoom({call:async()=>({ok:true}),admission:{member_id:'self',name:'Student',isTeacher:false,peers:[]},context:{},view,mediaDevices:{getUserMedia:async()=>{opened++;return {getTracks:()=>[{stop(){stopped++;}}]};}}});
+ await room.setMedia('audio',true);assert.equal(room.localParticipant.isMicrophoneEnabled,true);
+ await room.sync({peers:[],micBlocked:true});assert.equal(stopped,1);assert.equal(room.localParticipant.isMicrophoneEnabled,false);
+ await assert.rejects(room.setMedia('audio',true),/professor/);assert.equal(opened,1);
+ await room.sync({peers:[],micBlocked:false});assert.equal(opened,1);assert.equal(room.localParticipant.isMicrophoneEnabled,false);
+ await room.setMedia('audio',true);assert.equal(opened,2);await room.disconnect();
+ assert.deepEqual(moderation,[true,false]);
+});
+
+test('teacher mute wins while microphone permission prompt is still pending',async()=>{
+ let release,stopped=0;
+ const view={participant(){},status(){},controls(){},track(){},closed(){},remove(){}};
+ const room=new DirectRoom({call:async()=>({ok:true}),admission:{member_id:'self',isTeacher:false,peers:[]},context:{},view,mediaDevices:{getUserMedia:()=>new Promise(resolve=>{release=resolve;})}});
+ const pending=room.setMedia('audio',true);await room.sync({peers:[],micBlocked:true});
+ release({getTracks:()=>[{stop(){stopped++;}}]});await pending;
+ assert.equal(stopped,1);assert.equal(room.localParticipant.isMicrophoneEnabled,false);await room.disconnect();
+});
+
+test('device sound control cannot override a teacher-muted remote participant',async()=>{
+ const dom=new JSDOM('<div id="videos"></div><div id="audio"></div>');const previous={document:globalThis.document,MediaStream:globalThis.MediaStream};
+ globalThis.document=dom.window.document;globalThis.MediaStream=class{};dom.window.HTMLMediaElement.prototype.play=async()=>{};
+ try{const audio=document.querySelector('#audio'),view=directView({videos:document.querySelector('#videos'),audio,status(){},controls(){},closed(){}});
+  view.blockAudio('a',true);view.track('a','audio',{},false);assert.equal(audio.firstChild.muted,true);
+  await view.muteAudio(false);assert.equal(audio.firstChild.muted,true);
+  view.blockAudio('a',false);assert.equal(audio.firstChild.muted,false);
+ }finally{Object.assign(globalThis,previous);dom.window.close();}
 });
