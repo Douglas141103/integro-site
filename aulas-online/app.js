@@ -1,9 +1,9 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/+esm';
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
-import {DirectRoom,directView} from './direct-room.mjs?v=20261022-room3';
-import {mountCollaboration} from './collaboration.mjs?v=20261022-room3';
-import {mountRoomPanels} from './room-panels.mjs?v=20261022-room3';
-import {decorateRoom,mediaControls,mountParticipants} from './room-hud.mjs?v=20261022-room3';
+import {DirectRoom,directView} from './direct-room.mjs?v=20261022-layout4';
+import {mountCollaboration} from './collaboration.mjs?v=20261022-layout4';
+import {mountRoomPanels} from './room-panels.mjs?v=20261022-layout4';
+import {decorateRoom,mediaControls,mountParticipants} from './room-hud.mjs?v=20261022-layout4';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -169,6 +169,7 @@ $('sound').onclick=event=>act(event.currentTarget,async()=>{if(state.room?.setAu
 $('mute-sound').onclick=event=>act(event.currentTarget,async()=>{if(!state.room?.setAudioMuted)return;await state.room.setAudioMuted(!state.room.audioMuted);$('mute-sound').textContent=state.room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';});
 $('end').onclick=event=>act(event.currentTarget,async()=>{if(!state.roomLesson||!confirm('Encerrar esta aula para todos? Para retirar somente um aluno, use Pessoas.'))return;state.reentry=null;await api('end',{lesson_id:state.roomLesson.id});await state.room?.disconnect();await refresh();notice('Aula encerrada para todos os participantes.');});
 
+document.addEventListener('fullscreenchange',()=>{const button=$('fullscreen'),active=document.fullscreenElement===$('classroom');button.querySelector('span').textContent=active?'Reduzir':'Expandir';button.setAttribute('aria-label',active?'Reduzir sala':'Expandir sala');button.setAttribute('aria-expanded',String(active));});
 $('fullscreen').onclick=()=>act($('fullscreen'),async()=>{
  if(document.fullscreenElement===$('classroom'))await document.exitFullscreen();
  else if($('classroom').requestFullscreen)await $('classroom').requestFullscreen();

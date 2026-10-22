@@ -63,3 +63,10 @@ Migração: `20261022040914_online_room_moderation.sql`; estrutura de instalaç�
 Referências de interação consultadas:
 - Google Meet: https://support.google.com/meet/answer/7501121
 - Zoom: https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0065566
+
+### Ajustes de tela e chat — 22/10/2026
+
+- O compartilhamento ampliado mantém o botão **Reduzir tela** dentro da área de tela cheia, com saída também por Escape. Navegadores sem tela cheia usam ampliação dentro da página, preservando o mesmo vídeo.
+- No computador, vídeo e chat têm colunas delimitadas, e somente as mensagens rolam dentro do chat.
+- Ao digitar no celular, a sala acompanha a altura de `visualViewport`, mantém uma faixa de vídeo e posiciona mensagem/envio acima do teclado. **Concluir** fecha a edição sem apagar o rascunho.
+- Validação: 17 testes automatizados passaram, incluindo alternância de tela cheia, fallback, teclado simulado, troca de abas e controles anteriores. A conferência visual em navegador e teclado físico continua pendente por indisponibilidade da prévia no ambiente.

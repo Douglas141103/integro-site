@@ -1,3 +1,4 @@
+import {mountRoomViewport} from './room-viewport.mjs?v=20261022-layout4';
 // Tools preserve all media connections and keep the call controls available.
 export function mountRoomPanels(roomElement){
  const nav=roomElement.querySelector('#room-shortcuts'),tools=roomElement.querySelector('#collaboration');
@@ -13,6 +14,7 @@ export function mountRoomPanels(roomElement){
   if(focus){const target=roomElement.querySelector(panel==='call'?'#room-title':panel==='people'?'#participants-title':panel==='board'?'#board-title':'#chat-title');target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}
  }
  const onClick=event=>{const button=event.target.closest('[data-room-panel]');if(button&&nav.contains(button))show(button.dataset.roomPanel,true);};
+ const disposeViewport=mountRoomViewport(roomElement);
  nav.hidden=false;nav.addEventListener('click',onClick);show('call');
- return ()=>{nav.removeEventListener('click',onClick);nav.hidden=true;videos.hidden=false;board.hidden=false;chat.hidden=false;people.hidden=true;stage.dataset.panel='call';tools.classList.remove('single-tool');};
+ return ()=>{disposeViewport();nav.removeEventListener('click',onClick);nav.hidden=true;videos.hidden=false;board.hidden=false;chat.hidden=false;people.hidden=true;stage.dataset.panel='call';tools.classList.remove('single-tool');};
 }

@@ -9,3 +9,40 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #88
 @media(max-width:900px){.room-stage[data-panel="board"]{grid-template-columns:minmax(0,1fr) 160px}.room-stage[data-panel="chat"],.room-stage[data-panel="people"]{grid-template-columns:minmax(0,1fr) 290px}.room-dock button{padding:10px;font-size:11px}.room-dock button svg{width:18px;height:18px}.dock-media,.dock-tools{gap:6px}.room-stage .videos{grid-template-columns:1fr}.room-stage[data-panel="call"] .videos{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){body.in-call main{padding:10px 8px}.classroom{padding:12px;border-radius:16px}.room-header{gap:8px;margin-bottom:12px}.room-header h2{font-size:19px}.room-header #connection{font-size:11px;line-height:1.35}.room-header .icon-button{padding:10px;min-height:40px}.room-header .icon-button span{display:none}.room-shortcuts{width:100%;padding:4px;gap:2px}.room-shortcuts button{flex:1;min-width:0;padding:9px 4px;font-size:11px;gap:5px}.room-shortcuts svg{width:16px;height:16px}.room-stage,.room-stage[data-panel="board"],.room-stage[data-panel="chat"],.room-stage[data-panel="people"]{display:flex;flex-direction:column;gap:10px}.room-stage .videos{min-height:0;max-height:46dvh;padding:8px;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}.video-tile{min-height:115px;aspect-ratio:4/3}.video-avatar{width:42px;height:42px;font-size:14px}.room-stage:not([data-panel="call"]) #videos{display:flex;flex-wrap:nowrap;overflow-x:auto;max-height:105px;min-height:0;padding:6px}.room-stage:not([data-panel="call"]) .video-tile{min-width:130px;min-height:85px;height:85px;aspect-ratio:auto}.room-stage:not([data-panel="call"]) .video-name{font-size:9px;padding:3px 5px;bottom:5px;left:5px}.room-stage:not([data-panel="call"]) .video-avatar{width:32px;height:32px;font-size:11px}.room-stage[data-panel="board"] #collaboration{order:1}.board-panel,.chat-panel,.participants-panel{padding:12px}.room-dock{gap:6px;align-items:stretch;padding:8px;border-radius:12px;margin-top:10px;bottom:calc(6px + env(safe-area-inset-bottom))}.room-dock button{flex-direction:column;gap:4px;min-height:52px;font-size:9px;padding:7px 6px;min-width:47px;white-space:normal;line-height:1.15}.dock-media{flex:1}.dock-media button{flex:1}.dock-tools{gap:5px}.room-settings summary{font-size:11px}.room-feedback{font-size:12px}.rejoin-card{flex-direction:column;align-items:stretch}.board-toolbar{gap:6px}.board-toolbar label{min-width:65px;flex:1}.board-toolbar select{padding:6px}.board-toolbar button{font-size:10px;min-height:36px}.teacher-muted::after{font-size:8px;padding:3px 5px}.single-tool #chat-messages{height:240px;max-height:35dvh}#board-canvas{max-height:none}.room-stage[data-panel="call"]:has(.shared-screen:not([hidden])) .shared-screen{min-height:190px;aspect-ratio:16/9}.classroom:fullscreen .room-stage .videos{max-height:50dvh}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* Bound each panel to its grid cell; media must never size the chat column. */
+.room-stage{align-items:stretch;isolation:isolate}
+.room-stage>#videos,.room-stage>#collaboration,.room-stage>#participants-panel{min-width:0;min-height:0;width:100%;max-width:100%}
+.room-stage[data-panel="chat"]>#videos,.room-stage[data-panel="people"]>#videos{grid-column:1;grid-row:1;overflow-x:hidden}
+.room-stage[data-panel="chat"]>#collaboration,.room-stage[data-panel="people"]>#participants-panel{grid-column:2;grid-row:1;position:relative}
+.room-stage[data-panel="chat"]>#collaboration{display:flex;flex-direction:column;height:clamp(340px,58dvh,650px);overflow:hidden}
+.room-stage[data-panel="chat"] #collab-status{margin:0 0 6px;font-size:11px;flex:none}
+.room-stage[data-panel="chat"] #collaboration>.muted:last-child{display:none}
+.room-stage[data-panel="chat"] .class-tools{flex:1;min-height:0;display:flex}
+.room-stage[data-panel="chat"] .chat-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.room-stage[data-panel="chat"] #chat-messages{flex:1;min-height:0;height:auto;max-height:none;overflow-y:auto}
+#chat-form{flex:none;min-width:0;gap:6px;margin-top:8px}
+.chat-compose-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#chat-done{font-size:12px;min-height:32px;padding:5px 10px}
+.chat-panel textarea{resize:none;min-height:52px;max-height:90px;font-size:16px}
+.video-tile.shared-screen:fullscreen,.video-tile.shared-screen.screen-expanded{display:flex;width:100%;height:100%;max-width:none;max-height:none;min-width:0;min-height:0;aspect-ratio:auto;border-radius:0;background:#0b201b;padding:64px 12px 42px;overflow:hidden}
+.video-tile.shared-screen.screen-expanded{position:fixed;inset:0;z-index:10000;height:100dvh}
+.video-tile.shared-screen:fullscreen video,.video-tile.shared-screen.screen-expanded video{position:static;width:100%;height:100%;max-height:100%;object-fit:contain}
+.shared-screen:fullscreen .expand-screen,.shared-screen.screen-expanded .expand-screen{position:absolute;inset:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) auto auto;z-index:10;background:#f1f5e9;color:#183f36;border:1px solid #9cb39a;min-height:44px;box-shadow:0 2px 12px #0006}
+@media(max-width:640px){
+ .room-stage[data-panel="chat"]>#collaboration{height:clamp(280px,58dvh,600px)}
+ .room-stage[data-panel="chat"] .chat-panel{padding:10px}
+ .room-stage[data-panel="chat"] .chat-panel>p{font-size:11px;margin-bottom:4px}
+ .classroom.chat-composing{position:fixed;top:var(--room-visible-top,0px);left:0;right:0;width:100%;height:var(--room-visible-height,100dvh);max-height:var(--room-visible-height,100dvh);margin:0;padding:6px 8px max(6px,env(safe-area-inset-bottom));border:0;border-radius:0;z-index:100;display:flex;flex-direction:column;overflow:hidden}
+ .chat-composing .room-header,.chat-composing .room-dock,.chat-composing .room-settings,.chat-composing .room-feedback{display:none}
+ .chat-composing .room-shortcuts{flex:none;margin-bottom:5px}
+ .chat-composing .room-stage{flex:1;min-height:0;gap:5px;overflow:hidden}
+ .chat-composing .room-stage #videos{flex:none;height:62px;max-height:62px;padding:3px}
+ .chat-composing .room-stage .video-tile{height:54px;min-height:54px;min-width:96px}
+ .chat-composing .room-stage[data-panel="chat"]>#collaboration{flex:1;min-height:0;height:auto}
+ .chat-composing #collab-status,.chat-composing .chat-panel>p{display:none}
+ .chat-composing #chat-title{font-size:14px;margin-bottom:4px}
+ .chat-composing #chat-form{margin-top:4px;gap:4px}
+ .chat-composing #chat-send{min-height:36px;padding:7px}
+ .chat-composing #chat-message{height:52px;min-height:52px}
+ .chat-composing .chat-panel{padding:6px 8px}
+}

@@ -1,3 +1,4 @@
+import {mountScreenExpansion} from './room-viewport.mjs?v=20261022-layout4';
 // Media stays between browsers. The authenticated RPC carries only connection descriptions.
 const slots=['audio','camera','screen'];
 export class DirectRoom {
@@ -200,7 +201,8 @@ export class DirectRoom {
 }
 
 export function directView({videos,audio,status,controls,closed,roster,moderation,audioMuted=false}){
- const tiles=new Map(),screens=new Map(),names=new Map(),blockedAudio=new Set();
+ const tiles=new Map(),screens=new Map(),names=new Map(),blockedAudio=new Set(),screenDisposers=new Map();
+ const removeScreen=id=>{screenDisposers.get(id)?.();screenDisposers.delete(id);screens.get(id)?.remove();screens.delete(id);};
  return {
   participant(id,name,local){
    if(tiles.has(id))return;
@@ -208,12 +210,12 @@ export function directView({videos,audio,status,controls,closed,roster,moderatio
    const avatar=document.createElement('div');avatar.className='video-avatar';avatar.textContent=name.trim().split(/\s+/).slice(0,2).map(n=>n[0]).join('').toUpperCase();tile.append(avatar);
    const label=document.createElement('span');label.className='video-name';label.textContent=name+(local?' (você)':'');tile.append(label);videos.append(tile);tiles.set(id,tile);names.set(id,name);
   },
-  remove(id){tiles.get(id)?.remove();tiles.delete(id);screens.get(id)?.remove();screens.delete(id);names.delete(id);audio.querySelectorAll('audio').forEach(el=>{if(el.dataset.peer===id)el.remove();});},
+  remove(id){tiles.get(id)?.remove();tiles.delete(id);removeScreen(id);names.delete(id);audio.querySelectorAll('audio').forEach(el=>{if(el.dataset.peer===id)el.remove();});},
   track(id,slot,track,local){
    if(slot==='screen'){
-    screens.get(id)?.remove();screens.delete(id);
+    removeScreen(id);
     if(track){const tile=document.createElement('div');tile.className='video-tile shared-screen';const label=document.createElement('span');label.textContent=(names.get(id)||'Professor')+' — tela';
-     const expand=document.createElement('button');expand.className='expand-screen secondary';expand.textContent='Ampliar tela';expand.onclick=()=>tile.requestFullscreen?.().catch(()=>status('Não foi possível ampliar a tela neste navegador.'));
+     const expand=document.createElement('button');expand.className='expand-screen secondary';screenDisposers.set(id,mountScreenExpansion(tile,expand));
      tile.append(label,expand);videos.prepend(tile);screens.set(id,tile);}
    }
    const container=slot==='audio'?audio:slot==='screen'?screens.get(id):tiles.get(id);if(!container||slot==='audio'&&local)return;
@@ -227,7 +229,7 @@ export function directView({videos,audio,status,controls,closed,roster,moderatio
    }
    el.play().catch(()=>status('Para ouvir a chamada, clique em “Ativar áudio”.'));
   },
-  status,controls,closed,roster,moderation,
+  status,controls,closed(reason){for(const id of [...screens.keys()])removeScreen(id);closed(reason);},roster,moderation,
   blockAudio(id,blocked){
    if(blocked)blockedAudio.add(id);else blockedAudio.delete(id);
    tiles.get(id)?.classList.toggle('teacher-muted',blocked);
