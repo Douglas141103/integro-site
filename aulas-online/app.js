@@ -1,9 +1,11 @@
+import {renderRoomMode,mountWaiting} from './room-presence.mjs?v=20261022-presence5';
+import {mountRoomFiles} from './room-files.mjs?v=20261022-presence5';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/+esm';
 import {zipSync} from 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js';
-import {DirectRoom,directView} from './direct-room.mjs?v=20261022-layout4';
-import {mountCollaboration} from './collaboration.mjs?v=20261022-layout4';
-import {mountRoomPanels} from './room-panels.mjs?v=20261022-layout4';
-import {decorateRoom,mediaControls,mountParticipants} from './room-hud.mjs?v=20261022-layout4';
+import {DirectRoom,directView} from './direct-room.mjs?v=20261022-presence5';
+import {mountCollaboration} from './collaboration.mjs?v=20261022-presence5';
+import {mountRoomPanels} from './room-panels.mjs?v=20261022-presence5';
+import {decorateRoom,mediaControls,mountParticipants} from './room-hud.mjs?v=20261022-presence5';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,7 +22,7 @@ const state={classes:[],options:null,role:null,lesson:null,selectedClass:null,ro
 function roomFeedback(message,error=false){$('room-feedback').textContent=message;$('room-feedback').hidden=!message;$('room-feedback').className='room-feedback'+(error?' error':'');}
 const notice=(message,error=false)=>{$('notice').textContent=message;$('notice').className='notice'+(error?' error':'');if(state.room)roomFeedback(message,error);};
 decorateRoom($('classroom'));
-function updateMedia(){if(state.room)mediaControls($('classroom'),state.room.localParticipant,Boolean(state.room.self?.micBlocked));}
+function updateMedia(){if(state.room){mediaControls($('classroom'),state.room.localParticipant,Boolean(state.room.self?.micBlocked));if(direct){renderRoomMode($('classroom'),state.room.roomMode||'live',state.teacher);if(state.room.self?.micBlocked)$('mic').disabled=true;}}}
 function showReentry(text){document.body.classList.remove('in-call');if(document.fullscreenElement===$('classroom'))document.exitFullscreen?.().catch(()=>{});$('rejoin').hidden=!state.reentry;$('rejoin-reason').textContent=text;}
 
 const date=value=>new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
@@ -48,7 +50,7 @@ function render(){
  <form data-form="lesson" class="form-grid"><label class="wide">Tema do encontro<input name="title" maxlength="160" required></label><label>Início<input name="starts_at" type="datetime-local" value="${inputDate(Date.now()+600000)}" required></label><label>Fim<input name="ends_at" type="datetime-local" value="${inputDate(Date.now()+600000+5400000)}" required></label><button>Agendar encontro</button></form>
  <button class="secondary" data-action="archive">Arquivar turma</button></details>`:''}
  ${c.lessons.length?c.lessons.map(l=>`<div class="lesson"><div><strong>${esc(l.title)}</strong><p class="muted">${esc(date(l.starts_at))} até ${esc(new Date(l.ends_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))}</p><span class="badge">${labels[l.status]}</span></div><div class="actions">
- ${['scheduled','live'].includes(l.status)&&c.active?`${c.can_manage?`<button data-action="start" data-lesson="${l.id}" ${state.online?'':'disabled'}>${l.status==='live'?'Entrar como professor':'Abrir sala'}</button>`:`<select aria-label="Aluno que entrará na aula" data-join-student="${l.id}">${options(c.students)}</select><button data-action="join" data-lesson="${l.id}" ${l.status==='live'&&state.online?'':'disabled'}>Entrar na aula</button>`}`:''}
+ ${['scheduled','live'].includes(l.status)&&c.active?`${c.can_manage?`<button data-action="start" data-lesson="${l.id}" ${state.online?'':'disabled'}>${l.status==='live'?'Entrar como professor':'Abrir sala'}</button>`:`<select aria-label="Aluno que entrará na aula" data-join-student="${l.id}">${options(c.students)}</select><button data-action="join" data-lesson="${l.id}" ${state.online?'':'disabled'}>${l.status==='live'?'Entrar na aula':'Aguardar professor'}</button>`}`:''}
  <button class="secondary" data-action="deliveries" data-lesson="${l.id}">${c.can_manage?'Fotos e correções':'Atividade e devolutiva'}</button>
  ${c.can_manage&&l.status==='live'?`<button class="danger" data-action="end" data-lesson="${l.id}">Encerrar aula</button>`:''}
  ${c.can_manage&&l.status==='scheduled'?`<button class="secondary" data-action="cancel" data-lesson="${l.id}">Cancelar encontro</button>`:''}
@@ -69,7 +71,7 @@ async function refresh(quiet=false){
 async function act(button,fn){
  if(button)button.disabled=true;
  try{await fn();}catch(error){notice(error.message||'Não foi possível concluir. Tente novamente.',true);}
- finally{if(button?.isConnected)button.disabled=button.id==='mic'&&Boolean(state.room?.self?.micBlocked);}
+ finally{if(button?.isConnected)button.disabled=false;if(state.room)updateMedia();}
 }
 $('class-form').addEventListener('submit',event=>{event.preventDefault();act(event.submitter,async()=>{
  const form=event.currentTarget;await rpc('class_create',Object.fromEntries(new FormData(form)));form.reset();await refresh();notice('Turma criada. Matricule até quatro alunos e agende os encontros.');
@@ -104,20 +106,34 @@ $('classes').addEventListener('click',event=>{
     const student=button.closest('.lesson').querySelector('select')?.value;
     const result=await api(button.dataset.action,{lesson_id:l.id,student_id:student});
     state.reentry={lesson:l,student_id:student,teacher:result.isTeacher};$('rejoin').hidden=true;
-    if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
+    if(direct&&result.waiting)showWaiting(l,student);else if(direct)await connectDirect(result,l);else await connectRoom(result,l);await refresh(true);
    }finally{state.joining=false;}
   }
  });
 });
+function stopWaiting(){state.waitDispose?.();state.waitDispose=null;state.waiting=null;$('waiting-room').hidden=true;document.body.classList.remove('is-waiting');}
+function showWaiting(lesson,student){
+ stopWaiting();const entry={lesson,student};state.waiting=entry;document.body.classList.remove('in-call');document.body.classList.add('is-waiting');$('classroom').hidden=true;$('rejoin').hidden=true;$('waiting-room').hidden=false;$('waiting-title').textContent=lesson.title;$('waiting-retry').hidden=true;
+ $('waiting-message').textContent='Aguarde o professor entrar. Sua entrada na chamada será automática.';
+ state.waitDispose=mountWaiting({entry,check:()=>callDirect('wait',{lesson_id:lesson.id,student_id:student}),
+  changed:result=>{if(state.waiting===entry)$('waiting-message').textContent=result.error||(result.ready?'O professor entrou. Conectando…':'Aguarde o professor entrar. Sua entrada na chamada será automática.');},
+  enter:async()=>{if(state.waiting!==entry)return;const result=await api('join',{lesson_id:lesson.id,student_id:student});if(state.waiting!==entry){if(result.member_id)await callDirect('leave',{lesson_id:lesson.id,member_id:result.member_id});return;}if(result.waiting){showWaiting(lesson,student);return;}await connectDirect(result,lesson);},
+  failed:error=>{if(state.waiting!==entry)return;$('waiting-message').textContent=error.message||'Não foi possível conectar. Tente novamente.';$('waiting-retry').hidden=false;}
+ });$('waiting-room').scrollIntoView({block:'start'});
+}
+$('waiting-leave').onclick=()=>stopWaiting();
+$('waiting-retry').onclick=()=>{if(state.waiting)showWaiting(state.waiting.lesson,state.waiting.student);};
+$('room-mode-controls').onclick=event=>{const button=event.target.closest('[data-lesson-mode]');if(!button||!state.room)return;act(button,async()=>{await state.room.setRoomMode(button.dataset.lessonMode);roomFeedback(button.dataset.lessonMode==='live'?'Aula em andamento. Ligue o microfone e a câmera quando desejar.':'Aviso exibido para os alunos. Microfones e câmeras serão desligados.');});};
 async function connectDirect(result,lesson){
+ stopWaiting();
  $('videos').replaceChildren();$('audio').replaceChildren();state.roomLesson=lesson;state.teacher=result.isTeacher;
  const secondDevice=result.isTeacher&&result.coordinator_id&&result.coordinator_id!==result.member_id;
  const room=new DirectRoom({call:callDirect,admission:result,context:{lesson_id:lesson.id,client_id:clientId},view:directView({
   videos:$('videos'),audio:$('audio'),audioMuted:!!secondDevice,status:text=>{$('connection').textContent=text;if(text.includes('Ativar áudio'))$('classroom').querySelector('.room-settings').open=true;},
-  controls:p=>mediaControls($('classroom'),p,Boolean(room.self.micBlocked)),
+  controls:()=>updateMedia(),roomState:()=>updateMedia(),
   roster:(people,id)=>state.participants?.roster(people,id),
   moderation:blocked=>{updateMedia();roomFeedback(blocked?'Seu microfone foi silenciado pelo professor.':'Microfone liberado. Clique em Ligar microfone quando quiser falar.');},
-  closed:text=>{if(state.room!==room)return;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.participants?.dispose();state.participants=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();showReentry(text);notice(text);}
+  closed:text=>{if(state.room!==room)return;state.filesDispose?.();state.filesDispose=null;state.panelsDispose?.();state.panelsDispose=null;state.collabDispose?.();state.collabDispose=null;state.participants?.dispose();state.participants=null;state.room=null;$('classroom').hidden=true;$('videos').replaceChildren();$('audio').replaceChildren();showReentry(text);notice(text);}
  })});
  state.room=room;document.body.classList.add('in-call');roomFeedback('');$('rejoin').hidden=true;state.participants=mountParticipants($('classroom'),{getRoom:()=>state.room,feedback:roomFeedback});$('room-title').textContent=lesson.title;$('classroom').hidden=false;$('screen').hidden=!result.isTeacher;$('end').hidden=!result.isTeacher;
  room.audioMuted=!!secondDevice;$('mute-sound').hidden=false;$('mute-sound').textContent=room.audioMuted?'Ligar som neste aparelho':'Silenciar som neste aparelho';
@@ -126,6 +142,7 @@ async function connectDirect(result,lesson){
  $('screen-help').textContent=result.isTeacher?(navigator.mediaDevices.getDisplayMedia?'Compartilhar tela: escolha uma aba, janela ou tela e confirme no navegador.':'Este navegador não permite compartilhar tela. Use um navegador de computador compatível.'):'';
  state.collabDispose=mountCollaboration($('collaboration'),room);
  state.panelsDispose=mountRoomPanels($('classroom'));
+ state.filesDispose=mountRoomFiles($('classroom'),{db,room,download:downloadBlob,feedback:roomFeedback});
  updateMedia();
  try{await room.start();}catch(error){await room.disconnect();throw error;}
  $('classroom').scrollIntoView({behavior:'smooth',block:'start'});
@@ -185,7 +202,7 @@ $('retry-room').onclick=event=>act(event.currentTarget,async()=>{
  if(!state.reentry||state.joining)return;
  state.joining=true;
  try{const entry=state.reentry;const result=await api(entry.teacher?'start':'join',{lesson_id:entry.lesson.id,student_id:entry.student_id});
-  if(direct)await connectDirect(result,entry.lesson);else await connectRoom(result,entry.lesson);
+  if(direct&&result.waiting)showWaiting(entry.lesson,entry.student_id);else if(direct)await connectDirect(result,entry.lesson);else await connectRoom(result,entry.lesson);
  }finally{state.joining=false;}
 });
 
@@ -255,4 +272,4 @@ try{
   setInterval(()=>{if(!document.hidden)refresh(true).catch(()=>{});},30000);
  }
 }catch(error){notice(error.message||'Não foi possível carregar as aulas.',true);}
-window.addEventListener('pagehide',()=>state.room?.disconnect());
+window.addEventListener('pagehide',()=>{stopWaiting();state.room?.disconnect();});

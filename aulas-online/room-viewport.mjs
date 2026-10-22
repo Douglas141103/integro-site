@@ -17,7 +17,9 @@ export function mountScreenExpansion(tile,button){
  }
  const key=event=>{if(event.key==='Escape'&&placeholder){restore();update();button.focus();}};
  button.type='button';button.addEventListener('click',toggle);doc.addEventListener('fullscreenchange',update);doc.addEventListener('keydown',key);update();
- return ()=>{disposed=true;restore();button.removeEventListener('click',toggle);doc.removeEventListener('fullscreenchange',update);doc.removeEventListener('keydown',key);};
+ const dispose=()=>{disposed=true;restore();button.removeEventListener('click',toggle);doc.removeEventListener('fullscreenchange',update);doc.removeEventListener('keydown',key);};
+ dispose.collapse=()=>{restore();if(doc.fullscreenElement===tile)doc.exitFullscreen?.().catch(()=>{});update();};
+ return dispose;
 }
 
 // visualViewport follows the visible area above mobile keyboards, unlike 100vh.

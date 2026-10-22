@@ -70,3 +70,14 @@ Referências de interação consultadas:
 - No computador, vídeo e chat têm colunas delimitadas, e somente as mensagens rolam dentro do chat.
 - Ao digitar no celular, a sala acompanha a altura de `visualViewport`, mantém uma faixa de vídeo e posiciona mensagem/envio acima do teclado. **Concluir** fecha a edição sem apagar o rascunho.
 - Validação: 17 testes automatizados passaram, incluindo alternância de tela cheia, fallback, teclado simulado, troca de abas e controles anteriores. A conferência visual em navegador e teclado físico continua pendente por indisponibilidade da prévia no ambiente.
+
+### Presença, espera e arquivos — 22/10/2026
+
+Aplicar também `supabase/migrations/20261022152931_online_room_presence_files.sql` após as migrações anteriores. O modo direto permanece ativo.
+
+- Cada participante tem ícones de microfone e câmera com estado ligado/desligado e rótulos acessíveis. As mudanças são informadas ao servidor na consulta de presença, em intervalos aproximados de dois segundos.
+- O aluno pode selecionar **Aguardar professor** antes de a sala abrir. A espera não adquire mídia nem ocupa uma vaga na chamada; autorização e disponibilidade são conferidas antes da entrada automática. Encerramento/cancelamento e retirada de matrícula impedem o acesso.
+- Novas salas começam em **Iniciaremos em breve**. O professor controla **Iniciar aula**, **Em pausa** e **Retomar aula**. Pausa/espera desligam capturas nos clientes atualizados e silenciam o áudio recebido. Retomar não liga câmera, microfone ou compartilhamento automaticamente. As salas que já estavam em andamento durante a atualização permanecem em aula.
+- A logo original do Instituto aparece no cabeçalho e nas telas de espera e pausa.
+- **Arquivos** permite ao professor enviar até cinco arquivos por vez, com 20 MB por arquivo, para todos os alunos da turma. PDF, JPEG, PNG, WebP, TXT, Word, Excel e PowerPoint são aceitos. O bucket `online-room-files` é privado; upload/exclusão exigem professor autorizado presente e download exige vínculo com a turma. Arquivos ficam armazenados após a chamada; a aba mostra os 100 mais recentes e atualiza a cada oito segundos.
+- Verificação: 23 testes automatizados de UI, mídia, banco local e RLS passaram. A prévia visual permanece indisponível neste ambiente; falta validação audiovisual entre aparelhos reais. Atualizar as páginas do professor e alunos para carregar a nova versão.

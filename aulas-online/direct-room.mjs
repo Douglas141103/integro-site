@@ -1,4 +1,5 @@
-import {mountScreenExpansion} from './room-viewport.mjs?v=20261022-layout4';
+import {renderMediaIndicators} from './room-presence.mjs?v=20261022-presence5';
+import {mountScreenExpansion} from './room-viewport.mjs?v=20261022-presence5';
 // Media stays between browsers. The authenticated RPC carries only connection descriptions.
 const slots=['audio','camera','screen'];
 export class DirectRoom {
@@ -27,12 +28,19 @@ export class DirectRoom {
  }
  async poll(){
   if(this.closed)return;
-  try{const data=await this.request('poll',{after:this.cursor});this.lastPoll=Date.now();await this.sync(data);}
+  try{const data=await this.request('poll',{after:this.cursor,media:{microphone:this.localParticipant.isMicrophoneEnabled,camera:this.localParticipant.isCameraEnabled}});this.lastPoll=Date.now();await this.sync(data);}
   catch(error){if(!this.closed)this.view.status('Reconectando ao portal. '+error.message);}
   finally{if(!this.closed)this.timer=setTimeout(()=>this.poll(),2000);}
  }
  async sync(data){
   if(this.closed)return;
+  const incomingRevision=data.modeRevision||0;
+  const mode=incomingRevision<(this.modeRevision||0)?this.roomMode:(data.roomMode||'live');
+  this.modeRevision=Math.max(this.modeRevision||0,incomingRevision);
+  if(mode!==this.roomMode){this.roomMode=mode;
+   if(mode!=='live')for(const slot of slots)await this.setMedia(slot,false);
+   this.view.roomState?.(mode);
+  }
   const blocked=Boolean(data.micBlocked);
   if(blocked!==Boolean(this.self.micBlocked)){
    this.self.micBlocked=blocked;
@@ -50,7 +58,9 @@ export class DirectRoom {
    // One deterministic offerer per pair; no simultaneous-offer race.
    if(this.self.member_id<person.id)this.enqueue(peer,()=>this.offer(peer));
   }
+  for(const person of others)this.view.mediaState?.(person.id,{microphone:Boolean(person.micOn),camera:Boolean(person.cameraOn),blocked:Boolean(person.micBlocked)});
   for(const message of data.messages||[]){
+   if(message.id<=this.cursor)continue;
    const peer=this.peers.get(message.sender);
    if(peer)this.enqueue(peer,()=>this.receive(peer,message.description));
    this.cursor=Math.max(this.cursor,message.id);
@@ -149,6 +159,7 @@ export class DirectRoom {
  }
  async setMedia(slot,enabled){
   if(this.closed)return;
+  if(enabled&&this.roomMode&&this.roomMode!=='live')throw Error('Aguarde o professor iniciar ou retomar a aula.');
   if(slot==='audio'&&enabled&&this.self.micBlocked)throw Error('Seu microfone foi silenciado pelo professor. Aguarde a liberação.');
   const revision=(this.mediaRevision[slot]||0)+1;this.mediaRevision[slot]=revision;
   if(slot==='screen'&&!this.self.isTeacher)throw Error('Somente o professor pode compartilhar a tela.');
@@ -159,16 +170,18 @@ export class DirectRoom {
     stream=slot==='screen'?await this.mediaDevices.getDisplayMedia({video:{frameRate:10},audio:false}):await this.mediaDevices.getUserMedia(slot==='audio'?{audio:{echoCancellation:true,noiseSuppression:true},video:false}:{audio:false,video:{width:{ideal:640},height:{ideal:360},frameRate:{ideal:15,max:15}}});
    }catch(error){throw Error(error.name==='NotAllowedError'?'A permissão foi recusada ou cancelada. Permita o acesso no navegador e tente novamente.':'Não foi possível acessar o dispositivo. Confira se está conectado e livre para uso.');}
    track=stream.getTracks()[0];
-   if(this.closed||this.mediaRevision[slot]!==revision||(slot==='audio'&&this.self.micBlocked)){stream.getTracks().forEach(t=>t.stop());return;}
+   if(this.closed||(this.roomMode&&this.roomMode!=='live')||this.mediaRevision[slot]!==revision||(slot==='audio'&&this.self.micBlocked)){stream.getTracks().forEach(t=>t.stop());return;}
   }
   const previous=this.tracks[slot];this.tracks[slot]=track;
   const results=await Promise.allSettled([...this.peers.values()].map(p=>p.senders[slots.indexOf(slot)]?.replaceTrack(track)));
   previous?.stop();this.view.track(this.self.member_id,slot,track,true);
   const flag={audio:'isMicrophoneEnabled',camera:'isCameraEnabled',screen:'isScreenShareEnabled'}[slot];
   this.localParticipant[flag]=Boolean(track);this.view.controls(this.localParticipant);
+  this.view.mediaState?.(this.self.member_id,{microphone:this.localParticipant.isMicrophoneEnabled,camera:this.localParticipant.isCameraEnabled,blocked:this.self.micBlocked});
   if(track)track.onended=()=>{if(this.tracks[slot]===track)this.setMedia(slot,false).catch(()=>{});};
   if(results.some(r=>r.status==='rejected'))this.view.status('Um participante perdeu a conexão. Saia e entre na aula novamente.');
  }
+ async setRoomMode(mode){if(!this.self.isTeacher)throw Error('Somente o professor pode alterar o estado da aula.');await this.sync(await this.request('room_mode',{mode}));}
  async startAudio(){await this.view.audio();}
  async moderate(targetId,operation){
   if(!this.self.isTeacher)throw Error('Somente o professor pode administrar participantes.');
@@ -200,7 +213,8 @@ export class DirectRoom {
  }
 }
 
-export function directView({videos,audio,status,controls,closed,roster,moderation,audioMuted=false}){
+export function directView({videos,audio,status,controls,closed,roster,moderation,roomState,audioMuted=false}){
+ let paused=false;
  const tiles=new Map(),screens=new Map(),names=new Map(),blockedAudio=new Set(),screenDisposers=new Map();
  const removeScreen=id=>{screenDisposers.get(id)?.();screenDisposers.delete(id);screens.get(id)?.remove();screens.delete(id);};
  return {
@@ -208,7 +222,7 @@ export function directView({videos,audio,status,controls,closed,roster,moderatio
    if(tiles.has(id))return;
    const tile=document.createElement('div');tile.className='video-tile';tile.dataset.peer=id;
    const avatar=document.createElement('div');avatar.className='video-avatar';avatar.textContent=name.trim().split(/\s+/).slice(0,2).map(n=>n[0]).join('').toUpperCase();tile.append(avatar);
-   const label=document.createElement('span');label.className='video-name';label.textContent=name+(local?' (você)':'');tile.append(label);videos.append(tile);tiles.set(id,tile);names.set(id,name);
+   const label=document.createElement('span');label.className='video-name';label.textContent=name+(local?' (você)':'');tile.append(label);videos.append(tile);tiles.set(id,tile);names.set(id,name);renderMediaIndicators(tile);
   },
   remove(id){tiles.get(id)?.remove();tiles.delete(id);removeScreen(id);names.delete(id);audio.querySelectorAll('audio').forEach(el=>{if(el.dataset.peer===id)el.remove();});},
   track(id,slot,track,local){
@@ -222,20 +236,22 @@ export function directView({videos,audio,status,controls,closed,roster,moderatio
    const existing=[...container.querySelectorAll('video,audio')].find(el=>el.dataset.slot===slot&&el.dataset.peer===id);existing?.remove();
    if(!track)return;
    const el=document.createElement(slot==='audio'?'audio':'video');el.dataset.peer=id;el.dataset.slot=slot;
-   el.autoplay=true;el.playsInline=true;el.muted=local||slot!=='audio'||audioMuted||blockedAudio.has(id);el.srcObject=new MediaStream([track]);container.append(el);
+   el.autoplay=true;el.playsInline=true;el.muted=local||slot!=='audio'||paused||audioMuted||blockedAudio.has(id);el.srcObject=new MediaStream([track]);container.append(el);
    if(slot!=='audio'){
     const target=slot==='screen'?container:el;target.hidden=track.muted;
     track.onmute=()=>{target.hidden=true;};track.onunmute=()=>{target.hidden=false;};
    }
    el.play().catch(()=>status('Para ouvir a chamada, clique em “Ativar áudio”.'));
   },
+  mediaState(id,state){const tile=tiles.get(id);if(tile)renderMediaIndicators(tile,state);},
+  roomState(mode){paused=mode!=='live';if(paused)for(const dispose of screenDisposers.values())dispose.collapse?.();audio.querySelectorAll('audio').forEach(el=>{el.muted=paused||audioMuted||blockedAudio.has(el.dataset.peer);});roomState?.(mode);},
   status,controls,closed(reason){for(const id of [...screens.keys()])removeScreen(id);closed(reason);},roster,moderation,
   blockAudio(id,blocked){
    if(blocked)blockedAudio.add(id);else blockedAudio.delete(id);
    tiles.get(id)?.classList.toggle('teacher-muted',blocked);
-   audio.querySelectorAll('audio').forEach(el=>{if(el.dataset.peer===id)el.muted=audioMuted||blocked;});
+   audio.querySelectorAll('audio').forEach(el=>{if(el.dataset.peer===id)el.muted=paused||audioMuted||blocked;});
   },
   async audio(){await Promise.all([...audio.querySelectorAll('audio')].map(el=>el.play()));},
-  async muteAudio(muted){audioMuted=muted;await Promise.all([...audio.querySelectorAll('audio')].map(el=>{el.muted=muted||blockedAudio.has(el.dataset.peer);return el.muted?Promise.resolve():el.play();}));}
+  async muteAudio(muted){audioMuted=muted;await Promise.all([...audio.querySelectorAll('audio')].map(el=>{el.muted=paused||muted||blockedAudio.has(el.dataset.peer);return el.muted?Promise.resolve():el.play();}));}
  };
 }

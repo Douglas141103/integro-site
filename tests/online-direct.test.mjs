@@ -25,6 +25,7 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   await db.exec(await readFile(new URL('../supabase/online-classrooms.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../supabase/online-direct.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/20261022040914_online_room_moderation.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261022152931_online_room_presence_files.sql',import.meta.url),'utf8'));
   const call=(n,fn,a,d={})=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[n?uid(n):'']);return(await tx.query(`select public.${fn}($1,$2) result`,[a,d])).rows[0].result;});
   const portal=(n,a,d)=>call(n,'online_portal',a,d);
   const rtc=(n,a,d)=>call(n,'online_call',a,d);
@@ -33,9 +34,14 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   const l=await portal(1,'lesson_create',{class_id:c.id,title:'Direct',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+5400000).toISOString()});
   const data=(n,extra={})=>({lesson_id:l.id,client_id:uid(100+n),protocol:3,...extra});
   await assert.rejects(rtc(0,'health'),/conta/);
-  await assert.rejects(rtc(3,'join',data(3,{student_id:uid(10)})),/Aguarde/);
+  assert.equal((await rtc(3,'join',data(3,{student_id:uid(10)}))).waiting,true);
+  assert.equal((await rtc(3,'wait',data(3,{student_id:uid(10)}))).ready,false);
+  await assert.rejects(rtc(4,'wait',data(4,{student_id:uid(11)})),/autorizada/);
+  assert.equal((await db.query('select count(*) n from private.online_call_members')).rows[0].n,0);
   await assert.rejects(rtc(2,'start',data(2)),/autorizada/);
   const teacher=await rtc(1,'start',data(1));assert.equal(teacher.isTeacher,true);
+  assert.equal(teacher.roomMode,'soon');
+  assert.equal((await rtc(3,'wait',data(3,{student_id:uid(10)}))).ready,true);
   const pupils=[];
   for(let n=10;n<14;n++)pupils.push(await rtc(3,'join',data(n,{student_id:uid(n)})));
   assert.equal(pupils[3].peers.length,5);
@@ -53,6 +59,32 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   await assert.rejects(rtc(3,'start',data(10,{student_id:uid(10)})),/professor/);
   await assert.rejects(rtc(3,'end',data(10)),/professor/);
   const tm=data(1,{member_id:teacher.member_id});const sm=data(10,{member_id:pupils[0].member_id});
+  await assert.rejects(rtc(3,'room_mode',{...sm,mode:'live'}),/professor/);
+  await assert.rejects(rtc(1,'room_mode',{...tm,mode:'wrong'}),/inválido/);
+  const live=await rtc(1,'room_mode',{...tm,mode:'live'});assert.equal(live.roomMode,'live');assert.equal(live.modeRevision,1);
+  const media=await rtc(3,'poll',{...sm,media:{microphone:true,camera:true},target_id:teacher.member_id});
+  assert.equal(media.peers.find(p=>p.id===pupils[0].member_id).micOn,true);assert.equal(media.peers.find(p=>p.id===teacher.member_id).micOn,false);
+  await rtc(1,'room_mode',{...tm,mode:'paused'});
+  const paused=await rtc(3,'poll',{...sm,media:{microphone:true,camera:true}});assert.equal(paused.roomMode,'paused');assert.ok(paused.peers.every(p=>!p.micOn&&!p.cameraOn));
+  await rtc(1,'room_mode',{...tm,mode:'live'});
+  assert.ok((await rtc(3,'poll',sm)).peers.every(p=>!p.micOn&&!p.cameraOn));
+  // Actual Storage RLS, not just frontend visibility: only this room's teacher uploads.
+  await db.exec('grant usage on schema storage to authenticated;grant select,insert,delete on storage.objects to authenticated;');
+  const storage=(n,sql,args=[])=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[uid(n)]);return tx.query(sql,args);});
+  const path=l.id+'/notes.pdf';
+  await storage(1,"insert into storage.objects values('online-room-files',$1)",[path]);
+  await assert.rejects(storage(3,"insert into storage.objects values('online-room-files',$1)",[l.id+'/forged.pdf']));
+  await assert.rejects(storage(2,"insert into storage.objects values('online-room-files',$1)",[l.id+'/other.pdf']));
+  assert.equal((await storage(3,"select * from storage.objects where bucket_id='online-room-files'")).rows.length,1);
+  assert.equal((await storage(2,"select * from storage.objects where bucket_id='online-room-files'")).rows.length,0);
+  const another=await portal(2,'class_create',{title:'Other class',teacher_id:uid(2)});
+  const otherLesson=await portal(2,'lesson_create',{class_id:another.id,title:'Other',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+5400000).toISOString()});
+  await rtc(2,'start',{lesson_id:otherLesson.id,client_id:uid(999)});
+  await storage(2,"insert into storage.objects values('online-room-files',$1)",[otherLesson.id+'/private.pdf']);
+  assert.equal((await storage(3,"select * from storage.objects where bucket_id='online-room-files'")).rows.length,1);
+  await storage(3,"delete from storage.objects where bucket_id='online-room-files'");
+  assert.equal((await storage(1,"select * from storage.objects where name=$1",[path])).rows.length,1);
+  await storage(1,"delete from storage.objects where name=$1",[path]);
   await assert.rejects(rtc(3,'moderate',{...sm,target_id:pupils[1].member_id,operation:'mute'}),/professor/);
   await assert.rejects(rtc(2,'moderate',{...tm,target_id:pupils[1].member_id,operation:'mute'}).then(r=>{if(r.closed)throw Error('closed');}),/closed/);
   await assert.rejects(rtc(1,'moderate',{...tm,target_id:teacher.member_id,operation:'remove'}),/indisponível/);
@@ -94,11 +126,12 @@ test('direct calls enforce role, family, unique seats, private signaling, expiry
   assert.equal(continuing.closed,undefined);assert.equal(continuing.coordinator_id,replacement.member_id);
   await rtc(1,'leave',data(2,{member_id:replacement.member_id}));
   assert.equal((await rtc(3,'poll',data(12,{member_id:pupils[2].member_id}))).closed,true);
-  await assert.rejects(rtc(3,'join',data(12,{student_id:uid(12)})),/professor/);
+  assert.equal((await rtc(3,'join',data(12,{student_id:uid(12)}))).waiting,true);
   await rtc(1,'start',data(1));const lastPhone=await rtc(1,'start',data(2));await rtc(1,'end',data(1));
   assert.equal((await rtc(1,'poll',data(2,{member_id:lastPhone.member_id}))).closed,true);
   await assert.rejects(rtc(1,'start',data(1)),/encerrada/);
   assert.equal((await db.query('select count(*) n from private.online_call_signals')).rows[0].n,0);
+  await assert.rejects(rtc(3,'wait',data(10,{student_id:uid(10)})),/encerrada/);
  }finally{await db.close();}
 });
 
