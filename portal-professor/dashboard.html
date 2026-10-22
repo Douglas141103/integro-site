@@ -496,7 +496,7 @@
           <button type="button" class="action-card action-trigger" data-section-target="materialSection">
             <span class="action-icon">2</span>
             <strong>Material individual</strong>
-            <small>Enviar arquivo específico para o aluno.</small>
+            <small>Enviar, consultar e excluir materiais do aluno.</small>
           </button>
 
           <button type="button" class="action-card action-trigger" data-section-target="progressSection">
@@ -878,8 +878,16 @@
         </label>
 
         <button type="submit" class="btn btn-primary">Enviar material</button>
-        <p id="materialMessage" class="helper"></p>
+        <p id="materialMessage" class="helper" role="status" aria-live="polite"></p>
       </form>
+
+      <div class="section-heading" style="margin-top: 28px;">
+        <div>
+          <h2>Materiais enviados</h2>
+          <p class="helper">Confira os arquivos do aluno selecionado. Para remover um material, clique em Excluir material e confirme.</p>
+        </div>
+      </div>
+      <div id="managedMaterialsList" class="record-list"></div>
     </section>
 
     <section id="progressSection" class="panel-card action-section">
@@ -1400,6 +1408,7 @@
 
         <article class="panel-card">
           <h2>Materiais do aluno</h2>
+          <p id="materialsRecordsMessage" class="helper" role="status" aria-live="polite"></p>
           <div id="materialsList" class="record-list"></div>
         </article>
 
@@ -1421,7 +1430,7 @@
     </section>
   </main>
 
-  <script src="app.js?v=20260426frequencia"></script>
+  <script src="app.js?v=20261021-materials-admin1"></script>
 
   <script>
     (function initPedagogicalProfileModule() {

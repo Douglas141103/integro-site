@@ -238,6 +238,41 @@ async function fetchGuardians(studentId) {
   return state.guardians;
 }
 
+function setMaterialFeedback(message, type = 'success') {
+  setHelperMessage('materialMessage', message, type);
+  setHelperMessage('materialsRecordsMessage', message, type);
+}
+
+async function deleteStudentMaterial(materialId, studentId) {
+  const { data, error } = await supabaseClient
+    .from('student_materials')
+    .delete()
+    .eq('id', materialId)
+    .eq('student_id', studentId)
+    .select('id, file_path');
+
+  if (error) throw error;
+  if (!data?.length) {
+    throw new Error('O material não foi excluído. Verifique sua permissão ou atualize a lista.');
+  }
+
+  const filePath = data[0].file_path;
+  if (!filePath) return '';
+  try {
+    // Keep a file that is still linked to another material.
+    const references = await supabaseClient.from('student_materials')
+      .select('id').eq('file_path', filePath).limit(1);
+    if (references.error) throw references.error;
+    if (references.data?.length) return '';
+    const stored = await supabaseClient.storage.from(config.bucket || 'partner-materials').remove([filePath]);
+    if (stored.error) throw stored.error;
+    if (!stored.data?.length) throw new Error('Arquivo não removido do armazenamento.');
+    return '';
+  } catch {
+    return 'Material removido da lista do aluno. Não foi possível confirmar a remoção do arquivo armazenado.';
+  }
+}
+
 async function fetchStudentData(studentId) {
   const { start, end } = monthBounds(state.attendanceMonth);
 
@@ -475,6 +510,7 @@ async function populateDashboard() {
 async function loadStudentSection(studentId) {
   const student = state.students.find(s => s.id === studentId);
   state.selectedStudent = student || null;
+  setMaterialFeedback('');
 
   setText('studentMeta', student?.schools?.name ? `Escola: ${student.schools.name}` : 'Sem escola vinculada');
   setText('summaryStudent', student?.full_name || '—');
@@ -534,7 +570,7 @@ async function loadStudentSection(studentId) {
     </div>
   `);
 
-  renderList('materialsList', materials, item => `
+  const materialCard = item => `
     <div class="record-item material-record">
       <h3>${escapeHtml(item.title || 'Material')}</h3>
       <p>${formatMultiline(item.description || '')}</p>
@@ -544,13 +580,17 @@ async function loadStudentSection(studentId) {
           type="button"
           class="btn btn-danger small-btn delete-material-btn"
           data-material-id="${escapeHtml(item.id)}"
+          data-student-id="${escapeHtml(studentId)}"
+          data-material-title="${escapeHtml(item.title || 'Material')}"
           data-file-path="${encodeURIComponent(item.file_path || '')}"
         >
           Excluir material
         </button>
       </div>
     </div>
-  `);
+  `;
+  renderList('materialsList', materials, materialCard);
+  renderList('managedMaterialsList', materials, materialCard);
 
   renderList('progressList', progress, item => `
     <div class="record-item progress-record">
@@ -845,49 +885,36 @@ async function initDashboardPage() {
 
   document.addEventListener('click', async (event) => {
     const button = event.target.closest('.delete-material-btn');
-
-    if (!button) return;
-
-    if (!confirm('Tem certeza que deseja excluir este material do aluno?')) {
-      return;
-    }
+    if (!button || button.disabled) return;
 
     const materialId = button.dataset.materialId;
-    const filePath = decodeURIComponent(button.dataset.filePath || '');
+    const studentId = button.dataset.studentId;
+    if (!materialId || studentId !== state.selectedStudentId) return;
+    if (!confirm(`Excluir o material "${button.dataset.materialTitle || 'Material'}"? Ele deixará de aparecer para o aluno e a família.`)) return;
 
-    button.disabled = true;
-
-    const originalText = button.textContent;
-
-    button.textContent = 'Excluindo...';
+    const buttons = [...document.querySelectorAll('.delete-material-btn')]
+      .filter(item => item.dataset.materialId === materialId);
+    buttons.forEach(item => { item.disabled = true; item.textContent = 'Excluindo...'; });
+    setMaterialFeedback('Excluindo material...');
 
     try {
-      if (filePath) {
-        const storageRes = await supabaseClient.storage
-          .from(config.bucket)
-          .remove([filePath]);
-
-        if (storageRes.error) throw storageRes.error;
+      const cleanupWarning = await deleteStudentMaterial(materialId, studentId);
+      if (state.selectedStudentId !== studentId) return;
+      // Remove both copies immediately, even if refreshing the remaining data fails.
+      buttons.forEach(item => item.closest('.material-record')?.remove());
+      try {
+        await loadStudentSection(studentId);
+      } catch {
+        setMaterialFeedback('Material excluído. Atualize a página para recarregar a lista.', 'error');
+        return;
       }
-
-      const { error } = await supabaseClient
-        .from('student_materials')
-        .delete()
-        .eq('id', materialId);
-
-      if (error) throw error;
-
-      setHelperMessage('materialMessage', 'Material excluído com sucesso.');
-      await loadStudentSection(state.selectedStudentId);
+      setMaterialFeedback(cleanupWarning || 'Material excluído com sucesso.', cleanupWarning ? 'error' : 'success');
     } catch (error) {
-      setHelperMessage(
-        'materialMessage',
-        error.message || 'Erro ao excluir material.',
-        'error'
-      );
-
-      button.disabled = false;
-      button.textContent = originalText;
+      if (state.selectedStudentId === studentId) {
+        setMaterialFeedback(error.message || 'Não foi possível excluir o material. Tente novamente.', 'error');
+      }
+    } finally {
+      buttons.forEach(item => { item.disabled = false; item.textContent = 'Excluir material'; });
     }
   });
 
