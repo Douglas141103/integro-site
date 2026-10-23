@@ -10,7 +10,8 @@ test('winter gift, 7-IntGem purchases and single-use stock are durable, idempote
   assert.equal((await winter(1,'winter_claim')).granted,true);assert.equal((await winter(1,'winter_claim')).granted,false);assert.equal((await winter(1)).skates,2);assert.equal((await winter(2)).skates,0);
   assert.equal((await db.query('select quantity from private.egg_trap_stock where user_id=$1',[uid(1)])).rows[0].quantity,3);
   await run(1,"select public.box_egg('gift_claim') r");assert.equal((await winter(1)).skates,2);assert.equal((await db.query("select quantity from private.egg_trap_stock where user_id=$1 and kind='mine'",[uid(1)])).rows[0].quantity,4,'old gift remains independent');
-  const g=new EggAdventure();g.save.coins=21;g.save.eggs=[{id:1,world:20,rarity:'secret',mutation:'normal',remaining:8}];assert.equal((await save(1,g.save)).revision,1);
+  const g=new EggAdventure();g.save.coins=21;g.save.eggs=[{id:1,world:20,rarity:'secret',mutation:'normal',remaining:1200}];assert.equal((await save(1,g.save)).revision,1);
+  const loaded=(await run(1,"select public.box_egg('load') r")).save;assert.equal(loaded.incubationVersion,1);assert.equal(new EggAdventure(loaded).save.eggs[0].remaining,1200);
   const balance=async n=>(await db.query('select balance from private.intgem_wallets where user_id=$1',[uid(n)])).rows[0]?.balance??0;
   await db.query('update private.intgem_wallets set balance=21 where user_id=$1',[uid(1)]);
   assert.equal((await winter(1)).currency,'intgem');assert.equal((await winter(1)).price,7);

@@ -8,7 +8,7 @@ test('five promotional eggs preserve their hidden reward through delivery, reloa
   let g=new EggAdventure();assert.equal(g.nestEggs[20].length,5);Object.assign(g.player,NESTS[20]);assert(g.steal(slot));assert.equal(g.saleValue(20,g.carriedEgg.rarity),value);
   assert(!g.drainEvents().some(e=>e.text.includes(value.toLocaleString('pt-BR'))),'pickup does not reveal the reward');
   Object.assign(g.player,CORRAL);assert.equal(g.interact(),'deposit');assert(g.drainEvents().some(e=>e.type==='deposit'&&e.text.includes(value.toLocaleString('pt-BR'))));
-  g=new EggAdventure(JSON.parse(JSON.stringify(g.save)));advance(g,9);assert.equal(g.save.creatures[0].world,20);assert.equal(g.saleValue(20,g.save.creatures[0].rarity),value);
+  g=new EggAdventure(JSON.parse(JSON.stringify(g.save)));advance(g,g.hatchRemaining(g.save.eggs[0])+.1);assert.equal(g.save.creatures[0].world,20);assert.equal(g.saleValue(20,g.save.creatures[0].rarity),value);
   const pending=Math.floor(g.save.creatures[0].incomeProgress||0),before=g.save.coins;assert(g.sell(g.save.creatures[0].id));assert.equal(g.save.coins-before,value+pending);
  }
 });

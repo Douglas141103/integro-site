@@ -73,6 +73,14 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:0});assert(w.document.querySelector('.egg-level-buy[data-buy="boots"]').disabled);assert.match(w.document.getElementById('eggSheetBody').textContent,/Integros disponíveis insuficientes/);
   w.document.getElementById('eggCloseSheet').click();
   const beforeCredit=state(),oldPosition=JSON.stringify(beforeCredit.player);w.BoxEggRuntime.solidarityCredit(500);assert.equal(state().coins,beforeCredit.coins+500);assert.equal(JSON.stringify(state().player),oldPosition);assert.equal(state().tax.earned,beforeCredit.tax.earned);
+  // A long-running egg retains one clock, pauses with the game and releases GPU resources on hatch.
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),incubationVersion:1,creatures:[],eggs:[{id:1,world:20,rarity:'secret',mutation:'normal',remaining:1200}]});tick(1);
+  const hatchClock=adapter.scene().getObjectByName('EggHatchClock');assert(hatchClock);assert.equal(hatchClock.userData.time,'20:00');assert.equal(hatchClock.visible,true);
+  tick(65);assert.equal(adapter.scene().getObjectByName('EggHatchClock'),hatchClock);assert.equal(hatchClock.userData.time,'19:59');
+  key('Escape');const remaining=w.BoxEggRuntime.save().eggs[0].remaining;tick(65);assert.equal(w.BoxEggRuntime.save().eggs[0].remaining,remaining);assert.equal(hatchClock.userData.paused,true);key('Escape');
+  const savedEgg=w.BoxEggRuntime.save();w.BoxEggRuntime.apply(savedEgg);tick(1);assert(w.BoxEggRuntime.save().eggs[0].remaining>1198,'reload must not clamp incubation to eight seconds');
+  w.BoxEggRuntime.apply({...savedEgg,eggs:[{...savedEgg.eggs[0],remaining:.1}]});const finalClock=adapter.scene().getObjectByName('EggHatchClock');let disposed=0;finalClock.material.addEventListener('dispose',()=>disposed++);finalClock.material.map.addEventListener('dispose',()=>disposed++);tick(10);
+  assert.equal(adapter.scene().getObjectByName('EggHatchClock'),undefined);assert.equal(disposed,2);assert.equal(state().creatures.length,1);
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });
