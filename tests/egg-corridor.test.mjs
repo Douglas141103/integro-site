@@ -32,3 +32,24 @@ test('guardians stay inside the same corridor during pursuit, avoidance and retu
   const home={x:NESTS[i].x,z:NESTS[i].z-2.5};for(let f=0;f<400;f++)g.moveGuardian(enemy,home,12,.05);assert(Math.hypot(enemy.x-home.x,enemy.z-home.z)<.15,'guardians can return to their nest');
  }
 });
+
+test('both shoulders of every track stop a grounded max-speed runner in either direction',()=>{
+ for(let world=0;world<WORLDS.length;world++)for(const side of[-1,1])for(const direction of[-1,1]){
+  const g=new EggAdventure();g.save.training=600;g.save.upgrades.turbo=10;g.save.upgrades.boots=10;g.save.abilityStock.rush=1;g.useAbility('rush');
+  const barrierZ=-world*LENGTH-6;
+  Object.assign(g.player,{x:side*(TRACK_HALF_WIDTH-PLAYER_RADIUS),z:barrierZ-direction*3});
+  for(let step=0;step<20;step++){g.update(.05,{z:direction,sprint:true});legal(g.player);}
+  assert(direction*(g.player.z-barrierZ)<0,'cannot tunnel past or squeeze between barricade and fence');
+  assert(g.drainEvents().some(e=>e.type==='obstacle'));
+ }
+});
+
+test('edge barricades allow an inward detour, a deliberate jump and access to every nest',()=>{
+ for(let world=0;world<WORLDS.length;world++)for(const side of[-1,1]){
+  const g=new EggAdventure(),z=-world*LENGTH-6;
+  Object.assign(g.player,{x:side*4.35,z:z+3});g.movePlayer(0,-6);assert(g.player.z>z);
+  g.movePlayer(-side*2.2,0);g.movePlayer(0,-6);assert(g.player.z<z-2,'a route through the middle remains open');
+  Object.assign(g.player,{x:side*4.35,z:z+3,y:1.3});g.movePlayer(0,-6);assert(g.player.z<z-2,'jumping above the visible barrier still works');
+  const n=NESTS[world];Object.assign(g.player,{x:n.x*.55,z:n.z,y:0});g.movePlayer(0,0);assert.equal(g.interaction()?.type,'nest');assert.equal(g.interaction()?.world,world);
+ }
+});

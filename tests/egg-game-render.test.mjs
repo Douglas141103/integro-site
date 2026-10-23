@@ -20,6 +20,9 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
+  const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgeBarricade')barriers.push(n);});
+  assert.equal(barriers.length,21*8,'visible barricades cover both edges of every track');
+  for(const barrier of barriers){const o=barrier.userData.obstacle;assert.equal(barrier.position.x,o.x);assert.equal(barrier.position.z,o.z);const bounds=new T.Box3().setFromObject(barrier);assert(Math.abs(bounds.max.y-o.h)<.01,'visible height matches jump collision');}
   w.BoxEggCloud={ready:true,dirty(){},ranking:async()=>({mine:{position:5,integros:100,intgem:2},rows:[],total:0,updated_at:new Date().toISOString()})};tick(10);await new Promise(setImmediate);assert.equal(w.document.querySelector('#eggRanking [data-rank-position]').textContent,'5º');
   w.document.getElementById('eggRanking').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');w.document.querySelector('[data-egg-action="resume"]').click();
   key('w');tick(270);key('w',true);key('d');tick(20);key('d',true);assert.equal(state().interaction.type,'nest');
