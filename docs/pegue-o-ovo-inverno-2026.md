@@ -14,7 +14,7 @@ A fênix anuncia a nevasca 1,5 s antes de congelar toda a pista por 10 s; o cicl
 
 Um par é consumido ao ativar. Dura uma tentativa, terminando ao voltar à base depois de sair, ser capturado, entrar em uma corrida/visita ou sair do jogo. Pausar não consome outro par. Os pares ainda não usados permanecem na conta.
 
-Cada par custa **7 Integros**, sem cobrança de IntGem. A compra ocorre na base, sem ovo carregado, com revisão do progresso e reserva do imposto preservada. Repetir uma solicitação que perdeu a resposta não cobra nem consome outro item.
+Cada par custa **7 IntGem**, debitados da carteira IntGem com lançamento no extrato. O saldo de Integros não é alterado. A compra ocorre na base, sem ovo carregado, com revisão do progresso e reserva do imposto preservada. Repetir uma solicitação que perdeu a resposta não cobra nem consome outro item.
 
 ## Presente e loja
 

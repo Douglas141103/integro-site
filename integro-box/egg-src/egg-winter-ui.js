@@ -1,7 +1,7 @@
 import {WINTER} from './egg-winter-rules.js';
 export const SKATE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h6v7l6 2c2 1 3 3 2 4H5V8m2 8v4m10-4v4M3 20h17l2-2M7 6h4M7 9h4"/></svg>';
-const errors={insufficient_integros:'Você precisa de 7 Integros disponíveis.',winter_empty:'Seus patins acabaram. Compre outro par na loja.',winter_full:'Sua mochila está cheia.',race_running:'Os patins não podem ser usados durante uma corrida online.',trade_pending:'Conclua a troca antes de usar os patins.',request_changed:'Atualize a página e tente novamente.'};
-export function createEggWinter({dock,getGame,rpc,ready,active,blocked,canPresent,open,close,message,storage,onClaim,onUse,canAct=()=>true}){
+const errors={insufficient_intgem:'Você precisa de 7 IntGem disponíveis.',winter_empty:'Seus patins acabaram. Compre outro par na loja.',winter_full:'Sua mochila está cheia.',race_running:'Os patins não podem ser usados durante uma corrida online.',trade_pending:'Conclua a troca antes de usar os patins.',request_changed:'Atualize a página e tente novamente.'};
+export function createEggWinter({dock,getGame,rpc,ready,active,blocked,canPresent,open,close,message,storage,onClaim,onUse,canAct=()=>true,getBalance=()=>window.BoxIntGem?.balance,refreshWallet=()=>window.BoxIntGem?.refresh()}){
  let data={claimed:false,skates:0},loaded=false,busy=false,checking=false,nextCheck=0,offer=true,host=null,mode='shop',status='',requests={};
  try{requests=JSON.parse(storage?.getItem('egg-winter-requests')||'{}');}catch{}
  const remember=()=>{try{storage?.setItem('egg-winter-requests',JSON.stringify(requests));}catch{}};
@@ -11,11 +11,11 @@ export function createEggWinter({dock,getGame,rpc,ready,active,blocked,canPresen
  const node=(tag,text,cls)=>{const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;};
  const btn=(label,fn,disabled=false,cls='egg-primary')=>{const b=node('button',label,cls);b.type='button';b.disabled=busy||disabled;b.onclick=fn;return b;};
  async function check(force=false){if(checking||busy||!ready()||!active()||(!force&&(loaded||Date.now()<nextCheck)))return;checking=true;nextCheck=Date.now()+10000;try{data=await rpc('winter_state');loaded=true;status='';update();if(visible())render(host,mode);}catch{status='Conecte o perfil para abrir o presente e usar os patins.';if(visible())render(host,mode);}finally{checking=false;}}
- async function act(action,fromPanel=false){if(busy||!ready()||!canAct())return false;if(action==='winter_use'&&(!canUse()||!active()||(!fromPanel&&blocked())))return false;if(action==='winter_buy'&&(!getGame().inBase()||getGame().carrying!==null||getGame().raceMode)){status='Volte à base, guarde o ovo e abra a loja para comprar.';if(visible())render(host,mode);return false;}
+ async function act(action,fromPanel=false){if(busy||!ready()||!canAct())return false;if(action==='winter_use'&&(!canUse()||!active()||(!fromPanel&&blocked())))return false;if(action==='winter_buy_intgem'&&(!getGame().inBase()||getGame().carrying!==null||getGame().raceMode)){status='Volte à base, guarde o ovo e abra a loja para comprar.';if(visible())render(host,mode);return false;}
   busy=true;status='Confirmando…';const id=action==='winter_claim'?null:(requests[action]||=window.crypto.randomUUID());remember();update();if(visible())render(host,mode);
   try{const result=await rpc(action,id);data=result;loaded=true;delete requests[action];remember();
    if(action==='winter_claim'){status='Presente recebido: 3 minas e 2 pares de patins!';await onClaim();}
-   if(action==='winter_buy')status='Um par de patins comprado por 7 Integros.';
+   if(action==='winter_buy_intgem'){status='Um par de patins comprado por 7 IntGem.';try{await refreshWallet();}catch{}}
    if(action==='winter_use'){if(!getGame().activateSkates())throw Error('Não foi possível ativar os patins neste momento.');close();onUse();message('Patins ativados. No gelo, a redução cai de 70% para 25%.');}
    return true;
   }catch(e){status=errors[e.code]||e.message||'Não foi possível confirmar. Tente novamente.';if(e.code){delete requests[action];remember();}message(status);return false;}finally{busy=false;update();if(visible())render(host,mode);}
@@ -33,8 +33,8 @@ export function createEggWinter({dock,getGame,rpc,ready,active,blocked,canPresen
    host.append(node('p','A fênix persegue até quem voa de mochila a jato. Após o aviso, ela congela toda a pista por 10 segundos: o chão escorrega e sua velocidade cai 70%.'));
    const values=node('div','','egg-winter-values');for(let i=0;i<5;i++)values.append(node('span','XXXXX'));host.append(values,node('p','Pegue o ovo e descubra no curral quanto vale.','egg-muted'));
    const card=node('article','','egg-winter-skates');const art=node('div','','egg-winter-skate-art');art.innerHTML=SKATE_ICON;
-   card.append(art,node('h3','Patins de neve'),node('strong','7 Integros · uso único'),node('p','No gelo, a redução de velocidade passa de 70% para 25%. Um par é consumido ao ativar e termina ao voltar à base, ser capturado ou sair da partida.'),node('p',loaded?'Na mochila: '+data.skates+' pares':'Conectando sua mochila…'));
-   const buy=btn('Comprar 1 par · 7 Integros',()=>void act('winter_buy'),!loaded||!getGame().inBase()||getGame().spendable()<7||getGame().carrying!==null||getGame().raceMode);buy.dataset.winterBuy='';
+   card.append(art,node('h3','Patins de neve'),node('strong','💎 7 IntGem · uso único'),node('p','No gelo, a redução de velocidade passa de 70% para 25%. Um par é consumido ao ativar e termina ao voltar à base, ser capturado ou sair da partida.'),node('p',loaded?'Na mochila: '+data.skates+' pares':'Conectando sua mochila…'));
+   const buy=btn('Comprar 1 par · 7 IntGem',()=>void act('winter_buy_intgem'),!loaded||!getGame().inBase()||(getBalance()!=null&&getBalance()<WINTER.skatePrice)||getGame().carrying!==null||getGame().raceMode);buy.dataset.winterBuy='';
    const use=btn(getGame().skatesActive?'Patins ativos':'Usar 1 par agora',()=>void act('winter_use',true),!loaded||!data.skates||!canUse(),'egg-secondary');use.dataset.winterUse='';card.append(buy,use);host.append(card,btn(data.claimed?'Ver presente de inverno':'Abrir meu presente grátis',()=>open('winterGift'),false,'egg-secondary'));
   }
   const feedback=node('p',status,'egg-winter-feedback');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
