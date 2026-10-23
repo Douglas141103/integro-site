@@ -2,6 +2,6 @@ import * as THREE from 'three';
 import {createRoomCosmetics} from '../room-cosmetics.mjs';
 import {mountEggGame} from './egg-game.js';
 import {WORLDS,RARITIES,MUTATIONS,VEHICLES} from './egg-rules.js';
-window.BoxEgg={mountEggGame,contentVersion:20,vehicleIds:Object.keys(VEHICLES),worldNames:WORLDS.map(w=>w.name),petName:p=>`${WORLDS[p.world]?.creature||'Criatura'} · ${RARITIES[p.rarity]?.name||'Comum'} · ${MUTATIONS[p.mutation]?.name||'Natural'}`};
+window.BoxEgg={mountEggGame,contentVersion:21,vehicleIds:Object.keys(VEHICLES),worldNames:WORLDS.map(w=>w.name),petName:p=>`${WORLDS[p.world]?.creature||'Criatura'} · ${RARITIES[p.rarity]?.name||'Comum'} · ${MUTATIONS[p.mutation]?.name||'Natural'}`};
 
 window.BoxRoomCosmetics={create:(parent,game)=>createRoomCosmetics(THREE,parent,game)};

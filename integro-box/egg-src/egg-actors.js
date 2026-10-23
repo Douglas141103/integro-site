@@ -76,6 +76,7 @@ const SPECIES={
  panda:{head:[1.07,-.12],hip:.43,leg:.37,foot:.065,r:.12,arms:true},
  robot:{head:[1.22,-.06],hip:.45,leg:.40,foot:.055,r:.10,arms:true},
  griffin:{head:[1.08,-.17],hip:.43,leg:.37,foot:.065,r:.085,wing:true},
+ icePhoenix:{head:[1.17,-.15],hip:.43,leg:.37,foot:.065,r:.075,wing:true},
  phoenix:{head:[1.12,-.16],hip:.43,leg:.37,foot:.065,r:.075,wing:true},
  clockOwl:{head:[1.16,-.1],hip:.37,leg:.31,foot:.065,r:.06,wing:true},
  hedgehog:{head:[.88,-.27],hip:.40,leg:.34,foot:.06,r:.075,quad:true},

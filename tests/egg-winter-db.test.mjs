@@ -1,0 +1,26 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+import {intgemDatabase} from './intgem-db-fixture.mjs';import {uid} from './box-db-fixture.mjs';import {EggAdventure} from '../integro-box/egg-src/egg-rules.js';
+const migration=name=>readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
+test('winter gift, 7-Integro purchases and single-use stock are durable, idempotent, revisioned and isolated',async()=>{
+ const {db,run,call}=await intgemDatabase();try{
+  for(const file of ['20261020233803_egg_room_traps.sql','20261020235725_egg_jetpack.sql','20261021001638_egg_welcome_gift.sql','20261021014434_egg_income_tax_luxury.sql','20261023004052_egg_winter_2026.sql','20261023004052_egg_winter_2026.sql'])await db.exec(await migration(file));
+  const winter=(n,action='winter_state',id=null,rev=-1)=>run(n,'select public.box_egg(p_action=>$1,p_id=>$2,p_revision=>$3) r',[action,id?uid(id):null,rev]);
+  const save=(n,data,rev=0)=>run(n,"select public.box_egg('save',p_data=>$1,p_revision=>$2) r",[data,rev]);
+  assert.equal((await winter(1)).claimed,false);assert.equal((await db.query('select count(*)::int n from private.egg_winter_inventory')).rows[0].n,0);
+  assert.equal((await winter(1,'winter_claim')).granted,true);assert.equal((await winter(1,'winter_claim')).granted,false);assert.equal((await winter(1)).skates,2);assert.equal((await winter(2)).skates,0);
+  assert.equal((await db.query('select quantity from private.egg_trap_stock where user_id=$1',[uid(1)])).rows[0].quantity,3);
+  await run(1,"select public.box_egg('gift_claim') r");assert.equal((await winter(1)).skates,2);assert.equal((await db.query("select quantity from private.egg_trap_stock where user_id=$1 and kind='mine'",[uid(1)])).rows[0].quantity,4,'old gift remains independent');
+  const g=new EggAdventure();g.save.coins=21;g.save.eggs=[{id:1,world:20,rarity:'secret',mutation:'normal',remaining:8}];assert.equal((await save(1,g.save)).revision,1);
+  let d=await winter(1,'winter_buy',90,1);assert.equal(d.save.coins,14);assert.equal(d.revision,2);assert.equal(d.skates,3);assert.equal((await winter(1,'winter_buy',90,1)).skates,3);
+  assert.equal((await winter(1,'winter_buy',91,1)).error,'conflict');assert.equal((await winter(1,'winter_buy',91,null)).error,'conflict');assert.equal((await winter(1,'winter_use',90)).error,'request_changed');
+  assert.equal((await winter(1,'winter_use',92)).skates,2);assert.equal((await winter(1,'winter_use',92)).skates,2);assert.equal((await winter(1,'winter_use',93)).skates,1);assert.equal((await winter(1,'winter_use',94)).skates,0);assert.equal((await winter(1,'winter_use',95)).error,'winter_empty');assert.equal((await winter(2,'winter_use',92)).error,'winter_empty');
+  d=await winter(1,'winter_buy',96,2);assert.equal(d.save.coins,7);d=await winter(1,'winter_buy',97,3);assert.equal(d.save.coins,0);assert.equal((await winter(1,'winter_buy',98,4)).error,'insufficient_integros');
+  const taxed=new EggAdventure();taxed.save.coins=2000000;taxed.creditIncome(100);assert.equal((await save(2,taxed.save)).revision,1);await db.query("update private.box_egg_saves set data=jsonb_set(data,'{coins}','10') where user_id=$1",[uid(2)]);assert.equal((await winter(2,'winter_buy',99,1)).error,'insufficient_integros','reserved tax cannot be spent');
+  assert.equal((await run(1,"select public.box_egg('capabilities') r")).worlds,21);
+  const bad={...g.save,eggs:[{id:1,world:21,rarity:'secret',mutation:'normal',remaining:8}]};assert.equal((await save(3,bad)).error,'invalid_save');
+  const room=(await call(1,'create_public',{p_game:'egg'})).id;await call(2,'join_public',{p_room:room});const pose=await call(1,'sync',{p_room:room,p_state:{x:0,y:0,z:-1007,yaw:0,zone:'world'}});assert.equal(pose.players.find(p=>p.slot===1).state.z,-1007);
+  await db.query('insert into private.box_egg_races(room_id,starts_at,world) values($1,now(),20)',[room]);assert.equal((await winter(1,'winter_use',100)).error,'race_running');
+  await db.query('insert into private.egg_winter_inventory(user_id,skates) values($1,999999)',[uid(3)]);assert.equal((await winter(3,'winter_claim')).error,'winter_full');assert.equal((await winter(3)).claimed,false);
+  await assert.rejects(()=>winter(20,'winter_claim'),/box_access_denied/);await assert.rejects(()=>winter(null,'winter_claim'),/box_access_denied/);await assert.rejects(()=>run(1,'select * from private.egg_winter_inventory'),/permission denied/);await assert.rejects(()=>run(1,"select private.box_egg_winter('winter_claim',null,0) r"),/permission denied/);
+ }finally{await db.close();}
+});

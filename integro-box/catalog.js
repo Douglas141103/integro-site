@@ -7,7 +7,7 @@ const games=[
  ['shark','Shark','#playShark','Aventura','Um oceano 3D cartoon: coma peixes menores, cresça, explore seis regiões e equipe seu tubarão.'],
  ['integro-rush','Integro Rush','#playRush','Corrida','15 expedições 3D, cinco mundos e 24 acessórios. Pule, deslize e explore.'],
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
- ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','20 pistas, 64 acessórios, skates e patinetes voadores para sua aventura.'],
+ ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','Inverno 2026: pista 21, Fênix Gelada, ovos misteriosos e um presente para sua aventura.'],
  ['meu-bairro','Meu Bairro','#playDollGame','Criatividade','Uma casa, lojas e muitas histórias para viver.'],
  ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore 20 ilhas, enfrente guardiões e descubra frutas.'],
  ['integrocraft','IntegroCraft','#playCraft','Criatividade','Explore, fabrique e construa o seu mundo.'],
