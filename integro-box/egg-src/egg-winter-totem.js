@@ -1,36 +1,56 @@
 import * as T from 'three';
 
+// Custom angular numerals follow the supplied sketch instead of a system font.
+export function createWinterYear(){
+ const two=[[0,1],[1,1],[1,.75],[.37,.25],[1,.25],[1,0],[0,0],[0,.24],[.65,.76],[0,.76]];
+ const zero=[[0,0],[1,0],[1,1],[0,1]],six=[[0,0],[1,0],[1,.59],[.39,.59],[.39,1],[0,1]];
+ const definitions=[{outer:two},{outer:zero,hole:[[.32,.23],[.32,.77],[.68,.77],[.68,.23]]},{outer:two},{outer:six,hole:[[.32,.19],[.32,.39],[.68,.39],[.68,.19]]}];
+ const shapes=definitions.map((d,i)=>{
+  const points=p=>p.map(([x,y])=>new T.Vector2(-1.19+i*.635+x*.475,y*.86));
+  const shape=new T.Shape(points(d.outer));if(d.hole)shape.holes.push(new T.Path(points(d.hole)));return shape;
+ });
+ const group=new T.Group();group.name='WinterYear2026';group.userData.text='2026';
+ const outlineGeo=new T.ExtrudeGeometry(shapes,{depth:.055,bevelEnabled:true,bevelSize:.035,bevelThickness:.022,bevelSegments:1,curveSegments:1,steps:1});
+ const outline=new T.Mesh(outlineGeo,new T.MeshBasicMaterial({color:0x082f50,toneMapped:false,fog:false}));outline.name='YearOutline';group.add(outline);
+ const face=new T.Mesh(new T.ShapeGeometry(shapes),new T.MeshBasicMaterial({color:0xffffff,toneMapped:false,fog:false}));face.position.z=.079;face.name='YearFace';group.add(face);
+ return group;
+}
+
 // Sculpted ice plaque traced from the event's hand-drawn reference.
 // Rings and inscriptions are mounted on both faces, so they read from the track and the corral.
 export function createWinterTotem(){
  const g=new T.Group();g.name='Winter2026Totem';
  const shape=new T.Shape();
- shape.moveTo(-1.08,.17);shape.quadraticCurveTo(-1.2,.8,-.84,1.5);
- shape.lineTo(-.59,2.05);shape.quadraticCurveTo(-.91,2.9,-1.0,3.58);
- shape.quadraticCurveTo(-.93,3.83,-.35,3.96);shape.lineTo(.83,4.32);
- shape.quadraticCurveTo(1.08,3.75,.91,2.42);shape.lineTo(.86,1.66);
- shape.quadraticCurveTo(1.18,1.22,1.07,.17);shape.closePath();
+ shape.moveTo(-1.42,.17);shape.quadraticCurveTo(-1.52,.9,-1.14,1.92);
+ shape.lineTo(-.59,2.55);shape.quadraticCurveTo(-.91,3.4,-1.0,4.08);
+ shape.quadraticCurveTo(-.93,4.33,-.35,4.46);shape.lineTo(.83,4.82);
+ shape.quadraticCurveTo(1.08,4.25,.91,2.92);shape.lineTo(1.17,1.92);
+ shape.quadraticCurveTo(1.51,1.22,1.42,.17);shape.closePath();
  const bodyGeo=new T.ExtrudeGeometry(shape,{depth:.32,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.075,bevelThickness:.065,curveSegments:10});bodyGeo.translate(0,0,-.16);
  const faceMat=new T.MeshStandardMaterial({color:0xc6edfa,roughness:.3,metalness:.08});
  const edgeMat=new T.MeshStandardMaterial({color:0x559ec9,roughness:.22,metalness:.16});
  const body=new T.Mesh(bodyGeo,[faceMat,edgeMat]);body.name='SculptedIcePlaque';body.castShadow=true;body.receiveShadow=true;g.add(body);
- const foot=new T.Mesh(new T.BoxGeometry(2.42,.18,.85),edgeMat);foot.position.y=.09;foot.receiveShadow=true;g.add(foot);
+ const foot=new T.Mesh(new T.BoxGeometry(3.08,.18,.85),edgeMat);foot.position.y=.09;foot.receiveShadow=true;g.add(foot);
  const red=new T.MeshStandardMaterial({color:0xe52c42,roughness:.23,metalness:.12});
  const rings=[[-.30,2.53,.065],[-.44,2.68,.11],[-.57,2.98,.18],[-.35,3.43,.25],[.15,3.49,.26],[.45,3.08,.24],[.54,2.57,.30],[.35,2.03,.32],[-.09,1.70,.27],[-.49,1.57,.23]];
- const cv=document.createElement('canvas');cv.width=512;cv.height=256;const ctx=cv.getContext('2d');
- ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.strokeStyle='#f8fdff';ctx.lineWidth=9;ctx.fillStyle='#195579';ctx.font='900 148px Arial';ctx.strokeText('2026',256,94,480);ctx.fillText('2026',256,94,480);
- ctx.font='bold 58px Arial';ctx.lineWidth=4;ctx.strokeText('INVERNO',256,206,480);ctx.fillText('INVERNO',256,206,480);
- const texture=new T.CanvasTexture(cv);texture.colorSpace=T.SRGBColorSpace;
- const textMat=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,toneMapped:false});
- const textGeo=new T.PlaneGeometry(1.90,.95);
+ const year=createWinterYear();
+ const cv=document.createElement('canvas');cv.width=1024;cv.height=192;const ctx=cv.getContext('2d');
+ ctx.fillStyle='#082f50';ctx.fillRect(0,0,1024,192);ctx.fillStyle='#ffffff';ctx.font='900 138px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('INVERNO',512,102,960);
+ const texture=new T.CanvasTexture(cv);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=8;
+ const textMat=new T.MeshBasicMaterial({map:texture,toneMapped:false,fog:false});
+ const textGeo=new T.PlaneGeometry(2.42,.45);
+ const yearPanelGeo=new T.BoxGeometry(2.65,1.04,.06),yearPanelMat=new T.MeshBasicMaterial({color:0xdaf4ff,toneMapped:false,fog:false});
  const ringGeos=rings.map(([, , r])=>new T.TorusGeometry(r,Math.min(.036,r*.23),8,32));
  for(const side of [-1,1]){
   const face=new T.Group();face.name=side<0?'TotemTrackFace':'TotemCorralFace';face.rotation.y=side<0?Math.PI:0;g.add(face);
-  rings.forEach(([x,y],i)=>{const ring=new T.Mesh(ringGeos[i],red);ring.name='RedCircle'+i;ring.position.set(x,y,.255+(i%2)*.01);ring.castShadow=true;face.add(ring);});
-  const text=new T.Mesh(textGeo,textMat);text.name='TotemInscription';text.userData.text='2026 INVERNO';text.position.set(0,.82,.24);face.add(text);
+  rings.forEach(([x,y],i)=>{const ring=new T.Mesh(ringGeos[i],red);ring.name='RedCircle'+i;ring.position.set(x,y+.5,.255+(i%2)*.01);ring.castShadow=true;face.add(ring);});
+  const inscription=new T.Group();inscription.name='TotemInscription';inscription.userData.text='2026 INVERNO';face.add(inscription);
+  const panel=new T.Mesh(yearPanelGeo,yearPanelMat);panel.position.set(0,1.24,.27);inscription.add(panel);
+  const numerals=year.clone(true);numerals.position.set(0,.81,.325);inscription.add(numerals);
+  const text=new T.Mesh(textGeo,textMat);text.name='WinterWord';text.position.set(0,.48,.31);inscription.add(text);
  }
  const snow=new T.MeshStandardMaterial({color:0xf7fcff,roughness:.95});
- const capPath=new T.CatmullRomCurve3([new T.Vector3(-.96,3.71,0),new T.Vector3(-.53,3.94,0),new T.Vector3(.15,4.13,0),new T.Vector3(.84,4.34,0)]);
+ const capPath=new T.CatmullRomCurve3([new T.Vector3(-.96,4.21,0),new T.Vector3(-.53,4.44,0),new T.Vector3(.15,4.63,0),new T.Vector3(.84,4.84,0)]);
  const cap=new T.Mesh(new T.TubeGeometry(capPath,18,.10,6,false),snow);cap.scale.z=2.4;cap.castShadow=true;g.add(cap);
  return g;
 }

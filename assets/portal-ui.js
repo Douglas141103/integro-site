@@ -1,5 +1,5 @@
 // Shared maintenance notice and release checks; no credentials are collected.
-(function(){if(!document.querySelector('script[data-integro-updates]')){const v=new URLSearchParams(location.search).get('_integro_update');const s=document.createElement('script');s.src='/assets/site-update.js?v='+((v&&/^[a-zA-Z0-9-]{1,60}$/.test(v))?v:'20261023-winter3');s.dataset.integroUpdates='true';document.head.append(s);}})();
+(function(){if(!document.querySelector('script[data-integro-updates]')){const v=new URLSearchParams(location.search).get('_integro_update');const s=document.createElement('script');s.src='/assets/site-update.js?v='+((v&&/^[a-zA-Z0-9-]{1,60}$/.test(v))?v:'20261023-winter4');s.dataset.integroUpdates='true';document.head.append(s);}})();
 /* Shared presentation layer. Authentication and business rules belong to each module. */
 (() => {
   'use strict';

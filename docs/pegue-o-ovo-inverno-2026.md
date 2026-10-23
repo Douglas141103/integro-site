@@ -43,3 +43,9 @@ A loja única reúne inverno, mochila a jato, armadilhas, IntGem, melhorias, con
 Removidas as duas árvores dianteiras que encobriam os totens do curral; as duas árvores de fundo ficam nas extremidades traseiras. Cada uma das 21 pistas recebe dois totens alternados nas laterais e uma faixa física `INVERNO 2026`, legível nos dois sentidos. Os modelos compartilham geometria e materiais e acompanham a visibilidade de cada pista. Áreas de exposição ficam livres de vegetação e adereços do cenário.
 
 Validação: nove testes do atualizador, totem e integração do jogo passaram. Inspeção geométrica das 21 pistas confirmou 42 totens, 21 faixas, nenhuma interseção entre árvores e peças e todas as peças fora dos limites da corrida. A limitação de conferência visual WebGL permanece.
+
+## Ano em destaque — winter4
+
+O ano foi redesenhado com polígonos próprios: números angulares, zeros com recortes retangulares e o 6 em degrau, seguindo o desenho enviado. O `2026` passa a ser geometria em relevo, com 0,86 m de altura, interior branco e contorno azul-marinho. A base foi alargada e a parte superior elevada para separar os círculos da inscrição. `INVERNO` ocupa uma faixa escura maior. Ano, contorno, fundo e faixa não recebem névoa nem variação de iluminação, preservando o contraste.
+
+Nove testes passaram. A prova vetorial dos mesmos polígonos foi conferida visualmente no navegador, incluindo redução a 180 px. A conferência geométrica confirmou que os totens maiores continuam fora da pista e sem interseção com árvores nas 21 pistas; a limitação de visualização WebGL permanece.

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261023-winter3';
+  const VERSION = '20261023-winter4';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
