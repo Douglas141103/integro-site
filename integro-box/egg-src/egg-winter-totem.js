@@ -34,3 +34,31 @@ export function createWinterTotem(){
  const cap=new T.Mesh(new T.TubeGeometry(capPath,18,.10,6,false),snow);cap.scale.z=2.4;cap.castShadow=true;g.add(cap);
  return g;
 }
+
+// Set dressing stays beyond the running rails and alternates sides along the route.
+export function winterDisplayLayout(index){
+ const side=index%2?-1:1,z=-index*48;
+ return {totems:[{x:side*7.6,z:z-8},{x:-side*7.6,z:z-36}],banner:{x:-side*9,z:z-21}};
+}
+export function winterDisplayArea(index,x,z){
+ const {totems,banner}=winterDisplayLayout(index);
+ return [...totems,banner].some(p=>Math.abs(x-p.x)<4.5&&Math.abs(z-p.z)<5.5);
+}
+export function createWinterBanner(){
+ const g=new T.Group();g.name='Winter2026Banner';
+ const poleMat=new T.MeshStandardMaterial({color:0x609fbd,roughness:.5});
+ const poleGeo=new T.CylinderGeometry(.055,.075,3.2,8),capGeo=new T.SphereGeometry(.105,8,6);
+ for(const x of [-2.05,2.05]){
+  const pole=new T.Mesh(poleGeo,poleMat);pole.position.set(x,1.6,0);pole.castShadow=true;g.add(pole);
+  const cap=new T.Mesh(capGeo,poleMat);cap.position.set(x,3.24,0);g.add(cap);
+ }
+ const cv=document.createElement('canvas');cv.width=768;cv.height=192;const c=cv.getContext('2d');
+ c.fillStyle='#edfaff';c.fillRect(0,0,768,192);c.fillStyle='#196385';c.fillRect(0,14,768,164);
+ c.fillStyle='#e52c42';c.fillRect(0,14,22,164);c.fillRect(746,14,22,164);
+ c.fillStyle='#ffffff';c.font='bold 65px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('INVERNO 2026',384,97,660);
+ const texture=new T.CanvasTexture(cv);texture.colorSpace=T.SRGBColorSpace;
+ const material=new T.MeshBasicMaterial({map:texture,toneMapped:false});
+ const geo=new T.PlaneGeometry(4,.99);
+ for(const side of [-1,1]){const face=new T.Mesh(geo,material);face.position.set(0,2.56,side*.018);face.rotation.y=side<0?Math.PI:0;g.add(face);}
+ return g;
+}

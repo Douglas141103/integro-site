@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {createWinterTotem} from './egg-winter-totem.js';
+import {createWinterTotem,createWinterBanner,winterDisplayLayout,winterDisplayArea} from './egg-winter-totem.js';
 import {WINTER} from './egg-winter-rules.js';
 export function icePhoenix(g,limbs,{ball,cyl,rod,softBox,group}){
  const navy=0x316caa,ice=0xb8f6ff,blue=0x57c9ed,white=0xf3fcff;
@@ -17,15 +17,19 @@ export function icePhoenix(g,limbs,{ball,cyl,rod,softBox,group}){
  return{faceY:1.21,faceZ:-.46};
 }
 export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
- const {box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}=helpers,snow=0xf0f8ff,blue=0x5996c8;
+ const {box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}=helpers,snow=0xf0f8ff;
+ const totem=createWinterTotem(),banner=createWinterBanner();
  // Snow settles in every biome; their landmarks and colours remain recognizable.
  for(let i=0;i<zoneGroups.length;i++){
   const g=zoneGroups[i],z=-(i*48+24);
   for(const side of [-1,1])for(let j=0;j<5;j++){
    const x=side*(6.1+j%2*2.6),zz=z-19+j*9;
    ball(g,1.35,snow,x,.06,zz,1.35,.23,1.7);
-   if(j%2===0)tree(g,side*11,zz,3,.85+j*.1);
+   if(j%2===0&&!winterDisplayArea(i,side*11,zz))tree(g,side*11,zz,3,.85+j*.1);
   }
+  const layout=winterDisplayLayout(i);
+  for(const p of layout.totems){const t=totem.clone(true);t.position.set(p.x,0,p.z);t.rotation.y=p.x<0?-.18:.18;g.add(t);}
+  const flag=banner.clone(true);flag.position.set(layout.banner.x,0,layout.banner.z);g.add(flag);
   const cap=box(g,12.8,.13,.66,snow,0,4.84,-i*48);cap.castShadow=false;
  }
  // Winter games village with the custom red-circle event emblem.
@@ -33,12 +37,11 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  for(const [x,h,n]of [[-1.6,.7,'2'],[0,1.15,'1'],[1.6,.5,'3']]){softBox(podium,1.5,h,1.5,0x79b4d9,x,h/2,0);box(podium,1.5,.10,1.5,snow,x,h+.05,0);label(podium,n,x,h*.55,-.8,.65,'#144a72','#e8f8ff');}
  for(const [x,y,c]of [[-1.15,3.4,0xe52c42],[0,3.4,0xe52c42],[1.15,3.4,0xe52c42],[-.57,2.8,0xe52c42],[.57,2.8,0xe52c42]])torus(podium,.52,.055,c,x,y,.6);
  label(podium,'INVERNO 2026',0,4.5,.6,5,'#184d74','#eefbff');
- const totem=createWinterTotem();
  for(const x of [-9,9]){const t=totem.clone(true);t.position.set(x,0,5.8);t.rotation.y=x<0?-.18:.18;base.add(t);}
  for(const side of [-1,1]){rod(base,[side*3.2,0,6],[side*3.2,4.5,6],.06,0xe5f7ff);box(base,1.2,.8,.045,side<0?0x57c5dc:0xa99de4,side*3.2+.6,4,6);}
  for(const x of [-2.8,2.8])ball(pen,.5,snow,x,2.88,2.5,1.8,.22,1.3);
  const winter=zoneGroups[WINTER.world],z=-(WINTER.world*48+24);
- for(const side of [-1,1])for(let j=0;j<5;j++){const zz=z-20+j*9;crystal(winter,side*(6.5+j%2),zz,j%2?0xa6e8fb:0x7fb5de,2.5+j%3);tree(winter,side*10,zz,3,1.4);}
+ for(const side of [-1,1])for(let j=0;j<5;j++){const zz=z-20+j*9;if(winterDisplayArea(WINTER.world,side*7.5,zz))continue;crystal(winter,side*(6.5+j%2),zz,j%2?0xa6e8fb:0x7fb5de,2.5+j%3);tree(winter,side*10,zz,3,1.4);}
  const arch=torus(winter,6,.28,0x8aceed,0,3,z-13);arch.scale.y=1.3;label(winter,'FÊNIX GELADA',0,7,z-13,6,'#154b75','#eafbff');
  const frost=new T.Group();winter.add(frost);frost.visible=false;
  const iceMat=new T.MeshStandardMaterial({color:0x7bcbea,roughness:.12,metalness:.25,transparent:true,opacity:.8});

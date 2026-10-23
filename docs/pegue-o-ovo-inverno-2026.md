@@ -37,3 +37,9 @@ A loja única reúne inverno, mochila a jato, armadilhas, IntGem, melhorias, con
 - Direção visual: volumes táteis e letras expressivas, apoiada nas referências Adobe de tendências 2026: https://www.adobe.com/express/learn/blog/design-trends-2026 . Brief: atualizar a identidade existente para Inverno 2026, com neve, azul-gelo e o totem do desenho com círculos vermelhos.
 - Corrigida divergência entre `site-release.json` e a versão interna de `site-update.js`, que provocava tentativas de atualização repetidas. O aviso de atraso agora tem título coerente e botão de fechar; a verificação periódica não reabre um aviso dispensado. Avisos compactos não bloqueiam o teclado do jogo. Dados de formulários continuam protegidos.
 - Verificação: testes do atualizador, geometria do totem, atores, integração do jogo e idiomas. Prévia do catálogo em 390 × 844 verificou a nova capa e o botão que dispensa o aviso. A prévia de navegador não oferece WebGL, portanto a aparência 3D final dos totens ainda precisa de conferência em um dispositivo com GPU.
+
+## Distribuição pelas pistas — winter3
+
+Removidas as duas árvores dianteiras que encobriam os totens do curral; as duas árvores de fundo ficam nas extremidades traseiras. Cada uma das 21 pistas recebe dois totens alternados nas laterais e uma faixa física `INVERNO 2026`, legível nos dois sentidos. Os modelos compartilham geometria e materiais e acompanham a visibilidade de cada pista. Áreas de exposição ficam livres de vegetação e adereços do cenário.
+
+Validação: nove testes do atualizador, totem e integração do jogo passaram. Inspeção geométrica das 21 pistas confirmou 42 totens, 21 faixas, nenhuma interseção entre árvores e peças e todas as peças fora dos limites da corrida. A limitação de conferência visual WebGL permanece.
