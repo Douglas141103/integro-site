@@ -3,6 +3,7 @@
 const lobby=document.getElementById('lobby');
 if(!lobby||lobby.dataset.catalogReady)return;
 const games=[
+ ['descubra','Descubra!','#playDescubra','Desafios','Mistério na nave Integro! Tarefas, sabotagens e votação. Solo com bots ou salas online.'],
  ['tower','TOWER','#playTower','Criatividade','Construa torres, resolva 24 desafios de lógica e teste sua estrutura com gravidade e vento.'],
  ['shark','Shark','#playShark','Aventura','Um oceano 3D cartoon: coma peixes menores, cresça, explore seis regiões e equipe seu tubarão.'],
  ['integro-rush','Integro Rush','#playRush','Corrida','15 expedições 3D, cinco mundos e 24 acessórios. Pule, deslize e explore.'],

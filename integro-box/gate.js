@@ -1,6 +1,6 @@
 import {supabase,requireFamily} from './access.js?v=20261016-intgem1';
 // Old game links must enter through the catalog before any game installer runs.
-const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft','#blueworld','#blue-world','#shark','#tower']);
+const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft','#blueworld','#blue-world','#shark','#tower','#descubra']);
 if(gameAnchors.has(location.hash))history.replaceState(history.state,'',location.pathname+location.search);
 const message=document.getElementById('boxGateMessage');
 const gate=document.getElementById('boxGate');
@@ -16,6 +16,7 @@ function lock(){
  window.BoxRush?.stop();
  window.BoxShark?.stop();
  window.BoxTower?.stop();
+ window.BoxDescubra?.stop();
  window.BoxBounce?.stop();
  window.BoxInterDance?.stop();
  window.BoxRobot?.stop();
@@ -48,7 +49,7 @@ try {
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261021-roomitems1');
   phase('Conectando amigos e salas…');
-  await import('./multiplayer.js?v=20261021-economy1');
+  await import('./multiplayer.js?v=20261023-descubra1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
   if(!unloaded)await import('./egg-cloud.js?v=20261023-incubation1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
@@ -60,8 +61,9 @@ try {
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
   if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261022-tower2');installTower();}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261021-tower1');startUsage();}
+  if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-descubra1');installDescubra();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261023-incubation1');
+  if(!unloaded)await script('./catalog.js?v=20261023-descubra1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261021-roomitems1');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
