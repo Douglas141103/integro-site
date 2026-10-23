@@ -29,3 +29,11 @@ A loja única reúne inverno, mochila a jato, armadilhas, IntGem, melhorias, con
 - Build: `npm ci`, `npm ci --prefix integro-box/egg-src`, `npm run build --prefix integro-box/egg-src`. O bundle usa uma única cópia de Three, inclusive nos atores compartilhados com Rush.
 - Testes: `node --test --test-concurrency=2 tests/egg-*.test.mjs`. Cobrem as regras, preservação dos cinco valores, revelação no curral, perseguição aérea, percentuais, estoque, dupla solicitação, autenticação, imposto, compatibilidade e integração dos atores/HUD.
 - QA de interface em 390 × 844 com renderizador de teste e serviços simulados: presente, loja e uso dos patins. O navegador de QA não oferece WebGL, portanto a renderização GPU final não foi validada nele. Os arquivos temporários de QA não fazem parte da publicação.
+
+## Identidade visual e atualização — winter2
+
+- Totens do curral substituídos por placas de gelo extrudadas com cintura e topo inclinado, seguindo o desenho fornecido. Círculos vermelhos em relevo e inscrição `2026 / INVERNO` em ambas as faces.
+- Logo sazonal gerada com a ferramenta de imagens, preservando explorador, pintinho e tipografia; neve, roupa de inverno e pequeno totem. Asset: `integro-box/assets/catalog-v1/pegue-o-ovo.webp`. Catálogo, destaque, recentes, página de apresentação e capas traduzidas usam a identidade de inverno.
+- Direção visual: volumes táteis e letras expressivas, apoiada nas referências Adobe de tendências 2026: https://www.adobe.com/express/learn/blog/design-trends-2026 . Brief: atualizar a identidade existente para Inverno 2026, com neve, azul-gelo e o totem do desenho com círculos vermelhos.
+- Corrigida divergência entre `site-release.json` e a versão interna de `site-update.js`, que provocava tentativas de atualização repetidas. O aviso de atraso agora tem título coerente e botão de fechar; a verificação periódica não reabre um aviso dispensado. Avisos compactos não bloqueiam o teclado do jogo. Dados de formulários continuam protegidos.
+- Verificação: testes do atualizador, geometria do totem, atores, integração do jogo e idiomas. Prévia do catálogo em 390 × 844 verificou a nova capa e o botão que dispensa o aviso. A prévia de navegador não oferece WebGL, portanto a aparência 3D final dos totens ainda precisa de conferência em um dispositivo com GPU.

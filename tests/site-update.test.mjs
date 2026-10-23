@@ -64,3 +64,23 @@ test('a stale cached page retries after cooldown and stops after three attempts'
   }finally{t.dom.window.close()}
  }
 });
+
+test('the updater and published release agree; stale retry history clears on a current page',async()=>{
+ const t=await setup();try{
+  assert.equal(t.w.IntegroUpdates.version,currentVersion);
+  t.w.sessionStorage.setItem('integro:last-auto-update:attempts',JSON.stringify({version:currentVersion,count:3,at:Date.now()}));
+  await t.check();assert.equal(t.w.sessionStorage.getItem('integro:last-auto-update:attempts'),null);assert.equal(t.navigations.length,0);
+ }finally{t.dom.window.close()}
+});
+test('delayed updates never claim completion, can be dismissed, and do not trap game controls',async()=>{
+ const t=await setup('/integro-box/jogar.html');try{
+  const version='future-release';t.w.sessionStorage.setItem('integro:last-auto-update:attempts',JSON.stringify({version,count:3,at:Date.now()}));
+  t.set({version,maintenance:false});await t.check();
+  const panel=t.w.document.getElementById('integroUpdate'),button=panel.querySelector('button');
+  assert.equal(panel.hidden,false);assert.equal(button.hidden,false);assert.equal(panel.dataset.compact,'true');
+  assert.equal(panel.querySelector('h2').textContent,'Atualização adiada');assert.doesNotMatch(panel.textContent,/concluída/);
+  let pressed=false;t.w.document.addEventListener('keydown',()=>pressed=true);t.w.document.body.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'w',bubbles:true,cancelable:true}));assert(pressed);
+  button.click();assert(panel.hidden);await t.check();assert(panel.hidden,'polling cannot reopen a dismissed notice');t.reload();assert.equal(t.navigations.length,0);
+  t.set({version:'another-release',maintenance:true});await t.check();assert.equal(panel.hidden,false,'a distinct release can display its own notice');
+ }finally{t.dom.window.close()}
+});

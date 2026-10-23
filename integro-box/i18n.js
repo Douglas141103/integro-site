@@ -1,7 +1,7 @@
 /* Local, reviewed translations. No player text is sent to a translation service. */
 (() => {
   'use strict';
-  const VERSION = '20261021-roomitems1';
+  const VERSION = '20261023-winter2';
   const STORAGE_KEY = 'integro-box-language-v1';
   const LANGUAGES = {
     pt: { locale: 'pt-BR', label: 'Português', flag: '🇧🇷' },
