@@ -9,7 +9,7 @@ Jogo original de dedução social, 2D Canvas cartoon, integrado ao catálogo e a
 - Modo online mantém estado privado, decisões e bots no Postgres. RPC `public.descubra_room` é wrapper invoker; implementação definer privada, acesso `box_access`, associação por `auth.uid()`, RLS com negação por padrão e revogação de leitura direta. Respostas excluem `traitor`; revelação só no fim.
 - Sala expira em 30 minutos. Ausentes por 60 segundos são controlados por bots; partida não é salva para continuação após recarregar. Não altera carteira, prêmios ou economia dos outros jogos.
 
-Arquivos: `rules.mjs` (solo), `render.mjs` (arte Canvas), `game.mjs` (UI/transporte), `../descubra-loader.js`, `../descubra.css`. A migração `20261023204728_descubra_game.sql` cria somente recursos novos.
+Arquivos: `rules.mjs` (solo), `render.mjs` (arte Canvas), `game.mjs` (UI/transporte), `../descubra-loader.js`, `../descubra.css`. A migração `20261023205650_descubra_game.sql` cria somente recursos novos.
 
 Capa: `../assets/catalog-v1/descubra.webp`, gerada com Criar imagem integrado, a partir do prompt: “Capa horizontal 3:2 cartoon 2D de nave científica Integro, cinco pequenos astronautas coloridos arredondados com mochila, sem braços, visor ciano e emblema i; logo grande DESCUBRA! e marca INTEGRO BOX; cores chapadas, contornos simples, sem realismo ou violência”. PNG original foi convertido para WebP para uso no catálogo.
 
