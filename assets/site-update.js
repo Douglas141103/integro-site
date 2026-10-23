@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261023-track-edges1';
+  const VERSION = '20261023-adjustments1';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;
