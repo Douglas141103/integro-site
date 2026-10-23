@@ -63,12 +63,13 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   for(const [id,base] of [['boots',80],['energy',90],['pen',150]]){
    const before=w.BoxEggRuntime.save();w.BoxEggRuntime.apply({...before,upgrades:{...before.upgrades,[id]:4}});
    const bar=w.document.querySelector('.egg-level-buy[data-buy="'+id+'"]');assert.equal(bar.disabled,false);bar.click();
-   const purchased=w.BoxEggRuntime.save();assert.equal(purchased.upgrades[id],5);assert.equal(purchased.coins,before.coins-Math.round(base*5**1.5));
+   const purchased=w.BoxEggRuntime.save();assert.equal(purchased.upgrades[id],5);assert.equal(purchased.coins,before.coins-Math.round(base*2*5**2.4));
    assert.equal(JSON.parse(w.localStorage.getItem('integro-box-eggs-v1')).upgrades[id],5);
   }
   assert(w.document.querySelector('.egg-level-buy[data-buy="energy"]').disabled,'maximum level is not purchased again');
   w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:0});assert(w.document.querySelector('.egg-level-buy[data-buy="boots"]').disabled);assert.match(w.document.getElementById('eggSheetBody').textContent,/Integros disponíveis insuficientes/);
   w.document.getElementById('eggCloseSheet').click();
+  const beforeCredit=state(),oldPosition=JSON.stringify(beforeCredit.player);w.BoxEggRuntime.solidarityCredit(500);assert.equal(state().coins,beforeCredit.coins+500);assert.equal(JSON.stringify(state().player),oldPosition);assert.equal(state().tax.earned,beforeCredit.tax.earned);
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });

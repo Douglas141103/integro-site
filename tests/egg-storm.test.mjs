@@ -3,7 +3,7 @@ import {boxDatabase,uid} from './box-db-fixture.mjs';
 import {EggAdventure,ACCESSORIES,WORLDS,NESTS,CORRAL,cleanSave,freshSave} from '../integro-box/egg-src/egg-rules.js';
 test('sixteen new accessories have prices, purchase checks, visual slots and persistent equipment',()=>{
  const legacy=['crown','headphones','halo','goggles','wings','cape'];const ids=['pilotCap','safariHat','iceTiara','stormHelm','solarCrown','starGlasses','cyberVisor','butterflyMask','royalMask','explorerPack','beeWings','jetpack','phoenixWings','auroraCape','cometPack','infinityWings'];const items=Object.entries(ACCESSORIES).filter(([id])=>ids.includes(id));assert.equal(items.length,16);assert.ok(items.filter(([,v])=>v.price>=20000).length>=4);assert.ok(items.some(([,v])=>v.price>=100000));
- const g=new EggAdventure();assert.equal(g.buy('infinityWings'),false);g.save.coins=1000000;
+ const g=new EggAdventure();assert.equal(g.buy('infinityWings'),false);g.save.coins=items.reduce((total,[,item])=>total+item.price,0);
  for(const [id,item] of items){const before=g.save.coins;assert.ok(g.buy(id));assert.equal(g.save.coins,before-item.price);assert.equal(g.save.equipped[item.slot],id);assert.equal(g.buy(id),false);const reloaded=new EggAdventure(g.save);assert.ok(reloaded.save.accessories.includes(id));assert.equal(reloaded.save.equipped[item.slot],id);assert.equal(reloaded.save.coins,g.save.coins);}
  g.player.z=-100;assert.equal(g.buy('crown'),false,'purchases still require the base');
 });
