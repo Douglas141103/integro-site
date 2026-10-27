@@ -173,18 +173,24 @@
     bind();
     refreshOptions();
     drawCart();
-    window.INTEGRO_INFINITEPAY?.mount({
+    let checkoutLocked = false;
+    const checkoutHooks = {
       snapshot: () => {
         if (!sale.customer || !sale.items.length) throw new Error("Adicione itens ao carrinho primeiro.");
         return JSON.parse(JSON.stringify({customer:sale.customer,items:sale.items,note:$("pdv2Note").value.trim()}));
       },
       clear: clearSaleNow,
+      isLocked: () => checkoutLocked,
       lock: (locked) => {
+        checkoutLocked = locked;
         document.querySelectorAll('#pdv2 > section:first-child button, #pdv2 > section:first-child input, #pdv2 > section:first-child select, #pdv2 > section:first-child textarea, #pdv2 > aside button, #pdv2 > aside input, #pdv2 > aside select').forEach(el => {el.disabled=locked;});
         if (!locked) lockCustomer();
+        window.dispatchEvent(new Event('integro:checkout-lock'));
       },
       refresh: async () => {if(typeof reloadAll === "function") await reloadAll();}
-    });
+    };
+    window.INTEGRO_ASAAS?.mount(checkoutHooks);
+    window.INTEGRO_INFINITEPAY?.mount(checkoutHooks);
   }
 
   function bind() {

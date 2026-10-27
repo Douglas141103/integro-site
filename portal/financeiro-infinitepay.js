@@ -18,7 +18,7 @@
   const $=id=>document.getElementById(id);let enabled=false,busy=false,request=null,lastPayload=null,orders=[],refreshing=false,paidSeen=new Set(),initialized=false;
   const message=t=>{$('ipMessage').textContent=t;};
   function draw(){
-   $('ipCreate').disabled=!enabled||busy;
+   $('ipCreate').disabled=!enabled||busy||!!hooks.isLocked?.();
    $('ipToggle').textContent=enabled?'Desativar integração e usar caixa manual':'Ativar integração InfinitePay';
    $('ipOrders').innerHTML=orders.map(o=>{
     const url=checkout(o.checkout_url),status=o.status==='paid'?(o.posted_at?'Pago — lançado no caixa':'Pago — conciliação pendente'):o.status==='pending'?'Aguardando pagamento':o.status==='uncertain'?'Geração não confirmada — conferir na InfinitePay':'Gerando / aguardando confirmação';
@@ -41,7 +41,7 @@
    }catch(e){if(!silent)message(e.message);$('ipCreate').disabled=true;}finally{refreshing=false;}
   }
   $('ipCreate').onclick=async()=>{
-   if(busy||!enabled)return;
+   if(busy||!enabled||hooks.isLocked?.())return;
    try{
     const payload=hooks.snapshot(),serialized=JSON.stringify(payload);
     if(serialized!==lastPayload){request=crypto.randomUUID();lastPayload=serialized;}
@@ -58,6 +58,7 @@
    if(enabled&&!confirm('Desativar novas cobranças InfinitePay e continuar com o caixa manual? Cobranças já emitidas poderão ser pagas e terão baixa automática.'))return;
    try{await api({action:'settings',enabled:!enabled});await refresh();}catch(e){message(e.message);}
   };
+  window.addEventListener('integro:checkout-lock',draw);
   refresh();const timer=setInterval(()=>{if(document.visibilityState==='visible')refresh(true);},15000);
   window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
  }};
