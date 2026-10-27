@@ -281,7 +281,7 @@ function createFinanceRequestId() {
 }
 
 function canModifyFinanceRecord(recordType, record) {
-  if (recordType === 'entry' && record?.intgem_order_id) return false;
+  if (recordType === 'entry' && (record?.intgem_order_id || record?.infinitepay_order_id)) return false;
   const cycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
   const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date());
   const recordDate = recordType === 'entry' ? record?.entry_date : record?.expense_date;
@@ -298,8 +298,8 @@ function canModifyFinanceRecord(recordType, record) {
 }
 
 function financeRecordActions(recordType, record) {
-  if (recordType === 'entry' && record?.intgem_order_id) {
-    return '<small class="director-note">Venda IntGem confirmada automaticamente. Recibo preservado para conciliação.</small>';
+  if (recordType === 'entry' && (record?.intgem_order_id || record?.infinitepay_order_id)) {
+    return '<small class="director-note">Pagamento confirmado automaticamente. Recibo preservado para conciliação.</small>';
   }
   if (!canModifyFinanceRecord(recordType, record)) {
     return '<small class="director-note">Histórico financeiro — somente leitura.</small>';

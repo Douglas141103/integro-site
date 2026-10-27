@@ -173,6 +173,18 @@
     bind();
     refreshOptions();
     drawCart();
+    window.INTEGRO_INFINITEPAY?.mount({
+      snapshot: () => {
+        if (!sale.customer || !sale.items.length) throw new Error("Adicione itens ao carrinho primeiro.");
+        return JSON.parse(JSON.stringify({customer:sale.customer,items:sale.items,note:$("pdv2Note").value.trim()}));
+      },
+      clear: clearSaleNow,
+      lock: (locked) => {
+        document.querySelectorAll('#pdv2 > section:first-child button, #pdv2 > section:first-child input, #pdv2 > section:first-child select, #pdv2 > section:first-child textarea, #pdv2 > aside button, #pdv2 > aside input, #pdv2 > aside select').forEach(el => {el.disabled=locked;});
+        if (!locked) lockCustomer();
+      },
+      refresh: async () => {if(typeof reloadAll === "function") await reloadAll();}
+    });
   }
 
   function bind() {
