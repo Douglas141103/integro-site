@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
-import {saleForPix,today,provider,AsaasError,accountForKey,verifyPayment,pixData} from '../supabase/functions/finance-asaas/contract.mjs';
+import {saleForPix,today,provider,AsaasError,safeProviderDescription,accountForKey,verifyPayment,pixData} from '../supabase/functions/finance-asaas/contract.mjs';
 import {createHandler} from '../supabase/functions/finance-asaas/handler.mjs';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const sample=()=>({customer:{studentId:id(3),studentName:'Aluno',payerName:'Responsável',payerDocument:'24971563792',phone:'',email:''},items:[{type:'material',qty:2,grossUnit:15,discountUnit:5,finalUnit:10,desc:'Apostila'}],note:'Teste'});
@@ -47,12 +47,19 @@ test('provider validates exact payment identity, amount, method and received dat
  await assert.rejects(call('//evil.test'));await assert.rejects(accountForKey(async()=>({general:'PENDING',id:id(90)})),/aprovação/);
 });
 test('provider errors expose only safe explanations and numeric minimums',async()=>{
- const error=new AsaasError(400,{errors:[{code:'invalid_value',description:'O valor mínimo da cobrança é R$ 5,00. segredo-nao-expor'}]});
+ const error=new AsaasError(400,{errors:[{code:'invalid_value',description:'O valor mínimo da cobrança é R$ 5,00. '+apiKey}]},apiKey);
  assert.match(error.message,/R\$\s*5,00/);assert.equal(error.rejected,true);assert.equal(error.message.includes('segredo'),false);
  const call=provider(apiKey,{fetcher:async()=>({ok:false,status:400,json:async()=>({errors:[{code:'invalid_value',description:'valor inválido '+apiKey}]})})});
- await assert.rejects(call('/payments','POST',{}),e=>e instanceof AsaasError&&e.rejected&&e.message.includes('valor mínimo')&&!e.message.includes(apiKey));
+ await assert.rejects(call('/payments','POST',{}),e=>e instanceof AsaasError&&e.rejected&&e.message.includes('valor inválido')&&!e.message.includes(apiKey));
  assert.equal(new AsaasError(500).rejected,false);assert.equal(new AsaasError(429).rejected,false);
- assert.equal(new AsaasError(400,{errors:[{code:'unknown',description:apiKey}]}).message.includes(apiKey),false);
+ assert.equal(new AsaasError(400,{errors:[{code:'unknown',description:apiKey}]},apiKey).message.includes(apiKey),false);
+ const generic=new AsaasError(400,{errors:[{code:'invalid_object',description:'O valor mínimo da cobrança é R$ 5,00.'}]});
+ assert.match(generic.message,/5,00/);assert.match(generic.message,/invalid_object/);assert.equal(generic.rejected,true);
+ const custom=new AsaasError(400,{errors:[{code:'account_restriction',description:'A conta precisa atualizar os dados comerciais.'}]});
+ assert.match(custom.message,/dados comerciais/);
+ const safe=safeProviderDescription(apiKey+' $aact_prod_abcdefghijk 24971563792 123.456.789-00 12.345.678/0001-99 test@example.test <img> Texto útil.',apiKey);
+ for(const raw of [apiKey,'$aact_','24971563792','123.456.789-00','12.345.678/0001-99','test@example.test','<img>'])assert.equal(safe.includes(raw),false);
+ assert.match(safe,/Texto útil/);
 });
 test('a refused payment is stored with its safe reason, never retried under the same request, and never posted',async()=>{
  const x=await setup();try{
@@ -60,7 +67,7 @@ test('a refused payment is stored with its safe reason, never retried under the 
   const fetcher=async(url,opts)=>{
    if(url.includes('/customers')&&opts.method==='GET')return {ok:true,json:async()=>({data:[]})};
    if(url.includes('/customers'))return {ok:true,json:async()=>({id:'cus_test001'})};
-   posts++;return {ok:false,status:400,json:async()=>({errors:[{code:'invalid_value',description:'O valor mínimo é R$ 5,00.'}]})};
+   posts++;return {ok:false,status:400,json:async()=>({errors:[{code:'invalid_object',description:'O valor mínimo é R$ 5,00.'}]})};
   };
   const handler=createHandler({rpc:x.rpc,getUser:async()=>({id:id(1)}),baseUrl:'https://project.supabase.co',fetcher});
   const invoke=b=>handler(new Request('https://project.supabase.co/functions/v1/finance-asaas',{method:'POST',headers:{authorization:'Bearer valid'},body:JSON.stringify(b)}));

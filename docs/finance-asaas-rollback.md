@@ -31,6 +31,6 @@ A confirmação ponta a ponta depende da chave conectada pelo titular e de um pa
 
 ## Diagnóstico de geração
 
-Uma recusa HTTP explícita do Asaas fica como `rejected`, com mensagem local segura em `creation_error`. Quando o provedor informa um valor mínimo no erro `invalid_value`, somente esse número é apresentado. O sistema nunca aumenta o valor do carrinho para atender um limite. Respostas brutas, chaves e documentos não entram nas mensagens.
+Uma recusa HTTP explícita do Asaas fica como `rejected`, com mensagem local segura em `creation_error`. O motivo textual do provedor é preservado também para códigos genéricos, como `invalid_object`, junto do código HTTP e do erro. Antes de exibir e gravar a mensagem, a função remove a chave de API, padrões de credenciais, CPF/CNPJ, e-mail, identificadores longos e HTML. A resposta completa não é exposta. O sistema nunca aumenta o valor do carrinho para atender um limite.
 
 Falhas de rede após o envio permanecem `uncertain`; o mesmo pedido não é reenviado. Conferir pagamento pesquisa o identificador externo e informa quando uma consulta válida não encontra a cobrança. Isso não altera o valor, não efetua nova emissão e não lança receita. A tentativa inicial anterior à correção não tinha o erro do provedor armazenado, portanto seu motivo não pode ser reconstruído pelo histórico local.

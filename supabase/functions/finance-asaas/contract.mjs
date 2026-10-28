@@ -9,24 +9,37 @@ export function saleForPix(input){
 }
 export function today(now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Manaus',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
 export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;}
+export function safeProviderDescription(value,secret=''){
+ if(typeof value!=='string')return '';
+ let text=value;
+ if(secret)text=text.split(secret).join('[credencial protegida]');
+ return text.replace(/\$aact_[^\s"'<>]+/gi,'[credencial protegida]')
+  .replace(/Bearer\s+[^\s"'<>]+/gi,'[credencial protegida]')
+  .replace(/(?:access_token|api_key|authorization)\s*[:=]\s*[^\s,;]+/gi,'[credencial protegida]')
+  .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[e-mail protegido]')
+  .replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b|\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b|\b\d{11,14}\b/g,'[documento protegido]')
+  .replace(/\b[A-Za-z0-9_+\/-]{40,}={0,2}\b/g,'[identificador protegido]')
+  .replace(/<[^>]*>/g,'').replace(/[\x00-\x1f\x7f]/g,' ').replace(/\s+/g,' ').trim().slice(0,360);
+}
 export class AsaasError extends Error {
- constructor(status,data={}){
+ constructor(status,data={},secret=''){
   const errors=Array.isArray(data.errors)?data.errors:[],code=errors.find(e=>typeof e?.code==='string')?.code;
+  const descriptions=errors.map(e=>safeProviderDescription(e?.description,secret)).filter(Boolean).slice(0,2);
   let message='O Asaas recusou a operação. Confira os dados da cobrança e a situação da conta.';
   if(code==='invalid_value'){
    message='O Asaas recusou o valor da cobrança. Confira o valor mínimo permitido pela sua conta.';
-   // Only a numeric minimum may be copied. Never expose raw provider responses or customer data.
-   const description=errors.find(e=>e?.code==='invalid_value')?.description;
-   const minimum=typeof description==='string'&&description.match(/(?:mínimo|minimo|menor que|inferior a)[^\d]{0,40}(?:R\$\s*)?(\d{1,6}(?:[.,]\d{1,2})?)/i);
-   if(minimum){const value=Number(minimum[1].replace(',','.'));if(value>0&&value<=100000)message='O Asaas exige pelo menos '+value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' para esta cobrança. O valor do carrinho não foi alterado.';}
   }else if(code==='invalid_dueDate'||code==='invalid_due_date')message='O Asaas recusou o vencimento. Confira a data da cobrança.';
   else if(code==='invalid_customer'||code==='invalid_cpfCnpj'||code==='invalid_cpf_cnpj')message='O Asaas recusou o cadastro do pagador. Confira o nome e o CPF/CNPJ.';
   else if(code==='invalid_billingType')message='O Pix ainda não está disponível para esta cobrança na conta Asaas.';
+  // Validation failures also use generic codes such as invalid_object. Preserve the explanation,
+  // not the full response: redact credentials and documents, then render as escaped text in the UI.
+  if(descriptions.length&&[400,403,422].includes(status))message=('Asaas: '+descriptions.join(' ')).slice(0,420);
   if(status===401)message='A chave do Asaas é inválida ou expirou. A direção precisa atualizar a conexão.';
-  if(status===403)message='O Asaas não liberou esta operação. Confira a aprovação e as permissões da conta.';
+  if(status===403&&!descriptions.length)message='O Asaas não liberou esta operação. Confira a aprovação e as permissões da conta.';
   if(status===429)message='Aguarde alguns instantes antes de consultar o Asaas novamente.';
   super(message);this.name='AsaasError';this.status=status;
-  this.code=['invalid_value','invalid_dueDate','invalid_due_date','invalid_customer','invalid_cpfCnpj','invalid_cpf_cnpj','invalid_billingType'].includes(code)?code:'provider_error';
+  this.code=typeof code==='string'&&/^[a-z][a-zA-Z0-9_]{1,59}$/.test(code)&&code!==secret?code:'provider_error';
+  this.message+=' (HTTP '+status+'; '+this.code+')';
   this.rejected=[400,401,403,404,422].includes(status);
  }
 }
@@ -38,7 +51,7 @@ export function provider(apiKey,{fetcher=fetch}={}){
   const response=await fetcher('https://api.asaas.com/v3'+path,{method,redirect:'error',headers:{access_token:apiKey,'Content-Type':'application/json','User-Agent':'InstitutoIntegro/1.0'},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(15000)});
   if(!response.ok){
    let data={};try{data=await response.json();}catch{}
-   throw new AsaasError(response.status,data||{});
+   throw new AsaasError(response.status,data||{},apiKey);
   }
   const data=await response.json();if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Resposta inválida do Asaas.');return data;
  };
