@@ -8,7 +8,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const sample=()=>({customer:{studentId:id(3),studentName:'Aluno',payerName:'Responsável',payerDocument:'24971563792',phone:'',email:''},items:[{type:'material',qty:2,grossUnit:15,discountUnit:5,finalUnit:10,desc:'Apostila'}],note:'Teste'});
 const migration=await readFile(new URL('../supabase/migrations/20261027231540_finance_asaas_pix.sql',import.meta.url),'utf8');
 const apiKey='test-only-key-never-a-real-credential',hookToken='hook-test-'.padEnd(64,'h');
-async function setup(){
+async function setup(withFee=true){
  const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create schema private;create schema cron;create schema vault;
  create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
  create table auth.users(id uuid primary key);insert into auth.users values('${id(1)}'),('${id(2)}'),('${id(5)}');
@@ -20,6 +20,7 @@ async function setup(){
  insert into public.finance_cash_cycles values('${id(20)}','${id(10)}',date_trunc('month',now())::date,(date_trunc('month',now())+interval '1 month - 1 day')::date,to_char(now(),'YYYY-MM'),'aberto');
  create function private.assert_finance_cycle_writable(uuid,uuid,date,boolean) returns void language plpgsql as $$begin if not exists(select 1 from public.finance_cash_cycles where school_id=$1 and id=$2 and status='aberto' and $3 between start_date and end_date) then raise exception 'closed_cycle';end if;end$$;
  create table public.finance_entries(id uuid primary key default gen_random_uuid(),receipt_number bigint generated always as identity,school_id uuid,cash_cycle_id uuid,student_id uuid,student_name_snapshot text,payer_name text,payer_document text,package_id uuid,package_name_snapshot text,discount_id uuid,discount_name_snapshot text,gross_amount numeric,discount_amount numeric,amount_paid numeric,payment_method text,competence_month text,description text,entry_type text,entry_date date,created_by uuid);
+ create table public.finance_expenses(id uuid primary key default gen_random_uuid(),school_id uuid,cash_cycle_id uuid,description text not null,amount numeric not null,paid_to text not null,paid_by_name text not null,category text,expense_date date not null,notes text,created_by uuid,allocation_bucket text);
  create function cron.schedule(text,text,text) returns bigint language sql as $$select 1::bigint$$;
  -- In-memory Vault double only. Production uses the installed encrypted Vault extension.
  create table vault.secrets(id uuid primary key default gen_random_uuid(),value text,name text unique);
@@ -28,6 +29,7 @@ async function setup(){
  create function vault.update_secret(i uuid,v text) returns void language sql as $$update vault.secrets set value=v where id=i$$;`);
  await db.exec(migration);
  await db.exec(await readFile(new URL('../supabase/migrations/20261027235725_finance_asaas_creation_errors.sql',import.meta.url),'utf8'));
+ if(withFee)await db.exec(await readFile(new URL('../supabase/migrations/20261028005355_finance_pos_steps_asaas_fee.sql',import.meta.url),'utf8'));
  const rpc=(action,data={})=>db.transaction(async tx=>{await tx.exec("set local role service_role;set local request.jwt.claim.role='service_role';");return (await tx.query('select public.finance_asaas_service($1,$2) r',[action,data])).rows[0].r;});
  const connect=async(account_id=id(90))=>{const {lease}=await rpc('connect_lock',{user_id:id(1)});try{return await rpc('connect_save',{user_id:id(1),lease,api_key:apiKey,hook_token:hookToken,account_id,account_name:'Conta de teste',document_masked:'•••3792',webhook_id:'hook_test001'});}finally{await rpc('connect_unlock',{user_id:id(1),lease});}};
  const create=(n=30,sale=saleForPix(sample()),user_id=id(1))=>rpc('create',{user_id,request_id:id(n),sale,due_date:today()});
@@ -170,5 +172,44 @@ test('connection validates account before storing secrets, creates authenticated
   const response=await handler(req());assert.equal(response.status,200);const result=await response.text();assert.equal(result.includes(apiKey),false);assert.equal(result.includes('hook_token'),false);
   assert.equal(readonlyCalls,2);assert.match(hookBody.url,/webhook\/00000000-0000-4000-8000-000000000010$/);assert.equal(hookBody.authToken.length,72);assert.ok(hookBody.events.includes('PAYMENT_RECEIVED'));
   const state=await x.rpc('list',{user_id:id(1)});assert.equal(state.enabled,false);assert.equal(state.connected,true);
+ }finally{await x.db.close();}
+});
+
+
+test('Asaas fee is atomic with gross receipts, unique per payment, absent for pending or closed cycle, and protected',async()=>{
+ const x=await setup();try{
+  await x.connect();await x.rpc('settings',{user_id:id(1),enabled:true});
+  const order=await x.bind(await x.create(801),'fee001');
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_expenses')).rows[0].n,0);
+  await x.db.exec("update public.finance_cash_cycles set status='fechado'");
+  await x.settle(order);
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_expenses')).rows[0].n,0);
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_entries')).rows[0].n,0);
+  await x.db.exec("update public.finance_cash_cycles set status='aberto'");
+  await x.settle(order);await x.settle(order);
+  const expenses=(await x.db.query('select * from public.finance_expenses')).rows;
+  assert.equal(expenses.length,1);assert.equal(Number(expenses[0].amount),0.99);assert.equal(expenses[0].asaas_order_id,order.id);assert.equal(expenses[0].school_id,id(10));
+  assert.equal(Number((await x.db.query('select sum(amount_paid) total from public.finance_entries')).rows[0].total),20);
+  await assert.rejects(x.db.exec('delete from public.finance_expenses'),/preservada/);
+  await assert.rejects(x.db.exec('update public.finance_expenses set amount=0'),/preservada/);
+  await assert.rejects(x.db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query('select private.finance_asaas_record_fee($1)',[order.id]);}),/permission denied/);
+  // Failure to record the fee rolls back the entire receipt batch.
+  await x.db.exec("create function private.test_fee_failure() returns trigger language plpgsql as $$begin raise exception 'fee_storage_unavailable';end$$;create trigger test_fee_failure before insert on public.finance_expenses for each row execute function private.test_fee_failure();");
+  const second=await x.bind(await x.create(802),'fee002');await x.settle(second);
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_entries where asaas_order_id=$1',[second.id])).rows[0].n,0);
+  assert.equal((await x.rpc('get',{user_id:id(1),id:second.id})).posted_at,null);
+ }finally{await x.db.close();}
+});
+
+
+test('fee migration reconciles an already posted payment once without changing its receipt',async()=>{
+ const x=await setup(false);try{
+  await x.connect();await x.rpc('settings',{user_id:id(1),enabled:true});const o=await x.bind(await x.create(803),'fee003');await x.settle(o);
+  const before=(await x.db.query('select * from public.finance_entries')).rows;
+  await x.db.exec(await readFile(new URL('../supabase/migrations/20261028005355_finance_pos_steps_asaas_fee.sql',import.meta.url),'utf8'));
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_expenses')).rows[0].n,1);
+  await x.db.query('select private.finance_asaas_record_fee($1)',[o.id]);
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_expenses')).rows[0].n,1);
+  const after=(await x.db.query('select * from public.finance_entries')).rows;assert.equal(after[0].id,before[0].id);assert.equal(after[0].amount_paid,before[0].amount_paid);
  }finally{await x.db.close();}
 });

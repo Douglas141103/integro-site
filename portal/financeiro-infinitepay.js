@@ -8,22 +8,25 @@
  async function api(body){
   const {data}=await db.auth.getSession();if(!data.session)throw Error('Entre no portal novamente.');
   const r=await fetch(cfg.url+'/functions/v1/finance-infinitepay',{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.anonKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),signal:AbortSignal.timeout(25000)});
-  const result=await r.json();if(!r.ok||result.error)throw Error(result.error||'Cobrança indisponível.');return result;
+  const result=await r.json();if(!r.ok||result.error){const error=Error(result.error||'Cobrança indisponível.');error.status=r.status;error.orderId=result.order_id;throw error;}return result;
  }
  window.INTEGRO_INFINITEPAY={mount(hooks){
   if(document.getElementById('infinitepayPanel'))return;
   const el=document.createElement('section');el.id='infinitepayPanel';el.className='pdv2-card';el.style.gridColumn='1 / -1';
-  el.innerHTML='<h2>Cobranças InfinitePay</h2><p class="pdv2-muted">Gere uma cobrança do carrinho para pagar por Pix ou cartão. O QR Code e o Pix Copia e Cola ficam na página da InfinitePay. O caixa recebe a baixa após a confirmação.</p><div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="ipCreate" disabled>Gerar cobrança do carrinho</button><button type="button" class="pdv2-btn ghost" id="ipRefresh">Atualizar cobranças</button><button type="button" class="pdv2-btn ghost" id="ipToggle" hidden></button></div><p id="ipMessage" role="status" aria-live="polite"></p><div id="ipOrders"></div>';
-  document.getElementById('pdv2').append(el);
-  const $=id=>document.getElementById(id);let enabled=false,busy=false,request=null,lastPayload=null,orders=[],refreshing=false,paidSeen=new Set(),initialized=false;
+  el.innerHTML='<h2>Cobranças InfinitePay</h2><p class="pdv2-muted">Gere uma cobrança do carrinho para pagar por Pix ou cartão. O QR Code e o Pix Copia e Cola ficam na página da InfinitePay. O caixa recebe a baixa após a confirmação.</p><div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="ipCreate" disabled>Gerar cobrança do carrinho</button><button type="button" class="pdv2-btn ghost" id="ipRefresh">Atualizar cobranças</button><button type="button" class="pdv2-btn ghost" id="ipToggle" hidden></button></div><p id="ipMessage" role="status" aria-live="polite"></p><div id="ipCurrent"></div><details style="margin-top:18px"><summary>Cobranças e recibos anteriores</summary><div id="ipOrders"></div></details>';
+  document.getElementById(hooks.target||'pdv2').append(el);
+  const $=id=>document.getElementById(id);let enabled=false,busy=false,request=null,lastPayload=null,orders=[],refreshing=false,paidSeen=new Set(),initialized=false,currentId=null;
   const message=t=>{$('ipMessage').textContent=t;};
   function draw(){
-   $('ipCreate').disabled=!enabled||busy||!!hooks.isLocked?.();
+   $('ipCreate').disabled=!enabled||busy||!!hooks.isLocked?.('infinitepay')||(hooks.canCreate&&!hooks.canCreate('infinitepay'));
    $('ipToggle').textContent=enabled?'Desativar integração e usar caixa manual':'Ativar integração InfinitePay';
-   $('ipOrders').innerHTML=orders.map(o=>{
+   const renderOrder=o=>{
     const url=checkout(o.checkout_url),status=o.status==='paid'?(o.posted_at?'Pago — lançado no caixa':'Pago — conciliação pendente'):o.status==='pending'?'Aguardando pagamento':o.status==='uncertain'?'Geração não confirmada — conferir na InfinitePay':'Gerando / aguardando confirmação';
-    return `<article class="pdv2-item" style="margin-top:12px"><div class="pdv2-head"><strong>${safe(o.student_name)} — ${money(o.amount)}</strong><span>${status}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.needs_reconciliation?'<p>Pagamento confirmado, mas a baixa precisa de conferência pela direção. Não lance novamente sem conferir os recibos.</p>':''}${url&&o.status!=='paid'?`<div class="pdv2-actions"><a class="pdv2-btn primary" href="${safe(url)}" target="_blank" rel="noopener noreferrer">Abrir Pix / cartão</a><button type="button" class="pdv2-btn ghost" data-ip-copy="${o.id}">Copiar link</button><button type="button" class="pdv2-btn ghost" data-ip-print="${o.id}">Imprimir cobrança / PDF</button></div>`:''}</article>`;
-   }).join('')||'<p>Nenhuma cobrança gerada.</p>';
+    return `<article class="pdv2-item" style="margin-top:12px"><div class="pdv2-head"><strong>${safe(o.student_name)} — ${money(o.amount)}</strong><span>${status}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.needs_reconciliation?'<p>Pagamento confirmado, mas a baixa precisa de conferência pela direção. Não lance novamente sem conferir os recibos.</p>':''}${hooks.receipt&&o.status==='paid'&&o.posted_at&&!o.needs_reconciliation?`<button type="button" class="pdv2-btn primary" data-ip-receipt="${safe(o.id)}">Imprimir recibo</button>`:''}${url&&o.status!=='paid'?`<div class="pdv2-actions"><a class="pdv2-btn primary" href="${safe(url)}" target="_blank" rel="noopener noreferrer">Abrir Pix / cartão</a><button type="button" class="pdv2-btn ghost" data-ip-copy="${o.id}">Copiar link</button><button type="button" class="pdv2-btn ghost" data-ip-print="${o.id}">Imprimir cobrança / PDF</button></div>`:''}</article>`;
+   };
+   $('ipCurrent').innerHTML=orders.filter(o=>o.id===currentId).map(renderOrder).join('');
+   $('ipOrders').innerHTML=orders.filter(o=>o.id!==currentId).map(renderOrder).join('')||'<p>Nenhuma cobrança anterior.</p>';
+   el.querySelectorAll('[data-ip-receipt]').forEach(b=>b.onclick=()=>hooks.receipt?.('infinitepay',orders.find(o=>o.id===b.dataset.ipReceipt)));
    el.querySelectorAll('[data-ip-copy]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(checkout(orders.find(o=>o.id===b.dataset.ipCopy).checkout_url));message('Link copiado. Você pode enviá-lo ao responsável.');}catch{message('Não foi possível copiar automaticamente. Abra o pagamento e copie o endereço.');}});
    el.querySelectorAll('[data-ip-print]').forEach(b=>b.onclick=()=>{
     const o=orders.find(o=>o.id===b.dataset.ipPrint),url=checkout(o.checkout_url);if(!url)return;
@@ -33,7 +36,7 @@
   }
   async function refresh(silent=false){
    if(refreshing)return;refreshing=true;
-   try{const r=await api({action:'list'});enabled=r.enabled;orders=r.orders||[];$('ipToggle').hidden=!r.can_configure;
+   try{const r=await api({action:'list'});enabled=r.enabled;orders=r.orders||[];await hooks.orders?.('infinitepay',orders);$('ipToggle').hidden=!r.can_configure;
     const newPaid=orders.filter(o=>o.posted_at&&!paidSeen.has(o.id));orders.filter(o=>o.posted_at).forEach(o=>paidSeen.add(o.id));
     if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pagamento confirmado e lançado no caixa. O recibo está em Entradas.');}
     else if(!silent)message(enabled?'Integração ativa. Gere a cobrança após montar o carrinho.':'Integração desativada. O caixa manual continua disponível. Cobranças já emitidas continuam sendo acompanhadas.');
@@ -41,15 +44,17 @@
    }catch(e){if(!silent)message(e.message);$('ipCreate').disabled=true;}finally{refreshing=false;}
   }
   $('ipCreate').onclick=async()=>{
-   if(busy||!enabled||hooks.isLocked?.())return;
+   if(busy||!enabled||hooks.isLocked?.('infinitepay')||(hooks.canCreate&&!hooks.canCreate('infinitepay')))return;
+   let attempted=false;
    try{
     const payload=hooks.snapshot(),serialized=JSON.stringify(payload);
     if(serialized!==lastPayload){request=crypto.randomUUID();lastPayload=serialized;}
-    busy=true;hooks.lock(true);draw();message('Gerando cobrança. Aguarde a confirmação antes de lançar manualmente.');
+    attempted=true;hooks.started?.('infinitepay',request);busy=true;hooks.lock(true);draw();message('Gerando cobrança. Aguarde a confirmação antes de lançar manualmente.');
     const r=await api({action:'create',request_id:request,...payload});
+    currentId=r.id;if(hooks.prepared)hooks.prepared('infinitepay',r);
     if(!r.checkout_url){message('Tentativa registrada. Confira a InfinitePay antes de gerar novamente.');return;}
-    hooks.clear();request=null;lastPayload=null;await refresh(true);message('Cobrança gerada. Abra o Pix/cartão ou copie o link. O valor ainda não entrou no caixa.');
-   }catch(e){await refresh(true);message(e.message+' Se houve falha de conexão, atualize as cobranças antes de tentar outra venda.');}
+    if(!hooks.prepared)hooks.clear();request=null;lastPayload=null;await refresh(true);message('Cobrança gerada. Abra o Pix/cartão ou copie o link. O valor ainda não entrou no caixa.');
+   }catch(e){await refresh(true);if(attempted)hooks.failed?.('infinitepay',e,orders.find(o=>o.id===e.orderId));message(e.message+' Se houve falha de conexão, atualize as cobranças antes de tentar outra venda.');}
    finally{busy=false;hooks.lock(false);draw();}
   };
   $('ipRefresh').onclick=()=>refresh();
@@ -58,6 +63,7 @@
    if(enabled&&!confirm('Desativar novas cobranças InfinitePay e continuar com o caixa manual? Cobranças já emitidas poderão ser pagas e terão baixa automática.'))return;
    try{await api({action:'settings',enabled:!enabled});await refresh();}catch(e){message(e.message);}
   };
+  window.addEventListener('integro:pos-new-sale',()=>{currentId=null;request=null;lastPayload=null;message('Monte a nova venda para gerar a cobrança.');draw();});
   window.addEventListener('integro:checkout-lock',draw);
   refresh();const timer=setInterval(()=>{if(document.visibilityState==='visible')refresh(true);},15000);
   window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});

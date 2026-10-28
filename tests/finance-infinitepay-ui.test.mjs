@@ -23,8 +23,8 @@ test('UI disables creation when off, clears cart only after link exists, escapes
  fail=true;w.document.getElementById('ipCreate').click();await pause();assert.equal(clears,0);
  fail=false;w.document.getElementById('ipCreate').click();await pause();assert.equal(clears,1);
  const creations=requests.filter(r=>r.action==='create');assert.equal(creations[0].request_id,creations[1].request_id);
- assert.equal(w.document.querySelector('#ipOrders img'),null);
+ assert.equal(w.document.querySelector('#infinitepayPanel img'),null);
  assert.match(w.document.getElementById('infinitepayPanel').textContent,/QR Code.*página da InfinitePay/);
- assert.match(w.document.getElementById('ipOrders').textContent,/Aguardando pagamento/);
+ assert.match(w.document.getElementById('infinitepayPanel').textContent,/Aguardando pagamento/);
  w.close();
 });
