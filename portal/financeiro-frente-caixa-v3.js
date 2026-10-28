@@ -9,6 +9,7 @@
 
   const sale = { customer: null, items: [] };
   let step = 1, method = null, busy = false, activeOrder = null, receipt = null, manualRequest = null, receiptLoading = false;
+  let directPix = null, directSettings = null;
   const dataStore = { user: null, profile: null, school: null, students: [], packages: [], discounts: [] };
   const $ = (id) => document.getElementById(id);
 
@@ -111,7 +112,7 @@
     if ($("pdv3Css")) return;
     const link = document.createElement("link");
     link.id = "pdv3Css"; link.rel = "stylesheet";
-    link.href = "./financeiro-caixa.css?v=20261028-pdv1";
+    link.href = "./financeiro-caixa.css?v=20261028-pix-direct1";
     document.head.appendChild(link);
   }
 
@@ -143,11 +144,16 @@
       <aside class="pdv2-card pdv-basket"><div class="pdv-sale-heading"><h3>Itens incluídos</h3><span id="pdvItemCount" class="pdv-count">0 itens</span></div><div id="pdv2Cart" class="pdv2-cart"></div><div class="pdv-totals"><div class="pdv2-total-row"><span>Subtotal</span><strong id="pdv2Subtotal">R$ 0,00</strong></div><div class="pdv2-total-row"><span>Descontos</span><strong id="pdv2DiscountTotal">R$ 0,00</strong></div><div class="pdv2-total-row grand"><span>Total da venda</span><strong id="pdv2Total" aria-live="polite">R$ 0,00</strong></div><button id="pdvNextPayment" class="pdv2-btn primary pdv-wide" type="button">Ir para pagamento →</button></div></aside></div></section>
     <section id="pdvStep3" class="pdv-step" hidden><div class="pdv-sale-heading"><div><p class="pdv-eyebrow">PAGAMENTO</p><h2 id="pdvPaymentTitle">Como deseja receber?</h2></div><button id="pdvBackItems" class="pdv2-btn ghost" type="button">← Voltar aos itens</button></div>
       <div id="pdvPaymentSummary" class="pdv-payment-summary"><div><span id="pdvPaymentCustomer"></span><small id="pdvPaymentItems"></small></div><strong id="pdvPaymentTotal">R$ 0,00</strong></div>
-      <div id="pdvPaymentMethods" class="pdv-methods"><button type="button" class="pdv-method" data-method="infinitepay"><span class="pdv-method-symbol">↗</span><strong>InfinitePay</strong><small>Com verificação no checkout</small></button><button type="button" class="pdv-method" data-method="asaas"><span class="pdv-method-symbol">▦</span><strong>Asaas</strong><small>Pix com QR Code no caixa</small></button><button type="button" class="pdv-method" data-method="cash"><span class="pdv-method-symbol">R$</span><strong>Dinheiro</strong><small>Recebimento no caixa</small></button><button type="button" class="pdv-method" data-method="other"><span class="pdv-method-symbol">▰</span><strong>Outros</strong><small>Cartão ou Pix na maquininha</small></button></div>
+      <div id="pdvPaymentMethods" class="pdv-methods"><button type="button" class="pdv-method" data-method="direct_pix"><span class="pdv-method-symbol">▦</span><strong>Pix direto · InfinitePay</strong><small>QR no caixa · confirmação manual</small></button><button type="button" class="pdv-method" data-method="infinitepay"><span class="pdv-method-symbol">↗</span><strong>Checkout InfinitePay</strong><small>Com verificação automática</small></button><button type="button" class="pdv-method" data-method="asaas"><span class="pdv-method-symbol">▦</span><strong>Asaas</strong><small>Pix com QR Code no caixa</small></button><button type="button" class="pdv-method" data-method="cash"><span class="pdv-method-symbol">R$</span><strong>Dinheiro</strong><small>Recebimento no caixa</small></button><button type="button" class="pdv-method" data-method="other"><span class="pdv-method-symbol">▰</span><strong>Outros</strong><small>Cartão ou Pix na maquininha</small></button></div>
       <p id="pdvPending" class="pdv-pending" role="status" hidden></p>
+      <section id="pdvDirectPix" class="pdv2-card" hidden><p class="pdv-eyebrow">PIX DIRETO · INFINITEPAY</p><h3>QR Code na tela do caixa</h3><p class="pdv2-muted">O cliente escaneia no aplicativo do banco ou usa o Pix Copia e Cola. Confira o recebimento no app da InfinitePay antes de dar baixa.</p>
+      <p id="pdvPixStatus" role="status">Carregando a chave Pix…</p>
+      <details id="pdvPixConfig" hidden><summary>Cadastrar / alterar chave Pix</summary><p class="pdv2-muted">Use uma chave Pix já cadastrada na sua conta InfinitePay. A chave de API não serve neste campo.</p><div class="pdv2-grid"><label>Tipo de chave<select id="pdvPixKeyType"><option value="random">Chave aleatória</option><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option><option value="phone">Telefone</option></select></label><label>Chave Pix<input id="pdvPixKey" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Cole a chave da área Pix da InfinitePay"></label><label>Nome do recebedor<input id="pdvPixName" maxlength="25" placeholder="Nome ou razão social da conta"></label><label>Cidade do recebedor<input id="pdvPixCity" maxlength="15" placeholder="Ex.: MANAUS"></label></div><label class="pdv-confirm"><input type="checkbox" id="pdvPixEnabled">Ativar Pix direto no caixa</label><button type="button" id="pdvPixSave" class="pdv2-btn ghost">Salvar configuração</button></details>
+      <div class="pdv2-actions"><button type="button" id="pdvPixGenerate" class="pdv2-btn primary">Gerar QR Code da venda</button></div>
+      <div id="pdvPixCode" class="pdv-pix-code" hidden><div id="pdvPixImage" class="pdv-pix-image"></div><div class="pdv-pix-details"><strong id="pdvPixAmount" class="pdv-pix-amount"></strong><p id="pdvPixReceiver"></p><p id="pdvPixReference" class="pdv2-small"></p><label>Pix Copia e Cola<textarea id="pdvPixPayload" rows="4" readonly spellcheck="false"></textarea></label><div class="pdv2-actions"><button type="button" id="pdvPixCopy" class="pdv2-btn primary">Copiar Pix</button><button type="button" id="pdvPixDownload" class="pdv2-btn ghost">Baixar QR Code</button><button type="button" id="pdvPixReset" class="pdv2-btn ghost">Voltar / trocar pagamento</button></div><p class="pdv2-small">Mantenha esta venda aberta até conferir o pagamento. Gerar o código não confirma o recebimento.</p></div></div></section>
       <section id="pdvManualPayment" class="pdv2-card" hidden><h3 id="pdvManualTitle">Receber em dinheiro</h3><div id="pdvOtherOptions" class="pdv2-grid" hidden><label>Pagamento recebido<select id="pdvOtherType"><option value="card">Cartão</option><option value="pix">Pix</option></select></label><label id="pdvCardKindLabel">Tipo de cartão<select id="pdvCardKind"><option value="Cartão de crédito">Crédito</option><option value="Cartão de débito">Débito</option></select></label></div>
       <div class="pdv2-final"><label id="pdvReceivedLabel">Valor recebido<input id="pdv2Received" type="number" min="0" step="0.01" placeholder="0,00"></label><label id="pdvChangeLabel">Troco<input id="pdv2Change" readonly value="R$ 0,00"></label><label class="full">Observação<input id="pdv2Note" placeholder="Informação adicional do recebimento"></label></div><select id="pdv2Pay" hidden><option>Dinheiro</option><option>Pix</option><option>Cartão de crédito</option><option>Cartão de débito</option></select>
-      <label class="pdv-confirm"><input id="pdvReceivedConfirmed" type="checkbox">Confirmo que recebi o pagamento.</label><button id="pdv2Finish" class="pdv2-btn primary" type="button">Confirmar recebimento e dar baixa</button></section>
+      <label class="pdv-confirm"><input id="pdvReceivedConfirmed" type="checkbox"><span id="pdvReceivedText">Confirmo que recebi o pagamento.</span></label><button id="pdv2Finish" class="pdv2-btn primary" type="button">Confirmar recebimento e dar baixa</button></section>
       <div id="pdvProviders"></div><div id="pdvPaid" class="pdv-paid" hidden><span class="pdv-paid-mark">✓</span><h2>Pagamento confirmado</h2><p id="pdvPaidDescription"></p><div class="pdv2-actions"><button type="button" id="pdvPrintReceipt" class="pdv2-btn primary">Imprimir recibo</button><button type="button" id="pdvNewSale" class="pdv2-btn ghost">Nova venda</button></div></div>
       <div class="pdv2-actions"><button id="pdv2ClearSale" class="pdv2-btn danger" type="button">Limpar venda</button><button id="pdvLeavePending" class="pdv2-btn ghost" type="button" hidden>Deixar cobrança pendente e iniciar outra venda</button></div></section></div>`;
     document.body.append(screen);
@@ -155,8 +161,8 @@
     const hooks = {
       target: 'pdvProviders',
       snapshot: () => { if (!sale.customer || !sale.items.length) throw Error('Adicione itens ao carrinho primeiro.'); return JSON.parse(JSON.stringify({customer:sale.customer,items:sale.items,note:$("pdv2Note").value.trim()})); },
-      canCreate: provider => !busy && !receipt && sale.items.length > 0 && (!activeOrder || (!activeOrder.id && activeOrder.provider === provider)),
-      isLocked: provider => busy || (!!activeOrder && !(provider === activeOrder.provider && !activeOrder.id)) || !!receipt,
+      canCreate: provider => !busy && !receipt && !directPix && !manualRequest && sale.items.length > 0 && (!activeOrder || (!activeOrder.id && activeOrder.provider === provider)),
+      isLocked: provider => busy || !!directPix || !!manualRequest || (!!activeOrder && !(provider === activeOrder.provider && !activeOrder.id)) || !!receipt,
       lock: value => { busy = value; updateControls(); },
       started: (provider,requestId) => { activeOrder ||= {provider,requestId,id:null,status:'creating'}; updateControls(); },
       prepared: (provider,order) => { activeOrder = {...activeOrder,provider,id:order.id,status:order.status,amount:order.amount}; updateControls(); },
@@ -177,34 +183,129 @@
     $("pdvOpen").onclick=openCash; $("pdvClose").onclick=closeCash;
     document.querySelector('[data-tab="caixa"]')?.addEventListener('click',openCash);
     document.addEventListener('keydown',event=>{if(!$('pdv2').hidden&&event.key==='Escape')closeCash();if(!$('pdv2').hidden&&event.key==='Tab'){const nodes=[...$('pdv2').querySelectorAll('button,input,select,textarea,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
+    window.addEventListener('beforeunload',event=>{if(directPix&&!receipt){event.preventDefault();event.returnValue='';}});
+  }
+
+  async function readDirectSettings(settings) {
+    if(!window.INTEGRO_PIX||typeof window.qrcode!=='function')throw Error('Atualize a página para carregar o gerador de Pix.');
+    const args={p_school_id:dataStore.school.id};
+    if(settings)args.p_settings=settings;
+    const result=await db.rpc('finance_direct_pix_settings',args);
+    if(result.error)throw Error(result.error.message||'Não foi possível consultar a chave Pix.');
+    directSettings=result.data?.settings||null;
+    $('pdvPixConfig').hidden=!result.data?.can_configure;
+    if(directSettings){
+      $('pdvPixKeyType').value=directSettings.key_type;
+      $('pdvPixKey').value=directSettings.pix_key;
+      $('pdvPixName').value=directSettings.merchant_name;
+      $('pdvPixCity').value=directSettings.merchant_city;
+      $('pdvPixEnabled').checked=directSettings.enabled;
+      $('pdvPixStatus').textContent=(directSettings.enabled?'Chave cadastrada: ':'Pix direto desativado: ')+directSettings.merchant_name+' · '+directSettings.pix_key;
+      $('pdvPixConfig').open=!directSettings.enabled;
+    }else{
+      $('pdvPixStatus').textContent=result.data?.can_configure?'Cadastre a chave Pix da conta InfinitePay para começar.':'Peça à direção para cadastrar a chave Pix da conta InfinitePay.';
+      $('pdvPixConfig').open=true;
+    }
+    return directSettings;
+  }
+
+  async function loadDirectSettings() {
+    if(busy||directPix)return;
+    busy=true;directSettings=null;updateControls();
+    try{await readDirectSettings();}catch(e){$('pdvPixStatus').textContent=e.message;showMsg(e.message,'error');}
+    finally{busy=false;updateControls();}
+  }
+
+  async function saveDirectSettings() {
+    if(busy||directPix||manualRequest||receipt)return;
+    try{
+      const settings=window.INTEGRO_PIX.normalizeSettings({key_type:$('pdvPixKeyType').value,pix_key:$('pdvPixKey').value,merchant_name:$('pdvPixName').value,merchant_city:$('pdvPixCity').value,enabled:$('pdvPixEnabled').checked});
+      busy=true;updateControls();await readDirectSettings(settings);
+      showMsg(settings.enabled?'Chave Pix salva. Você já pode gerar o código da venda.':'Pix direto desativado.');
+    }catch(e){showMsg(e.message||'Não foi possível salvar a chave Pix.','error');}
+    finally{busy=false;updateControls();}
+  }
+
+  async function generateDirectPix() {
+    if(busy||directPix||activeOrder||manualRequest||receipt||method!=='direct_pix')return;
+    try{
+      if(!sale.customer||!sale.items.length)throw Error('Adicione os itens da venda antes de gerar o Pix.');
+      busy=true;updateControls();
+      const settings=await readDirectSettings();
+      if(!settings?.enabled)throw Error('Cadastre e ative a chave Pix para gerar o código.');
+      currentOpenCycle();
+      const saleId=crypto.randomUUID(),txid=saleId.replace(/-/g,'').slice(0,25),amount=Math.round(totals().total*100);
+      const payload=window.INTEGRO_PIX.build(settings,amount,txid);
+      const qr=window.qrcode(0,'M');qr.addData(payload,'Byte');qr.make();
+      $('pdvPixImage').innerHTML=qr.createSvgTag({cellSize:6,margin:24,scalable:true,alt:'QR Code Pix da venda'});
+      directPix={saleId,txid,amount,payload,qr};
+      $('pdvPixPayload').value=payload;
+      $('pdvPixAmount').textContent=money(amount/100);
+      $('pdvPixReceiver').textContent='Recebedor: '+settings.merchant_name+' · '+settings.merchant_city;
+      $('pdvPixReference').textContent='Referência: '+txid;
+      $('pdvPixCode').hidden=false;$('pdvPixConfig').open=false;
+      $('pdvReceivedConfirmed').checked=false;
+      showMsg('QR Code pronto. Confira o recebimento no app da InfinitePay antes de dar baixa.');
+    }catch(e){showMsg(e.message||'Não foi possível gerar o QR Code.','error');}
+    finally{busy=false;updateControls();}
+  }
+
+  function resetDirectPix() {
+    directPix=null;
+    $('pdvPixImage').replaceChildren();$('pdvPixPayload').value='';$('pdvPixCode').hidden=true;
+    $('pdvReceivedConfirmed').checked=false;
+  }
+
+  async function copyDirectPix() {
+    if(!directPix)return;
+    try{await navigator.clipboard.writeText(directPix.payload);showMsg('Pix Copia e Cola copiado.');}
+    catch{$('pdvPixPayload').focus();$('pdvPixPayload').select();showMsg('Selecione e copie o código no campo Pix Copia e Cola.');}
+  }
+
+  function downloadDirectPix() {
+    if(!directPix)return;
+    try{
+      const qr=directPix.qr,modules=qr.getModuleCount(),scale=10,border=4,canvas=document.createElement('canvas');
+      canvas.width=canvas.height=(modules+border*2)*scale;
+      const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#000';
+      for(let y=0;y<modules;y++)for(let x=0;x<modules;x++)if(qr.isDark(y,x))ctx.fillRect((x+border)*scale,(y+border)*scale,scale,scale);
+      const link=document.createElement('a');link.download='pix-'+directPix.txid+'.png';link.href=canvas.toDataURL('image/png');link.click();
+    }catch{showMsg('Não foi possível baixar a imagem. Use o Pix Copia e Cola.','error');}
   }
 
   function openCash() { $('pdv2').hidden=false; document.body.classList.add('pdv-open'); updateControls(); $('pdv2Student').focus(); }
   function closeCash() { if(busy){showMsg('Aguarde a conclusão da operação.');return;} $('pdv2').hidden=true; document.body.classList.remove('pdv-open'); $('pdvOpen')?.focus(); }
   function setStep(value) { step=value; showMsg(''); updateControls(); $('pdv2').scrollTop=0; }
   function setMethod(value) {
-    if(busy||activeOrder||receipt)return;
+    if(busy||activeOrder||directPix||manualRequest||receipt)return;
     method=value; $('pdvReceivedConfirmed').checked=false;
-    $('pdv2Pay').value=value==='cash'?'Dinheiro':$('pdvOtherType').value==='pix'?'Pix':$('pdvCardKind').value;
+    $('pdv2Pay').value=value==='cash'?'Dinheiro':value==='direct_pix'||$('pdvOtherType').value==='pix'?'Pix':$('pdvCardKind').value;
     if(value!=='cash')$('pdv2Received').value=totals().total.toFixed(2); else $('pdv2Received').value='';
     calcChange();updateControls();
+    if(value==='direct_pix')loadDirectSettings();
   }
   function updateControls() {
     if(!$('pdv2'))return;
-    const locked=busy||!!activeOrder||!!manualRequest||!!receipt;
+    const locked=busy||!!activeOrder||!!directPix||!!manualRequest||!!receipt;
     [1,2,3].forEach(value=>{ $('pdvStep'+value).hidden=step!==value; const label=document.querySelector('[data-step-label="'+value+'"]'); label.classList.toggle('current',step===value); label.classList.toggle('done',step>value); if(step===value)label.setAttribute('aria-current','step');else label.removeAttribute('aria-current'); });
     document.querySelectorAll('#pdvStep1 input,#pdvStep1 select,#pdvStep1 button,#pdvStep2 input,#pdvStep2 select,#pdvStep2 button,#pdvStep2 textarea').forEach(el=>el.disabled=locked);
     $('pdvNextPayment').disabled=locked||!sale.items.length;
     $('pdvBackItems').disabled=locked; $('pdvBackItems').hidden=!sale.items.length;
     $('pdvPaymentMethods').hidden=!!receipt;
     document.querySelectorAll('[data-method]').forEach(el=>{el.disabled=locked;el.setAttribute('aria-pressed',String(el.dataset.method===method));});
-    $('pdvManualPayment').hidden=!!receipt||!['cash','other'].includes(method);
+    $('pdvManualPayment').hidden=!!receipt||(!['cash','other'].includes(method)&&!(method==='direct_pix'&&directPix));
     $('pdvOtherOptions').hidden=method!=='other'; $('pdvCardKindLabel').hidden=$('pdvOtherType').value!=='card';
     $('pdvReceivedLabel').hidden=method!=='cash';$('pdvChangeLabel').hidden=method!=='cash';
-    $('pdvManualTitle').textContent=method==='cash'?'Receber em dinheiro':'Pagamento recebido na maquininha / por fora';
+    $('pdvManualTitle').textContent=method==='cash'?'Receber em dinheiro':method==='direct_pix'?'Conferir e registrar o Pix':'Pagamento recebido na maquininha / por fora';
+    $('pdvReceivedText').textContent=method==='direct_pix'?'Conferi no app da InfinitePay e recebi o valor desta venda.':'Confirmo que recebi o pagamento.';
     document.querySelectorAll('#pdvManualPayment input,#pdvManualPayment select').forEach(el=>el.disabled=busy||!!activeOrder||!!manualRequest||!!receipt);
     $('pdv2Finish').disabled=busy||!!activeOrder||!!receipt;
     $('pdv2Finish').textContent=manualRequest?'Conferir / concluir o recebimento':'Confirmar recebimento e dar baixa';
+    $('pdvDirectPix').hidden=method!=='direct_pix'||!!receipt;
+    $('pdvPixGenerate').hidden=!!directPix;
+    $('pdvPixGenerate').disabled=locked||!sale.items.length||!directSettings?.enabled;
+    $('pdvPixReset').disabled=busy||!!manualRequest||!!receipt;
+    document.querySelectorAll('#pdvPixConfig input,#pdvPixConfig select,#pdvPixConfig button').forEach(el=>el.disabled=locked);
     const pa=$('asaasPanel'),pi=$('infinitepayPanel'); if(pa)pa.hidden=method!=='asaas'||!!receipt; if(pi)pi.hidden=method!=='infinitepay'||!!receipt;
     $('pdvPending').hidden=!activeOrder||!!receipt;
     $('pdvPending').textContent=activeOrder?.needs_reconciliation||activeOrder?.status==='refunded'?'Esta cobrança precisa de conciliação. Confira o pagamento e os lançamentos antes de continuar.':activeOrder?.status==='paid'?'Pagamento recebido. Aguardando o lançamento no caixa para liberar o recibo.':activeOrder?.status==='uncertain'?'A tentativa precisa de conferência. Verifique a cobrança antes de tentar outro pagamento.':'Aguardando a confirmação do pagamento. O recibo será liberado após a baixa.';
@@ -236,9 +337,9 @@
     ["pdv2Gross", "pdv2DiscValue"].forEach((id) => $(id).oninput = calcFinal);
     ["pdv2Final", "pdv2Qty", "pdv2Received"].forEach((id) => $(id).oninput = calcChange);
     $('pdvNextCustomer').onclick=()=>{try{sale.customer=null;sale.customer=getCustomer();lockCustomer();setStep(2);}catch(e){showMsg(e.message,'error');}};
-    $('pdvBackCustomer').onclick=()=>{if(!busy&&!activeOrder)setStep(1);};
+    $('pdvBackCustomer').onclick=()=>{if(!busy&&!activeOrder&&!directPix&&!manualRequest)setStep(1);};
     $('pdvNextPayment').onclick=()=>{if(sale.items.length)setStep(3);};
-    $('pdvBackItems').onclick=()=>{if(!busy&&!activeOrder&&!manualRequest)setStep(sale.items.length?2:1);};
+    $('pdvBackItems').onclick=()=>{if(!busy&&!activeOrder&&!directPix&&!manualRequest)setStep(sale.items.length?2:1);};
     document.querySelectorAll('[data-method]').forEach(el=>el.onclick=()=>setMethod(el.dataset.method));
     ['pdvOtherType','pdvCardKind'].forEach(id=>$(id).onchange=()=>setMethod('other'));
     $('pdvPrintReceipt').onclick=()=>{if(receipt)printReceipt(receipt);};
@@ -249,6 +350,11 @@
     $("pdv2ClearItem").onclick = clearItem;
     $("pdv2ClearSale").onclick = clearSale;
     $("pdv2Finish").onclick = finish;
+    $('pdvPixSave').onclick=saveDirectSettings;
+    $('pdvPixGenerate').onclick=generateDirectPix;
+    $('pdvPixCopy').onclick=copyDirectPix;
+    $('pdvPixDownload').onclick=downloadDirectPix;
+    $('pdvPixReset').onclick=()=>{if(busy||manualRequest||receipt)return;if(confirm('O QR Code já compartilhado continua pagável. Confira que esta venda não foi paga antes de trocar o pagamento. Continuar?')){resetDirectPix();showMsg('Volte aos itens ou selecione outra forma de pagamento.');updateControls();}};
     $("pdv2ReloadOptions").onclick = async () => { await loadContextAndOptions(); refreshOptions(); showMsg("Lista atualizada."); };
     document.querySelectorAll("[data-type]").forEach((button) => button.onclick = () => {
       $("pdv2Type").value = button.dataset.type;
@@ -340,7 +446,7 @@
 
   function addItem() {
     try {
-      if (busy || activeOrder || receipt) return;
+      if (busy || activeOrder || directPix || manualRequest || receipt) return;
       if (!sale.customer) sale.customer = getCustomer();
       const qty = n($("pdv2Qty").value);
       if(!Number.isInteger(qty)||qty<1||qty>1000)throw Error("Informe uma quantidade inteira entre 1 e 1.000.");
@@ -374,7 +480,7 @@
     const total = totals();
     if (!sale.items.length) cart.innerHTML = '<div class="pdv2-empty">Nenhum item no carrinho.</div>';
     else cart.innerHTML = sale.items.map((item) => `<article class="pdv2-item"><div class="pdv2-head"><div><strong>${safe(item.desc)}</strong><br><span class="pdv2-small">${safe(item.typeLabel)} • Qtd. ${item.qty}${item.packageName ? ` • ${safe(item.packageName)}` : ""}</span></div><span class="amount">${money(item.total)}</span></div><span class="pdv2-small">Bruto: ${money(item.grossTotal)} • Desconto: ${money(item.discountTotal)}</span><br><button class="pdv2-remove" data-rm="${item.id}" type="button">Remover</button></article>`).join("");
-    cart.querySelectorAll("[data-rm]").forEach((button) => button.onclick = () => { if(busy||activeOrder||receipt)return; sale.items = sale.items.filter((item) => item.id !== button.dataset.rm); lockCustomer(); drawCart(); });
+    cart.querySelectorAll("[data-rm]").forEach((button) => button.onclick = () => { if(busy||activeOrder||directPix||manualRequest||receipt)return; sale.items = sale.items.filter((item) => item.id !== button.dataset.rm); lockCustomer(); drawCart(); });
     $("pdv2Subtotal").textContent = money(total.gross);
     $("pdv2DiscountTotal").textContent = money(total.discount);
     $("pdv2Total").textContent = money(total.total);
@@ -391,12 +497,13 @@
   }
 
   function clearSale() {
-    if (sale.items.length && !confirm("Limpar a venda atual?")) return;
+    if (sale.items.length && !confirm(directPix?'O QR Code já compartilhado continua pagável. Confira que não houve pagamento antes de limpar esta venda. Continuar?':"Limpar a venda atual?")) return;
     clearSaleNow();
   }
 
   function clearSaleNow() {
-    if(busy)return;
+    if(busy||(manualRequest&&!receipt))return;
+    resetDirectPix();
     activeOrder=null;receipt=null;manualRequest=null;method=null;step=1;
     $("pdvReceivedConfirmed").checked=false;showMsg("");
     sale.customer = null;
@@ -408,38 +515,44 @@
     window.dispatchEvent(new Event('integro:pos-new-sale'));
   }
 
+  function currentOpenCycle(transactionMoment = new Date()) {
+    if (!cyclePolicy?.getCurrentCycleRange) throw new Error("Política do ciclo financeiro indisponível. Atualize a página e tente novamente.");
+    const range = cyclePolicy.getCurrentCycleRange(transactionMoment);
+    const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
+    if (range.isClosingWindow) throw new Error("O caixa está em fechamento nos dias 9 e 10. O novo ciclo será aberto no dia 11.");
+    if (!liveCycle?.id) throw new Error("O ciclo financeiro ainda está carregando. Aguarde e tente novamente.");
+    if (String(liveCycle.status || "").trim().toLowerCase() === "fechado") {
+      throw new Error("Este ciclo financeiro está fechado. Não é possível registrar novas entradas.");
+    }
+    if (
+      liveCycle.cycle_key !== range.cycleKey ||
+      liveCycle.start_date !== range.startISO ||
+      liveCycle.end_date !== range.endISO
+    ) {
+      throw new Error("O ciclo exibido não corresponde ao período atual. Atualize a página antes de finalizar a venda.");
+    }
+    return liveCycle;
+  }
+
   async function finish() {
     if(busy||activeOrder||receipt)return;
     try {
-      if(!["cash","other"].includes(method))throw Error("Escolha uma forma de pagamento.");
+      if(!["cash","other","direct_pix"].includes(method))throw Error("Escolha uma forma de pagamento.");
+      if(method==='direct_pix'&&(!directPix||directPix.amount!==Math.round(totals().total*100)))throw Error('Gere o QR Code desta venda antes de confirmar o recebimento.');
       if(!$("pdvReceivedConfirmed").checked)throw Error("Confirme o recebimento antes de dar baixa.");
       if (!db || !dataStore.school?.id || !dataStore.user?.id) throw new Error("Sistema ainda carregando. Aguarde e tente novamente.");
-      if (!cyclePolicy?.getCurrentCycleRange) throw new Error("Política do ciclo financeiro indisponível. Atualize a página e tente novamente.");
       const transactionMoment = new Date();
-      const range = cyclePolicy.getCurrentCycleRange(transactionMoment);
-      const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
-      if (range.isClosingWindow) throw new Error("O caixa está em fechamento nos dias 9 e 10. O novo ciclo será aberto no dia 11.");
-      if (!liveCycle?.id) throw new Error("O ciclo financeiro ainda está carregando. Aguarde e tente novamente.");
-      if (String(liveCycle.status || "").trim().toLowerCase() === "fechado") {
-        throw new Error("Este ciclo financeiro está fechado. Não é possível registrar novas entradas.");
-      }
-      if (
-        liveCycle.cycle_key !== range.cycleKey ||
-        liveCycle.start_date !== range.startISO ||
-        liveCycle.end_date !== range.endISO
-      ) {
-        throw new Error("O ciclo exibido não corresponde ao período atual. Atualize a página antes de finalizar a venda.");
-      }
+      const liveCycle = currentOpenCycle(transactionMoment);
       if (!sale.customer || !sale.items.length) throw new Error("Adicione pelo menos um item ao carrinho.");
       const total = totals();
       let received = n($("pdv2Received").value);
       if (!received && $("pdv2Pay").value !== "Dinheiro") { received = total.total; $("pdv2Received").value = received.toFixed(2); }
       if (received < total.total) throw new Error("O valor recebido não pode ser menor que o total da venda.");
       const change = Math.max(received - total.total, 0);
-      manualRequest ||= crypto.randomUUID();
+      manualRequest ||= directPix?.saleId || crypto.randomUUID();
       const saleCode = "VENDA-" + manualRequest.slice(0,8).toUpperCase();
       busy=true;updateControls();
-      const note = $("pdv2Note").value.trim();
+      const note = [$("pdv2Note").value.trim(),directPix?`Pix direto · InfinitePay · Ref. ${directPix.txid} · Recebimento conferido manualmente`:null].filter(Boolean).join(' • ');
       const rows = sale.items.map((item, index) => ({
         school_id: dataStore.school.id,
         cash_cycle_id: liveCycle.id,

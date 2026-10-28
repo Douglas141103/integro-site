@@ -18,7 +18,14 @@ export function installFixture(w) {
   then(resolve,reject){return this.run().then(resolve,reject);}
  }
  for(const records of Object.values(fixed))for(const record of records)record.school_id ||= id(10);
- const db={auth:{getUser:async()=>({data:{user:{id:id(1)}}}),getSession:async()=>({data:{session:{access_token:'test-only'}}})},from:table=>new Query(table)};
+ t.pixSettings=null;t.pixCanConfigure=true;t.pixRpcError=null;t.pixRpcCalls=[];t.copied='';
+ Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{t.copied=text;}}});
+ const db={auth:{getUser:async()=>({data:{user:{id:id(1)}}}),getSession:async()=>({data:{session:{access_token:'test-only'}}})},from:table=>new Query(table),rpc:async(name,args)=>{
+  t.pixRpcCalls.push({name,args});
+  if(t.pixRpcError)return{error:{message:t.pixRpcError},data:null};
+  if(args.p_settings){if(!t.pixCanConfigure)return{error:{message:'Sem acesso'},data:null};t.pixSettings={...args.p_settings};}
+  return{data:{can_configure:t.pixCanConfigure,settings:t.pixSettings},error:null};
+ }};
  w.INTEGRO_SUPABASE={url:'https://payments.example.test',anonKey:'test-public'};w.supabase={createClient:()=>db};w.client=db;
  w.INTEGRO_FINANCE_CYCLE_POLICY={referenceISO:()=> '2026-10-27',getCurrentCycleRange:()=>({cycleKey:'2026-10',startISO:'2026-10-11',endISO:'2026-11-10',isClosingWindow:false})};
  w.INTEGRO_FINANCE_CURRENT_CYCLE={id:id(20),cycle_key:'2026-10',start_date:'2026-10-11',end_date:'2026-11-10',status:'aberto'};
