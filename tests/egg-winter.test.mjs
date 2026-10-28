@@ -1,3 +1,5 @@
+import {mock} from 'node:test';
+mock.timers.enable({apis:['Date'],now:new Date('2026-10-28T21:32:00Z')});
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EggAdventure,WORLDS,NESTS,CORRAL} from '../integro-box/egg-src/egg-rules.js';

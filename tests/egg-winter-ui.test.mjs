@@ -1,3 +1,5 @@
+import {mock} from 'node:test';
+mock.timers.enable({apis:['Date'],now:new Date('2026-10-28T21:32:00Z')});
 import test from 'node:test';import assert from 'node:assert/strict';import {JSDOM} from 'jsdom';import {createEggWinter} from '../integro-box/egg-src/egg-winter-ui.js';import {EggAdventure} from '../integro-box/egg-src/egg-rules.js';
 test('winter shop hides egg values, activates from its panel once, and retries an uncertain request with its same ID',async()=>{
  const dom=new JSDOM('<main><div id="dock"></div><section></section></main>',{url:'https://test.invalid'});globalThis.window=dom.window;globalThis.document=dom.window.document;

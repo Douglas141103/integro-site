@@ -14,12 +14,13 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({},{get:(o,k)=>o[k]||(()=>{})});w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,AA';w.scrollTo=()=>{};
  let frame,clock=0,adapter;const errors=[];
  class Renderer{constructor({canvas}={}){this.domElement=canvas||w.document.createElement('canvas');this.shadowMap={};}setPixelRatio(){}setSize(){}dispose(){}forceContextLoss(){}render(s,c){s.updateMatrixWorld(true);c.updateMatrixWorld(true);}}
- const exports={},context=vm.createContext({exports,require:id=>id==='three'?{...T,WebGLRenderer:Renderer}:require(id),window:w,document:w.document,localStorage:w.localStorage,performance:{now:()=>clock},devicePixelRatio:1,innerWidth:390,ResizeObserver:class{observe(){}},requestAnimationFrame:cb=>{frame=cb;return 1;},console:{...console,error:(...args)=>errors.push(args)},setTimeout,clearTimeout});
+ const exports={},context=vm.createContext({Date:class extends Date{static now(){return Date.parse('2026-10-28T21:32:00Z');}},exports,require:id=>id==='three'?{...T,WebGLRenderer:Renderer}:require(id),window:w,document:w.document,localStorage:w.localStorage,performance:{now:()=>clock},devicePixelRatio:1,innerWidth:390,ResizeObserver:class{observe(){}},requestAnimationFrame:cb=>{frame=cb;return 1;},console:{...console,error:(...args)=>errors.push(args)},setTimeout,clearTimeout});
  const code=buildSync({entryPoints:[new URL('../integro-box/egg-src/egg-game.js',import.meta.url).pathname],bundle:true,format:'cjs',platform:'node',external:['three'],write:false}).outputFiles[0].text;
  context.module={exports};vm.runInContext(code,context);const api=context.module.exports.mountEggGame({onExit(){},registerAdapter:(_,a)=>(adapter={...a})});
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
+  const eventClock=adapter.scene().getObjectByName('WinterEventClock');assert(eventClock);assert.equal(eventClock.userData.time,'06:00:00');
   const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgeBarricade')barriers.push(n);});
   assert.equal(barriers.length,21*8,'visible barricades cover both edges of every track');
   for(const barrier of barriers){const o=barrier.userData.obstacle;assert.equal(barrier.position.x,o.x);assert.equal(barrier.position.z,o.z);const bounds=new T.Box3().setFromObject(barrier);assert(Math.abs(bounds.max.y-o.h)<.01,'visible height matches jump collision');}
@@ -81,6 +82,10 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   const savedEgg=w.BoxEggRuntime.save();w.BoxEggRuntime.apply(savedEgg);tick(1);assert(w.BoxEggRuntime.save().eggs[0].remaining>1198,'reload must not clamp incubation to eight seconds');
   w.BoxEggRuntime.apply({...savedEgg,eggs:[{...savedEgg.eggs[0],remaining:.1}]});const finalClock=adapter.scene().getObjectByName('EggHatchClock');let disposed=0;finalClock.material.addEventListener('dispose',()=>disposed++);finalClock.material.map.addEventListener('dispose',()=>disposed++);tick(10);
   assert.equal(adapter.scene().getObjectByName('EggHatchClock'),undefined);assert.equal(disposed,2);assert.equal(state().creatures.length,1);
+  // Real-time expiry continues while the menu pauses the simulation.
+  key('Escape');const atEnd=state().player;w.BoxEggRuntime.syncEventClock('2026-10-29T03:32:00Z');tick(2);
+  assert.equal(state().event.active,false);assert.equal(state().nestEggs[20].length,3);assert.equal(state().visibleNestEggs[20],3);assert.equal(state().visibleNestEggs.length,21);assert.equal(eventClock.userData.time,'00:00:00');assert.equal(eventClock.parent.visible,false);
+  const seasonGroups=[];adapter.scene().traverse(n=>{if(n.name==='WinterSeasonDecor')seasonGroups.push(n);});assert(seasonGroups.every(n=>!n.visible));assert.equal(state().player.z,atEnd.z);assert.doesNotMatch(w.document.getElementById('eggSheetBody').textContent,/XXXXX/);key('Escape');
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });

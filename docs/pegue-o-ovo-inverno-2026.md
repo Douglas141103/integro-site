@@ -49,3 +49,14 @@ Validação: nove testes do atualizador, totem e integração do jogo passaram. 
 O ano foi redesenhado com polígonos próprios: números angulares, zeros com recortes retangulares e o 6 em degrau, seguindo o desenho enviado. O `2026` passa a ser geometria em relevo, com 0,86 m de altura, interior branco e contorno azul-marinho. A base foi alargada e a parte superior elevada para separar os círculos da inscrição. `INVERNO` ocupa uma faixa escura maior. Ano, contorno, fundo e faixa não recebem névoa nem variação de iluminação, preservando o contraste.
 
 Nove testes passaram. A prova vetorial dos mesmos polígonos foi conferida visualmente no navegador, incluindo redução a 180 px. A conferência geométrica confirmou que os totens maiores continuam fora da pista e sem interseção com árvores nas 21 pistas; a limitação de visualização WebGL permanece.
+
+
+## Encerramento — 28/10/2026, 23h32 (UTC−4)
+
+Prazo absoluto: `2026-10-29T03:32:00.000Z`, seis horas a partir do pedido às 17h32. Relógio físico de duas faces entre os dois totens da entrada do curral; contagem também no HUD. Não reinicia ao entrar e continua com o jogo pausado. O servidor fornece a hora, sincronizada a cada 30 segundos; os clientes usam relógio monotônico entre sincronizações.
+
+Ao expirar, somem a neve geral, faixas, totens, pódio e neve caindo, e voltam as cores e árvores normais. A pista 21, sua Fênix Gelada, o gelo e os patins permanecem. O ninho passa a três ovos, com raridades, mutações e renovação comuns; valor-base de 75.000, igual à pista 20. Não há mais a tabela promocional nem XXXXX. Ovos em transporte ou caídos viram comuns; ovos já depositados e criaturas conquistadas mantêm a marca `winterReward` e seus valores, inclusive após chocar/recarregar/trocar. Saldos e compras são preservados.
+
+O servidor encerra o presente de inverno e rejeita salvamentos de clientes desatualizados após o prazo. A função de estado deriva do horário do banco; não depende de tarefa agendada para fechar. O cálculo patrimonial distingue criaturas promocionais antigas de novas criaturas normais. Migração: `20261028213739_egg_winter_event_deadline.sql`.
+
+Validação: testes das regras, transição durante pausa, relógio, geometrias reais, preservação de recompensas, autenticação, fim do presente e rejeição de salvamentos antigos. A prévia remota está com WebGL desativado, portanto o desenho por GPU não foi conferido visualmente nesse navegador.

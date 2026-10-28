@@ -1,3 +1,4 @@
+import {createEventClock} from './egg-event-clock.js';
 import * as T from 'three';
 import {createWinterTotem,createWinterBanner,winterDisplayLayout,winterDisplayArea} from './egg-winter-totem.js';
 import {WINTER} from './egg-winter-rules.js';
@@ -18,10 +19,12 @@ export function icePhoenix(g,limbs,{ball,cyl,rod,softBox,group}){
 }
 export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  const {box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}=helpers,snow=0xf0f8ff;
+ const seasonal=[];const seasonalGroup=parent=>{const g=group(parent);g.name="WinterSeasonDecor";seasonal.push(g);return g;};
+ const eventBase=seasonalGroup(base),eventPen=seasonalGroup(pen);
  const totem=createWinterTotem(),banner=createWinterBanner();
  // Snow settles in every biome; their landmarks and colours remain recognizable.
  for(let i=0;i<zoneGroups.length;i++){
-  const g=zoneGroups[i],z=-(i*48+24);
+  const g=seasonalGroup(zoneGroups[i]),z=-(i*48+24);
   for(const side of [-1,1])for(let j=0;j<5;j++){
    const x=side*(6.1+j%2*2.6),zz=z-19+j*9;
    ball(g,1.35,snow,x,.06,zz,1.35,.23,1.7);
@@ -33,13 +36,14 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
   const cap=box(g,12.8,.13,.66,snow,0,4.84,-i*48);cap.castShadow=false;
  }
  // Winter games village with the custom red-circle event emblem.
- const podium=group(base,-5,0,22.5);
+ const podium=group(eventBase,-5,0,22.5);
  for(const [x,h,n]of [[-1.6,.7,'2'],[0,1.15,'1'],[1.6,.5,'3']]){softBox(podium,1.5,h,1.5,0x79b4d9,x,h/2,0);box(podium,1.5,.10,1.5,snow,x,h+.05,0);label(podium,n,x,h*.55,-.8,.65,'#144a72','#e8f8ff');}
  for(const [x,y,c]of [[-1.15,3.4,0xe52c42],[0,3.4,0xe52c42],[1.15,3.4,0xe52c42],[-.57,2.8,0xe52c42],[.57,2.8,0xe52c42]])torus(podium,.52,.055,c,x,y,.6);
  label(podium,'INVERNO 2026',0,4.5,.6,5,'#184d74','#eefbff');
- for(const x of [-9,9]){const t=totem.clone(true);t.position.set(x,0,5.8);t.rotation.y=x<0?-.18:.18;base.add(t);}
- for(const side of [-1,1]){rod(base,[side*3.2,0,6],[side*3.2,4.5,6],.06,0xe5f7ff);box(base,1.2,.8,.045,side<0?0x57c5dc:0xa99de4,side*3.2+.6,4,6);}
- for(const x of [-2.8,2.8])ball(pen,.5,snow,x,2.88,2.5,1.8,.22,1.3);
+ for(const x of [-9,9]){const t=totem.clone(true);t.position.set(x,0,5.8);t.rotation.y=x<0?-.18:.18;eventBase.add(t);}
+ for(const side of [-1,1]){rod(eventBase,[side*3.2,0,6],[side*3.2,4.5,6],.06,0xe5f7ff);box(eventBase,1.2,.8,.045,side<0?0x57c5dc:0xa99de4,side*3.2+.6,4,6);}
+ for(const x of [-2.8,2.8])ball(eventPen,.5,snow,x,2.88,2.5,1.8,.22,1.3);
+ const eventClock=createEventClock(eventBase);
  const winter=zoneGroups[WINTER.world],z=-(WINTER.world*48+24);
  for(const side of [-1,1])for(let j=0;j<5;j++){const zz=z-20+j*9;if(winterDisplayArea(WINTER.world,side*7.5,zz))continue;crystal(winter,side*(6.5+j%2),zz,j%2?0xa6e8fb:0x7fb5de,2.5+j%3);tree(winter,side*10,zz,3,1.4);}
  const arch=torus(winter,6,.28,0x8aceed,0,3,z-13);arch.scale.y=1.3;label(winter,'FÊNIX GELADA',0,7,z-13,6,'#154b75','#eafbff');
@@ -53,7 +57,8 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  snowGeo.setAttribute('position',new T.BufferAttribute(positions,3));const flakes=new T.Points(snowGeo,new T.PointsMaterial({color:0xffffff,size:.095,transparent:true,opacity:.85,depthWrite:false}));flakes.frustumCulled=false;root.add(flakes);
  const skates=[];
  for(const side of ['L','R']){const foot=player.model.bones['foot'+side],g=group(foot);g.name='WinterSkate'+side;softBox(g,.38,.12,.67,0xb1eaff,0,-.10,-.11);box(g,.065,.10,.61,0x58779d,0,-.20,-.10);softBox(g,.07,.06,.75,0xe2f7ff,0,-.24,-.15);g.visible=false;skates.push(g);}
- return {frost,flakes,skates,update(game,dt,reducedMotion=false){
+ return {frost,flakes,skates,eventClock,seasonal,updateEvent(game){for(const g of seasonal)g.visible=game.eventActive;flakes.visible=game.eventActive;eventClock.update(game.now());},update(game,dt,reducedMotion=false){
+  this.updateEvent(game);
   const warning=!game.raceMode&&game.time<game.winter.startsAt&&game.winter.startsAt<Infinity;
   frost.visible=game.time<game.winter.until&&!game.raceMode;iceMat.opacity=warning?.2+Math.sin(game.time*10)*.08:.8;
   flakes.position.set(game.player.x,0,game.player.z-7);
