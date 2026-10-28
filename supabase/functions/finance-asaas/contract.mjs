@@ -9,6 +9,27 @@ export function saleForPix(input){
 }
 export function today(now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Manaus',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
 export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;}
+export class AsaasError extends Error {
+ constructor(status,data={}){
+  const errors=Array.isArray(data.errors)?data.errors:[],code=errors.find(e=>typeof e?.code==='string')?.code;
+  let message='O Asaas recusou a operação. Confira os dados da cobrança e a situação da conta.';
+  if(code==='invalid_value'){
+   message='O Asaas recusou o valor da cobrança. Confira o valor mínimo permitido pela sua conta.';
+   // Only a numeric minimum may be copied. Never expose raw provider responses or customer data.
+   const description=errors.find(e=>e?.code==='invalid_value')?.description;
+   const minimum=typeof description==='string'&&description.match(/(?:mínimo|minimo|menor que|inferior a)[^\d]{0,40}(?:R\$\s*)?(\d{1,6}(?:[.,]\d{1,2})?)/i);
+   if(minimum){const value=Number(minimum[1].replace(',','.'));if(value>0&&value<=100000)message='O Asaas exige pelo menos '+value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' para esta cobrança. O valor do carrinho não foi alterado.';}
+  }else if(code==='invalid_dueDate'||code==='invalid_due_date')message='O Asaas recusou o vencimento. Confira a data da cobrança.';
+  else if(code==='invalid_customer'||code==='invalid_cpfCnpj'||code==='invalid_cpf_cnpj')message='O Asaas recusou o cadastro do pagador. Confira o nome e o CPF/CNPJ.';
+  else if(code==='invalid_billingType')message='O Pix ainda não está disponível para esta cobrança na conta Asaas.';
+  if(status===401)message='A chave do Asaas é inválida ou expirou. A direção precisa atualizar a conexão.';
+  if(status===403)message='O Asaas não liberou esta operação. Confira a aprovação e as permissões da conta.';
+  if(status===429)message='Aguarde alguns instantes antes de consultar o Asaas novamente.';
+  super(message);this.name='AsaasError';this.status=status;
+  this.code=['invalid_value','invalid_dueDate','invalid_due_date','invalid_customer','invalid_cpfCnpj','invalid_cpf_cnpj','invalid_billingType'].includes(code)?code:'provider_error';
+  this.rejected=[400,401,403,404,422].includes(status);
+ }
+}
 export function provider(apiKey,{fetcher=fetch}={}){
  if(typeof apiKey!=='string'||apiKey.length<20||apiKey.length>1000||/[\r\n]/.test(apiKey))throw Error('Chave de API inválida.');
  return async(path,method='GET',body)=>{
@@ -16,10 +37,8 @@ export function provider(apiKey,{fetcher=fetch}={}){
   if(!/^\/[a-zA-Z0-9/?=&_:%.~-]+$/.test(path)||path.startsWith('//'))throw Error('Operação inválida.');
   const response=await fetcher('https://api.asaas.com/v3'+path,{method,redirect:'error',headers:{access_token:apiKey,'Content-Type':'application/json','User-Agent':'InstitutoIntegro/1.0'},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(15000)});
   if(!response.ok){
-   if(response.status===401)throw Error('A chave do Asaas é inválida ou expirou. A direção precisa atualizar a conexão.');
-   if(response.status===403)throw Error('O Asaas não liberou esta operação. Confira a aprovação e as permissões da conta.');
-   if(response.status===429)throw Error('Aguarde alguns instantes antes de consultar o Asaas novamente.');
-   throw Error('O Asaas não confirmou a operação. Confira os dados da cobrança e a situação da conta.');
+   let data={};try{data=await response.json();}catch{}
+   throw new AsaasError(response.status,data||{});
   }
   const data=await response.json();if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Resposta inválida do Asaas.');return data;
  };

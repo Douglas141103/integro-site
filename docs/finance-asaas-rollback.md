@@ -28,3 +28,9 @@ Criações não são repetidas após falha de rede. O pedido mantém o identific
 Testes locais com HTTP simulado, DOM e PostgreSQL embutido verificam autorização, isolamento de unidades, não exposição de chaves, ativação explícita, Pix na própria tela, recuperação sem duplicar cobrança, validação do pagamento e preservação dos recibos. O Vault em testes é um substituto em memória; em produção é a extensão criptografada instalada. Nenhuma cobrança real é emitida durante os testes.
 
 A confirmação ponta a ponta depende da chave conectada pelo titular e de um pagamento real autorizado. A configuração da conta e o webhook devem ser revisados no Asaas se houver expiração de chave, restrição de conta ou fila de webhooks interrompida. A integração inicial não faz transferências, estornos ou cobranças em cartão.
+
+## Diagnóstico de geração
+
+Uma recusa HTTP explícita do Asaas fica como `rejected`, com mensagem local segura em `creation_error`. Quando o provedor informa um valor mínimo no erro `invalid_value`, somente esse número é apresentado. O sistema nunca aumenta o valor do carrinho para atender um limite. Respostas brutas, chaves e documentos não entram nas mensagens.
+
+Falhas de rede após o envio permanecem `uncertain`; o mesmo pedido não é reenviado. Conferir pagamento pesquisa o identificador externo e informa quando uma consulta válida não encontra a cobrança. Isso não altera o valor, não efetua nova emissão e não lança receita. A tentativa inicial anterior à correção não tinha o erro do provedor armazenado, portanto seu motivo não pode ser reconstruído pelo histórico local.

@@ -1,5 +1,5 @@
-import {SITE,UUID,PAYMENT_ID,saleForPix,today,validDate,provider,accountForKey,getCustomer,paymentBody,externalReference,verifyPayment,pixData,equalToken} from './contract.mjs';
-const publicOrder=o=>o?({id:o.id,status:o.status,amount:o.amount,due_date:o.due_date,payment_id:o.payment_id,posted_at:o.posted_at,needs_reconciliation:!!o.post_error}):null;
+import {SITE,UUID,PAYMENT_ID,AsaasError,saleForPix,today,validDate,provider,accountForKey,getCustomer,paymentBody,externalReference,verifyPayment,pixData,equalToken} from './contract.mjs';
+const publicOrder=o=>o?({id:o.id,status:o.status,amount:o.amount,due_date:o.due_date,payment_id:o.payment_id,posted_at:o.posted_at,needs_reconciliation:!!o.post_error,creation_error:o.creation_error||null,...(o.not_found?{not_found:true}:{})}):null;
 export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
  return async request=>{
   const origin=request.headers.get('origin'),headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS',...(origin&&[SITE,'https://institutointegro.com.br'].includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
@@ -20,8 +20,9 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
    const synchronize=async(order,call,payment)=>{
     if(!order.payment_id){
      const matches=await call('/payments?externalReference='+encodeURIComponent(externalReference(order.id))+'&limit=100');
-     const found=(matches.data||[]).filter(p=>p.externalReference===externalReference(order.id));
-     if(!found.length)return order;
+     if(!Array.isArray(matches.data))throw Error('O Asaas não confirmou a consulta. Tente conferir novamente.');
+     const found=matches.data.filter(p=>p.externalReference===externalReference(order.id));
+     if(!found.length)return {...order,not_found:true};
      if(found.length!==1||matches.hasMore)throw Error('Mais de uma cobrança encontrada. Confira no Asaas.');
      payment=found[0];
      // Validate before binding a recovered ID. No POST is retried.
@@ -74,18 +75,22 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
     if(!UUID.test(input.request_id))return reply({error:'Identificador inválido.'},400);
     const sale=saleForPix(input),due_date=input.due_date||today();if(!validDate(due_date))return reply({error:'Vencimento inválido.'},400);
     let order=await rpc('create',{user_id:user.id,request_id:input.request_id,sale,due_date});
-    if(!order.created)return reply(publicOrder(order));
+    if(!order.created)return order.status==='rejected'?reply({error:order.creation_error||'Cobrança recusada. Corrija os dados antes de emitir outra cobrança.',order_id:order.id},400):reply(publicOrder(order));
+    let paymentAttempted=false;
     try{
      const secret=await rpc('credentials',{school_id:context.school_id}),call=provider(secret.api_key,{fetcher});
      const customer=await getCustomer(call,order);
      order=await rpc('customer',{id:order.id,customer_id:customer});
+     paymentAttempted=true;
      const payment=await call('/payments','POST',paymentBody(order,customer));
      verifyPayment({...order,payment_id:payment.id},payment);
      order=await rpc('bind',{id:order.id,payment_id:payment.id});
      return reply(publicOrder(await synchronize(order,call,payment)));
-    }catch{
-     await rpc('uncertain',{id:order.id});
-     return reply({error:'A tentativa foi registrada. Use “Conferir pagamento” nesta cobrança antes de tentar outra venda.',order_id:order.id},503);
+    }catch(e){
+     const rejected=!paymentAttempted||(e instanceof AsaasError&&e.rejected);
+     const reason=rejected?(e instanceof AsaasError?e.message:'Não foi possível preparar a cobrança. Confira o cadastro do pagador e a conexão Asaas.'):'A tentativa ficou sem confirmação. Use “Conferir pagamento” antes de gerar outra cobrança.';
+     await rpc('create_failed',{id:order.id,rejected,error:reason});
+     return reply({error:reason,order_id:order.id},rejected?400:503);
     }
    }
    if(input.action==='check'||input.action==='qr'){

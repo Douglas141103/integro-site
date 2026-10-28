@@ -31,7 +31,7 @@
   const $=id=>document.getElementById(id),message=t=>{$('asaasMessage').textContent=t;};
   let settings={enabled:false,connected:false},orders=[],busy=false,refreshing=false,checking=false,initialized=false,request=null,lastPayload=null,selected=null,qr=null;
   const seenPaid=new Set();
-  const status=o=>o.status==='paid'?(o.posted_at?'Pago · lançado no caixa':'Pago · baixa pendente de conciliação'):o.status==='pending'?'Aguardando pagamento':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
+  const status=o=>o.status==='paid'?(o.posted_at?'Pago · lançado no caixa':'Pago · baixa pendente de conciliação'):o.status==='rejected'?'Cobrança não gerada · confira o motivo':o.status==='pending'?'Aguardando pagamento':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
   function draw(){
    $('asaasCreate').disabled=!settings.enabled||busy||!!hooks.isLocked?.(); $('asaasConnect').disabled=busy; $('asaasDue').disabled=busy;
    $('asaasToggle').hidden=!settings.can_configure||!settings.connected; $('asaasToggle').disabled=busy;
@@ -40,7 +40,7 @@
    $('asaasStatus').textContent=settings.enabled?'Pix ativo':settings.connected?'Conta conectada · Pix desativado':'Aguardando conexão';
    $('asaasAccount').textContent=settings.connected?'Recebedor: '+settings.account_name+' · documento final '+settings.document_masked:'A direção precisa conectar a conta Asaas para gerar o Pix.';
    if(!settings.connected&&settings.can_configure)$('asaasSetup').open=true;
-   $('asaasOrders').innerHTML=orders.map(o=>`<article class="pdv2-item asaas-order"><div class="pdv2-head"><strong>${safe(o.student_name)} · ${money(o.amount)}</strong><span>${safe(status(o))}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.needs_reconciliation?'<p>Confira esta cobrança no Asaas e nos recibos antes de fazer qualquer lançamento manual.</p>':''}<div class="pdv2-actions">${o.payment_id&&o.status==='pending'&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-qr="${safe(o.id)}">Mostrar QR Code</button>`:''}${!['refunded','canceled'].includes(o.status)?`<button class="pdv2-btn ghost" type="button" data-asaas-check="${safe(o.id)}">Conferir pagamento</button>`:''}</div></article>`).join('')||'<p>Nenhuma cobrança Pix gerada pelo Asaas.</p>';
+   $('asaasOrders').innerHTML=orders.map(o=>`<article class="pdv2-item asaas-order"><div class="pdv2-head"><strong>${safe(o.student_name)} · ${money(o.amount)}</strong><span>${safe(status(o))}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.creation_error?`<p>${safe(o.creation_error)}</p>`:''}${o.needs_reconciliation?'<p>Confira esta cobrança no Asaas e nos recibos antes de fazer qualquer lançamento manual.</p>':''}<div class="pdv2-actions">${o.payment_id&&o.status==='pending'&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-qr="${safe(o.id)}">Mostrar QR Code</button>`:''}${!['refunded','canceled'].includes(o.status)?`<button class="pdv2-btn ghost" type="button" data-asaas-check="${safe(o.id)}">Conferir pagamento</button>`:''}</div></article>`).join('')||'<p>Nenhuma cobrança Pix gerada pelo Asaas.</p>';
    el.querySelectorAll('[data-asaas-qr]').forEach(b=>{b.disabled=busy;b.onclick=()=>showQr(b.dataset.asaasQr);});
    el.querySelectorAll('[data-asaas-check]').forEach(b=>{b.disabled=busy;b.onclick=()=>check(b.dataset.asaasCheck);});
    const active=orders.find(o=>o.id===selected);
@@ -58,7 +58,7 @@
   }
   async function check(id,silent=false){
    if(checking||busy)return;checking=true;
-   try{const o=await api({action:'check',id});await refresh(true);if(!silent)message(status(o)+(o.status==='uncertain'?' — consulte o Asaas antes de gerar outra cobrança.':'.'));}
+   try{const o=await api({action:'check',id});await refresh(true);if(!silent)message(o.not_found?'O Asaas não encontrou cobrança para esta tentativa. Nenhum pagamento foi lançado por ela. Confira o valor e os dados antes de uma nova emissão.':o.creation_error||status(o)+(o.status==='uncertain'?' — consulte o Asaas antes de gerar outra cobrança.':'.'));}
    catch(e){if(!silent)message(e.message);}finally{checking=false;}
   }
   function drawQr(o,data){

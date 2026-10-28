@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
-import {saleForPix,today,provider,accountForKey,verifyPayment,pixData} from '../supabase/functions/finance-asaas/contract.mjs';
+import {saleForPix,today,provider,AsaasError,accountForKey,verifyPayment,pixData} from '../supabase/functions/finance-asaas/contract.mjs';
 import {createHandler} from '../supabase/functions/finance-asaas/handler.mjs';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const sample=()=>({customer:{studentId:id(3),studentName:'Aluno',payerName:'Responsável',payerDocument:'24971563792',phone:'',email:''},items:[{type:'material',qty:2,grossUnit:15,discountUnit:5,finalUnit:10,desc:'Apostila'}],note:'Teste'});
@@ -27,6 +27,7 @@ async function setup(){
  create function vault.create_secret(v text,n text) returns uuid language plpgsql as $$declare result uuid;begin insert into vault.secrets(value,name) values(v,n) returning id into result;return result;end$$;
  create function vault.update_secret(i uuid,v text) returns void language sql as $$update vault.secrets set value=v where id=i$$;`);
  await db.exec(migration);
+ await db.exec(await readFile(new URL('../supabase/migrations/20261027235725_finance_asaas_creation_errors.sql',import.meta.url),'utf8'));
  const rpc=(action,data={})=>db.transaction(async tx=>{await tx.exec("set local role service_role;set local request.jwt.claim.role='service_role';");return (await tx.query('select public.finance_asaas_service($1,$2) r',[action,data])).rows[0].r;});
  const connect=async(account_id=id(90))=>{const {lease}=await rpc('connect_lock',{user_id:id(1)});try{return await rpc('connect_save',{user_id:id(1),lease,api_key:apiKey,hook_token:hookToken,account_id,account_name:'Conta de teste',document_masked:'•••3792',webhook_id:'hook_test001'});}finally{await rpc('connect_unlock',{user_id:id(1),lease});}};
  const create=(n=30,sale=saleForPix(sample()),user_id=id(1))=>rpc('create',{user_id,request_id:id(n),sale,due_date:today()});
@@ -44,6 +45,40 @@ test('provider validates exact payment identity, amount, method and received dat
  let captured;const call=provider(apiKey,{fetcher:async(url,options)=>{captured={url,options};return {ok:true,json:async()=>({ok:true})};}});
  await call('/payments/pay_test001');assert.equal(captured.options.body,undefined);assert.equal(captured.options.headers.access_token,apiKey);assert.equal(captured.options.redirect,'error');
  await assert.rejects(call('//evil.test'));await assert.rejects(accountForKey(async()=>({general:'PENDING',id:id(90)})),/aprovação/);
+});
+test('provider errors expose only safe explanations and numeric minimums',async()=>{
+ const error=new AsaasError(400,{errors:[{code:'invalid_value',description:'O valor mínimo da cobrança é R$ 5,00. segredo-nao-expor'}]});
+ assert.match(error.message,/R\$\s*5,00/);assert.equal(error.rejected,true);assert.equal(error.message.includes('segredo'),false);
+ const call=provider(apiKey,{fetcher:async()=>({ok:false,status:400,json:async()=>({errors:[{code:'invalid_value',description:'valor inválido '+apiKey}]})})});
+ await assert.rejects(call('/payments','POST',{}),e=>e instanceof AsaasError&&e.rejected&&e.message.includes('valor mínimo')&&!e.message.includes(apiKey));
+ assert.equal(new AsaasError(500).rejected,false);assert.equal(new AsaasError(429).rejected,false);
+ assert.equal(new AsaasError(400,{errors:[{code:'unknown',description:apiKey}]}).message.includes(apiKey),false);
+});
+test('a refused payment is stored with its safe reason, never retried under the same request, and never posted',async()=>{
+ const x=await setup();try{
+  await x.connect();await x.rpc('settings',{user_id:id(1),enabled:true});let posts=0;
+  const fetcher=async(url,opts)=>{
+   if(url.includes('/customers')&&opts.method==='GET')return {ok:true,json:async()=>({data:[]})};
+   if(url.includes('/customers'))return {ok:true,json:async()=>({id:'cus_test001'})};
+   posts++;return {ok:false,status:400,json:async()=>({errors:[{code:'invalid_value',description:'O valor mínimo é R$ 5,00.'}]})};
+  };
+  const handler=createHandler({rpc:x.rpc,getUser:async()=>({id:id(1)}),baseUrl:'https://project.supabase.co',fetcher});
+  const invoke=b=>handler(new Request('https://project.supabase.co/functions/v1/finance-asaas',{method:'POST',headers:{authorization:'Bearer valid'},body:JSON.stringify(b)}));
+  const b={action:'create',request_id:id(60),...sample()},first=await invoke(b);assert.equal(first.status,400);
+  const data=await first.json();assert.match(data.error,/5,00/);
+  const list=await x.rpc('list',{user_id:id(1)});assert.equal(list.orders[0].status,'rejected');assert.match(list.orders[0].creation_error,/5,00/);
+  assert.equal((await invoke(b)).status,400);assert.equal(posts,1);
+  assert.equal((await x.db.query('select count(*)::int n from public.finance_entries')).rows[0].n,0);
+ }finally{await x.db.close();}
+});
+test('checking an uncertain attempt reports absence only after a valid provider response, without creating a payment',async()=>{
+ const x=await setup();try{
+  await x.connect();await x.rpc('settings',{user_id:id(1),enabled:true});const o=await x.create();await x.rpc('uncertain',{id:o.id});
+  let gets=0;
+  const handler=createHandler({rpc:x.rpc,getUser:async()=>({id:id(1)}),baseUrl:'https://project.supabase.co',fetcher:async(url,opts)=>{assert.equal(opts.method,'GET');gets++;return {ok:true,json:async()=>({data:[],hasMore:false})};}});
+  const response=await handler(new Request('https://project.supabase.co/functions/v1/finance-asaas',{method:'POST',headers:{authorization:'Bearer valid'},body:JSON.stringify({action:'check',id:o.id})}));
+  const result=await response.json();assert.equal(result.not_found,true);assert.equal(result.status,'uncertain');assert.equal(gets,1);
+ }finally{await x.db.close();}
 });
 test('database isolates schools and credentials; receipts are atomic, immutable and idempotent after disable',async()=>{
  const x=await setup();try{
