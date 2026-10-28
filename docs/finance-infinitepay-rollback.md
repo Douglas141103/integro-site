@@ -29,3 +29,11 @@ Desativar não cancela cobranças emitidas, não estorna dinheiro e não desfaz 
 ## Validação
 
 Testes locais com PostgreSQL embutido e DOM verificam acesso, flag de desativação, idempotência, conferência do valor, transação atômica, ciclo fechado, isolamento de unidades e preservação de recibos. Nenhum pagamento real é feito pelos testes. A confirmação ponta a ponta ainda requer uma venda real paga pelo cliente.
+
+## Cobrança sem preenchimento prévio do comprador — 27/10/2026
+
+Por solicitação do Instituto Integro, novas cobranças criadas por `finance-infinitepay` omitem completamente `customer` e `address` na requisição à InfinitePay. São enviados os itens (descrição e valor), a conta recebedora, o identificador do pedido, o webhook e a URL de retorno. Os dados do aluno/pagador continuam no pedido interno e nos recibos. Descrições digitadas nos itens ainda são enviadas como parte da cobrança.
+
+Essa opção retira o preenchimento prévio dos dados; não garante que o checkout da InfinitePay dispense identificação, WhatsApp ou outras verificações. Links já emitidos mantêm os dados usados na criação. A alteração é no servidor, sem mudar Asaas nem a navegação do caixa.
+
+Para reverter somente essa opção, restaure `supabase/functions/finance-infinitepay/contract.mjs` da revisão `0edfa6d555b9ca34faba60d341cfec4f219b0567` e publique novamente a função `finance-infinitepay` com seu `index.ts`, preservando `verify_jwt=false` e a autenticação interna existente. Atualize o teste de payload para corresponder ao comportamento restaurado. Não reverta o caixa por etapas nem exclua pedidos ou lançamentos financeiros.

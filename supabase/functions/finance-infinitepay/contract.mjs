@@ -25,10 +25,8 @@ export async function postProvider(path,body,{fetcher=fetch}={}){
  const data=await r.json();if(!data||typeof data!=='object')throw Error('Resposta inválida da InfinitePay.');return data;
 }
 export async function createCheckout(order,webhook,options){
- const c=order.sale.customer;
- const customer={name:c.payer_name};if(c.email)customer.email=c.email;
- const phone=c.phone.replace(/\D/g,'');if(phone)customer.phone_number='+'+(phone.startsWith('55')?phone:'55'+phone);
- const r=await postProvider('/links',{handle:HANDLE,order_nsu:order.id,webhook_url:webhook,redirect_url:SITE+'/portal/financeiro-pagamento.html',customer,items:order.sale.items.map(i=>({quantity:1,price:i.amount,description:i.description+(i.qty>1?' (quantidade '+i.qty+')':'')}))},options);
+ // Keep the purchaser in the local sale/receipt; send only checkout and order data.
+ const r=await postProvider('/links',{handle:HANDLE,order_nsu:order.id,webhook_url:webhook,redirect_url:SITE+'/portal/financeiro-pagamento.html',items:order.sale.items.map(i=>({quantity:1,price:i.amount,description:i.description+(i.qty>1?' (quantidade '+i.qty+')':'')}))},options);
  const url=safeCheckout(r.url);if(!url)throw Error('Link de pagamento inválido.');return url;
 }
 export async function verifyPayment(order,transaction,slug,options){

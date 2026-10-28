@@ -32,10 +32,14 @@ test('amounts validated in cents; rejects malformed or inconsistent carts',()=>{
  s.items[0].finalUnit=0;assert.throws(()=>normalizeSale(s));
  assert.equal(safeCheckout('https://evil.test/pay'),null);assert.equal(safeCheckout('https://user:pass@pay.infinitepay.io/a'),null);
 });
-test('checkout pre-fills purchaser and binds the order; verification rejects forged or wrong amounts',async()=>{
+test('checkout omits purchaser data while keeping the local customer and order binding; verification rejects wrong amounts',async()=>{
  const order={id:id(40),amount:2000,sale:normalizeSale(sample())};let sent;
+ const localCustomer=structuredClone(order.sale.customer);
  const fetcher=async(url,opts)=>{sent=JSON.parse(opts.body);return {ok:true,json:async()=>({url:'https://checkout.infinitepay.io/instituto-integro/a'})};};
- await createCheckout(order,'https://example.test/webhook',{fetcher});assert.equal(sent.order_nsu,order.id);assert.equal(sent.customer.phone_number,'+5592999999999');assert.equal(sent.items[0].price,2000);
+ await createCheckout(order,'https://example.test/webhook',{fetcher});
+ assert.deepEqual(sent,{handle:'instituto-integro',order_nsu:order.id,webhook_url:'https://example.test/webhook',redirect_url:'https://www.institutointegro.com.br/portal/financeiro-pagamento.html',items:[{quantity:1,price:2000,description:'Apostila (quantidade 2)'}]});
+ assert.deepEqual(order.sale.customer,localCustomer);
+ for(const value of [localCustomer.payer_name,localCustomer.email,localCustomer.phone,localCustomer.payer_document])assert.equal(JSON.stringify(sent).includes(value),false);
  const verified=result=>verifyPayment(order,'tx-1','invoice-1',{fetcher:async()=>({ok:true,json:async()=>result})});
  assert.deepEqual(await verified({paid:false,success:true}),{paid:false});
  await assert.rejects(verified({success:true,paid:true,amount:1,capture_method:'pix'}));
@@ -53,7 +57,8 @@ test('service-only, off switch, pending orders do not enter cash; paid event pos
  await rpc('settings',{user_id:id(1),enabled:false});await assert.rejects(create(31),/desativada/);
  assert.equal((await settle(o)).posted,true);await settle(o);
  assert.equal((await db.query('select count(*)::int n,sum(amount_paid) total from public.finance_entries')).rows[0].n,1);
- assert.equal(Number((await db.query('select amount_paid from public.finance_entries')).rows[0].amount_paid),20);
+ const entry=(await db.query('select amount_paid,payer_name,payer_document,student_name_snapshot from public.finance_entries')).rows[0];
+ assert.equal(Number(entry.amount_paid),20);assert.equal(entry.payer_name,'Responsável');assert.equal(entry.payer_document,'00000000000');assert.equal(entry.student_name_snapshot,'Aluno');
  await assert.rejects(db.exec("delete from public.finance_entries"),/preservado/);
  await assert.rejects(settle(o,'different'),/Outro pagamento/);
  }finally{await db.close();}
