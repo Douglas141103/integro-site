@@ -46,6 +46,16 @@ test('provider validates exact payment identity, amount, method and received dat
  await call('/payments/pay_test001');assert.equal(captured.options.body,undefined);assert.equal(captured.options.headers.access_token,apiKey);assert.equal(captured.options.redirect,'error');
  await assert.rejects(call('//evil.test'));await assert.rejects(accountForKey(async()=>({general:'PENDING',id:id(90)})),/aprovação/);
 });
+test('Pix rejects totals below five reais before recording an order or calling Asaas; allows the boundary and combined items',async()=>{
+ const handler=createHandler({getUser:async()=>({id:id(1)}),baseUrl:'https://project.supabase.co',rpc:async action=>{assert.equal(action,'authorize');return {school_id:id(10)};},fetcher:async()=>{assert.fail('Asaas must not be called for an invalid total');}});
+ for(const value of [1,1.5,4.99]){
+  const sale=sample();sale.items=[{type:'material',qty:1,grossUnit:value,discountUnit:0,finalUnit:value,desc:'Material'}];
+  const response=await handler(new Request('https://project.supabase.co/functions/v1/finance-asaas',{method:'POST',headers:{authorization:'Bearer valid'},body:JSON.stringify({action:'create',request_id:id(80),...sale})}));
+  assert.equal(response.status,400);assert.match((await response.json()).error,/mínimo de R\$ 5,00/);assert.equal(sale.items[0].finalUnit,value);
+ }
+ const sale=sample();sale.items=[{type:'material',qty:1,grossUnit:6,discountUnit:1,finalUnit:5,desc:'Material'}];assert.equal(saleForPix(sale).amount,500);
+ sale.items=[{...sale.items[0],grossUnit:3,discountUnit:0.5,finalUnit:2.5,qty:2}];assert.equal(saleForPix(sale).amount,500);
+});
 test('provider errors expose only safe explanations and numeric minimums',async()=>{
  const error=new AsaasError(400,{errors:[{code:'invalid_value',description:'O valor mínimo da cobrança é R$ 5,00. '+apiKey}]},apiKey);
  assert.match(error.message,/R\$\s*5,00/);assert.equal(error.rejected,true);assert.equal(error.message.includes('segredo'),false);

@@ -2,8 +2,10 @@ import {normalizeSale, UUID, SITE} from '../finance-infinitepay/contract.mjs';
 export {UUID, SITE};
 export const PAYMENT_ID=/^pay_[a-zA-Z0-9]{6,80}$/;
 export const CUSTOMER_ID=/^cus_[a-zA-Z0-9]{6,80}$/;
+export const MIN_PIX_CENTS=500;
 export function saleForPix(input){
  const sale=normalizeSale(input),document=sale.customer.payer_document.replace(/\D/g,'');
+ if(sale.amount<MIN_PIX_CENTS)throw Error('O Pix pelo Asaas exige um total mínimo de R$ 5,00 após os descontos. O valor do carrinho não foi alterado.');
  if(![11,14].includes(document.length))throw Error('Informe o CPF ou CNPJ do pagador no cadastro do caixa.');
  sale.customer.payer_document=document;return sale;
 }

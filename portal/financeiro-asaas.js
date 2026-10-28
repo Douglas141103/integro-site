@@ -15,6 +15,7 @@
   el.innerHTML=`<style>#asaasPanel[hidden],#asaasPanel [hidden]{display:none!important}.asaas-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.asaas-badge{background:#eef5f0;border-radius:30px;padding:8px 12px;font-weight:800}.asaas-qr-layout{display:flex;gap:24px;flex-wrap:wrap;align-items:center}.asaas-qr{width:256px;max-width:100%;height:auto;background:white;padding:12px;border:1px solid #d7e9df;border-radius:12px;box-sizing:border-box;image-rendering:pixelated}.asaas-payload{width:100%;box-sizing:border-box;overflow-wrap:anywhere;font:12px monospace!important}.asaas-details{margin-top:18px;padding-top:14px;border-top:1px solid #d7e9df}.asaas-details summary{cursor:pointer;font-weight:800}.asaas-order{margin-top:12px}.asaas-date{max-width:230px;margin-top:14px}.asaas-guide{line-height:1.5}.asaas-pix-body{flex:1;min-width:220px}.asaas-orders{max-height:520px;overflow:auto}</style>
    <div class="asaas-summary"><h2>Pix no caixa · Asaas</h2><span class="asaas-badge" id="asaasStatus">Verificando conexão…</span></div>
    <p class="pdv2-muted">O QR Code e o Pix Copia e Cola aparecem aqui. Após o pagamento confirmado, o valor entra no caixa e o recibo fica em Entradas.</p>
+   <p class="pdv2-small">Valor mínimo para emitir pelo Asaas: <strong>R$ 5,00 no total do carrinho, após os descontos.</strong></p>
    <p id="asaasAccount"></p>
    <label class="asaas-date">Vencimento da cobrança<input id="asaasDue" type="date" value="${today()}" min="${today()}"></label>
    <div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="asaasCreate" disabled>Gerar Pix do carrinho</button><button type="button" class="pdv2-btn ghost" id="asaasRefresh">Atualizar cobranças</button><button type="button" class="pdv2-btn ghost" id="asaasToggle" hidden></button></div>
@@ -81,6 +82,8 @@
    if(busy||!settings.enabled||hooks.isLocked?.())return;
    try{
     const payload={...hooks.snapshot(),due_date:$('asaasDue').value},serialized=JSON.stringify(payload);
+    const amount=payload.items.reduce((sum,item)=>sum+Math.round(Number(item.finalUnit)*100)*Number(item.qty),0);
+    if(Number.isFinite(amount)&&amount<500)throw Error('O Pix pelo Asaas exige um total mínimo de R$ 5,00 após os descontos. O valor do carrinho não foi alterado.');
     if(lastPayload!==serialized){request=crypto.randomUUID();lastPayload=serialized;}
     busy=true;hooks.lock(true);draw();message('Gerando Pix. Aguarde antes de fazer outro lançamento.');
     const result=await api({action:'create',request_id:request,...payload});
