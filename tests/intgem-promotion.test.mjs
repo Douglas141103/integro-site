@@ -59,6 +59,8 @@ test('promotion reappears on entry, remains reachable after closing, and hides a
   api.update(p);const modal=w.document.querySelector('dialog');assert(modal.open);assert.match(modal.textContent,/20 IntGem/);assert.match(modal.textContent,/\+80 de bônus/);assert.equal(modal.querySelector('.ig-promo-total strong').textContent,'100');
   modal.querySelector('.ig-promo-close').click();assert(!modal.open);api.update(p);assert(!modal.open);assert(!w.document.querySelector('.ig-promo-banner').hidden);
   w.document.querySelector('.ig-promo-launcher').click();assert(modal.open);modal.querySelector('.ig-promo-buy').click();assert.equal(opened,1);assert(!modal.open);
+  const full=w.document.createElement('section');w.document.body.append(full);Object.defineProperty(w.document,'fullscreenElement',{configurable:true,value:full});api.update(p);assert.equal(w.document.querySelector('.ig-promo-launcher').parentElement,full);
+  Object.defineProperty(w.document,'fullscreenElement',{configurable:true,value:null});api.update(p);assert.equal(w.document.querySelector('.ig-promo-launcher').parentElement,w.document.body);
   api.stop();api=mount();api.update(p);assert(w.document.querySelector('dialog').open);
   api.update({...p,server_now:new Date(Date.parse(p.ends_at)+1).toISOString()});assert(!w.document.querySelector('dialog').open);assert(w.document.querySelector('.ig-promo-launcher').hidden);assert.equal(expired,1);assert.equal(api.getActive(),null);
  }finally{api.stop();w.close();}

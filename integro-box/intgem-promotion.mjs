@@ -30,12 +30,14 @@ export function mountIntGemPromotion({openWallet,standalone=false,onExpire=()=>{
  function tick(){
   if(stopped)return;const active=!!getActive();
   banner.hidden=!active;launcher.hidden=!active||!!standalone;
+  if(active&&!standalone){const parent=doc.fullscreenElement||doc.body;if(launcher.parentElement!==parent)parent.append(launcher);}
   if(active)modal.querySelectorAll('[data-promo-countdown]').forEach(el=>el.textContent=remainingPromotion(offer.ends_at,serverNow()));
   else if(modal.open)modal.close();
   if(wasActive&&!active)onExpire();wasActive=active;
  }
  modal.querySelector('.ig-promo-close').onclick=()=>modal.close();banner.onclick=show;launcher.onclick=show;
  for(const type of ['keydown','keyup','pointerdown','pointerup'])modal.addEventListener(type,e=>e.stopPropagation());
+ for(const type of ['keydown','keyup','pointerdown','pointerup'])launcher.addEventListener(type,e=>e.stopPropagation());
  function update(p){
   if(stopped)return;
   if(p?.server_now&&Number.isFinite(Date.parse(p.server_now)))offset=Date.parse(p.server_now)-Date.now();

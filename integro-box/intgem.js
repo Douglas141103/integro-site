@@ -1,4 +1,4 @@
-import {mountIntGemPromotion} from './intgem-promotion.mjs?v=20261028-promo1';
+import {mountIntGemPromotion} from './intgem-promotion.mjs?v=20261028-promo2';
 import {supabase} from './access.js?v=20261016-intgem1';
 import {GAMES,ITEMS,PACKS,activeGame,gemArt,money} from './intgem-catalog.mjs?v=20261016-eggshop1';
 import {eggItemArt} from './egg-intgem-catalog.mjs?v=20261016-eggshop1';
