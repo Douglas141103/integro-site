@@ -15,9 +15,9 @@
   el.innerHTML=`<style>#asaasPanel[hidden],#asaasPanel [hidden]{display:none!important}.asaas-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.asaas-badge{background:#eef5f0;border-radius:30px;padding:8px 12px;font-weight:800}.asaas-qr-layout{display:flex;gap:24px;flex-wrap:wrap;align-items:center}.asaas-qr{width:256px;max-width:100%;height:auto;background:white;padding:12px;border:1px solid #d7e9df;border-radius:12px;box-sizing:border-box;image-rendering:pixelated}.asaas-payload{width:100%;box-sizing:border-box;overflow-wrap:anywhere;font:12px monospace!important}.asaas-details{margin-top:18px;padding-top:14px;border-top:1px solid #d7e9df}.asaas-details summary{cursor:pointer;font-weight:800}.asaas-order{margin-top:12px}.asaas-date{max-width:230px;margin-top:14px}.asaas-guide{line-height:1.5}.asaas-pix-body{flex:1;min-width:220px}.asaas-orders{max-height:520px;overflow:auto}</style>
    <div class="asaas-summary"><h2>Pix no caixa · Asaas</h2><span class="asaas-badge" id="asaasStatus">Verificando conexão…</span></div>
    <p class="pdv2-muted">O QR Code e o Pix Copia e Cola aparecem aqui. Após a baixa do pagamento, o recibo fica disponível para impressão.</p>
-   <p class="pdv2-small">Valor mínimo para emitir pelo Asaas: <strong>R$ 5,00 no total do carrinho, após os descontos.</strong></p>
-   <p class="pdv2-small">Tarifa configurada no caixa: <strong>R$ 0,99 por cobrança paga</strong>, registrada automaticamente em Saídas.</p><p id="asaasAccount"></p>
-   <label class="asaas-date">Vencimento da cobrança<input id="asaasDue" type="date" value="${today()}" min="${today()}"></label>
+   <p class="pdv2-small">Valor mínimo para emitir pelo Asaas: <strong>R$ 1,00 no total do carrinho, após os descontos.</strong></p>
+   <p id="asaasAccount"></p>
+   <p class="pdv2-small">Cada QR Code vale por 30 minutos e recebe um único pagamento.</p>
    <div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="asaasCreate" disabled>Gerar Pix do carrinho</button><button type="button" class="pdv2-btn ghost" id="asaasRefresh">Atualizar cobranças</button><button type="button" class="pdv2-btn ghost" id="asaasToggle" hidden></button></div>
    <p id="asaasMessage" role="status" aria-live="polite"></p>
    <div id="asaasPix" class="pdv2-item" hidden></div>
@@ -32,16 +32,16 @@
   const $=id=>document.getElementById(id),message=t=>{$('asaasMessage').textContent=t;};
   let settings={enabled:false,connected:false},orders=[],busy=false,refreshing=false,checking=false,initialized=false,request=null,lastPayload=null,selected=null,qr=null;
   const seenPaid=new Set();
-  const status=o=>o.status==='paid'?(o.posted_at?'Pago · lançado no caixa':'Pago · baixa pendente de conciliação'):o.status==='rejected'?'Cobrança não gerada · confira o motivo':o.status==='pending'?'Aguardando pagamento':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
+  const status=o=>o.status==='paid'?(o.posted_at?'Pago · lançado no caixa':'Pago · baixa pendente de conciliação'):o.status==='rejected'?'Cobrança não gerada · confira o motivo':o.status==='pending'?'Aguardando pagamento':o.status==='expired'?'Pix expirado · gere um novo código':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
   function draw(){
-   $('asaasCreate').disabled=!settings.enabled||busy||!!hooks.isLocked?.('asaas')||(hooks.canCreate&&!hooks.canCreate('asaas')); $('asaasConnect').disabled=busy; $('asaasDue').disabled=busy||!!hooks.isLocked?.();
+   $('asaasCreate').disabled=!settings.enabled||busy||!!hooks.isLocked?.('asaas')||(hooks.canCreate&&!hooks.canCreate('asaas')); $('asaasConnect').disabled=busy;
    $('asaasToggle').hidden=!settings.can_configure||!settings.connected; $('asaasToggle').disabled=busy;
    $('asaasToggle').textContent=settings.enabled?'Desativar Pix Asaas':'Ativar Pix nesta conta';
    $('asaasSetup').hidden=!settings.can_configure;
    $('asaasStatus').textContent=settings.enabled?'Pix ativo':settings.connected?'Conta conectada · Pix desativado':'Aguardando conexão';
    $('asaasAccount').textContent=settings.connected?'Recebedor: '+settings.account_name+' · documento final '+settings.document_masked:'A direção precisa conectar a conta Asaas para gerar o Pix.';
    if(!settings.connected&&settings.can_configure)$('asaasSetup').open=true;
-   $('asaasOrders').innerHTML=orders.map(o=>`<article class="pdv2-item asaas-order"><div class="pdv2-head"><strong>${safe(o.student_name)} · ${money(o.amount)}</strong><span>${safe(status(o))}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.creation_error?`<p>${safe(o.creation_error)}</p>`:''}${o.needs_reconciliation?'<p>Confira esta cobrança no Asaas e nos recibos antes de fazer qualquer lançamento manual.</p>':''}<div class="pdv2-actions">${hooks.receipt&&o.status==='paid'&&o.posted_at&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-receipt="${safe(o.id)}">Imprimir recibo</button>`:''}${o.payment_id&&o.status==='pending'&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-qr="${safe(o.id)}">Mostrar QR Code</button>`:''}${!['refunded','canceled'].includes(o.status)?`<button class="pdv2-btn ghost" type="button" data-asaas-check="${safe(o.id)}">Conferir pagamento</button>`:''}</div></article>`).join('')||'<p>Nenhuma cobrança Pix gerada pelo Asaas.</p>';
+   $('asaasOrders').innerHTML=orders.map(o=>`<article class="pdv2-item asaas-order"><div class="pdv2-head"><strong>${safe(o.student_name)} · ${money(o.amount)}</strong><span>${safe(status(o))}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.creation_error?`<p>${safe(o.creation_error)}</p>`:''}${o.needs_reconciliation?'<p>Confira esta cobrança no Asaas e nos recibos antes de fazer qualquer lançamento manual.</p>':''}<div class="pdv2-actions">${hooks.receipt&&o.status==='paid'&&o.posted_at&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-receipt="${safe(o.id)}">Imprimir recibo</button>`:''}${(o.pix_available||o.payment_id)&&o.status==='pending'&&!o.needs_reconciliation?`<button class="pdv2-btn primary" type="button" data-asaas-qr="${safe(o.id)}">Mostrar QR Code</button>`:''}${!['refunded','canceled'].includes(o.status)?`<button class="pdv2-btn ghost" type="button" data-asaas-check="${safe(o.id)}">Conferir pagamento</button>`:''}</div></article>`).join('')||'<p>Nenhuma cobrança Pix gerada pelo Asaas.</p>';
    el.querySelectorAll('[data-asaas-qr]').forEach(b=>{b.disabled=busy;b.onclick=()=>showQr(b.dataset.asaasQr);});
    el.querySelectorAll('[data-asaas-check]').forEach(b=>{b.disabled=busy;b.onclick=()=>check(b.dataset.asaasCheck);});
    el.querySelectorAll('[data-asaas-receipt]').forEach(b=>b.onclick=()=>hooks.receipt?.('asaas',orders.find(o=>o.id===b.dataset.asaasReceipt)));
@@ -53,6 +53,7 @@
    try{
     const result=await api({action:'list'});settings=result;orders=result.orders||[];
     await hooks.orders?.('asaas',orders);
+    if(orders.some(o=>o.id===selected&&['expired','rejected'].includes(o.status))){request=null;lastPayload=null;}
     const newPaid=orders.filter(o=>o.posted_at&&!seenPaid.has(o.id));orders.filter(o=>o.posted_at).forEach(o=>seenPaid.add(o.id));
     if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pix recebido e lançado no caixa. O recibo está em Entradas.');}
     else if(!silent)message(settings.enabled?'Monte o carrinho e clique em “Gerar Pix do carrinho”.':settings.connected?'Confira o recebedor acima e ative o Pix nesta conta.':'Conecte a conta Asaas na área abaixo.');
@@ -66,11 +67,12 @@
   }
   function drawQr(o,data){
    selected=o.id;qr=data;const box=$('asaasPix');box.hidden=false;
-   box.innerHTML=`<div class="asaas-qr-layout"><img class="asaas-qr" src="data:image/png;base64,${safe(data.encodedImage)}" alt="QR Code Pix da cobrança"><div class="asaas-pix-body"><h3>${money(o.amount)}</h3><p>${safe(o.student_name||'Cobrança do carrinho')}</p><p>Escaneie com o aplicativo do banco ou copie o código Pix.</p><label>Pix Copia e Cola<textarea id="asaasPayload" class="asaas-payload" readonly rows="4">${safe(data.payload)}</textarea></label><div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="asaasCopy">Copiar Pix</button><button type="button" class="pdv2-btn ghost" id="asaasPrint">Imprimir cobrança / PDF</button></div><p class="pdv2-small">${data.expirationDate?'Validade do QR Code informada pelo Asaas: '+safe(data.expirationDate)+'. ':''}A geração do código ainda não confirma o pagamento.</p></div></div>`;
+   box.innerHTML=`<div class="asaas-qr-layout"><img class="asaas-qr" src="data:image/png;base64,${safe(data.encodedImage)}" alt="QR Code Pix da cobrança"><div class="asaas-pix-body"><h3>${money(o.amount)}</h3><p>${safe(o.student_name||'Cobrança do carrinho')}</p><p>Escaneie com o aplicativo do banco ou copie o código Pix.</p><label>Pix Copia e Cola<textarea id="asaasPayload" class="asaas-payload" readonly rows="4">${safe(data.payload)}</textarea></label><div class="pdv2-actions"><button type="button" class="pdv2-btn primary" id="asaasCopy">Copiar Pix</button><button type="button" class="pdv2-btn ghost" id="asaasPrint">Imprimir cobrança / PDF</button></div><p class="pdv2-small">${data.expires_at?'Válido até '+safe(new Date(data.expires_at).toLocaleTimeString('pt-BR'))+'. ':data.expirationDate?'Validade do QR Code informada pelo Asaas: '+safe(data.expirationDate)+'. ':''}A geração do código ainda não confirma o pagamento.</p></div></div>`;
+   box.scrollIntoView?.({behavior:'smooth',block:'start'});
    $('asaasCopy').onclick=async()=>{try{await navigator.clipboard.writeText(data.payload);message('Código Pix copiado. Você pode enviá-lo ao responsável.');}catch{$('asaasPayload').focus();$('asaasPayload').select();message('Selecione e copie o código no campo Pix Copia e Cola.');}};
    $('asaasPrint').onclick=()=>{
     const win=window.open('','_blank');if(!win){message('Permita abrir a janela de impressão.');return;}
-    win.document.write(`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Cobrança Pix · Integro</title><style>body{font:16px Arial;color:#174c39;max-width:700px;margin:30px auto;padding:28px;border:2px solid #174c39;border-radius:18px}.logo{width:135px}.qr{width:260px;max-width:100%}.code{overflow-wrap:anywhere;font:11px monospace;color:#222}small{color:#555}@media print{button{display:none}}</style><img class="logo" src="${location.origin}/logo-whatsapp.png" alt="Instituto Integro"><h1>Cobrança Pix</h1><p>Aluno/beneficiário: ${safe(o.student_name||'')}</p><p>Pagador: ${safe(o.payer_name||'')}</p><h2>${money(o.amount)}</h2><p>Vencimento: ${safe(o.due_date)}</p><img class="qr" src="data:image/png;base64,${safe(data.encodedImage)}" alt="QR Code Pix"><h3>Pix Copia e Cola</h3><p class="code">${safe(data.payload)}</p><p><small>Pedido ${safe(o.id)}. Documento de cobrança, não é recibo nem boleto bancário. O pagamento será confirmado pelo Asaas.</small></p><button onclick="window.print()">Imprimir / salvar em PDF</button></html>`);win.document.close();
+    win.document.write(`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Cobrança Pix · Integro</title><style>body{font:16px Arial;color:#174c39;max-width:700px;margin:30px auto;padding:28px;border:2px solid #174c39;border-radius:18px}.logo{width:135px}.qr{width:260px;max-width:100%}.code{overflow-wrap:anywhere;font:11px monospace;color:#222}small{color:#555}@media print{button{display:none}}</style><img class="logo" src="${location.origin}/logo-whatsapp.png" alt="Instituto Integro"><h1>Cobrança Pix</h1><p>Aluno/beneficiário: ${safe(o.student_name||'')}</p><p>Pagador: ${safe(o.payer_name||'')}</p><h2>${money(o.amount)}</h2><p>${data.expires_at?'Válido até: '+safe(new Date(data.expires_at).toLocaleString('pt-BR')):'Vencimento: '+safe(o.due_date)}</p><img class="qr" src="data:image/png;base64,${safe(data.encodedImage)}" alt="QR Code Pix"><h3>Pix Copia e Cola</h3><p class="code">${safe(data.payload)}</p><p><small>Pedido ${safe(o.id)}. Documento de cobrança, não é recibo nem boleto bancário. O pagamento será confirmado pelo Asaas.</small></p><button onclick="window.print()">Imprimir / salvar em PDF</button></html>`);win.document.close();
    };
   }
   async function showQr(id){
@@ -84,17 +86,17 @@
    if(busy||!settings.enabled||hooks.isLocked?.('asaas')||(hooks.canCreate&&!hooks.canCreate('asaas')))return;
    let attempted=false;
    try{
-    const payload={...hooks.snapshot(),due_date:$('asaasDue').value},serialized=JSON.stringify(payload);
+    const payload={...hooks.snapshot()},serialized=JSON.stringify(payload);
     const amount=payload.items.reduce((sum,item)=>sum+Math.round(Number(item.finalUnit)*100)*Number(item.qty),0);
-    if(Number.isFinite(amount)&&amount<500)throw Error('O Pix pelo Asaas exige um total mínimo de R$ 5,00 após os descontos. O valor do carrinho não foi alterado.');
+    if(Number.isFinite(amount)&&amount<100)throw Error('O Pix pelo Asaas exige um total mínimo de R$ 1,00 após os descontos. O valor do carrinho não foi alterado.');
     if(lastPayload!==serialized){request=crypto.randomUUID();lastPayload=serialized;}
     attempted=true;hooks.started?.('asaas',request);busy=true;hooks.lock(true);draw();message('Gerando Pix. Aguarde antes de fazer outro lançamento.');
     const result=await api({action:'create',request_id:request,...payload});
     if(hooks.prepared)hooks.prepared('asaas',result);
-    if(!result.payment_id){message('Tentativa registrada. Use “Conferir pagamento” na cobrança antes de tentar outra venda.');await refresh(true);return;}
+    if(!result.payment_id&&!result.pix_available){message('Tentativa registrada. Use “Conferir pagamento” na cobrança antes de tentar outra venda.');await refresh(true);return;}
     if(!hooks.prepared)hooks.clear();request=null;lastPayload=null;selected=result.id;await refresh(true);
     busy=false;await showQr(result.id);
-   }catch(e){await refresh(true);if(attempted)hooks.failed?.('asaas',e,orders.find(o=>o.id===e.orderId));message(e.message);}
+   }catch(e){await refresh(true);const failed=orders.find(o=>o.id===e.orderId);if(failed?.status==='rejected'){request=null;lastPayload=null;}if(attempted)hooks.failed?.('asaas',e,failed);message(e.message);}
    finally{busy=false;hooks.lock(false);draw();}
   };
   $('asaasConnectForm').onsubmit=async event=>{
@@ -111,9 +113,15 @@
    try{await api({action:'settings',enabled:!settings.enabled});await refresh();}catch(e){message(e.message);}
   };
   $('asaasRefresh').onclick=()=>refresh();
-  window.addEventListener('integro:pos-new-sale',()=>{selected=null;qr=null;request=null;lastPayload=null;$('asaasPix').hidden=true;$('asaasPix').innerHTML='';$('asaasDue').value=today();message('Monte a nova venda para gerar o Pix.');draw();});
+  window.addEventListener('integro:pos-new-sale',()=>{selected=null;qr=null;request=null;lastPayload=null;$('asaasPix').hidden=true;$('asaasPix').innerHTML='';message('Monte a nova venda para gerar o Pix.');draw();});
   window.addEventListener('integro:checkout-lock',draw);
+  const expiryTimer=setInterval(()=>{
+   if(qr?.expires_at&&Date.parse(qr.expires_at)<=Date.now()){
+    qr=null;$('asaasPix').innerHTML='<strong>Este QR Code expirou.</strong><p>Conferindo se houve pagamento antes de liberar outra emissão…</p>';
+    if(selected)check(selected,true);
+   }
+  },1000);
   refresh();const timer=setInterval(async()=>{if(document.visibilityState!=='visible'||busy)return;const active=orders.find(o=>o.id===selected);if(active&&['pending','uncertain','creating'].includes(active.status))await check(active.id,true);else await refresh(true);},15000);
-  window.addEventListener('pagehide',()=>{clearInterval(timer);$('asaasKey').value='';qr=null;},{once:true});
+  window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(expiryTimer);$('asaasKey').value='';qr=null;},{once:true});
  }};
 })();

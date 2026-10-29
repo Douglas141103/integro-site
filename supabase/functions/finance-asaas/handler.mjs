@@ -1,5 +1,6 @@
+import {QR_ID,StaticPaymentMismatch,createStaticPix,readStaticPayment} from './static-pix.mjs';
 import {SITE,UUID,PAYMENT_ID,AsaasError,saleForPix,today,validDate,provider,accountForKey,getCustomer,paymentBody,externalReference,verifyPayment,pixData,equalToken} from './contract.mjs';
-const publicOrder=o=>o?({id:o.id,status:o.status,amount:o.amount,due_date:o.due_date,payment_id:o.payment_id,posted_at:o.posted_at,needs_reconciliation:!!o.post_error,creation_error:o.creation_error||null,...(o.not_found?{not_found:true}:{})}):null;
+const publicOrder=o=>o?({id:o.id,status:o.status,amount:o.amount,due_date:o.due_date,payment_id:o.payment_id,payment_flow:o.payment_flow,pix_available:!!o.pix_qr_id,pix_expires_at:o.pix_expires_at,posted_at:o.posted_at,needs_reconciliation:!!o.post_error,creation_error:o.creation_error||null,...(o.not_found?{not_found:true}:{})}):null;
 export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
  return async request=>{
   const origin=request.headers.get('origin'),headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS',...(origin&&[SITE,'https://institutointegro.com.br'].includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
@@ -18,6 +19,20 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
    const raw=await request.text();if(raw.length>(hookPath?150000:40000))return reply({error:'Pedido muito grande.'},413);
    let input;try{input=JSON.parse(raw);if(!input||Array.isArray(input)||typeof input!=='object')throw Error();}catch{return reply({error:'Pedido inválido.'},400);}
    const synchronize=async(order,call,payment)=>{
+    if(order.payment_flow==='static_pix'){
+     let proof;try{proof=await readStaticPayment(call,order);}catch(e){
+      // Transport/API failures are retriable, not evidence of a mismatched sale.
+      if(e instanceof StaticPaymentMismatch)return await rpc('error',{id:order.id});
+      throw e;
+     }
+     if(!proof){
+      const expiration=order.pix_expires_at?Date.parse(order.pix_expires_at)+60000:Date.parse(order.created_at)+32*60000;
+      if(Date.now()>=expiration)return await rpc('expire',{id:order.id});
+      return order;
+     }
+     if(!order.payment_id)order=await rpc('bind',{id:order.id,payment_id:proof.payment_id});
+     return await rpc('sync',{id:order.id,...proof});
+    }
     if(!order.payment_id){
      const matches=await call('/payments?externalReference='+encodeURIComponent(externalReference(order.id))+'&limit=100');
      if(!Array.isArray(matches.data))throw Error('O Asaas não confirmou a consulta. Tente conferir novamente.');
@@ -35,13 +50,16 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
    };
    if(hookPath){
     if(input.account?.id&&input.account.id!==credentials.account_id)return reply({error:'Conta divergente.'},400);
-    const reference=input.payment?.externalReference;
-    if(typeof reference!=='string'||!reference.startsWith('integro:')||!UUID.test(reference.slice(8)))return reply({ignored:true});
-    const order=await rpc('inspect',{id:reference.slice(8),school_id:hookPath[1]});
+    const reference=input.payment?.externalReference,qrId=input.payment?.pixQrCodeId;
+    let order=QR_ID.test(qrId||'')?await rpc('lookup_pix',{qr_id:qrId,school_id:hookPath[1]}):null;
+    if(!order&&typeof reference==='string'&&reference.startsWith('integro:')&&UUID.test(reference.slice(8)))order=await rpc('inspect',{id:reference.slice(8),school_id:hookPath[1]});
     if(!order)return reply({ignored:true});
     if(!PAYMENT_ID.test(input.payment?.id)||(order.payment_id&&order.payment_id!==input.payment.id))return reply({error:'Cobrança divergente.'},400);
     // Webhook is only a notification. Always read the current payment through Asaas.
-    await synchronize(order,provider(credentials.api_key,{fetcher}));
+    try{
+     const checked=await synchronize(order,provider(credentials.api_key,{fetcher}));
+     if(input.event==='PAYMENT_RECEIVED'&&checked.status!=='paid'&&checked.status!=='refunded')return reply({error:'Recebimento ainda não disponível para conferência.'},503);
+    }catch{return reply({error:'Conferência indisponível. Reenvie o evento.'},503);}
     return reply({received:true});
    }
    const bearer=request.headers.get('authorization')||'';
@@ -74,11 +92,16 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
    if(input.action==='create'){
     if(!UUID.test(input.request_id))return reply({error:'Identificador inválido.'},400);
     const sale=saleForPix(input),due_date=input.due_date||today();if(!validDate(due_date))return reply({error:'Vencimento inválido.'},400);
-    let order=await rpc('create',{user_id:user.id,request_id:input.request_id,sale,due_date});
+    let order=await rpc('create',{user_id:user.id,request_id:input.request_id,sale,due_date,payment_flow:'static_pix'});
     if(!order.created)return order.status==='rejected'?reply({error:order.creation_error||'Cobrança recusada. Corrija os dados antes de emitir outra cobrança.',order_id:order.id},400):reply(publicOrder(order));
     let paymentAttempted=false;
     try{
      const secret=await rpc('credentials',{school_id:context.school_id}),call=provider(secret.api_key,{fetcher});
+     if(order.payment_flow==='static_pix'){
+      const pix=await createStaticPix(call,order,()=>{paymentAttempted=true;});
+      order=await rpc('pix',{id:order.id,...pix});
+      return reply(publicOrder(order));
+     }
      const customer=await getCustomer(call,order);
      order=await rpc('customer',{id:order.id,customer_id:customer});
      paymentAttempted=true;
@@ -100,6 +123,10 @@ export function createHandler({rpc,getUser,baseUrl,fetcher=fetch}){
     const claim=await rpc('claim_check',{id:order.id});
     if(claim.claimed)order=await synchronize(order,call);
     if(input.action==='qr'){
+     if(order.payment_flow==='static_pix'){
+      const available=order.status==='pending'&&order.pix_qr_id&&!order.post_error&&Date.parse(order.pix_expires_at)>Date.now();
+      return reply({order:publicOrder(order),qr:available?{payload:order.pix_payload,encodedImage:order.pix_image,expires_at:order.pix_expires_at}:null});
+     }
      if(!order.payment_id||order.status!=='pending'||order.post_error)return reply({order:publicOrder(order),qr:null});
      return reply({order:publicOrder(order),qr:pixData(await call('/payments/'+order.payment_id+'/pixQrCode'))});
     }

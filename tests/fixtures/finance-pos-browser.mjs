@@ -37,7 +37,7 @@ export function installFixture(w) {
   else if(b.action==='create'){
    if(t.failCreation)throw Error('Conexão interrompida');
    const existing=t[provider].find(o=>o.request_id===b.request_id);
-   result=existing||{id:id(provider==='asaas'?30:40),status:'pending',amount:b.items.reduce((s,i)=>s+Math.round(i.finalUnit*100)*i.qty,0),student_name:b.customer.studentName,payer_name:b.customer.payerName,payment_id:provider==='asaas'?'pay_test001':null,checkout_url:provider==='infinitepay'?'https://checkout.infinitepay.io/instituto-integro/test':null,created_at:new Date().toISOString(),request_id:b.request_id};
+   result=existing||{id:id(provider==='asaas'?30:40),status:'pending',amount:b.items.reduce((s,i)=>s+Math.round(i.finalUnit*100)*i.qty,0),student_name:b.customer.studentName,payer_name:b.customer.payerName,payment_id:null,pix_available:provider==='asaas',payment_flow:provider==='asaas'?'static_pix':undefined,checkout_url:provider==='infinitepay'?'https://checkout.infinitepay.io/instituto-integro/test':null,created_at:new Date().toISOString(),request_id:b.request_id};
    if(!existing)t[provider].push(result);
   } else if(b.action==='qr')result={order:t[provider][0],qr:{payload:'000201-test',encodedImage:'iVBORw0KGgoAAA='}};
   else if(b.action==='check')result=t[provider].find(o=>o.id===b.id);

@@ -1,0 +1,197 @@
+-- New sales use the same direct, single-use 30-minute Pix flow as Integro Box.
+-- Previously issued dynamic charges remain verifiable through their original flow.
+alter table private.finance_asaas_orders
+ add column payment_flow text not null default 'dynamic',
+ add column pix_qr_id text unique,
+ add column pix_payload text,
+ add column pix_image text,
+ add column pix_expires_at timestamptz,
+ add column removed_fee jsonb,
+ add constraint finance_asaas_orders_flow_check check(payment_flow in ('dynamic','static_pix'));
+alter table private.finance_asaas_orders drop constraint finance_asaas_orders_status_check;
+alter table private.finance_asaas_orders add constraint finance_asaas_orders_status_check check(status in ('creating','pending','uncertain','paid','canceled','refunded','rejected','expired'));
+
+create or replace function public.finance_asaas_service(p_action text,p_data jsonb default '{}') returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare o private.finance_asaas_orders%rowtype; p public.profiles%rowtype; s private.finance_asaas_settings%rowtype; sid uuid; item jsonb; c jsonb; result jsonb; secret_api text; secret_hook text;
+begin
+ if coalesce(auth.role(),'')<>'service_role' then raise exception 'Acesso negado.' using errcode='42501'; end if;
+ if p_action in ('authorize','list','settings','create','get','connect_lock','connect_save','connect_unlock') then
+  select * into p from public.profiles where id=(p_data->>'user_id')::uuid and active;
+  if p.id is null or p.role::text not in ('integro_admin','diretor','coordenacao','admin') then raise exception 'Acesso financeiro não autorizado.'; end if;
+  sid:=p.school_id;
+  select * into s from private.finance_asaas_settings where school_id=sid;
+  if s.school_id is null then raise exception 'Asaas não configurado para esta unidade.'; end if;
+ end if;
+ if p_action in ('settings','connect_lock','connect_save','connect_unlock') and p.role::text not in ('integro_admin','diretor','admin') then raise exception 'Apenas a direção pode configurar o Asaas.'; end if;
+ if p_action='authorize' then
+  return jsonb_build_object('school_id',sid,'can_configure',p.role::text in ('integro_admin','diretor','admin'));
+ elsif p_action='connect_lock' then
+  select * into s from private.finance_asaas_settings where school_id=sid for update;
+  if s.connect_until>now() then raise exception 'Conexão em andamento. Aguarde dois minutos antes de tentar novamente.'; end if;
+  update private.finance_asaas_settings set connect_lease=gen_random_uuid(),connect_until=now()+interval '2 minutes' where school_id=sid returning * into s;
+  return jsonb_build_object('lease',s.connect_lease);
+ elsif p_action='connect_unlock' then
+  update private.finance_asaas_settings set connect_until=null,connect_lease=null where school_id=sid and connect_lease=(p_data->>'lease')::uuid;
+  return '{}'::jsonb;
+ elsif p_action='connect_save' then
+  select * into s from private.finance_asaas_settings where school_id=sid for update;
+  if s.connect_lease is distinct from (p_data->>'lease')::uuid or s.connect_until<now() then raise exception 'Conexão expirou. Tente novamente.'; end if;
+  if s.account_id is not null and s.account_id is distinct from (p_data->>'account_id')::uuid then raise exception 'Use uma chave da mesma conta já vinculada. A troca de titular exige conciliar as cobranças anteriores.'; end if;
+  if length(p_data->>'api_key') not between 20 and 1000 or length(p_data->>'hook_token') not between 32 and 255 or nullif(p_data->>'webhook_id','') is null then raise exception 'Conexão incompleta.'; end if;
+  if s.api_secret_id is null then s.api_secret_id:=vault.create_secret(p_data->>'api_key','finance_asaas_api_'||sid::text); else perform vault.update_secret(s.api_secret_id,p_data->>'api_key'); end if;
+  if s.hook_secret_id is null then s.hook_secret_id:=vault.create_secret(p_data->>'hook_token','finance_asaas_hook_'||sid::text); end if;
+  update private.finance_asaas_settings set api_secret_id=s.api_secret_id,hook_secret_id=s.hook_secret_id,account_id=(p_data->>'account_id')::uuid,
+   account_name=left(p_data->>'account_name',200),document_masked=left(p_data->>'document_masked',30),webhook_id=p_data->>'webhook_id',
+   connect_lease=null,connect_until=null,updated_by=p.id,updated_at=now() where school_id=sid;
+  return jsonb_build_object('connected',true);
+ elsif p_action='credentials' then
+  select * into s from private.finance_asaas_settings where school_id=(p_data->>'school_id')::uuid;
+  if s.school_id is null then raise exception 'Unidade não encontrada.'; end if;
+  select decrypted_secret into secret_api from vault.decrypted_secrets where id=s.api_secret_id;
+  select decrypted_secret into secret_hook from vault.decrypted_secrets where id=s.hook_secret_id;
+  return jsonb_build_object('api_key',secret_api,'hook_token',secret_hook,'account_id',s.account_id,'webhook_id',s.webhook_id,'enabled',s.enabled);
+ elsif p_action='settings' then
+  if jsonb_typeof(p_data->'enabled') is distinct from 'boolean' then raise exception 'Configuração inválida.'; end if;
+  if (p_data->>'enabled')::boolean and (s.api_secret_id is null or s.webhook_id is null) then raise exception 'Conecte uma conta Asaas primeiro.'; end if;
+  update private.finance_asaas_settings set enabled=(p_data->>'enabled')::boolean,updated_by=p.id,updated_at=now() where school_id=sid;
+  return jsonb_build_object('enabled',(p_data->>'enabled')::boolean);
+ elsif p_action='list' then
+  select coalesce(jsonb_agg(to_jsonb(t) order by t.created_at desc),'[]') into result from (
+   select id,status,amount,due_date,created_at,paid_at,posted_at,payment_id,payment_flow,pix_expires_at,(pix_qr_id is not null) pix_available,creation_error,(post_error is not null) needs_reconciliation,
+    sale->'customer'->>'student_name' student_name,sale->'customer'->>'payer_name' payer_name
+   from private.finance_asaas_orders where school_id=sid order by created_at desc limit 100
+  ) t;
+  return jsonb_build_object('enabled',s.enabled,'connected',s.api_secret_id is not null,'account_name',s.account_name,'document_masked',s.document_masked,'can_configure',p.role::text in ('integro_admin','diretor','admin'),'orders',result);
+ elsif p_action='lookup_pix' then
+  select * into o from private.finance_asaas_orders where pix_qr_id=p_data->>'qr_id' and school_id=(p_data->>'school_id')::uuid;
+  return case when o.id is null then null else to_jsonb(o) end;
+ elsif p_action='create' then
+  select * into s from private.finance_asaas_settings where school_id=sid for update;
+  select * into o from private.finance_asaas_orders where created_by=p.id and request_id=(p_data->>'request_id')::uuid;
+  if o.id is not null then
+   if o.sale is distinct from p_data->'sale' or (o.payment_flow='dynamic' and o.due_date is distinct from (p_data->>'due_date')::date) then raise exception 'Pedido já existe com outro conteúdo.'; end if;
+   return to_jsonb(o)||jsonb_build_object('created',false);
+  end if;
+  if not s.enabled or s.api_secret_id is null then raise exception 'Pix Asaas desativado. A direção precisa conectar e ativar a conta.'; end if;
+  if (select count(*) from private.finance_asaas_orders where created_by=p.id and created_at>now()-interval '1 minute')>=10 then raise exception 'Aguarde antes de gerar outra cobrança.'; end if;
+  if (p_data->>'due_date')::date not between (now() at time zone 'America/Manaus')::date and (now() at time zone 'America/Manaus')::date+365 then raise exception 'Vencimento inválido.'; end if;
+  c:=p_data->'sale'->'customer';
+  if nullif(c->>'student_id','') is not null and not exists(select 1 from public.students where id=(c->>'student_id')::uuid and school_id=sid) then raise exception 'Aluno de outra unidade.'; end if;
+  for item in select value from jsonb_array_elements(p_data->'sale'->'items') loop
+   if nullif(item->>'package_id','') is not null and not exists(select 1 from public.finance_packages where id=(item->>'package_id')::uuid and school_id=sid) then raise exception 'Pacote de outra unidade.'; end if;
+   if nullif(item->>'discount_id','') is not null and not exists(select 1 from public.finance_discounts where id=(item->>'discount_id')::uuid and school_id=sid) then raise exception 'Desconto de outra unidade.'; end if;
+  end loop;
+  insert into private.finance_asaas_orders(school_id,created_by,request_id,sale,amount,due_date,payment_flow) values(sid,p.id,(p_data->>'request_id')::uuid,p_data->'sale',(p_data->'sale'->>'amount')::bigint,(p_data->>'due_date')::date,coalesce(p_data->>'payment_flow','dynamic')) returning * into o;
+  return to_jsonb(o)||jsonb_build_object('created',true);
+ elsif p_action in ('get','inspect','customer','bind','uncertain','create_failed','claim_check','sync','error','pix','expire') then
+  select * into o from private.finance_asaas_orders where id=(p_data->>'id')::uuid for update;
+  if o.id is null then return null; end if;
+  if (p_action='get' and o.school_id<>sid) or (p_data ? 'school_id' and o.school_id<>(p_data->>'school_id')::uuid) then raise exception 'Cobrança não encontrada.'; end if;
+  if p_action='pix' then
+   if o.payment_flow<>'static_pix' or o.status not in ('creating','uncertain','pending')
+    or coalesce(p_data->>'qr_id','') !~ '^[A-Za-z0-9]{16,64}$'
+    or coalesce(p_data->>'payload','') not like '000201%' or length(p_data->>'payload')>4096
+    or coalesce(p_data->>'encodedImage','') !~ '^iVBORw0KGgo[A-Za-z0-9+/=\r\n]+$' or length(p_data->>'encodedImage')>300000
+    or (p_data->>'expires_at')::timestamptz is null
+    or (p_data->>'expires_at')::timestamptz not between now() and now()+interval '31 minutes'
+   then raise exception 'QR Code inválido.'; end if;
+   if o.pix_qr_id is not null then
+    if o.pix_qr_id is distinct from p_data->>'qr_id' then raise exception 'QR Code já vinculado.'; end if;
+    return to_jsonb(o);
+   end if;
+   update private.finance_asaas_orders set pix_qr_id=p_data->>'qr_id',pix_payload=p_data->>'payload',pix_image=p_data->>'encodedImage',
+    pix_expires_at=(p_data->>'expires_at')::timestamptz,status='pending',creation_error=null where id=o.id returning * into o;
+  elsif p_action='expire' then
+   if o.payment_flow='static_pix' and o.payment_id is null and o.status in ('creating','uncertain','pending')
+    and coalesce(o.pix_expires_at+interval '1 minute',o.created_at+interval '32 minutes')<=now() then
+    update private.finance_asaas_orders set status='expired',creation_error=null where id=o.id returning * into o;
+   end if;
+  elsif p_action='customer' then
+   if o.customer_id is not null and o.customer_id is distinct from p_data->>'customer_id' then raise exception 'Pagador divergente.'; end if;
+   update private.finance_asaas_orders set customer_id=p_data->>'customer_id' where id=o.id returning * into o;
+  elsif p_action='bind' then
+   if o.payment_flow='static_pix' and o.pix_qr_id is null then raise exception 'QR Code ainda não vinculado.'; end if;
+   if o.payment_id is not null and o.payment_id is distinct from p_data->>'payment_id' then raise exception 'Cobrança duplicada: conciliação necessária.'; end if;
+   update private.finance_asaas_orders set payment_id=p_data->>'payment_id',creation_error=null,status=case when status in ('creating','uncertain','rejected') then 'pending' else status end where id=o.id returning * into o;
+  elsif p_action='create_failed' then
+   update private.finance_asaas_orders set status=case when coalesce((p_data->>'rejected')::boolean,false) then 'rejected' else 'uncertain' end,creation_error=left(p_data->>'error',500)
+   where id=o.id and payment_id is null and status in ('creating','uncertain') returning * into o;
+  elsif p_action='uncertain' then
+   update private.finance_asaas_orders set status='uncertain' where id=o.id and status='creating';
+  elsif p_action='claim_check' then
+   if o.checked_at>now()-interval '10 seconds' then return jsonb_build_object('claimed',false); end if;
+   update private.finance_asaas_orders set checked_at=now() where id=o.id;
+   return jsonb_build_object('claimed',true);
+  elsif p_action='error' then
+   update private.finance_asaas_orders set post_error='Confira a cobrança no Asaas: dados divergentes ou estorno parcial.' where id=o.id returning * into o;
+  elsif p_action='sync' then
+   if (p_data->>'amount')::bigint is distinct from o.amount or o.payment_id is distinct from p_data->>'payment_id' or p_data->>'status' not in ('pending','paid','canceled','refunded') then raise exception 'Pagamento divergente.'; end if;
+   if p_data->>'status'='paid' and o.status<>'refunded' then
+    update private.finance_asaas_orders set status='paid',creation_error=null,paid_at=coalesce(paid_at,now()),payment_date=coalesce(payment_date,(p_data->>'payment_date')::date) where id=o.id;
+    perform private.finance_asaas_post(o.id);
+   elsif p_data->>'status' in ('refunded','canceled') then
+    update private.finance_asaas_orders set status=p_data->>'status',post_error=case when posted_at is not null then 'Conciliar estorno/cancelamento no caixa sem apagar o recibo original.' else null end where id=o.id;
+   elsif p_data->>'status'='pending' and o.status in ('creating','pending','uncertain','canceled','rejected') then
+    update private.finance_asaas_orders set status='pending',post_error=null,creation_error=null where id=o.id;
+   end if;
+   select * into o from private.finance_asaas_orders where id=o.id;
+  end if;
+  return to_jsonb(o);
+ end if;
+ raise exception 'Ação inválida.';
+end $$;
+revoke all on function public.finance_asaas_service(text,jsonb) from public,anon,authenticated;
+grant execute on function public.finance_asaas_service(text,jsonb) to service_role;
+
+
+create or replace function private.finance_asaas_post(p_id uuid) returns boolean language plpgsql security definer set search_path='' as $$
+declare o private.finance_asaas_orders%rowtype; c public.finance_cash_cycles%rowtype; item jsonb; idx integer:=0; customer jsonb;
+begin
+ select * into o from private.finance_asaas_orders where id=p_id for update;
+ if o.id is null or o.status<>'paid' or o.payment_date is null then return false; end if;
+ if o.posted_at is not null then return true; end if;
+ begin
+  select * into c from public.finance_cash_cycles where school_id=o.school_id and o.payment_date between start_date and end_date order by start_date desc limit 1 for share;
+  perform private.assert_finance_cycle_writable(o.school_id,c.id,o.payment_date,false);
+  customer:=o.sale->'customer';
+  perform set_config('app.finance_asaas_order',o.id::text,true);
+  for item in select value from jsonb_array_elements(o.sale->'items') loop
+   idx:=idx+1;
+   insert into public.finance_entries(school_id,cash_cycle_id,asaas_order_id,asaas_item_index,
+    student_id,student_name_snapshot,payer_name,payer_document,package_id,package_name_snapshot,discount_id,discount_name_snapshot,
+    gross_amount,discount_amount,amount_paid,payment_method,competence_month,description,entry_type,entry_date,created_by)
+   values(o.school_id,c.id,o.id,idx,(customer->>'student_id')::uuid,customer->>'student_name',customer->>'payer_name',customer->>'payer_document',
+    (item->>'package_id')::uuid,item->>'package_name',(item->>'discount_id')::uuid,item->>'discount_name',
+    (item->>'gross')::numeric/100,(item->>'discount')::numeric/100,(item->>'amount')::numeric/100,'Pix',item->>'reference',
+    'Asaas Pix • Pedido '||o.id::text||' • '||(item->>'description')||' • Valor integral recebido.'||case when coalesce(o.sale->>'note','')<>'' then ' • Obs.: '||(o.sale->>'note') else '' end,
+    item->>'type',o.payment_date,o.created_by);
+  end loop;
+  update private.finance_asaas_orders set posted_at=now(),post_error=null where id=o.id;
+  perform set_config('app.finance_asaas_order','',true);
+  return true;
+ exception when others then
+  update private.finance_asaas_orders set post_error=left(sqlstate||': '||sqlerrm,500) where id=o.id;
+  return false;
+ end;
+end $$;
+revoke all on function private.finance_asaas_post(uuid) from public,anon,authenticated;
+
+-- Disable the former fixed bookkeeping charge, including any internal retry.
+create or replace function private.finance_asaas_record_fee(p_id uuid) returns void
+language plpgsql security invoker set search_path='' as $$begin return; end$$;
+revoke all on function private.finance_asaas_record_fee(uuid) from public,anon,authenticated,service_role;
+
+-- Owner requested removal of the generated fee. Retain the exact expense in
+-- the private order audit field; only the merchant's automatic R$0.99 rows in
+-- writable cycles are removed. Receipts and unrelated expenses are preserved.
+lock table public.finance_expenses in access exclusive mode;
+update private.finance_asaas_orders o set removed_fee=jsonb_build_object('removed_at',now(),'reason','Owner requested removal of automatic bookkeeping fee','expense',to_jsonb(e))
+ from public.finance_expenses e, public.schools s, public.finance_cash_cycles c
+ where e.asaas_order_id=o.id and e.school_id=o.school_id and s.id=o.school_id and s.slug='instituto-integro'
+ and e.amount=0.99 and c.id=e.cash_cycle_id and c.school_id=o.school_id and c.status='aberto'
+ and (now() at time zone 'America/Manaus')::date between c.start_date and c.end_date and o.removed_fee is null;
+alter table public.finance_expenses disable trigger finance_asaas_expense_guard;
+delete from public.finance_expenses e using private.finance_asaas_orders o
+ where e.asaas_order_id=o.id and o.removed_fee->'expense'->>'id'=e.id::text;
+alter table public.finance_expenses enable trigger finance_asaas_expense_guard;
