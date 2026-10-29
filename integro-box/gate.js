@@ -64,7 +64,7 @@ try {
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-walk2');installDescubra();}
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261023-walk2');
-  if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-asaas1');await startIntGem({user});}
+  if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }

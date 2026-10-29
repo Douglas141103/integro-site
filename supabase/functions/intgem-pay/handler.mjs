@@ -1,3 +1,4 @@
+import {createPix,verifyPix,QR_ID} from './pix.mjs';
 import {provider,UUID,equalToken,SITE,checkoutBody,checkoutUrl,webhookOrder,validateCheckout,verifyAsaas} from './asaas.mjs';
 import {verifyPayment as verifyLegacy} from './provider.mjs';
 const origins=new Set([SITE,'https://institutointegro.com.br']);
@@ -33,7 +34,8 @@ export function createHandler({authenticate,createOrder,service,credentials,fetc
     }else if(input.payment){
      const ref=input.payment.externalReference;
      const id=typeof ref==='string'&&ref.startsWith('intgem:')?ref.slice(7):null;
-     if(UUID.test(id))order=await service('inspect',id);
+     if(QR_ID.test(input.payment.pixQrCodeId))order=await service('lookup_pix',null,{qr_id:input.payment.pixQrCodeId});
+     else if(UUID.test(id))order=await service('inspect',id);
      else if(UUID.test(input.payment.checkoutSession))order=await service('lookup_checkout',null,{checkout_id:input.payment.checkoutSession});
      else return reply({received:true,ignored:true});
      if(order.error==='unknown_order')return reply({received:true,ignored:true});
@@ -41,7 +43,7 @@ export function createHandler({authenticate,createOrder,service,credentials,fetc
     }else return reply({received:true,ignored:true});
     if(order.status==='paid')return reply({paid:true,duplicate:true});
     if(input.event==='CHECKOUT_CREATED')return reply({received:true});
-    const proof=await verifyAsaas(provider(config.api_key,{fetcher}),order);
+    const proof=await (order.payment_flow==='pix'?verifyPix:verifyAsaas)(provider(config.api_key,{fetcher}),order);
     if(proof.paid)return reply(await checkedService('settle',order.id,proof));
     if(input.event==='CHECKOUT_CANCELED'||input.event==='CHECKOUT_EXPIRED'){
      await checkedService(input.event==='CHECKOUT_CANCELED'?'canceled':'expired',order.id);return reply({received:true});
@@ -52,9 +54,10 @@ export function createHandler({authenticate,createOrder,service,credentials,fetc
     if(!UUID.test(input.request)||!['gem1','gem5','gem10','gem20'].includes(input.pack))return reply({error:'invalid_request'},400);
     config=await connection();if(!config.enabled||!config.api_key)return reply({error:'checkout_not_enabled'},503);
     const order=await createOrder(auth,input.pack,input.request);if(order.error)return reply(order,409);
-    if(order.url||order.status==='paid')return reply(order);
+    if(order.pix||order.url||order.status==='paid')return reply(order);
     if(order.provider!=='asaas')return reply({error:'checkout_expired'},409);
     try{
+     if(order.payment_flow==='pix')return reply(await checkedService('pix',order.id,await createPix(provider(config.api_key,{fetcher}),order)));
      const result=await provider(config.api_key,{fetcher})('/checkouts','POST',checkoutBody(order));
      return reply(await checkedService('checkout',order.id,{checkout_id:result.id,url:checkoutUrl(result.id)}));
     }catch(e){
@@ -64,16 +67,17 @@ export function createHandler({authenticate,createOrder,service,credentials,fetc
      return reply({error:e.message==='checkout_below_minimum'?'checkout_below_minimum':e.rejected?'checkout_unavailable':'checkout_in_progress',order:order.id},503);
     }
    }
-   if(!hook&&input.action!=='verify')return reply({error:'invalid_action'},400);
+   if(!hook&&!['verify','pix'].includes(input.action))return reply({error:'invalid_action'},400);
    const id=input.order||input.order_nsu;if(!UUID.test(id))return reply({error:'invalid_request'},400);
    const order=await service('inspect',id);if(order.error)return reply({error:order.error},hook?400:409);
    if(!hook&&order.user_id!==auth.user.id)return reply({error:'order_not_found'},404);
    if(legacyHook&&order.provider==='asaas')return reply({error:'invalid_webhook'},400);
    if(order.status==='paid')return reply({paid:true});
+   if(!hook&&input.action==='pix')return reply(await checkedService('pix_view',id));
    if(!hook){const limited=await service('inspect',id,{manual:true});if(limited.error)return reply(limited,409);}
    let proof;
    if(order.provider==='asaas'){
-    config=await connection();proof=await verifyAsaas(provider(config.api_key,{fetcher}),order);
+    config=await connection();proof=await (order.payment_flow==='pix'?verifyPix:verifyAsaas)(provider(config.api_key,{fetcher}),order);
    }else{
     const transaction=input.transaction_nsu,slug=hook?input.invoice_slug:input.slug;
     if(!token.test(transaction)||!token.test(slug))return reply({error:'invalid_request'},400);
@@ -81,6 +85,6 @@ export function createHandler({authenticate,createOrder,service,credentials,fetc
    }
    if(!proof.paid)return reply({paid:false,status:order.status},hook?400:200);
    return reply(await checkedService('settle',id,proof));
-  }catch(e){return reply({error:['checking','payment_mismatch','checkout_below_minimum'].includes(e.message)?e.message:'payment_verification_unavailable'},503);}
+  }catch(e){return reply({error:['checking','payment_mismatch','checkout_below_minimum','pix_unavailable','pix_not_enabled'].includes(e.message)?e.message:'payment_verification_unavailable'},503);}
  };
 }
