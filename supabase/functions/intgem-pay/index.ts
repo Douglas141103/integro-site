@@ -33,7 +33,7 @@ Deno.serve(async request=>{
    try{
     const checkout=await createCheckout(order,url+'/functions/v1/intgem-pay/webhook');
     const stored=await service('checkout',order.id,{url:checkout});
-    if(stored.error)throw Error();return reply(stored);
+    if(stored.error)throw Error();return reply({...stored,gems:order.gems});
    }catch(e){await service('failed',order.id);return reply({error:e instanceof Error&&['checkout_not_enabled','checkout_below_minimum'].includes(e.message)?e.message:'checkout_unavailable',order:order.id},503);}
   }
   if(!webhook&&input.action!=='verify')return reply({error:'invalid_action'},400);

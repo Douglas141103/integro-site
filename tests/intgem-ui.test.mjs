@@ -1,3 +1,4 @@
+import {mountIntGemPromotion} from '../integro-box/intgem-promotion.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -13,7 +14,7 @@ test('wallet uses confirmed balances, buys with displayed server price, and moun
  const w=dom.window;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
  let server={balance:8,daily:{seconds:45,rewarded:false},items:catalog.ITEMS,owned:[],equipped:[],history:[],orders:[]};const calls=[];
  const client={rpc:async(name,args)=>{calls.push({name,...args});if(args.p_action==='buy'){const item=catalog.ITEMS.find(i=>i.id===args.p_payload.item);server={...server,balance:server.balance-item.price,owned:[item.id],equipped:[{game:item.game,kind:item.kind,item:item.id}]};}return {data:structuredClone(server)};}};
- Object.assign(w,{eggItemArt,GAMES:catalog.GAMES,ITEMS:catalog.ITEMS,PACKS:catalog.PACKS,gemArt:catalog.gemArt,money:catalog.money,activeGame:()=>catalog.activeGame(w.document,w),supabase:client});
+ Object.assign(w,{mountIntGemPromotion,eggItemArt,GAMES:catalog.GAMES,ITEMS:catalog.ITEMS,PACKS:catalog.PACKS,gemArt:catalog.gemArt,money:catalog.money,activeGame:()=>catalog.activeGame(w.document,w),supabase:client});
  let source=await readFile(new URL('../integro-box/intgem.js',import.meta.url),'utf8');source=source.replace(/^import .*;\n/gm,'').replaceAll('export ','');
  w.eval(source+'\nwindow.startIntGem=startIntGem;');
  try{
