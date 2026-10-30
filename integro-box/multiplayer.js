@@ -1,4 +1,6 @@
+import {createDepartureClock} from './room-departure.mjs?v=20261030-departure1';
 import {supabase} from './access.js?v=20261016-intgem1';
+const departureClock=createDepartureClock();let departureTimer=null;
 const $=id=>document.getElementById(id);
 const titles={egg:'Pegue o Ovo',bairro:'Meu Bairro',craft:'IntegroCraft'};
 const buttons={egg:'playEggGame',bairro:'playDollGame',craft:'playCraft'};
@@ -89,7 +91,11 @@ function display(data){
  $('boxRoomSetup').hidden=true;$('boxRoomActive').hidden=false;
  $('boxRoomTitle').textContent=titles[data.game];$('boxAlias').textContent='Explorador '+data.slot;$('boxInvite').textContent=data.code||'';$('boxInviteSection').hidden=!!data.public;$('boxRoomVisibility').textContent=data.public?'Pública · outros usuários autenticados podem entrar.':'Privada · entrada somente por convite.';
  const peers=data.players.filter(p=>p.slot!==data.slot);
- const adapter=window.BoxAdapters[data.game];adapter.setPeers(data.game==='egg'?(window.BoxEggPush?.peers(peers)||peers):peers);
+ const adapter=window.BoxAdapters[data.game];
+ const departure=data.players.find(p=>p.slot===data.slot)?.state?.departure;
+ adapter.setDeparture?.(departure);departureClock.set(departure);clearTimeout(departureTimer);
+ if(departureClock.active){const token=version;departureTimer=setTimeout(()=>{if(token===version&&room){void finishDeparture();}},departureClock.remaining());}
+ adapter.setPeers(data.game==='egg'?(window.BoxEggPush?.peers(peers)||peers):peers);
  if(data.world){lastWorld=data.world;adapter.applyWorld?.(data.world);}
  const signature=JSON.stringify(data.players.map(p=>p.slot));
  if($('boxPlayers').dataset.signature!==signature){
@@ -106,6 +112,7 @@ async function connect(action,extras){
  try{
   const data=await rpc(action,extras);
   if(token!==version)return;
+  if(!data?.id){status('');return;}
   room=data;await openGame(data.game);
   if(token!==version)return;
   window.BoxAdapters[data.game].enter?.(data.world||{});started=true;display(data);window.dispatchEvent(new Event('box-room-change'));failures=0;
@@ -120,7 +127,7 @@ async function sync(){
  const token=version,adapter=window.BoxAdapters[room.game];
  if(!adapter.active()||document.hidden){status('Sala pausada. Volte ao jogo em até 30 segundos para manter sua presença.');schedule(1500);return;}
  const raw=adapter.state();if(!raw){schedule();return;}
- const state={x:raw.x,y:raw.y||0,z:raw.z,yaw:raw.yaw||0,zone:raw.zone,jetpack:room.game==='egg'&&raw.jetpack===true,gesture:Date.now()<gestureUntil?gesture:'',vehicle:room.game==='egg'&&window.BoxEgg?.vehicleIds?.includes(raw.vehicle)?raw.vehicle:''};
+ const state={departure_client:adapter.setDeparture?1:0,x:raw.x,y:raw.y||0,z:raw.z,yaw:raw.yaw||0,zone:raw.zone,jetpack:room.game==='egg'&&raw.jetpack===true,gesture:Date.now()<gestureUntil?gesture:'',vehicle:room.game==='egg'&&window.BoxEgg?.vehicleIds?.includes(raw.vehicle)?raw.vehicle:''};
  const edit=editQueue[0]||null;
  try{
   const data=await rpc('sync',{p_state:state,p_revision:room.revision,p_edit:edit});
@@ -135,8 +142,9 @@ async function sync(){
  if(token===version)schedule(failures?2000:500);
 }
 async function disconnect(notify=true){
+ clearTimeout(departureTimer);departureTimer=null;departureClock.set(null);
  const previous=room;++version;clearTimeout(timer);timer=null;room=null;editQueue=[];failures=0;window.dispatchEvent(new Event('box-room-change'));
- if(previous){const adapter=window.BoxAdapters[previous.game];adapter.clearPeers();if(started)adapter.leave?.();started=false;
+ if(previous){const adapter=window.BoxAdapters[previous.game];adapter.setDeparture?.(null);adapter.clearPeers();if(started)adapter.leave?.();started=false;
   if(notify)try{await rpc('leave',{p_room:previous.id});}catch{}
  }
  $('boxRoomSetup').hidden=false;$('boxRoomActive').hidden=true;$('boxPlayers').dataset.signature='';$('boxOnlineToggle').firstChild.textContent='Salas ';
@@ -171,3 +179,17 @@ $('boxCopy').onclick=async()=>{try{await navigator.clipboard.writeText(room.code
 $('boxWave').onclick=()=>{gesture='wave';gestureUntil=Date.now()+2200;toggle(false);};
 $('boxCheer').onclick=()=>{gesture='cheer';gestureUntil=Date.now()+2200;toggle(false);};
 window.BoxMultiplayer={disconnect,get roomInfo(){return room;},edit(edit){if(!room||room.game!=='craft'||failures||editQueue.length>=8){status('Aguarde a conexão para construir.');return;}editQueue.push(edit);},get usageRoom(){return room?{id:room.id,game:room.game}:null;},get healthy(){return !!room&&!failures&&Date.now()-lastSyncAt<3000;},get connected(){return !!room;}};
+
+async function finishDeparture(){
+ if(!room||!departureClock.active)return;
+ const id=room.id,token=version;
+ // The server finishes only after its own deadline; no owner-wide close.
+ try{
+  const result=await rpc('finish_departure',{p_room:id});
+  if(token!==version)return;
+  if(result?.ok===false){departureTimer=setTimeout(finishDeparture,250);return;}
+ }catch{}
+ if(token===version&&room?.id===id){await disconnect(false);status('Você saiu da sala após desaparecer.');}
+}
+// Only an explicitly pending departure can resume a room after a page update.
+window.BoxMultiplayer.resumeDeparture=()=>connect('resume_departure',{});

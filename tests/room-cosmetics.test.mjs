@@ -22,3 +22,19 @@ test('shared room cosmetics reject wrong-game/slot IDs and work in Bairro and Cr
  adapter.setPeers([{slot:2,state}]);adapter.tick(.1);const gem=scene.getObjectByName('IntGem');assert(gem?.visible);assert.equal(gem.children[0].visible,true);adapter.setPeers([{slot:2,state:{...state,appearance:{}}}]);assert.equal(gem.visible,false);adapter.clearPeers();assert.equal(scene.children.length,0);
  }
 });
+test('actual Egg explorers and Aurora vehicles become invisible while the local player keeps its materials',()=>{
+ const realNow=Date.now;let time=1000;Date.now=()=>time;
+ const scene=new T.Scene(),world=createEggWorld(scene),adapter={scene:()=>scene,state:()=>({zone:'world'})};installEggPeerVisuals(adapter,()=>world);
+ try{
+  const original=new Map();world.player.g.traverse(n=>{if(n.material)original.set(n,n.material);});
+  const peers=['carAurora','jetAurora'].map((vehicle,i)=>({slot:i+2,state:{x:i*2,y:0,z:10,yaw:0,zone:'world',vehicle,departure:{start:1000,end:31000,serverNow:1000}}}));
+  adapter.setPeers(peers);adapter.tick(.016);time=16000;adapter.tickFade();
+  const actors=[];scene.traverse(n=>{if(n.name==='EggExplorer'&&n.userData.actor!==world.player)actors.push(n.userData.actor);});
+  assert.equal(actors.length,2);assert.deepEqual(actors.map(a=>a.vehicleId),['carAurora','jetAurora']);
+  for(const a of actors)a.g.traverse(n=>{if(n.material)assert(n.material.opacity<=.5);});
+  adapter.setPeers(peers);time=31000;adapter.tickFade();
+  for(const a of actors)a.g.traverse(n=>{if(n.material)assert.equal(n.material.opacity,0);});
+  for(const [mesh,material]of original)assert.equal(mesh.material,material);
+  adapter.clearPeers();for(const a of actors)assert.equal(a.g.parent,null);
+ }finally{Date.now=realNow;}
+});
