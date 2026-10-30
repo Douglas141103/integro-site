@@ -12,6 +12,11 @@ uma interrupção não concede progresso retroativo. Os personagens podem acumul
 o mesmo bônus diário de um IntGem após 300 segundos ativos (dia UTC-4), com ledger
 idempotente. Não criam pagamentos, não compram Pix e não resgatam dinheiro.
 
+Os treinos duram de 12 a 25 segundos, com intervalos individuais de 45 a 110
+segundos. Exploração, tentativas de coleta e pequenas pausas são intercaladas;
+nenhum nível mínimo bloqueia a saída da esteira. Atualizações preservam o progresso
+e os prazos de treino entre checkpoints.
+
 Nesta versão, as decisões automáticas incluem coleta, treino, missões, criação,
 venda e compras com Integros. Trocas entre contas, conversão no mercado de IntGem,
 chat, corridas organizadas e compras premium não são automatizados.

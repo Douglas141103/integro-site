@@ -3,6 +3,15 @@ import * as T from '../integro-box/egg-src/node_modules/three/build/three.module
 import {createRoomCosmetics,roomEquipment} from '../integro-box/room-cosmetics.mjs';
 import {createEggWorld} from '../integro-box/egg-src/egg-world.js';import {installEggPeerVisuals} from '../integro-box/egg-src/egg-peers.js';
 globalThis.document={createElement:()=>({getContext:()=>new Proxy({},{get:(o,k)=>o[k]||(()=>{})})})};
+test('virtual explorers run visibly on the treadmill without changing their position',()=>{
+ const scene=new T.Scene(),world=createEggWorld(scene),adapter={scene:()=>scene,state:()=>({zone:'world'})};installEggPeerVisuals(adapter,()=>world);
+ adapter.setPeers([{slot:2,identity:'virtual-1',automated:true,name:'Aurora 01',state:{x:5,y:0,z:14,yaw:0,zone:'world',activity:'train',appearance:{}}}]);
+ let actor;scene.traverse(n=>{if(n.name==='EggExplorer'&&n.userData.actor!==world.player)actor=n.userData.actor;});
+ adapter.tick(.1);const before=actor.model.bones.thighL.rotation.x;
+ for(let i=0;i<4;i++)adapter.tick(.1);
+ assert(Math.abs(actor.model.bones.thighL.rotation.x-before)>.05,'legs must animate while the position stays fixed');
+ assert.equal(actor.g.position.x,5);assert.equal(actor.g.position.z,14);adapter.clearPeers();
+});
 test('Egg peers show equipped native and premium gear, companions and vehicles, then remove them cleanly',()=>{
  const scene=new T.Scene(),world=createEggWorld(scene),adapter={scene:()=>scene,state:()=>({zone:'world'})};installEggPeerVisuals(adapter,()=>world);
  const state={x:2,y:0,z:10,yaw:0,zone:'world',vehicle:'carRoyal',appearance:{accessories:{head:'crown',back:'wings'},premium:{head:'egg_station_head',aura:'egg_coral_aura',companion:'egg_station_companion'},companion:{world:1,rarity:'rare',mutation:'gold'}}};

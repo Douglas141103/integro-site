@@ -1,9 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createBot,advanceBot,encodeBot,decodeBot} from '../integro-box/egg-src/egg-bot.js';
+import {createBot,advanceBot,encodeBot,decodeBot,botSnapshot} from '../integro-box/egg-src/egg-bot.js';
 import {intgemDatabase} from './intgem-db-fixture.mjs';
 const read=n=>readFile(new URL('../supabase/migrations/'+n,import.meta.url),'utf8');
+test('70 newcomers explore immediately, stagger their short workouts and survive checkpoints without extending training',()=>{
+ const bots=Array.from({length:70},(_,i)=>createBot(null,(i+1)*7919));
+ const training=Array(70).fill(0);let longest=0,maxSimultaneous=0,hunts=new Set(),trained=new Set();
+ for(let second=0;second<180;second++){
+  let simultaneous=0;
+  for(let i=0;i<bots.length;i++){
+   const b=bots[i];advanceBot(b,1);
+   if(b.game.mode==='train'){training[i]++;longest=Math.max(longest,training[i]);simultaneous++;trained.add(i);}else training[i]=0;
+   if(b.game.player.z<-10)hunts.add(i);
+   if(second%15===0)bots[i]=createBot(decodeBot(encodeBot(b)),(i+1)*7919);
+  }
+  maxSimultaneous=Math.max(maxSimultaneous,simultaneous);
+ }
+ assert(longest<=26,`workout lasted ${longest}s`);
+ assert(maxSimultaneous<40,`${maxSimultaneous} bots trained together`);
+ assert(hunts.size>=65,`${hunts.size} explorers tried the track`);assert(trained.size>=60);
+ assert(new Set(bots.map(b=>[Math.round(b.game.player.x),Math.round(b.game.player.z)].join(','))).size>10);
+});
+test('existing treadmill-only checkpoints exit safely and preserve earned progress',()=>{
+ const old=createBot(null,7);old.game.mode='train';old.game.player={x:5,z:14,y:0,vy:0};old.game.save.training=19;old.game.save.coins=73;
+ const checkpoint=botSnapshot(old);checkpoint.brain={world:0,trainTo:30,yaw:0};
+ const resumed=createBot(checkpoint,7919);assert.equal(resumed.game.mode,'run');
+ assert.equal(resumed.game.save.training,19);assert.equal(resumed.game.save.coins,73);
+ advanceBot(resumed,15);assert(resumed.game.player.x!==5||resumed.game.player.z!==14);
+});
 test('virtual character earns progress through the shared rules, persists physics and cannot skip elapsed time',()=>{
  const bot=createBot(null,42),g=bot.game;
  assert.equal(g.save.coins,0);assert.deepEqual(g.save.vehicles,[]);

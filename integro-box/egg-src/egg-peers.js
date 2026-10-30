@@ -36,7 +36,8 @@ export function installEggPeerVisuals(adapter,getWorld,{reducedMotion=false}={})
    const beforeX=g.position.x,beforeZ=g.position.z;g.position.lerp(target.set(s.x,s.y,s.z),1-Math.exp(-dt*8));constrainToCorridor(g.position);
    g.rotation.y+=Math.atan2(Math.sin(s.yaw-g.rotation.y),Math.cos(s.yaw-g.rotation.y))*(1-Math.exp(-dt*10));
    const speed=Math.hypot(g.position.x-beforeX,g.position.z-beforeZ)/dt;
-   actor.update(dt,{player:{...g.position,vy:(g.position.y-beforeY)/dt},moving:speed>.12?1:0,speed,vehicle:s.vehicle,flying:s.jetpack===true,reducedMotion});
+   const training=s.activity==='train'&&Math.hypot(s.x-5,s.z-14)<.6;
+   actor.update(dt,{training,player:{...g.position,vy:(g.position.y-beforeY)/dt},moving:training||speed>.12?1:0,speed:training?10:speed,vehicle:training?'':s.vehicle,flying:s.jetpack===true,reducedMotion});
    entry.cosmetics.update(s.appearance,actor.elapsed,reducedMotion);
    if(entry.buddy){entry.buddy.g.visible=g.visible;entry.buddy.g.position.lerp(target.set(g.position.x+1,0,g.position.z+1.1),Math.min(1,dt*5));entry.buddy.g.rotation.y=g.rotation.y;getWorld().animateCreature(entry.buddy,actor.elapsed,speed>.12?1:0,dt,speed,reducedMotion);}
    if(s.gesture==='wave'||s.gesture==='cheer'){const b=actor.model.bones;b.shoulderR.rotation.z=-2.2+Math.sin(actor.elapsed*9)*.2;b.elbowR.rotation.x=.3;}
