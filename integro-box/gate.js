@@ -37,7 +37,7 @@ try {
   phase('Preparando os seus mundos…');
   const {mountPlayerProfile}=await import('./player-profile.js?v=20261016-intgem1');
   mountPlayerProfile(user);
-  const {startPresence}=await import('./presence.js?v=20261016-intgem1');
+  const {startPresence}=await import('./presence.js?v=20261030-virtual1');
   if(!unloaded)startPresence(user);
   await script('./classic-games.js?v=20261020-i18n1');
   await script('./robot-core.js?v=20261017-robot1');
@@ -45,11 +45,11 @@ try {
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261030-reward1');
+  await script('./egg.js?v=20261030-virtual1');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261021-roomitems1');
   phase('Conectando amigos e salas…');
-  await import('./multiplayer.js?v=20261030-departure1');
+  await import('./multiplayer.js?v=20261030-virtual1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
   if(!unloaded)await import('./egg-cloud.js?v=20261028-event-end1');
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}

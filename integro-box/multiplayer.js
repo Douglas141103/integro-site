@@ -9,8 +9,8 @@ let room=null,timer=null,busy=false,version=0,gesture='',gestureUntil=0,listVers
 const panel=document.createElement('aside');panel.id='boxOnline';panel.setAttribute('aria-label','Salas multiplayer');
 panel.innerHTML=`<button id="boxOnlineToggle" title="Arraste para mover as salas" aria-label="Salas. Arraste para mover; Alt + setas para reposicionar." aria-expanded="false" aria-controls="boxOnlinePanel">Salas <span aria-hidden="true">↗</span></button>
 <section id="boxOnlinePanel" hidden><header id="boxOnlineDrag" title="Arraste para mover as salas"><h2>Juntos na aventura</h2><button id="boxOnlineClose" aria-label="Fechar painel">×</button></header>
-<p>Salas públicas ou por convite · até 4 jogadores · chat com revisão por IA</p>
-<div id="boxRoomSetup"><label for="boxGame">Escolha o mundo</label><select id="boxGame"><option value="descubra">Descubra! — salas da nave</option><option value="egg" selected>Pegue o Ovo</option><option value="bairro">Meu Bairro</option><option value="craft">IntegroCraft</option></select><section class="boxPublic"><h3>Salas públicas</h3><p>Encontre outros jogadores com login da família. Pessoas que você não conhece podem entrar.</p><div class="boxRoomActions"><button id="boxBrowse">Atualizar salas</button><button id="boxCreatePublic">Criar sala pública</button></div><div id="boxPublicList" aria-live="polite"></div></section><details class="boxPrivate"><summary>Sala privada por convite</summary><button id="boxCreate">Criar sala privada</button>
+<p>Salas públicas ou por convite · até 4 participantes · chat com revisão por IA</p>
+<div id="boxRoomSetup"><label for="boxGame">Escolha o mundo</label><select id="boxGame"><option value="descubra">Descubra! — salas da nave</option><option value="egg" selected>Pegue o Ovo</option><option value="bairro">Meu Bairro</option><option value="craft">IntegroCraft</option></select><section class="boxPublic"><h3>Salas públicas</h3><p>Encontre outros jogadores com login da família. Pessoas que você não conhece podem entrar. O Pegue o Ovo também tem personagens virtuais automatizados, identificados como virtuais.</p><div class="boxRoomActions"><button id="boxBrowse">Atualizar salas</button><button id="boxCreatePublic">Criar sala pública</button></div><div id="boxPublicList" aria-live="polite"></div></section><details class="boxPrivate"><summary>Sala privada por convite</summary><button id="boxCreate">Criar sala privada</button>
 <form id="boxJoinForm"><label for="boxCode">Código do convite</label><input id="boxCode" maxlength="14" autocomplete="off" autocapitalize="characters" placeholder="12 letras e números" required><button>Entrar com convite</button></form><small>O responsável compartilha o código apenas com famílias conhecidas. Cada jogador entra com uma conta de família diferente.</small></details></div>
 <div id="boxRoomActive" hidden><strong id="boxRoomTitle"></strong><p>Seu apelido: <b id="boxAlias"></b></p><p id="boxRoomVisibility"></p><div id="boxInviteSection"><label>Código da sala <output id="boxInvite"></output></label><button id="boxCopy">Copiar código</button></div><ul id="boxPlayers"></ul><div class="boxGestures"><button id="boxWave">👋 Acenar</button><button id="boxCheer">🙌 Comemorar</button></div><button id="boxReturn">Voltar ao mundo da sala</button><button id="boxLeave">Sair da sala</button><small>Ao sair, quem criou a sala a encerra para todos. A sala dura até 4 horas. As construções do grupo ficam apenas nesta sala; conquistas e desafios individuais continuam separados.</small></div>
 <p id="boxOnlineStatus" role="status" aria-live="polite"></p></section>`;
@@ -97,11 +97,11 @@ function display(data){
  if(departureClock.active){const token=version;departureTimer=setTimeout(()=>{if(token===version&&room){void finishDeparture();}},departureClock.remaining());}
  adapter.setPeers(data.game==='egg'?(window.BoxEggPush?.peers(peers)||peers):peers);
  if(data.world){lastWorld=data.world;adapter.applyWorld?.(data.world);}
- const signature=JSON.stringify(data.players.map(p=>p.slot));
+ const signature=JSON.stringify(data.players.map(p=>[p.slot,p.identity||'',p.name||'']));
  if($('boxPlayers').dataset.signature!==signature){
   $('boxPlayers').dataset.signature=signature;$('boxPlayers').replaceChildren();
-  for(const p of data.players){const li=document.createElement('li');li.textContent='Explorador '+p.slot+(p.slot===data.slot?' (você)':'');
-   if(data.owner&&p.slot!==data.slot){const kick=document.createElement('button');kick.textContent='Remover';kick.setAttribute('aria-label','Remover Explorador '+p.slot);kick.onclick=async()=>{try{display(await rpc('kick',{p_slot:p.slot}));}catch(e){status(e.message);}};li.append(kick);}
+  for(const p of data.players){const li=document.createElement('li');li.textContent=(p.automated?p.name+' · virtual':'Explorador '+p.slot)+(p.slot===data.slot?' (você)':'');
+   if(data.owner&&p.slot!==data.slot&&!p.automated){const kick=document.createElement('button');kick.textContent='Remover';kick.setAttribute('aria-label','Remover Explorador '+p.slot);kick.onclick=async()=>{try{display(await rpc('kick',{p_slot:p.slot}));}catch(e){status(e.message);}};li.append(kick);}
    $('boxPlayers').append(li);
   }
  }
@@ -160,7 +160,7 @@ async function browse(){
   for(const item of data.rooms||[]){
    const card=document.createElement('article'),name=document.createElement('strong'),info=document.createElement('span'),join=document.createElement('button');
    card.className='boxPublicRoom';name.textContent=titles[item.game]+' · '+item.id.slice(0,6).toUpperCase();info.textContent=item.players+' de '+item.capacity+' jogadores';
-   join.type='button';join.dataset.full=String(item.players>=item.capacity);join.disabled=item.players>=item.capacity;join.textContent=join.disabled?'Lotada':'Entrar';join.setAttribute('aria-label','Entrar em '+name.textContent);join.onclick=()=>connect('join_public',{p_room:item.id});
+   join.type='button';join.dataset.full=String(item.joinable===false||(item.joinable==null&&item.players>=item.capacity));join.disabled=join.dataset.full==='true';join.textContent=join.disabled?'Lotada':'Entrar';join.setAttribute('aria-label','Entrar em '+name.textContent);join.onclick=()=>connect('join_public',{p_room:item.id});
    card.append(name,info,join);list.append(card);
   }
   if(!list.children.length){const text=document.createElement('p');text.textContent='Nenhuma sala aberta neste mundo. Crie a primeira e aguarde outros jogadores.';list.append(text);}

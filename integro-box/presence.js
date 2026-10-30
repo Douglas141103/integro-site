@@ -12,13 +12,20 @@ export function startPresence(user,{client=supabase,doc=document,win=window,make
  const name=doc.getElementById('boxUserName'),label=doc.getElementById('boxOnlineCount'),badge=doc.getElementById('boxPresence');
  // The player-profile module owns the private student label.
  if(!name.textContent.trim())name.textContent='Jogador';
- let channel,stopped=false,connected=false,synced=false,operation=Promise.resolve();
+ let channel,stopped=false,connected=false,synced=false,operation=Promise.resolve(),virtual=0,virtualReady=false,virtualTimer=null;
  function unavailable(message='Conectando…'){label.textContent=message;badge.dataset.state='pending';}
- function render(){if(stopped||!connected||!synced)return;const n=countOnline(channel.presenceState());label.textContent=n+' '+(n===1?'pessoa online':'pessoas online');badge.dataset.state='online';}
+ function render(){if(stopped||!connected||!synced)return;if(!virtualReady){unavailable('Atualizando participantes…');return;}const n=countOnline(channel.presenceState())+virtual;label.textContent=n+' '+(n===1?'participante online':'participantes online');badge.dataset.state='online';}
+ async function refreshVirtual(){
+  if(stopped||doc.hidden)return;
+  try{const {data,error}=await client.rpc('box_virtual_presence');if(error||!Number.isInteger(data?.active)||data.active<0||data.active>70)throw Error('presence');
+   if(stopped)return;virtual=data.active;virtualReady=true;render();
+  }catch{virtual=0;virtualReady=false;if(!stopped&&connected)unavailable('Online indisponível');}
+  finally{if(!stopped){win.clearTimeout(virtualTimer);virtualTimer=win.setTimeout(refreshVirtual,15000);}}
+ }
  function visibility(){
   operation=operation.catch(()=>{}).then(async()=>{
    if(stopped||!connected||!channel)return;
-   try{const result=doc.hidden?await channel.untrack():await channel.track({online:true});if(!stopped&&result!=='ok')unavailable('Online indisponível');}
+   try{const result=doc.hidden?await channel.untrack():await channel.track({online:true});if(!doc.hidden)void refreshVirtual();if(!stopped&&result!=='ok')unavailable('Online indisponível');}
    catch{if(!stopped)unavailable('Online indisponível');}
   });
   return operation;
@@ -26,7 +33,7 @@ export function startPresence(user,{client=supabase,doc=document,win=window,make
  function offline(){connected=false;synced=false;unavailable('Sem conexão');}
  function online(){if(!stopped){unavailable('Reconectando…');if(channel?.state==='joined'){connected=true;synced=false;void visibility();}}}
  async function stop(){
-  if(stopped)return;stopped=true;connected=false;
+  if(stopped)return;stopped=true;connected=false;win.clearTimeout(virtualTimer);
   doc.removeEventListener('visibilitychange',visibility);win.removeEventListener('offline',offline);win.removeEventListener('online',online);win.removeEventListener('pagehide',stop);
   await operation.catch(()=>{});if(channel)await client.removeChannel(channel);
  }

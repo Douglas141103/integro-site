@@ -10,13 +10,13 @@ async function setup(){
  Object.defineProperty(doc,'hidden',{get:()=>hidden});
  const events={},calls=[];let callback,state={};
  const channel={state:'joined',on(_type,opts,fn){events[opts.event]=fn;return this},subscribe(fn){callback=fn;return this},presenceState:()=>state,async track(payload){calls.push(['track',payload]);return 'ok'},async untrack(){calls.push(['untrack']);return 'ok'}};
- const client={channel(topic,opts){calls.push(['channel',topic,opts]);return channel},async removeChannel(){calls.push(['remove'])}};
+ let virtualCount=0,virtualError=false;const client={async rpc(){return virtualError?{error:{message:'offline'}}:{data:{active:virtualCount}}},channel(topic,opts){calls.push(['channel',topic,opts]);return channel},async removeChannel(){calls.push(['remove'])}};
  const context=vm.createContext({window:dom.window,document:doc,crypto:webcrypto,TextEncoder,Uint8Array,supabase:client});
  vm.runInContext((await read('integro-box/presence.js')).replace(/^import .*;\n/gm,'').replace(/export /g,''),context);
  doc.getElementById('boxUserName').textContent='Ana <img src=x onerror=alert(1)>';
  const api=context.startPresence({id:'synthetic-user-a',boxProfile:{full_name:'Ana <img src=x onerror=alert(1)>'}},{client,doc,win:dom.window});await api.ready;
  const settle=()=>new Promise(r=>setImmediate(r));
- return {dom,doc,context,api,calls,async status(s){callback(s);await settle()},sync(s){state=s;events.sync()},async hide(value){hidden=value;doc.dispatchEvent(new dom.window.Event('visibilitychange'));await settle()},settle};
+ return {dom,doc,context,api,calls,setVirtual(n,error=false){virtualCount=n;virtualError=error;},async status(s){callback(s);await settle()},sync(s){state=s;events.sync()},async hide(value){hidden=value;doc.dispatchEvent(new dom.window.Event('visibilitychange'));await settle()},settle};
 }
 test('name is text only, shortcuts are removed from view, and profile keys disclose no account identifier',async()=>{
  const t=await setup();try{
@@ -30,10 +30,10 @@ test('counts distinct connected accounts, updates joins/leaves, never shows stal
  const t=await setup();try{
  const label=t.doc.getElementById('boxOnlineCount');assert.equal(label.textContent,'Conectando…');
  await t.status('SUBSCRIBED');assert.deepEqual(JSON.parse(JSON.stringify(t.calls.at(-1))),['track',{online:true}]);
- t.sync({a:[{online:true},{online:true}],b:[{online:true}],empty:[],invalid:[{}]});assert.equal(label.textContent,'2 pessoas online');
- t.sync({a:[{online:true}]});assert.equal(label.textContent,'1 pessoa online');
+ t.sync({a:[{online:true},{online:true}],b:[{online:true}],empty:[],invalid:[{}]});assert.equal(label.textContent,'2 participantes online');
+ t.sync({a:[{online:true}]});assert.equal(label.textContent,'1 participante online');
  await t.status('CHANNEL_ERROR');assert.equal(label.textContent,'Online indisponível');t.sync({a:[{online:true}],b:[{online:true}]});assert.equal(label.textContent,'Online indisponível');
- await t.status('SUBSCRIBED');t.sync({a:[{online:true}]});assert.equal(label.textContent,'1 pessoa online');
+ await t.status('SUBSCRIBED');t.sync({a:[{online:true}]});assert.equal(label.textContent,'1 participante online');
  t.dom.window.dispatchEvent(new t.dom.window.Event('offline'));assert.equal(label.textContent,'Sem conexão');
  }finally{await t.api.stop();t.dom.window.close()}
 });
@@ -42,4 +42,15 @@ test('hidden pages untrack, visible pages rejoin, logout removes the channel and
  await t.status('SUBSCRIBED');await t.hide(true);assert.equal(t.calls.at(-1)[0],'untrack');await t.hide(false);assert.equal(t.calls.at(-1)[0],'track');
  await t.api.stop();assert.equal(t.calls.at(-1)[0],'remove');const count=t.calls.length;await t.hide(true);await t.hide(false);await t.status('SUBSCRIBED');assert.equal(t.calls.length,count);
  }finally{t.dom.window.close()}
+});
+
+test('unified presence adds live virtual characters, and a failed refresh never preserves an inflated total',async()=>{
+ const t=await setup();try{
+  t.setVirtual(70);await t.status('SUBSCRIBED');t.sync({a:[{online:true},{online:true}],b:[{online:true}]});await t.settle();
+  assert.equal(t.doc.getElementById('boxOnlineCount').textContent,'72 participantes online');
+  t.setVirtual(0);await t.hide(true);await t.hide(false);await t.settle();
+  assert.equal(t.doc.getElementById('boxOnlineCount').textContent,'2 participantes online');
+  t.setVirtual(70,true);await t.hide(true);await t.hide(false);await t.settle();
+  assert.equal(t.doc.getElementById('boxOnlineCount').textContent,'Online indisponível');
+ }finally{await t.api.stop();t.dom.window.close()}
 });

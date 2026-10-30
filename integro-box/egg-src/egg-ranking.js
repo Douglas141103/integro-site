@@ -8,7 +8,7 @@ export function mountEggRanking(host, load) {
   };
   host.replaceChildren();
   host.className = 'egg-ranking';
-  host.append(text('p', 'Mais Integros primeiro. Em caso de empate, vence quem tem mais IntGem. Empate nos dois saldos mantém a mesma colocação.', 'egg-ranking-rules'));
+  host.append(text('p', 'Ranking único com jogadores e personagens virtuais automatizados. Mais Integros primeiro. Em caso de empate, vence quem tem mais IntGem. Empate nos dois saldos mantém a mesma colocação.', 'egg-ranking-rules'));
   const toolbar = text('div', '', 'egg-ranking-toolbar');
   const update = text('button', 'Atualizar ranking', 'egg-secondary'); update.type = 'button';
   const summary = text('span', ''); toolbar.append(summary, update); host.append(toolbar);
