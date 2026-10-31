@@ -39,7 +39,16 @@ export function pushBot(bot,event){
  return true;
 }
 export const encodeBot=bot=>JSON.stringify(botSnapshot(bot),(_,v)=>v===Infinity?'@Infinity':v===-Infinity?'@-Infinity':v);
-export const decodeBot=text=>JSON.parse(text,(_,v)=>v==='@Infinity'?Infinity:v==='@-Infinity'?-Infinity:v);
+export function decodeBot(text){
+ // JSON.parse's reviver calls JS for every numeric field in all 140 saves.
+ // Parse natively, then restore only the two non-finite-number sentinels.
+ const root=JSON.parse(text);
+ if(!text.includes('@Infinity')&&!text.includes('@-Infinity'))return root;
+ if(root==='@Infinity')return Infinity;if(root==='@-Infinity')return -Infinity;
+ const pending=root&&typeof root==='object'?[root]:[];
+ while(pending.length){const obj=pending.pop();for(const key of Object.keys(obj)){const value=obj[key];if(value==='@Infinity')obj[key]=Infinity;else if(value==='@-Infinity')obj[key]=-Infinity;else if(value&&typeof value==='object')pending.push(value);}}
+ return root;
+}
 
 function decide(bot){
  const g=bot.game,b=bot.brain;
