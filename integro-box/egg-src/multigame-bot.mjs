@@ -130,7 +130,14 @@ export function advanceParticipant(b,seconds){const {s,key}=b;seconds=clamp(Numb
    if(s.target&&g.at(s.target)&&!g.activity)g.use(s.target);g.update(dt);for(const e of g.drainEvents())if(e.type==='arrive'&&String(e.text).startsWith('enter:'))g.enter(e.text.slice(6));else if(e.type==='arrive'&&String(e.text).startsWith('exit:'))g.exit();
   }else if(key==='craft'){
    if(s.seconds>=s.next){s.next=s.seconds+5+random(s)*9;s.target={x:3+random(s)*42,z:3+random(s)*42};const p={x:Math.floor(g.player.x)+1,y:Math.floor(g.player.y),z:Math.floor(g.player.z)};if(p.x<48&&p.y>0&&p.y<30&&g.get(p.x,p.y,p.z)===0){g.selected=1+Math.floor(random(s)*3);if(g.place(p)){b.edits.push({...p,block:g.selected});s.actions++;}}}
-   const input=direction(g.player,s.target||{x:24,z:24});if(Math.floor(s.seconds*2)%7===0)g.jump();g.update(dt,input);
+   const move=direction(g.player,s.target||{x:24,z:24}),p=g.player;
+   // Craft inputs are camera-relative. Convert desired world movement instead
+   // of walking backwards when the saved camera faces the opposite direction.
+   if(move.x||move.z){const target=Math.atan2(-move.x,-move.z);p.yaw+=clamp(Math.atan2(Math.sin(target-p.yaw),Math.cos(target-p.yaw)),-dt*3,dt*3);}
+   const ahead={x:clamp(Math.floor(p.x+move.x*2),0,47),z:clamp(Math.floor(p.z+move.z*2),0,47)};
+   const height=Math.min(27,g.surface(ahead.x,ahead.z)+2.1);
+   g.update(dt,{x:move.x*Math.cos(p.yaw)-move.z*Math.sin(p.yaw),z:move.x*Math.sin(p.yaw)+move.z*Math.cos(p.yaw),up:clamp((height-p.y)*.9,-1,1)});
+   p.x=clamp(p.x,.35,47.65);p.z=clamp(p.z,.35,47.65);
   }
  }
 }

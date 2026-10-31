@@ -18,6 +18,14 @@ test('all 18 catalog games execute real inputs, resume checkpoints and keep wall
  if(game!=='egg')assert.equal(participantResult(other).data.coins,0,'other games must not mint Egg coins');
  }
 });
+test('Craft camera-relative steering explores the shared world instead of sticking to an edge',()=>{
+ let saved;const positions=[];
+ for(let n=0;n<40;n++){const bot=prepareParticipant(saved,31,{number:1,game:'craft',online:true,world:{}});advanceParticipant(bot,15);positions.push(participantPose(bot));saved=copy(participantSnapshot(bot));}
+ assert(Math.max(...positions.map(p=>p.x))-Math.min(...positions.map(p=>p.x))>15);
+ assert(Math.max(...positions.map(p=>p.z))-Math.min(...positions.map(p=>p.z))>15);
+ assert(positions.every(p=>p.x>=.35&&p.x<=47.65&&p.z>=.35&&p.z<=47.65));
+ assert(saved.games.craft.actions>15);
+});
 test('existing Egg inventory migrates losslessly; offline games remain frozen',()=>{
  let b=prepareParticipant(null,12,{number:1,game:'egg',online:true});advanceParticipant(b,15);let root=copy(participantSnapshot(b));root.egg.game.save.coins=345;const egg=JSON.stringify(root.egg);
  b=prepareParticipant(root,12,{number:2,game:'interball',online:true});advanceParticipant(b,15);assert.equal(participantResult(b).data.coins,345);assert.equal(JSON.stringify(participantSnapshot(b).egg),egg);
