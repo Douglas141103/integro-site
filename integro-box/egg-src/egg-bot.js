@@ -28,6 +28,16 @@ export function prepareBotSession(saved,seed,session,now){
  }
  return createBot(saved,seed,now);
 }
+export function pushBot(bot,event){
+ const g=bot.game,b=bot.brain;
+ if(!event||event.session!==bot.session||!Number.isFinite(event.x)||!Number.isFinite(event.z))return false;
+ if(g.mode==='train')g.interact();
+ g.roomMode=true;
+ if(!g.push({x:event.x,z:event.z}))return false;
+ b.activity='explore';b.until=g.time+2;b.nextWander=g.time+2;
+ b.wander={x:g.player.x,z:g.player.z};b.recoverUntil=g.time+1.2;b.nextTrain=Math.max(b.nextTrain,g.time+15);
+ return true;
+}
 export const encodeBot=bot=>JSON.stringify(botSnapshot(bot),(_,v)=>v===Infinity?'@Infinity':v===-Infinity?'@-Infinity':v);
 export const decodeBot=text=>JSON.parse(text,(_,v)=>v==='@Infinity'?Infinity:v==='@-Infinity'?-Infinity:v);
 
@@ -105,7 +115,7 @@ export function stepBot(bot,dt=.05){
  }
 
  let input={};
- if(target&&g.mode==='run'){
+ if(target&&g.mode==='run'&&g.time>=(b.recoverUntil||0)){
   // Use the clear central lane for long journeys, then approach the objective.
   const waypoint=Math.abs(target.z-g.player.z)>6?{x:b.lane,z:target.z}:target;
   const x=waypoint.x-g.player.x,z=waypoint.z-g.player.z,len=Math.hypot(x,z);

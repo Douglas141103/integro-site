@@ -55,3 +55,17 @@ exigem um proprietário humano, inclusive em salas com proprietário nulo.
 Validação: simulação com compras reais do jogo, restauração de estado físico,
 limite de tempo, permissões, leases/replay, bônus diário único, presença expirada,
 prioridade de vagas, ranking unificado e regressões de presença/equipamentos.
+
+## Nomes e empurrões
+
+Os personagens usam os nomes Jogador 01 a Jogador 70, mantendo o indicador virtual.
+O botão Empurrar reconhece a posição recebida do servidor, sem exigir broadcast
+de um navegador para o personagem automatizado. O RPC valida sala, presença,
+proximidade, altura, recarga de 3 segundos e proteção de 1,25 segundo.
+
+O impacto aceito aparece imediatamente para quem empurrou e é enviado aos demais
+pelo estado da sala. O worker aplica a força no motor compartilhado no próximo
+ciclo (até 15 segundos), interrompendo a esteira e dando tempo de recuperação.
+A fila é consumida no mesmo checkpoint, preservando impactos que chegaram durante
+o processamento e ignorando eventos de sessões antigas. O empurrão não concede
+moedas ou itens.

@@ -1,4 +1,4 @@
-import {prepareBotSession,advanceBot,botPose,botSnapshot,decodeBot} from './simulation.mjs';
+import {prepareBotSession,pushBot,advanceBot,botPose,botSnapshot,decodeBot} from './simulation.mjs';
 
 async function pack(value:unknown){
  const text=JSON.stringify(value,(_,v)=>v===Infinity?'@Infinity':v===-Infinity?'@-Infinity':v);
@@ -29,10 +29,15 @@ Deno.serve(async req=>{
    const session=job.sessions?.[id],seconds=Math.max(0,Math.min(15,session?.seconds??job.seconds));
    let time=job.now-seconds*1000;
    const bot=prepareBotSession(saved[id],id*7919,session,()=>time),path=[];
+   const pushes=job.pushes?.[id]||[];let pushIndex=0;
    for(let elapsed=0;elapsed<seconds-1e-8;elapsed+=.5){
+    while(pushIndex<pushes.length&&elapsed>=Math.max(0,(pushes[pushIndex].at-(job.now-seconds*1000))/1000))pushBot(bot,pushes[pushIndex++]);
     const dt=Math.min(.5,seconds-elapsed);time+=dt*1000;advanceBot(bot,dt);
     const p=botPose(bot);path.push([p.x,p.y,p.z,p.yaw].map(v=>Math.round(v*1000)/1000));
    }
+   // Events accepted just before the claim still apply, with motion continuing
+   // into the next checkpoint; no extra simulation time is granted.
+   while(pushIndex<pushes.length)pushBot(bot,pushes[pushIndex++]);
    next[id]=botSnapshot(bot);
    const s=bot.game.save;
    results.push({id,session:session?.number??0,data:{coins:s.coins,training:s.training,delivered:s.delivered,caught:s.caught,vehicles:s.vehicles,accessories:s.accessories,creatures:s.creatures.length,eggs:s.eggs.length,tax:s.tax},pose:botPose(bot),path});
