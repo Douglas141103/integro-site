@@ -28366,6 +28366,8 @@ void main() {
               !['x','y','z','yaw'].every(k => Number.isFinite(s[k]))) continue;
           ids.add(peer.slot);
           let entry = remote.get(peer.slot);
+          const identity=String(peer.identity||peer.slot)+':'+String(peer.name||'');
+          if(entry&&entry.identity!==identity){dispose(entry);remote.delete(peer.slot);entry=null;}
           if (!entry) {
             const node = new Sg();
             const body = new VA(new Tg(.6, .8, .35), new HB({color:colors[peer.slot-1]}));
@@ -28380,10 +28382,10 @@ void main() {
             }
             const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
             const ctx=canvas.getContext('2d');ctx.fillStyle='#132a31';ctx.fillRect(0,0,256,64);
-            ctx.fillStyle='#ffffff';ctx.font='bold 25px Arial';ctx.textAlign='center';ctx.fillText('Explorador '+peer.slot,128,41);
+            ctx.fillStyle='#ffffff';ctx.font='bold 25px Arial';ctx.textAlign='center';ctx.fillText(peer.automated?String(peer.name||'Jogador')+' · virtual':'Explorador '+peer.slot,128,41);
             const texture=new nB(canvas);texture.colorSpace=Eg;
             const label=new oC(new CC({map:texture,depthWrite:false}));label.position.y=2.05;label.scale.set(2.2,.55,1);node.add(label);
-            node.position.set(s.x,s.y,s.z);scene.add(node);entry={node,limbs,state:s,cosmetics:window.BoxRoomCosmetics?.create(node,id)};remote.set(peer.slot,entry);
+            node.position.set(s.x,s.y,s.z);scene.add(node);entry={node,limbs,state:s,identity,cosmetics:window.BoxRoomCosmetics?.create(node,id)};remote.set(peer.slot,entry);
           }
           entry.state=s;
           entry.cosmetics?.update(s.appearance,performance.now()/1000);

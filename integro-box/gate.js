@@ -37,7 +37,7 @@ try {
   phase('Preparando os seus mundos…');
   const {mountPlayerProfile}=await import('./player-profile.js?v=20261016-intgem1');
   mountPlayerProfile(user);
-  const {startPresence}=await import('./presence.js?v=20261030-virtual1');
+  const {startPresence}=await import('./presence.js?v=20261031-catalogbots1');
   if(!unloaded)startPresence(user);
   await script('./classic-games.js?v=20261020-i18n1');
   await script('./robot-core.js?v=20261017-robot1');
@@ -47,7 +47,7 @@ try {
   phase('Montando as aventuras 3D…');
   await script('./egg.js?v=20261030-botpush1');
   await script('./fruit.js?v=20261016-fruit-compact1');
-  await script('./worlds.js?v=20261021-roomitems1');
+  await script('./worlds.js?v=20261031-catalogbots1');
   phase('Conectando amigos e salas…');
   await import('./multiplayer.js?v=20261030-virtual1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');

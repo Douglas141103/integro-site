@@ -6,8 +6,11 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
+    "acorn": "8.15.0",
+    "eslint-scope": "8.4.0",
     "jsdom": "26.1.0",
     "jsqr": "1.4.0",
+    "matter-js": "0.20.0",
     "three": "0.180.0"
   }
 }

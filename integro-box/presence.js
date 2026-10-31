@@ -17,7 +17,7 @@ export function startPresence(user,{client=supabase,doc=document,win=window,make
  function render(){if(stopped||!connected||!synced)return;if(!virtualReady){unavailable('Atualizando participantes…');return;}const n=countOnline(channel.presenceState())+virtual;label.textContent=n+' '+(n===1?'participante online':'participantes online');badge.dataset.state='online';}
  async function refreshVirtual(){
   if(stopped||doc.hidden)return;
-  try{const {data,error}=await client.rpc('box_virtual_presence');if(error||!Number.isInteger(data?.active)||data.active<0||data.active>70)throw Error('presence');
+  try{const {data,error}=await client.rpc('box_virtual_presence');if(error||!Number.isInteger(data?.active)||data.active<0||data.active>140)throw Error('presence');
    if(stopped)return;virtual=data.active;virtualReady=true;render();
   }catch{virtual=0;virtualReady=false;if(!stopped&&connected)unavailable('Online indisponível');}
   finally{if(!stopped){win.clearTimeout(virtualTimer);virtualTimer=win.setTimeout(refreshVirtual,15000);}}
