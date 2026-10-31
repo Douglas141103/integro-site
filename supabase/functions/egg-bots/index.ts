@@ -1,4 +1,4 @@
-import {createBot,advanceBot,botPose,botSnapshot,decodeBot} from './simulation.mjs';
+import {prepareBotSession,advanceBot,botPose,botSnapshot,decodeBot} from './simulation.mjs';
 
 async function pack(value:unknown){
  const text=JSON.stringify(value,(_,v)=>v===Infinity?'@Infinity':v===-Infinity?'@-Infinity':v);
@@ -26,19 +26,20 @@ Deno.serve(async req=>{
   const saved=job.checkpoint?await unpack(job.checkpoint):{};
   const next:Record<string,unknown>={},results=[];
   for(let id=1;id<=70;id++){
-   let time=job.now-job.seconds*1000;
-   const bot=createBot(saved[id],id*7919,()=>time),path=[];
-   for(let elapsed=0;elapsed<job.seconds-1e-8;elapsed+=.5){
-    const dt=Math.min(.5,job.seconds-elapsed);time+=dt*1000;advanceBot(bot,dt);
+   const session=job.sessions?.[id],seconds=Math.max(0,Math.min(15,session?.seconds??job.seconds));
+   let time=job.now-seconds*1000;
+   const bot=prepareBotSession(saved[id],id*7919,session,()=>time),path=[];
+   for(let elapsed=0;elapsed<seconds-1e-8;elapsed+=.5){
+    const dt=Math.min(.5,seconds-elapsed);time+=dt*1000;advanceBot(bot,dt);
     const p=botPose(bot);path.push([p.x,p.y,p.z,p.yaw].map(v=>Math.round(v*1000)/1000));
    }
    next[id]=botSnapshot(bot);
    const s=bot.game.save;
-   results.push({id,data:{coins:s.coins,training:s.training,delivered:s.delivered,caught:s.caught,vehicles:s.vehicles,accessories:s.accessories,creatures:s.creatures.length,eggs:s.eggs.length,tax:s.tax},pose:botPose(bot),path});
+   results.push({id,session:session?.number??0,data:{coins:s.coins,training:s.training,delivered:s.delivered,caught:s.caught,vehicles:s.vehicles,accessories:s.accessories,creatures:s.creatures.length,eggs:s.eggs.length,tax:s.tax},pose:botPose(bot),path});
   }
   const outcome=await rpc({p_action:'commit',p_lease:job.lease,p_checkpoint:await pack(next),p_results:results});
   if(outcome.error)throw new Error('stale_checkpoint');
-  return Response.json({ok:true,participants:results.length});
+  return Response.json({ok:true,participants:outcome.participants});
  }catch(error){
   // Never log request headers, tokens, credentials or character checkpoints.
   console.error('egg-bots tick failed',error instanceof Error?error.message:'unknown');

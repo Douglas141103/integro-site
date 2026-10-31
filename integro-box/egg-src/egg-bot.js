@@ -6,7 +6,7 @@ export function createBot(saved,seed=1,now=()=>Date.now()) {
  const game=new EggAdventure(null,{now});
  if(saved){Object.assign(game,saved.game);game.now=now;}
  else game.save.rng=seed;
- const bot={game,brain:saved?.brain||{yaw:0}};
+ const bot={game,brain:saved?.brain||{yaw:0},session:saved?.session||0};
  if(bot.brain.version!==2){
   // Migrate only behaviour; leave earned balances, levels and inventory intact.
   if(game.mode==='train')game.interact();
@@ -18,7 +18,15 @@ export function createBot(saved,seed=1,now=()=>Date.now()) {
 }
 export function botSnapshot(bot){
  const {now,events,...game}=bot.game;
- return {game,brain:bot.brain};
+ return {game,brain:bot.brain,session:bot.session||0};
+}
+export function prepareBotSession(saved,seed,session,now){
+ // A new login uses the same persisted save/restart as a human game session.
+ // Offline checkpoints retain their runtime without advancing any game clock.
+ if(session?.online&&saved?.session!==session.number){
+  saved={game:new EggAdventure(saved?.game?.save,{now}),brain:{},session:session.number};
+ }
+ return createBot(saved,seed,now);
 }
 export const encodeBot=bot=>JSON.stringify(botSnapshot(bot),(_,v)=>v===Infinity?'@Infinity':v===-Infinity?'@-Infinity':v);
 export const decodeBot=text=>JSON.parse(text,(_,v)=>v==='@Infinity'?Infinity:v==='@-Infinity'?-Infinity:v);

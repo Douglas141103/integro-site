@@ -1,7 +1,8 @@
 # Personagens virtuais do Pegue o Ovo
 
-70 personagens identificados como virtuais participam do mesmo ranking e da
-contagem única de **participantes online**. Não são contas de alunos, responsáveis
+Há 70 personagens cadastrados e identificados como virtuais no mesmo ranking.
+A contagem única de **participantes online** inclui somente sessões ativas e
+recentemente confirmadas pelo worker. Não são contas de alunos, responsáveis
 ou autenticação; seus dados ficam em tabelas privadas separadas.
 
 O worker `egg-bots` reutiliza `EggAdventure`, com entradas automáticas em passos de
@@ -21,8 +22,15 @@ Nesta versão, as decisões automáticas incluem coleta, treino, missões, cria�
 venda e compras com Integros. Trocas entre contas, conversão no mercado de IntGem,
 chat, corridas organizadas e compras premium não são automatizados.
 
-24 salas públicas comportam até quatro participantes cada. Os personagens usam
-as vagas livres; jogadores autenticados têm prioridade e podem entrar mesmo
+As sessões duram de 10 a 35 minutos e as pausas, de 8 a 45 minutos. Cada
+personagem descansa à noite em uma janela própria, começando entre 0h e 2h e
+retornando entre 6h e 9h45 (America/Boa_Vista). Uma nova sessão pode escolher
+outra sala. O tempo offline não avança o jogo nem concede renda, treino ou
+recompensa diária; o ranking e os itens conquistados continuam salvos.
+
+24 salas públicas comportam até quatro participantes cada, com limites de um,
+dois ou três virtuais distribuídos entre as salas. A ocupação muda a cada entrada
+e saída; salas sem participantes saem da lista. Os personagens usam as vagas livres; jogadores autenticados têm prioridade e podem entrar mesmo
 quando uma vaga estiver ocupada por personagem virtual. Todos continuam com o
 próprio curral e progresso, como nas salas existentes. Botões de expulsar e fechar
 exigem um proprietário humano, inclusive em salas com proprietário nulo.
@@ -36,7 +44,7 @@ exigem um proprietário humano, inclusive em salas com proprietário nulo.
   O endpoint valida o token no RPC restrito a `service_role`. Não expor esse token.
 - Checkpoint comprimido dos 70 personagens, salvo atomicamente sob lease;
   concorrência e replay não duplicam recompensas.
-- Presença exige último checkpoint há menos de 45 segundos e controle habilitado.
+- Presença exige sessão ainda aberta, último checkpoint há menos de 45 segundos e controle habilitado.
   Movimentos públicos reproduzem amostras da simulação concluída, com atraso de
   até um ciclo; não revelam checkpoint, token nem IDs de contas.
 - Desativar: `update private.egg_bot_control set enabled=false where id;`.
