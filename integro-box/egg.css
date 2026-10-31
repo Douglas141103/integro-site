@@ -347,3 +347,40 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 @media(max-width:600px){.egg-winter-hero{padding:14px;gap:12px}.egg-winter-hero h3{font-size:24px!important}.egg-winter-hero>span{font-size:44px}.egg-winter-skates{padding:15px}.egg-shop-tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;padding-bottom:7px;scrollbar-width:thin}.egg-shop-tabs button{flex:0 0 auto;font-size:12px!important}.egg-winter-rewards article{padding:12px}.egg-nest-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.egg-winter-panel{gap:12px}#eggWinterStatus{font-size:9px}.egg-place strong{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 
 .egg-economy-account{min-width:0}.egg-economy-account .egg-tax-table{table-layout:fixed}.egg-economy-account .egg-tax-table td,.egg-economy-account .egg-tax-table th{overflow-wrap:anywhere;padding:8px;font-size:13px}
+
+/* Mobile portrait HUD: separate navigation, utilities, equipment and actions. */
+.egg-mobile-tools{display:none}
+@media(max-width:600px) and (orientation:portrait){
+ .egg-immersive .egg-stage{height:calc(100dvh - 166px);min-height:460px}
+ .egg-immersive .egg-hud-top{inset:8px 10px auto;display:grid;grid-template-columns:minmax(0,1fr) 144px;gap:6px}
+ .egg-immersive .egg-navigation{max-width:none}
+ .egg-immersive .egg-hud-tools{display:grid;grid-template-columns:repeat(3,44px);gap:4px 6px}
+ .egg-immersive .egg-money{grid-column:1/-1;justify-self:end;min-height:38px;align-items:flex-start;padding-top:2px}
+ .egg-immersive .egg-money b{font-size:16px}.egg-immersive .egg-money>svg{width:19px;height:19px}
+ .egg-immersive .egg-wallet-gain{top:23px;font-size:11px}
+ .egg-immersive .egg-place strong{font-size:13px;max-width:100%}
+ .egg-immersive #eggWinterStatus{font-size:8px;max-width:145px;white-space:normal}
+ .egg-immersive .egg-objective{font-size:10px;margin-left:0}
+ .egg-mobile-hud .egg-mobile-tools{position:absolute;display:flex;align-items:center;justify-content:flex-end;gap:6px;left:10px;right:10px;top:102px;height:44px;z-index:12;pointer-events:none}
+ .egg-mobile-tools>*{pointer-events:auto}
+ .egg-mobile-tools .ig-dock{position:static;flex-direction:row;margin-right:auto;gap:0}
+ .egg-mobile-tools .ig-dock>.ig-wallet-button{min-height:44px;padding:5px 8px;font-size:12px;border-width:1px;box-shadow:none;border-radius:12px}
+ .egg-mobile-tools .ig-companion,.egg-mobile-tools .ig-hide-companion{display:none!important}
+ .egg-mobile-tools #boxOnline,.egg-mobile-tools #boxChat{position:static!important;transform:none!important;max-width:none;flex:0 0 auto;right:auto!important;bottom:auto!important}
+ .egg-mobile-tools #boxOnlineToggle,.egg-mobile-tools #boxChatToggle{float:none;min-height:44px!important;font-size:12px!important;padding:8px 10px!important;box-shadow:none;white-space:nowrap}
+ .egg-mobile-tools #boxOnline #boxOnlinePanel,.egg-mobile-tools #boxChatPanel{position:absolute!important;top:50px!important;bottom:auto!important;right:0!important;left:auto!important;transform:none!important;width:min(340px,calc(100vw - 40px));max-width:100%;max-height:calc(100dvh - 350px);min-height:140px;overflow:auto;padding:12px}
+ .egg-mobile-tools #boxChatMessages{max-height:150px}
+ .egg-mobile-hud .egg-ability-dock,.egg-mobile-hud:has(#eggPush:not([hidden])) .egg-ability-dock{top:156px;bottom:auto;left:10px;right:10px;transform:none;justify-content:flex-start;align-items:center;gap:7px;z-index:8}
+ .egg-mobile-hud .egg-ability-button{width:44px;height:44px;min-width:44px;padding:8px}
+ .egg-mobile-hud .egg-ability-button svg{width:24px;height:24px}
+ .egg-mobile-hud .egg-ability-button span{font-size:10px;min-width:23px;right:-3px;bottom:-4px;padding:2px 3px}
+ .egg-mobile-hud .egg-ability-button small{display:none}
+ .egg-mobile-hud #eggTrapOpen{margin-left:auto;width:auto;min-height:44px;border-radius:12px;padding:6px 8px;font-size:9px}
+ .egg-mobile-hud .egg-supplies{display:none}
+ .egg-mobile-hud .egg-controls{left:12px;right:12px;bottom:12px;gap:10px}
+ .egg-mobile-hud .egg-action-pad{grid-template-columns:52px 52px;gap:6px}
+ .egg-mobile-hud .egg-interact,.egg-mobile-hud .egg-push{min-height:44px;font-size:11px}
+ .egg-mobile-hud .egg-chase,.egg-mobile-hud .egg-race-hud{top:210px;max-width:85%;font-size:10px}
+ .egg-mobile-hud .egg-toast{bottom:200px;max-width:85%}
+ .egg-mobile-hud:has(.egg-sheet:not([hidden])) .egg-mobile-tools{visibility:hidden;pointer-events:none}
+}

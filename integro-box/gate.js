@@ -9,6 +9,7 @@ let unloaded=false;
 function lock(){
  if(unloaded)return;unloaded=true;
  document.body.classList.add('box-locked');
+ window.BoxEggHud?.stop();
  window.BoxIntGem?.stop();
  window.BoxChat?.stop();
  window.BoxPresence?.stop();
@@ -52,6 +53,7 @@ try {
   await import('./multiplayer.js?v=20261030-virtual1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
   if(!unloaded)await import('./egg-cloud.js?v=20261030-botpush1');
+  if(!unloaded){const {mountEggHud}=await import('./egg-hud.mjs?v=20261031-hud1');window.BoxEggHud=mountEggHud();}
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-moves1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
