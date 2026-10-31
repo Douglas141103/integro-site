@@ -11,12 +11,14 @@ Deno.serve(async req=>{
  const url=Deno.env.get('SUPABASE_URL'),key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
  async function rpc(body:Record<string,unknown>,name='box_bot_tick'){
   const r=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{'Content-Type':'application/json',apikey:key!,Authorization:'Bearer '+key},body:JSON.stringify({p_token:token,...body})});
-  if(!r.ok)throw new Error('checkpoint_rpc_failed');return await r.json();
+  if(!r.ok){const detail=await r.json().catch(()=>({}));const code=/^[A-Z0-9]{5}$/.test(detail.code||'')?detail.code:'unknown';throw new Error('checkpoint_rpc_failed:'+r.status+':'+code);}return await r.json();
  }
+ let lease:string|null=null;
  try{
   const job=await rpc({p_action:'claim'});
   if(job.error)return Response.json({error:'unauthorized'},{status:401});
   if(job.busy)return Response.json({busy:true});
+  lease=job.lease;
   const saved=job.checkpoint?unpackCheckpoint(job.checkpoint,decodeBot):{};
   const next:Record<string,unknown>={},results=[];
   for(let id=1;id<=140;id++){
@@ -37,9 +39,11 @@ Deno.serve(async req=>{
   }
   const outcome=await rpc({p_action:'commit',p_lease:job.lease,p_checkpoint:packCheckpoint(next),p_results:results});
   if(outcome.error)throw new Error('stale_checkpoint');
+  lease=null;
   const chat=await reviewBotChat(body=>rpc(body,'box_bot_chat'),{key:Deno.env.get('OPENAI_API_KEY'),model:Deno.env.get('BOX_CHAT_MODEL')||'gpt-4.1-mini'});
   return Response.json({ok:true,participants:outcome.participants,chat});
  }catch(error){
+  if(lease)try{await rpc({p_action:'abort',p_lease:lease});}catch{}
   // Never log request headers, tokens, credentials or character checkpoints.
   console.error('egg-bots tick failed',error instanceof Error?error.message:'unknown');
   return Response.json({error:'tick_failed'},{status:503});
