@@ -42,7 +42,7 @@ test('140 identities rotate all games, respect human slots and moderate reportab
  const {db,run,call}=await intgemDatabase();
  try{
   await db.exec('alter table public.students add column active boolean default true');
-  for(const name of ['20261021030058_room_equipped_appearance.sql','20261030211429_box_room_departure.sql','20261020210536_egg_balance_ranking.sql','20261030224808_egg_virtual_players.sql','20261031000651_egg_virtual_sessions.sql','20261031001331_egg_virtual_session_scope.sql','20261031002420_egg_virtual_push.sql','20261031032814_catalog_virtual_players.sql','20261031151044_optimize_bot_commit.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+  for(const name of ['20261021030058_room_equipped_appearance.sql','20261030211429_box_room_departure.sql','20261020210536_egg_balance_ranking.sql','20261030224808_egg_virtual_players.sql','20261031000651_egg_virtual_sessions.sql','20261031001331_egg_virtual_session_scope.sql','20261031002420_egg_virtual_push.sql','20261031032814_catalog_virtual_players.sql','20261031151044_optimize_bot_commit.sql','20261031151957_shard_bot_checkpoints.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
   assert.equal((await db.query('select count(*)::int n from private.egg_bots')).rows[0].n,140);
   await db.exec("update private.egg_bot_control set enabled=true,token_hash=sha256(convert_to('test-token','UTF8')) where id;update private.egg_bots set next_login_at=now()-interval '1 minute' where id between 1 and 140");
   const day='2026-11-01T17:00:00Z';let sessions=(await db.query('select private.egg_bot_sessions($1,$1) r',[day])).rows[0].r;
@@ -57,14 +57,16 @@ test('140 identities rotate all games, respect human slots and moderate reportab
   const job=(await db.query("select public.box_bot_tick('test-token','claim') r")).rows[0].r;
   assert(job.lease);const results=[];
   for(let id=1;id<=140;id++){const bot=prepareParticipant(null,id,job.sessions[id]);advanceParticipant(bot,job.sessions[id].seconds);results.push({id,session:job.sessions[id].number,...participantResult(bot),pose:participantPose(bot),path:[]});}
+  assert.equal(job.format,'sharded-v1');assert.equal(Object.keys(job.baseline).length,140);
+  const checkpoints=JSON.stringify(Object.fromEntries(results.map(r=>[r.id,'checkpoint'])));
   // A bad final row cannot partially publish the other 139 participants.
   const invalid=structuredClone(results);invalid[139].session++;
-  await assert.rejects(db.query("select public.box_bot_tick('test-token','commit',$1,'bad',$2) r",[job.lease,JSON.stringify(invalid)]),/session_checkpoint_mismatch/);
+  await assert.rejects(db.query("select public.box_bot_tick('test-token','commit',$1,$3,$2) r",[job.lease,JSON.stringify(invalid),checkpoints]),/session_checkpoint_mismatch/);
   assert.equal((await db.query("select count(*)::int n from private.egg_bots where game_progress ? game")).rows[0].n,0);
   await db.exec("update private.egg_bots set tick_seconds=15,day_seconds=290,day=(now() at time zone 'America/Manaus')::date,rewarded=false where id=1;update private.egg_bots set is_online=false,tick_seconds=0,seen_at='2020-01-01' where id=2");
-  const committed=(await db.query("select public.box_bot_tick('test-token','commit',$1,'checkpoint',$2) r",[job.lease,JSON.stringify(results)])).rows[0].r;
+  const committed=(await db.query("select public.box_bot_tick('test-token','commit',$1,$3,$2) r",[job.lease,JSON.stringify(results),checkpoints])).rows[0].r;
   assert.equal(committed.ok,true);assert.equal((await db.query("select count(*)::int n from private.egg_bots where game_progress ? game")).rows[0].n,140);
-  assert.equal((await db.query("select public.box_bot_tick('test-token','commit',$1,'checkpoint',$2) r",[job.lease,JSON.stringify(results)])).rows[0].r.error,'stale_lease');
+  assert.equal((await db.query("select public.box_bot_tick('test-token','commit',$1,$3,$2) r",[job.lease,JSON.stringify(results),checkpoints])).rows[0].r.error,'stale_lease');
   const credited=(await db.query("select seconds,day_seconds,intgem from private.egg_bots where id=1")).rows[0];assert.equal(Number(credited.seconds),15);assert.equal(Number(credited.day_seconds),305);assert.equal(credited.intgem,1);
   assert.equal(new Date((await db.query("select seen_at from private.egg_bots where id=2")).rows[0].seen_at).getUTCFullYear(),2020);
   await db.exec("update private.egg_bot_control set last_tick=now()-interval '20 seconds' where id");
