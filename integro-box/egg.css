@@ -384,3 +384,15 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
  .egg-mobile-hud .egg-toast{bottom:200px;max-width:85%}
  .egg-mobile-hud:has(.egg-sheet:not([hidden])) .egg-mobile-tools{visibility:hidden;pointer-events:none}
 }
+
+/* Each launcher can move independently over the game; panels stay in bounds. */
+.egg-draggable-hud .egg-mobile-tools{position:absolute;display:block;inset:0;width:100%;height:100%;z-index:12;pointer-events:none}
+.egg-draggable-hud .egg-mobile-tools .ig-dock,.egg-draggable-hud .egg-mobile-tools #boxOnline,.egg-draggable-hud .egg-mobile-tools #boxChat{position:absolute!important;left:var(--egg-tool-x,10px)!important;top:var(--egg-tool-y,102px)!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0;max-width:none;width:max-content;pointer-events:auto}
+.egg-draggable-hud .egg-mobile-tools .ig-companion,.egg-draggable-hud .egg-mobile-tools .ig-hide-companion{display:none!important}
+.egg-draggable-hud .egg-mobile-tools #boxOnlineToggle,.egg-draggable-hud .egg-mobile-tools #boxChatToggle{float:none}
+.egg-draggable-hud .egg-mobile-tools .ig-wallet-button,.egg-draggable-hud .egg-mobile-tools #boxOnlineToggle,.egg-draggable-hud .egg-mobile-tools #boxChatToggle{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.egg-draggable-hud .egg-mobile-tools [data-egg-dragging]{z-index:2}
+.egg-draggable-hud .egg-mobile-tools [data-egg-dragging] button{cursor:grabbing}
+.egg-draggable-hud .egg-mobile-tools #boxOnline #boxOnlinePanel,.egg-draggable-hud .egg-mobile-tools #boxChatPanel{position:absolute!important;left:var(--egg-panel-x,0px)!important;top:var(--egg-panel-y,50px)!important;right:auto!important;bottom:auto!important;transform:none!important;width:min(340px,calc(100vw - 40px));max-width:none;max-height:min(var(--egg-panel-max-height,70dvh),calc(100dvh - 32px));min-height:0;overflow:auto}
+.egg-draggable-hud .egg-mobile-tools> :has(#boxOnlinePanel:not([hidden])),.egg-draggable-hud .egg-mobile-tools> :has(#boxChatPanel:not([hidden])){z-index:3}
+.egg-draggable-hud:has(.egg-sheet:not([hidden])) .egg-mobile-tools{visibility:hidden;pointer-events:none}
