@@ -86,5 +86,14 @@ test('140 identities rotate all games, respect human slots and moderate reportab
   assert.equal((await run(1,'select public.box_chat($1) r',[room])).messages.length,1);
   await run(1,'select public.box_chat($1,null,$2) r',[room,candidate.id]);assert.equal((await db.query('select count(*)::int n from private.box_chat_reports')).rows[0].n,1);
   await assert.rejects(run(1,"select public.box_bot_chat('test-token','reserve') r"),/permission denied/);
+  // Disabling bot chat also cancels a review already in flight.
+  await db.query("update private.box_chat_messages set status='pending',approved_at=null where id=$1",[candidate.id]);
+  const beforeBots=(await db.query('select id,is_online,room_id from private.egg_bots order by id')).rows;
+  await db.exec(await readFile(new URL('../supabase/migrations/20261101025205_disable_virtual_chat.sql',import.meta.url),'utf8'));
+  assert.deepEqual((await db.query("select public.box_bot_chat('test-token','reserve') r")).rows[0].r,{empty:true,disabled:true});
+  assert.deepEqual((await db.query("select public.box_bot_chat('test-token','finish',$1,'approved','safe') r",[candidate.id])).rows[0].r,{empty:true,disabled:true});
+  assert.deepEqual((await db.query('select status,reason from private.box_chat_messages where id=$1',[candidate.id])).rows[0],{status:'blocked',reason:'bot_chat_disabled'});
+  assert.deepEqual((await db.query('select id,is_online,room_id from private.egg_bots order by id')).rows,beforeBots);
+  await assert.rejects(run(1,"select public.box_bot_chat('test-token','reserve') r"),/permission denied/);
  }finally{await db.close();}
 });
