@@ -11,7 +11,7 @@ export function mountainState(time,castAt,slot,race=false){
  return{visible:true,warning:age<ROCK.warning,amount,r:ROCK.radius*amount,h:ROCK.height*amount};
 }
 export const rockMethods={
- resetRockRoom(){this.roomRock=null;this.rockRequest=null;this.rock={castAt:-Infinity,nextAt:0};},
+ resetRockRoom(){this.localRockCastId=null;this.closedRockId=null;this.roomRock=null;this.rockRequest=null;this.rock={castAt:-Infinity,nextAt:0};},
  applyRoomRock(rock,serverNow){
   if(!this.roomMode||!Number.isFinite(serverNow))return;
   const previous=this.roomRock?.id;
@@ -22,12 +22,16 @@ export const rockMethods={
  castRock(){
   if(this.raceMode||this.time<this.rock.nextAt)return;
   this.rock={castAt:this.roomMode?-Infinity:this.time,nextAt:this.time+ROCK.interval};
-  if(this.roomMode){this.rockRequest={id:Math.floor(this.now()).toString(36)+'-'+this.random().toString(36).slice(2,10),action:'cast'};return;}
+  if(this.roomMode){this.rockRequest={id:Math.floor(this.now()).toString(36)+'-'+this.random().toString(36).slice(2,10),action:'cast'};this.localRockCastId=this.rockRequest.id;this.closedRockId=null;return;}
   this.emit('obstacle','Grande Pedregulho! As pedrinhas vão crescer até virar montanhas. Desvie pelas laterais!',ROCK.world);
  },
- updateRock(){if(!this.raceMode&&!this.inBase()&&(this.zone()===ROCK.world||this.carrying===ROCK.world)&&this.time>=this.rock.nextAt)this.castRock();},
+ closeRock(){
+  if(this.roomMode){const castId=this.localRockCastId||this.roomRock?.id||'';this.rockRequest={id:Math.floor(this.now()).toString(36)+'-'+this.random().toString(36).slice(2,10),action:'close',castId};this.closedRockId=castId;}
+  this.rock={castAt:-Infinity,nextAt:0};
+ },
+ updateRock(){if(!this.raceMode&&!this.inBase()&&(this.activeEggPower===ROCK.world&&this.carrying===ROCK.world)&&this.time>=this.rock.nextAt)this.castRock();},
  mountain(world,slot){
-  if(this.roomMode){const f=this.roomRock;return mountainState(f?(f.serverNow+this.now()-f.receivedAt)/1000:0,f&&!f.closed?f.castAt/1000:-Infinity,slot,this.raceMode);}
+  if(this.roomMode){const f=this.roomRock;return mountainState(f?(f.serverNow+this.now()-f.receivedAt)/1000:0,f&&!f.closed&&f.id!==this.closedRockId?f.castAt/1000:-Infinity,slot,this.raceMode);}
   return mountainState(this.time,this.rock.castAt,slot,this.raceMode);
  },
  collideMountains(p,r){
