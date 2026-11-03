@@ -46,7 +46,7 @@ test('dragon is slower and only a successful capture closes every fissure',()=>{
  for(let world=0;world<22;world++)for(let slot=0;slot<2;slot++)assert.deepEqual(g.flameGap(world,slot),{warning:false,open:false,amount:0});
  g.update(.05);assert.equal(g.flame.castAt,-Infinity);
 });
-test('fissure lips open front to back across the full track and close without vertical movement',()=>{
+test('fissures follow the track and open sideways without vertical movement',()=>{
  const root=new THREE.Group();
  const group=p=>{const n=new THREE.Group();p.add(n);return n;};
  const box=(p,w,h,d,color,x=0,y=0,z=0)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color}));m.position.set(x,y,z);p.add(m);return m;};
@@ -54,10 +54,10 @@ test('fissure lips open front to back across the full track and close without ve
  world.ground(root,WORLDS[21],21);
  const lips=[];root.traverse(n=>{if(n.name==='FlameGroundLip')lips.push(n);});assert.equal(lips.length,4);
  world.update({time:4,flameGap:()=>({amount:1,open:true,warning:false})},false);
- for(const lip of lips){assert.equal(lip.position.x,0);assert.equal(lip.position.y,0);assert.equal(Math.abs(lip.position.z),FLAME.halfGap);assert.equal(lip.children[1].geometry.parameters.width,9.5);}
+ for(const lip of lips){assert.equal(lip.position.z,0);assert.equal(lip.position.y,0);assert.equal(Math.abs(lip.position.x),FLAME.halfGap);assert.equal(lip.children[1].geometry.parameters.depth,FLAME.halfLength*2);}
  root.updateMatrixWorld(true);
- const first=lips.slice(0,2).map(l=>new THREE.Box3().setFromObject(l.children[1])).sort((a,b)=>a.min.z-b.min.z);
- assert(Math.abs(first[1].min.z-first[0].max.z-FLAME.halfGap*2)<1e-6);
+ const first=lips.slice(0,2).map(l=>new THREE.Box3().setFromObject(l.children[1])).sort((a,b)=>a.min.x-b.min.x);
+ assert(Math.abs(first[1].min.x-first[0].max.x-FLAME.halfGap*2)<1e-6);
  world.update({time:8,flameGap:()=>({amount:0,open:false,warning:false})},false);
  assert(lips.every(l=>l.position.length()===0));
 });

@@ -3,7 +3,7 @@ import {FLAME,flameGaps} from './egg-flame-rules.js';
 export function createFlameWorld({helpers}){
  const {group,box,ball,cyl,rod,torus,seasonalSurface}=helpers,gaps=[],rocks=[];
  function ground(g,w,world){
-  const cuts=flameGaps(world).map(z=>-z-world*48),half=FLAME.halfGap;
+  const cuts=flameGaps(world).map(z=>-z-world*48),half=FLAME.halfLength;
   const slab=(parent,start,end,width=28,x=0)=>{
    const z=-world*48-(start+end)/2;
    seasonalSurface(box(parent,width,.8,end-start,w.ground,x,-.46,z),w.ground);
@@ -13,12 +13,11 @@ export function createFlameWorld({helpers}){
   for(let slot=0;slot<cuts.length;slot++){
    const cut=cuts[slot],z=-world*48-cut;slab(g,start,cut-half);
    const node=group(g);node.name='FlameFissure';node.userData.world=world;
-   // Full-width lips separate along the running direction, leaving a horizontal
-   // opening across the track rather than a seam down its centre.
-   const halves=[-1,1].map(side=>{const part=group(node);part.name='FlameGroundLip';slab(part,side<0?cut:cut-half,side<0?cut+half:cut);return{part,side};});
-   box(node,28,.2,half*2,0x160f19,0,-2,z);
-   const lava=box(node,28,.08,half*2,0xff5b19,0,-1.35,z);lava.material=lava.material.clone();lava.material.emissive.setHex(0xff3b05);lava.material.emissiveIntensity=1.4;
-   const glow=box(node,9.5,.02,.10,0xffbe43,0,.015,z);glow.material=glow.material.clone();glow.material.emissive.setHex(0xff7a14);glow.material.emissiveIntensity=1;
+   // A long seam follows the track; the left and right banks move sideways.
+   const halves=[-1,1].map(side=>{const part=group(node);part.name='FlameGroundLip';slab(part,cut-half,cut+half,14,side*7);return{part,side};});
+   box(node,FLAME.halfGap*2,.2,half*2,0x160f19,0,-2,z);
+   const lava=box(node,FLAME.halfGap*2,.08,half*2,0xff5b19,0,-1.35,z);lava.material=lava.material.clone();lava.material.emissive.setHex(0xff3b05);lava.material.emissiveIntensity=1.4;
+   const glow=box(node,.10,.02,half*2,0xffbe43,0,.015,z);glow.material=glow.material.clone();glow.material.emissive.setHex(0xff7a14);glow.material.emissiveIntensity=1;
    gaps.push({world,slot,halves,glow,lava});start=cut+half;
   }slab(g,start,48);
  }
@@ -37,7 +36,7 @@ export function createFlameWorld({helpers}){
   for(const side of[-1,1]){rod(g,[0,1.3,0],[side*.48,2.1,.05],.055,0x796056);rod(g,[side*.3,1.8,0],[side*.26,2.4,-.12],.035,0x8c7160);}
   return g;
  }
- function update(game,reducedMotion){for(const gap of gaps){const s=game.flameGap(gap.world,gap.slot);for(const {part,side}of gap.halves){part.position.z=side*s.amount*FLAME.halfGap;}gap.glow.visible=s.warning;gap.glow.scale.z=s.warning?(reducedMotion?1:1+Math.sin(game.time*5)*.3):1;gap.lava.visible=s.amount>0;}
+ function update(game,reducedMotion){for(const gap of gaps){const s=game.flameGap(gap.world,gap.slot);for(const {part,side}of gap.halves){part.position.x=side*s.amount*FLAME.halfGap;}gap.glow.visible=s.warning;gap.glow.scale.x=s.warning?(reducedMotion?1:1+Math.sin(game.time*5)*.3):1;gap.lava.visible=s.amount>0;}
   for(const {rock,phase}of rocks){const rise=(1-Math.cos((game.time*.9+phase)%(Math.PI*2)))/2;rock.position.y=-2+rise*5;rock.rotation.y=game.time*.18+phase;}
  }
  return{ground,scenery,deadTree,update};

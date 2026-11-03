@@ -92,6 +92,7 @@ function display(data){
  $('boxRoomTitle').textContent=titles[data.game];$('boxAlias').textContent='Explorador '+data.slot;$('boxInvite').textContent=data.code||'';$('boxInviteSection').hidden=!!data.public;$('boxRoomVisibility').textContent=data.public?'Pública · outros usuários autenticados podem entrar.':'Privada · entrada somente por convite.';
  const peers=data.players.filter(p=>p.slot!==data.slot);
  const adapter=window.BoxAdapters[data.game];
+ adapter.applyFlame?.(data.flame,data.serverNow);
  const departure=data.players.find(p=>p.slot===data.slot)?.state?.departure;
  adapter.setDeparture?.(departure);departureClock.set(departure);clearTimeout(departureTimer);
  if(departureClock.active){const token=version;departureTimer=setTimeout(()=>{if(token===version&&room){void finishDeparture();}},departureClock.remaining());}
@@ -128,6 +129,7 @@ async function sync(){
  if(!adapter.active()||document.hidden){status('Sala pausada. Volte ao jogo em até 30 segundos para manter sua presença.');schedule(1500);return;}
  const raw=adapter.state();if(!raw){schedule();return;}
  const state={departure_client:adapter.setDeparture?1:0,x:raw.x,y:raw.y||0,z:raw.z,yaw:raw.yaw||0,zone:raw.zone,jetpack:room.game==='egg'&&raw.jetpack===true,gesture:Date.now()<gestureUntil?gesture:'',vehicle:room.game==='egg'&&window.BoxEgg?.vehicleIds?.includes(raw.vehicle)?raw.vehicle:''};
+ if(room.game==='egg'){state.flame=raw.flame||null;state.flameChase=raw.flameChase===true;}
  const edit=editQueue[0]||null;
  try{
   const data=await rpc('sync',{p_state:state,p_revision:room.revision,p_edit:edit});

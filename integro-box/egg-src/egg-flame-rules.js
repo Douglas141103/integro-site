@@ -1,4 +1,4 @@
-export const FLAME={world:21,warning:3,hold:4,halfGap:1.35};
+export const FLAME={world:21,warning:3,hold:4,halfGap:1.35,halfLength:6};
 export const FLAME_WORLD={name:'Pedras Flamejantes',short:'Chamas',creature:'Dragão Quente',value:45000,color:0xff6934,ground:0x352c32,path:0x62504a,sky:0x853e35,kind:'dragon'};
 export const flameGaps=world=>[9,34].map(offset=>-(world*48+offset));
 export function flameGapState(time,castAt,world,slot,race=false){

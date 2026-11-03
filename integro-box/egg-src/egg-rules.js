@@ -150,11 +150,22 @@ export class EggAdventure{
  let moveX=vx*dt,moveZ=vz*dt;if((this.raceMode||this.roomMode)&&this.pushVelocity&&this.time<this.pushUntil){moveX+=this.pushVelocity.x*dt;moveZ+=this.pushVelocity.z*dt;const damping=Math.exp(-4*dt);this.pushVelocity.x*=damping;this.pushVelocity.z*=damping}else this.pushVelocity=null;if(this.player.vy||this.player.y){this.player.vy-=(this.zone()===6?13:22)*dt;this.player.y+=this.player.vy*dt;if(this.player.y<0){this.player.y=0;this.player.vy=0;this.airJumps=0}}this.movePlayer(moveX,moveZ);if(this.falling)return;this.save.visited[this.zone()]=true;this.updateHazard();constrainToCorridor(this.player);this.motionSpeed=dt?distance(before,this.player)/dt:0;this.moving=Math.min(1,this.motionSpeed/Math.max(v,.001));
  this.updateGuardians(dt,input);
  }
- closeFlame(){this.flame={castAt:-Infinity,nextAt:this.time+16};}
- castFlame(){if(this.raceMode||this.time<this.flame.nextAt)return;this.flame={castAt:this.time,nextAt:this.time+16};this.emit('obstacle','Dragão Quente! As pistas vão se abrir. Corra e pule as fendas de lava!',FLAME.world);}
+ setFlameRoom(active){this.roomMode=active;this.roomFlame=null;this.flameRequest=null;this.flame={castAt:-Infinity,nextAt:0};}
+ applyRoomFlame(flame,serverNow){
+  if(!this.roomMode||!Number.isFinite(serverNow))return;
+  const previous=this.roomFlame?.id;
+  this.roomFlame=flame&&Number.isFinite(flame.castAt)?{...flame,serverNow,receivedAt:this.now()}:null;
+  if(this.roomFlame&&!flame.closed&&previous!==flame.id&&serverNow-flame.castAt<12000)this.emit('obstacle','Dragão Quente! Fendas de lava para todos na sala. Desvie pelas laterais ou pule!',FLAME.world);
+ }
+ requestFlame(action){const castId=this.roomFlame?.id||this.flameRequest?.id||'';this.flameRequest={id:Math.floor(this.now()).toString(36)+'-'+this.random().toString(36).slice(2,10),action,castId};}
+ closeFlame(){if(this.roomMode)this.requestFlame('close');this.flame={castAt:-Infinity,nextAt:this.time+16};}
+ castFlame(){if(this.raceMode||this.time<this.flame.nextAt)return;this.flame={castAt:this.roomMode?-Infinity:this.time,nextAt:this.time+16};if(this.roomMode){this.requestFlame('cast');return;}this.emit('obstacle','Dragão Quente! As pistas vão se abrir. Desvie pelas laterais ou pule as fendas de lava!',FLAME.world);}
  updateFlame(){if(!this.raceMode&&(this.zone()===FLAME.world||this.carrying===FLAME.world)&&!this.inBase()&&this.time>=this.flame.nextAt)this.castFlame();}
- flameGap(world,slot){return flameGapState(this.time,this.flame.castAt,world,slot,this.raceMode);}
- checkFlameFall(){if(this.falling||this.raceMode||this.inBase()||this.jetFlight||this.player.y>.55)return false;const world=this.zone();if(!flameGaps(world).some((z,slot)=>Math.abs(this.player.z-z)<FLAME.halfGap*this.flameGap(world,slot).amount&&this.flameGap(world,slot).open))return false;
+ flameGap(world,slot){
+  if(this.roomMode){const f=this.roomFlame;return flameGapState(f?(f.serverNow+this.now()-f.receivedAt)/1000:0,f&&!f.closed?f.castAt/1000:-Infinity,world,slot,this.raceMode);}
+  return flameGapState(this.time,this.flame.castAt,world,slot,this.raceMode);
+ }
+ checkFlameFall(){if(this.falling||this.raceMode||this.inBase()||this.jetFlight||this.player.y>.55)return false;const world=this.zone();if(!flameGaps(world).some((z,slot)=>Math.abs(this.player.z-z)<FLAME.halfLength&&Math.abs(this.player.x)<FLAME.halfGap*this.flameGap(world,slot).amount&&this.flameGap(world,slot).open))return false;
   const i=this.carrying;if(this.carriedEgg){this.nestEggs[i][this.carriedEgg.slot].availableAt=this.time+5;this.guardians[i].state='return';this.save.caught++;}this.carrying=null;this.carriedEgg=null;this.clearDroppedEgg();this.clearPush();this.endSkates();this.runClean=false;this.falling=.65;this.player.vy=0;this.emit('caught','Você caiu na fenda! O ovo foi perdido. Voltando à área segura.',i);return true;}
  activateSkates(){if(this.raceMode||this.skatesActive||this.mode!=='run')return false;this.skatesActive=true;this.skateLeftBase=!this.inBase();this.emit('winter','Patins ativados: redução de 25% no gelo, até voltar à base.');return true}
  endSkates(){if(!this.skatesActive)return;this.skatesActive=false;this.skateLeftBase=false;this.emit('winter','Este par de patins foi utilizado. Os outros continuam na mochila.');}
