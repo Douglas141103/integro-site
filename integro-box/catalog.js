@@ -8,7 +8,7 @@ const games=[
  ['shark','Shark','#playShark','Aventura','Um oceano 3D cartoon: coma peixes menores, cresça, explore seis regiões e equipe seu tubarão.'],
  ['integro-rush','Integro Rush','#playRush','Corrida','15 expedições 3D, cinco mundos e 24 acessórios. Pule, deslize e explore.'],
  ['bounce-tegro','Bounce Tegro','#playBounce','Aventura','Role, pule e explore 20 fases em cinco mundos.'],
- ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','Inverno 2026: pista 21, Fênix Gelada, ovos misteriosos e um presente para sua aventura.'],
+ ['pegue-o-ovo','Pegue o Ovo','#playEggGame','Corrida','Explore 23 pistas, pegue os ovos e leve ao curral. Desvie dos poderes das criaturas pelo caminho!'],
  ['meu-bairro','Meu Bairro','#playDollGame','Criatividade','Uma casa, lojas e muitas histórias para viver.'],
  ['fruit-box','Fruit Box','#playFruitGame','Aventura','Explore 20 ilhas, enfrente guardiões e descubra frutas.'],
  ['integrocraft','IntegroCraft','#playCraft','Criatividade','Explore, fabrique e construa o seu mundo.'],
@@ -23,7 +23,7 @@ const games=[
  ['memoria-em-ingles','Memória em Inglês','[data-game="memory"]','Desafios','Encontre os pares e descubra palavras em inglês.']
 ].map(([id,name,selector,category,short])=>{const play=lobby.querySelector(selector);return {id,name,category,short,play,card:play?.closest('.card')};}).filter(g=>g.card);
 if(!games.length)return;
-const asset=id=>(id==='pegue-o-ovo'?'./assets/catalog-v1/pegue-o-ovo.webp?v=20261023-winter2':window.BoxCatalogAssets?.[id])||(id==='rota-do-robo'?'./assets/robot-route.svg?v=20261017-robot1':`./assets/catalog-v1/${id}.webp`);
+const asset=id=>(id==='pegue-o-ovo'?'./assets/catalog-v1/pegue-o-ovo.webp?v=20261103-original1':window.BoxCatalogAssets?.[id])||(id==='rota-do-robo'?'./assets/robot-route.svg?v=20261017-robot1':`./assets/catalog-v1/${id}.webp`);
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;};
 const btn=(cls,label,fn)=>{const b=el('button',cls,label);b.type='button';b.addEventListener('click',fn);return b;};
 const read=k=>{try{const a=JSON.parse((window.BoxStorage||localStorage).getItem(k)||'[]');return Array.isArray(a)?a.filter(id=>games.some(g=>g.id===id)):[];}catch{return [];}};

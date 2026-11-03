@@ -46,13 +46,13 @@ try {
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261103-pickup1');
+  await script('./egg.js?v=20261103-original1');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261031-catalogbots1');
   phase('Conectando amigos e salas…');
-  await import('./multiplayer.js?v=20261103-pickup1');
+  await import('./multiplayer.js?v=20261103-original1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
-  if(!unloaded)await import('./egg-cloud.js?v=20261103-pickup1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261103-original1');
   if(!unloaded){const {mountEggHud}=await import('./egg-hud.mjs?v=20261031-hud2');window.BoxEggHud=mountEggHud();}
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-moves1');installInterDance();}
@@ -65,7 +65,7 @@ try {
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261021-tower1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-walk2');installDescubra();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261023-walk2');
+  if(!unloaded)await script('./catalog.js?v=20261103-original1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
