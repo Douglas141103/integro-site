@@ -8,7 +8,7 @@ test('fixed deadline closes an active game, resets special nests, and survives r
  assert.equal(g.nestEggs[20].length,5);Object.assign(g.player,NESTS[20]);assert(g.steal(4));
  now=WINTER_END_MS;assert(g.syncEvent());assert.equal(g.syncEvent(),false);assert.equal(g.nestEggs[20].length,3);assert.equal(g.carriedEgg.winterReward,false);assert.equal(g.carriedEgg.slot,1);
  Object.assign(g.player,CORRAL);assert.equal(g.interact(),'deposit');assert.equal(g.save.eggs[0].winterReward,false);assert.equal(g.saleValue(20),75000);
- const again=new EggAdventure(g.save,{now:()=>now+2000});assert.equal(again.nestEggs.length,21);assert.equal(WORLDS[20].creature,'Fênix Gelada');assert.equal(again.nestEggs[20].length,3);assert.equal(again.eventActive,false);
+ const again=new EggAdventure(g.save,{now:()=>now+2000});assert.equal(again.nestEggs.length,22);assert.equal(WORLDS[20].creature,'Fênix Gelada');assert.equal(again.nestEggs[20].length,3);assert.equal(again.eventActive,false);
  const rarities=new Set(),mutations=new Set();for(let i=0;i<3000;i++){const e=again.rollEgg(20,0);rarities.add(e.rarity);mutations.add(e.mutation);}
  assert.equal(rarities.size,5);assert.equal(mutations.size,4);
 });

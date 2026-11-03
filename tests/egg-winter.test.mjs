@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {EggAdventure,WORLDS,NESTS,CORRAL} from '../integro-box/egg-src/egg-rules.js';
 const advance=(g,seconds,input={})=>{for(let t=0;t<seconds;t+=.05)g.update(.05,input);};
 test('five promotional eggs preserve their hidden reward through delivery, reload, hatching and sale',()=>{
- assert.equal(WORLDS.length,21);
+ assert.equal(WORLDS.length,22);
  for(const [slot,value]of [800000,900000,1000000,2000000,3000000].entries()){
   let g=new EggAdventure();assert.equal(g.nestEggs[20].length,5);Object.assign(g.player,NESTS[20]);assert(g.steal(slot));assert.equal(g.saleValue(20,g.carriedEgg.rarity),value);
   assert(!g.drainEvents().some(e=>e.text.includes(value.toLocaleString('pt-BR'))),'pickup does not reveal the reward');

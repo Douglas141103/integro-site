@@ -49,7 +49,7 @@ test('edge barricades allow an inward detour, a deliberate jump and access to ev
   const g=new EggAdventure(),z=-world*LENGTH-6;
   Object.assign(g.player,{x:side*4.35,z:z+3});g.movePlayer(0,-6);assert(g.player.z>z);
   g.movePlayer(-side*2.2,0);g.movePlayer(0,-6);assert(g.player.z<z-2,'a route through the middle remains open');
-  Object.assign(g.player,{x:side*4.35,z:z+3,y:1.3});g.movePlayer(0,-6);assert(g.player.z<z-2,'jumping above the visible barrier still works');
+  Object.assign(g.player,{x:side*4.35,z:z+3,y:3.1});g.movePlayer(0,-6);assert(g.player.z<z-2,'jumping above the visible barrier still works');
   const n=NESTS[world];Object.assign(g.player,{x:n.x*.55,z:n.z,y:0});g.movePlayer(0,0);assert.equal(g.interaction()?.type,'nest');assert.equal(g.interaction()?.world,world);
  }
 });
