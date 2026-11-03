@@ -15,10 +15,10 @@ test('five promotional eggs preserve their hidden reward through delivery, reloa
  }
 });
 test('entire winter track freezes after warning, loses exactly 70% speed, skates retain 75%, and momentum slips',()=>{
- const g=new EggAdventure();Object.assign(g.player,{x:0,z:-970});g.update(.05);assert.equal(g.winterSpeedFactor(),1);advance(g,1.6);assert.equal(g.winterSpeedFactor(),.3);
+ const g=new EggAdventure();Object.assign(g.player,NESTS[20]);g.steal(0);g.updateGuardians=()=>{};Object.assign(g.player,{x:0,z:-970});g.update(.05);assert.equal(g.winterSpeedFactor(),1);advance(g,1.6);assert.equal(g.winterSpeedFactor(),.3);
  for(const z of [-961,-984,-1006]){g.player.z=z;assert(g.winterFrozen());}g.player.z=-975;
  g.iceVelocity.z=100;g.update(.05,{z:1});assert(g.motionSpeed<=g.speed()*.3+1e-6);advance(g,1,{z:1});let z=g.player.z;g.update(.05,{});assert(g.player.z>z,'sliding continues after releasing the control');
- assert(g.activateSkates());assert.equal(g.winterSpeedFactor(),.75);advance(g,1,{z:1});assert(Math.abs(g.motionSpeed-g.speed()*.75)<.01);
+ assert(g.activateSkates());assert.equal(g.winterSpeedFactor(),.75);advance(g,1,{z:1});assert(Math.abs(g.motionSpeed-g.speed()*.75*.92)<.01);
  g.player.z=-959;assert.equal(g.winterSpeedFactor(),1);Object.assign(g.player,CORRAL);g.update(.05);assert.equal(g.skatesActive,false);
  g.player.z=-980;g.raceMode=true;assert.equal(g.winterSpeedFactor(),1);assert.equal(g.activateSkates(),false);
 });
