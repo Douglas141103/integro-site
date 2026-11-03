@@ -8,7 +8,7 @@ import {FLAME,flameGapState,flameGaps} from '../integro-box/egg-src/egg-flame-ru
 import {intgemDatabase} from './intgem-db-fixture.mjs';
 
 test('new dragon appends to existing saves and warns before opening every track',()=>{
- assert.equal(WORLDS.length,22);assert.equal(WORLDS[20].kind,'icePhoenix');
+ assert.equal(WORLDS[21].kind,'dragon');assert.equal(WORLDS[20].kind,'icePhoenix');
  assert.equal(WORLDS[21].name,'Pedras Flamejantes');
  const g=new EggAdventure();Object.assign(g.player,NESTS[21]);assert(g.steal(0));
  assert.equal(g.flame.castAt,0);assert(g.drainEvents().some(e=>e.text.includes('Dragão Quente')));
