@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {EggAdventure,WORLDS,NESTS,cleanSave} from '../integro-box/egg-src/egg-rules.js';
+import {EggAdventure,WORLDS,NESTS,cleanSave,guardianSpeed} from '../integro-box/egg-src/egg-rules.js';
+import * as THREE from 'three';
+import {createFlameWorld} from '../integro-box/egg-src/egg-flame-world.js';
 import {FLAME,flameGapState,flameGaps} from '../integro-box/egg-src/egg-flame-rules.js';
 import {intgemDatabase} from './intgem-db-fixture.mjs';
 
@@ -34,6 +36,30 @@ test('jumping clears a fissure; base, flight and races remain safe',()=>{
   if(mode==='flight')g.jetFlight={id:'test',remaining:20};if(mode==='race')g.raceMode=true;if(mode==='base')g.player.z=15;
   assert.equal(g.checkFlameFall(),false,mode);
  }
+});
+test('dragon is slower and only a successful capture closes every fissure',()=>{
+ const g=new EggAdventure();Object.assign(g.player,NESTS[21]);g.steal(0);g.time=7;
+ assert.equal(guardianSpeed(21),(7.7+21*1.1)*2*.6);assert.equal(g.guardianBurst(21),false);
+ assert.equal(guardianSpeed(20),(7.7+20*1.1)*2);
+ g.save.supplies.shield=1;g.catchEgg(21);assert.equal(g.carrying,21);assert(g.flameGap(0,0).open);
+ g.catchEgg(21);assert.equal(g.carrying,null);assert(g.inBase());
+ for(let world=0;world<22;world++)for(let slot=0;slot<2;slot++)assert.deepEqual(g.flameGap(world,slot),{warning:false,open:false,amount:0});
+ g.update(.05);assert.equal(g.flame.castAt,-Infinity);
+});
+test('fissure lips open front to back across the full track and close without vertical movement',()=>{
+ const root=new THREE.Group();
+ const group=p=>{const n=new THREE.Group();p.add(n);return n;};
+ const box=(p,w,h,d,color,x=0,y=0,z=0)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color}));m.position.set(x,y,z);p.add(m);return m;};
+ const world=createFlameWorld({helpers:{group,box,seasonalSurface:m=>m}});
+ world.ground(root,WORLDS[21],21);
+ const lips=[];root.traverse(n=>{if(n.name==='FlameGroundLip')lips.push(n);});assert.equal(lips.length,4);
+ world.update({time:4,flameGap:()=>({amount:1,open:true,warning:false})},false);
+ for(const lip of lips){assert.equal(lip.position.x,0);assert.equal(lip.position.y,0);assert.equal(Math.abs(lip.position.z),FLAME.halfGap);assert.equal(lip.children[1].geometry.parameters.width,9.5);}
+ root.updateMatrixWorld(true);
+ const first=lips.slice(0,2).map(l=>new THREE.Box3().setFromObject(l.children[1])).sort((a,b)=>a.min.z-b.min.z);
+ assert(Math.abs(first[1].min.z-first[0].max.z-FLAME.halfGap*2)<1e-6);
+ world.update({time:8,flameGap:()=>({amount:0,open:false,warning:false})},false);
+ assert(lips.every(l=>l.position.length()===0));
 });
 test('server accepts track 22 eggs and reports 22 worlds without changing earlier saves',async()=>{
  const {db,run}=await intgemDatabase();try{
