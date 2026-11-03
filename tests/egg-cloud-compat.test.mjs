@@ -29,3 +29,8 @@ test('confirmed solidarity credit updates the local wallet exactly once without 
  const storage=new Map(),server={worlds:21,rev:5,save:freshSave(),solidarityCredit:500};server.save.coins=100;
  const app=await boot({storage,server,local:freshSave()});try{const state=app.state;state.coins+=11;app.setState(state);app.w.BoxEggCloud.dirty();assert.equal(await app.w.BoxEggCloud.flush(),true);assert.equal(app.state.coins,611);assert.equal(server.save.coins,611);assert.equal(app.applies,1);app.w.BoxEggCloud.dirty();assert.equal(await app.w.BoxEggCloud.flush(),true);assert.equal(app.state.coins,611);assert.equal(server.save.coins,611);assert.equal(app.applies,1);}finally{app.close();}
 });
+
+test('track 23 server capability unlocks rooms and synchronizes the stone giant egg',async()=>{
+ const storage=new Map(),server={worlds:23,rev:0,save:null},local=freshSave();local.eggs=[{id:1,world:22,rarity:'rare',mutation:'normal',remaining:120}];
+ const app=await boot({storage,server,local});try{assert.equal(app.w.BoxEggCloud.worldLimit,23);assert.equal(app.writes,1);assert.equal(server.save.eggs[0].world,22);assert.equal(app.w.BoxEggCloud.ready,true);}finally{app.close();}
+});

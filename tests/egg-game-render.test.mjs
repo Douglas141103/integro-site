@@ -22,13 +22,16 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
   const eventClock=adapter.scene().getObjectByName('WinterEventClock');assert(eventClock);assert.equal(eventClock.userData.time,'06:00:00');
   const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgeDeadTree')barriers.push(n);});
-  const fissures=[],stones=[];adapter.scene().traverse(n=>{if(n.name==='FlameFissure')fissures.push(n);if(n.name==='RisingFlamingStone')stones.push(n);});assert.equal(fissures.length,44);assert.equal(stones.length,12);
+  const fissures=[],stones=[];adapter.scene().traverse(n=>{if(n.name==='FlameFissure')fissures.push(n);if(n.name==='RisingFlamingStone')stones.push(n);});assert.equal(fissures.length,state().visited.length*2);assert.equal(stones.length,12);
   adapter.enter();adapter.applyFlame({id:'shared-test',castAt:1000000,closed:false},1007000);tick();
   const lips=[];adapter.scene().traverse(n=>{if(n.name==='FlameGroundLip')lips.push(n);});
   assert(lips.every(l=>Math.abs(l.position.x)>.4&&l.position.y===0&&l.position.z===0),'room snapshot animates every track in the mounted game');
   adapter.applyFlame({id:'shared-test',castAt:1000000,closed:true},1007000);tick();assert(lips.every(l=>l.position.length()===0));
-  adapter.leave();assert.equal(adapter.state().flame,null);
-  assert.equal(barriers.length,22*8,'visible barricades cover both edges of every track');
+  const mountains=[];adapter.scene().traverse(n=>{if(n.name==='GrowingMountain')mountains.push(n);});assert.equal(mountains.length,state().visited.length*2);
+  adapter.applyRock({id:'shared-rock',castAt:1000000,closed:false},1001000);tick();assert(mountains.every(m=>m.visible&&m.scale.y<.1));
+  adapter.applyRock({id:'shared-rock',castAt:1000000,closed:false},1026000);tick();assert(mountains.every(m=>m.visible&&m.scale.y===1));
+  adapter.leave();tick();assert(mountains.every(m=>!m.visible));assert.equal(adapter.state().rock,null);assert.equal(adapter.state().flame,null);
+  assert.equal(barriers.length,state().visited.length*8,'visible barricades cover both edges of every track');
   for(const barrier of barriers){const o=barrier.userData.obstacle;assert.equal(barrier.position.x,o.x);assert.equal(barrier.position.z,o.z);const bounds=new T.Box3().setFromObject(barrier);assert(Math.abs(bounds.max.y-o.h)<.01,'visible height matches jump collision');}
   w.BoxEggCloud={ready:true,dirty(){},ranking:async()=>({mine:{position:5,integros:100,intgem:2},rows:[],total:0,updated_at:new Date().toISOString()})};tick(10);await new Promise(setImmediate);assert.equal(w.document.querySelector('#eggRanking [data-rank-position]').textContent,'5º');
   w.document.getElementById('eggRanking').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');w.document.querySelector('[data-egg-action="resume"]').click();
@@ -90,7 +93,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   assert.equal(adapter.scene().getObjectByName('EggHatchClock'),undefined);assert.equal(disposed,2);assert.equal(state().creatures.length,1);
   // Real-time expiry continues while the menu pauses the simulation.
   key('Escape');const atEnd=state().player;w.BoxEggRuntime.syncEventClock('2026-10-29T03:32:00Z');tick(2);
-  assert.equal(state().event.active,false);assert.equal(state().nestEggs[20].length,3);assert.equal(state().visibleNestEggs[20],3);assert.equal(state().visibleNestEggs.length,22);assert.equal(eventClock.userData.time,'00:00:00');assert.equal(eventClock.parent.visible,false);
+  assert.equal(state().event.active,false);assert.equal(state().nestEggs[20].length,3);assert.equal(state().visibleNestEggs[20],3);assert.equal(state().visibleNestEggs.length,state().visited.length);assert.equal(eventClock.userData.time,'00:00:00');assert.equal(eventClock.parent.visible,false);
   const seasonGroups=[];adapter.scene().traverse(n=>{if(n.name==='WinterSeasonDecor')seasonGroups.push(n);});assert(seasonGroups.every(n=>!n.visible));assert.equal(state().player.z,atEnd.z);assert.doesNotMatch(w.document.getElementById('eggSheetBody').textContent,/XXXXX/);key('Escape');
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
