@@ -3,7 +3,7 @@ import {createSphinxRig} from './egg-sphinx-rig.js';
 export const NEON_CYCLE=24;
 export const SPHINX_BACK_STEPS=5,SPHINX_STEP_SECONDS=.7;
 const clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>x*x*(3-2*x);
-export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
+export function createNeonScenery({group,box,softBox,cyl,ball,rod,actorArt}){
  const sites=[],up=new T.Vector3(0,1,0);
  function add(parent,index){if(index!==16)return;
   for(const side of[-1,1])for(let j=0;j<2;j++){
@@ -20,7 +20,7 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
     edges.push({a,direction,length,line,tip,start:k<4?k*.35:1.4+(k-4)*.35});
    }
    const sphinx=group(root);sphinx.name='NeonSphinx';
-   const rig=createSphinxRig(sphinx,{group,box,softBox,cyl,ball}),body=rig.body;
+   const rig=createSphinxRig(sphinx,{group,actorArt}),body=rig.body;
    const materials=new Map();body.traverse(n=>{if(n.isMesh){if(!materials.has(n.material))materials.set(n.material,n.material.clone());n.material=materials.get(n.material);n.material.transparent=true;}});
    const tunnel=group(root,0,0,-4.7);tunnel.name='SphinxGroundTunnel';
    const darkness=box(tunnel,3.3,.025,5.5,0x151525,0,.035,0);
@@ -47,7 +47,7 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
   sphinx.visible=age>=6&&age<18.5;sphinx.scale.setScalar(.1+.9*morph);sphinx.position.set(0,-4*sink,2.1*backProgress-7.4*run);sphinx.rotation.y=side*Math.PI*.75*(1-smooth(clamp((age-8.5)/2)));
   sphinx.userData.backwardSteps=Math.min(SPHINX_BACK_STEPS,Math.floor(backProgress*SPHINX_BACK_STEPS+1e-8));
   if(sphinx.visible)rig.update({stand:clamp((age-8.5)/2),mode:age>=10.5&&age<14?'backstep':age>=14&&age<18.5?'run':'rest',elapsed:age>=14?age-14:Math.max(0,age-10.5),reducedMotion});
-  for(const material of materials){material.opacity=morph;material.depthWrite=morph>=1;}
+  for(const material of materials){material.opacity=morph;material.depthWrite=!material.userData.contour&&morph>=1;}
   const opened=smooth(clamp((age-12.5)/1.5))*(1-smooth(clamp((age-19)/1.5)));
   tunnel.visible=age>=12.5&&age<20.5;rim.visible=opened>0;
   for(const {slab,sign}of shutters)slab.position.x=sign*(.825+opened*1.65);
