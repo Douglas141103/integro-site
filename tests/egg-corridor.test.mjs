@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EggAdventure,WORLDS,NESTS,LENGTH,CORRAL,TREADMILL,TRACK_HALF_WIDTH,PLAYER_RADIUS,corridorHalfWidth,constrainToCorridor} from '../integro-box/egg-src/egg-rules.js';
+import {EggAdventure,WORLDS,NESTS,LENGTH,CORRAL,TREADMILL,TRACK_HALF_WIDTH,PLAYER_RADIUS,EDGE_OBSTACLES,corridorHalfWidth,constrainToCorridor} from '../integro-box/egg-src/egg-rules.js';
 const legal=p=>assert(Math.abs(p.x)<=corridorHalfWidth(p.z)-PLAYER_RADIUS+1e-8,`outside track at ${p.x}, ${p.z}`);
 
 test('all twenty tracks contain running, sprinting and airborne players at maximum training',()=>{
@@ -44,12 +44,29 @@ test('both shoulders of every track stop a grounded max-speed runner in either d
  }
 });
 
-test('edge barricades allow an inward detour, a deliberate jump and access to every nest',()=>{
+test('edge pebbles allow an inward detour, a deliberate jump and access to every nest',()=>{
  for(let world=0;world<WORLDS.length;world++)for(const side of[-1,1]){
   const g=new EggAdventure(),z=-world*LENGTH-6;
   Object.assign(g.player,{x:side*4.35,z:z+3});g.movePlayer(0,-6);assert(g.player.z>z);
   g.movePlayer(-side*2.2,0);g.movePlayer(0,-6);assert(g.player.z<z-2,'a route through the middle remains open');
-  Object.assign(g.player,{x:side*4.35,z:z+3,y:3.1});g.movePlayer(0,-6);assert(g.player.z<z-2,'jumping above the visible barrier still works');
+  Object.assign(g.player,{x:side*4.35,z:z+3,y:.6});g.movePlayer(0,-6);assert(g.player.z<z-2,'jumping above the visible barrier still works');
   const n=NESTS[world];Object.assign(g.player,{x:n.x*.55,z:n.z,y:0});g.movePlayer(0,0);assert.equal(g.interaction()?.type,'nest');assert.equal(g.interaction()?.world,world);
  }
+});
+
+test('a normal unupgraded jump clears every shoulder pebble in both directions',()=>{
+ for(const o of EDGE_OBSTACLES)for(const direction of [-1,1]){
+  const g=new EggAdventure();Object.assign(g.player,{x:o.x,z:o.z-direction*1.9});
+  assert.equal(g.save.upgrades.springs,0);assert(g.requestJump());
+  for(let i=0;i<38;i++)g.update(1/60,{z:direction});
+  assert(direction*(g.player.z-o.z)>o.r+PLAYER_RADIUS,'normal jump clears the entire stone');
+  assert(!g.drainEvents().some(e=>e.type==='obstacle'),'no invisible tall collision remains');
+ }
+});
+test('a player carrying an egg can jump over a pebble with no spring upgrade',()=>{
+ const g=new EggAdventure();Object.assign(g.player,NESTS[0]);assert(g.steal(0));
+ const o=EDGE_OBSTACLES.find(o=>o.world===0);Object.assign(g.player,{x:o.x,z:o.z-1.9});
+ assert(g.requestJump());for(let i=0;i<38;i++)g.update(1/60,{z:1});
+ assert(g.player.z>o.z+o.r+PLAYER_RADIUS);assert.equal(g.carrying,0);
+ assert(!g.drainEvents().some(e=>e.type==='obstacle'));
 });
