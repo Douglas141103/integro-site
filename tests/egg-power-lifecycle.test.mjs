@@ -20,7 +20,7 @@ test('pickup activates the matching power; reaching safety turns it off before d
   if(world===20)assert(Number.isFinite(g.winter.startsAt));if(world===21)assert.equal(g.flame.castAt,0);if(world===22)assert.equal(g.rock.castAt,0);
   if(full)g.save.creatures=Array.from({length:g.capacity()},(_,i)=>({id:i,world:0,rarity:'common',mutation:'normal'}));
   Object.assign(g.player,CORRAL);g.update(.05);inactive(g);assert.equal(g.activeEggPower,null);assert.equal(g.carrying,world);
-  if(!full)assert.equal(g.interact(),'deposit');else assert.equal(g.interact(),false);
+  if(!full)assert.equal(g.interact(),'deposit');else assert.equal(g.interact(),'corral');
   Object.assign(g.player,NESTS[world]);g.update(.05);inactive(g);
  }
 });
