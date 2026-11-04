@@ -1,13 +1,17 @@
 // Automated input uses the shared gameplay rules with robot-only quarter earnings.
 // Movement, costs, inventory, guardians and incubation follow the normal game.
 import {BotEggAdventure} from './egg-bot-economy.js';
-import {NESTS,CORRAL,TREADMILL,MISSIONS,VEHICLES,UPGRADES,distance} from './egg-rules.js';
+import {NESTS,CORRAL,TREADMILL,MISSIONS,VEHICLES,UPGRADES,distance,cleanProgression,trainingTarget} from './egg-rules.js';
 
 export function createBot(saved,seed=1,now=()=>Date.now()) {
  const game=new BotEggAdventure(null,{now});
  if(saved){
   const guardians=game.guardians,nestEggs=game.nestEggs;
   Object.assign(game,saved.game);game.now=now;
+  // In-session checkpoints bypass cleanSave: add the new progression fields
+  // without renumbering creatures, resetting runtime, or altering earned coins.
+  if(game.save.progressionVersion!==1)game.save.trainXP=Math.min(trainingTarget(game.save.training),(game.save.trainXP||0)*trainingTarget(game.save.training)/(8+game.save.training*1.5));
+  Object.assign(game.save,cleanProgression(game.save));
   // Old worker snapshots can predate newly added tracks. Retain each existing
   // guardian/nest runtime and initialize only the missing worlds.
   game.guardians=guardians.map((fresh,i)=>saved.game.guardians?.[i]||fresh);

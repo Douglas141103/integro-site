@@ -25,3 +25,12 @@ test('old robot checkpoints gain missing track runtimes without resetting invent
  const old=createBot(null,11);old.game.save.coins=12345;old.game.save.creatures=[pet()];old.game.guardians=old.game.guardians.slice(0,20);old.game.nestEggs=old.game.nestEggs.slice(0,20);old.game.save.seen=old.game.save.seen.slice(0,20);old.game.save.visited=old.game.save.visited.slice(0,20);
  const restored=createBot(decodeBot(encodeBot(old)),11);assert.equal(restored.game.guardians.length,new EggAdventure().guardians.length);assert.equal(restored.game.save.coins,12345);assert.deepEqual(restored.game.save.creatures,old.game.save.creatures);restored.game.update(.05,{});assert(restored.game.save.coins>=12345);
 });
+
+test('legacy in-session robot checkpoints receive progression defaults without changing balances or inventories',()=>{
+ for(const training of [false,true]){
+  const old=createBot(null,23);old.game.save.coins=12345;old.game.save.creatures=[pet()];old.game.save.training=100;old.game.save.trainXP=79;delete old.game.save.fusion;delete old.game.save.trainingPasses;delete old.game.save.progressionVersion;delete old.game.save.secondFloor;if(training)old.game.mode='train';
+  const restored=createBot(decodeBot(encodeBot(old)),23);assert.deepEqual(restored.game.save.fusion,{owned:false,charges:0});assert.equal(restored.game.save.trainXP,restored.game.trainTarget()/2);assert.equal(restored.game.save.coins,12345);assert.equal(restored.game.save.creatures[0].id,1);
+  for(let i=0;i<300;i++)restored.game.update(.05,{});
+  const second=createBot(decodeBot(encodeBot(restored)),23);assert.equal(second.game.save.trainXP,restored.game.save.trainXP);assert.equal(second.game.save.coins,restored.game.save.coins);
+ }
+});

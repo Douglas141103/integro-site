@@ -99,6 +99,16 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   key('Escape');const atEnd=state().player;w.BoxEggRuntime.syncEventClock('2026-10-29T03:32:00Z');tick(2);
   assert.equal(state().event.active,false);assert.equal(state().nestEggs[20].length,3);assert.equal(state().visibleNestEggs[20],3);assert.equal(state().visibleNestEggs.length,state().visited.length);assert.equal(eventClock.userData.time,'00:00:00');assert.equal(eventClock.parent.visible,false);
   const seasonGroups=[];adapter.scene().traverse(n=>{if(n.name==='WinterSeasonDecor')seasonGroups.push(n);});assert(seasonGroups.every(n=>!n.visible));assert.equal(state().player.z,atEnd.z);assert.doesNotMatch(w.document.getElementById('eggSheetBody').textContent,/XXXXX/);key('Escape');
+  // Three physical treadmills, purchased loft and paid fusion machine survive reload.
+  for(const id of ['normal','gold','galaxy'])assert(adapter.scene().getObjectByName('Treadmill-'+id));
+  const loft=adapter.scene().getObjectByName('CorralSecondFloor'),machine=adapter.scene().getObjectByName('CorralFusionMachine');assert(!loft.visible);assert(!machine.visible);
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:300000,creatures:[{uid:'fusion-a',world:0,rarity:'common',mutation:'normal'},{uid:'fusion-b',world:1,rarity:'rare',mutation:'gold'}],eggs:[]});
+  w.BoxIntGem={balance:20,getEquipped:()=>({}),refresh:async()=>{}};let fusionCalls=0;
+  w.BoxEggCloud={ready:true,dirty(){},fusion:async action=>{assert.equal(action,'fusion_buy');fusionCalls++;w.BoxIntGem.balance-=10;w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),fusion:{owned:true,charges:10}},{keepPosition:true});}};
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="corral"]').click();
+  w.document.querySelector('[data-second-floor]').click();assert.equal(state().secondFloor,true);assert.equal(state().coins,50000);assert.equal(loft.visible,true);
+  assert.match(w.document.querySelector('[data-fusion-pack]').textContent,/10 IntGems/);w.document.querySelector('[data-fusion-pack]').click();await new Promise(setImmediate);assert.equal(fusionCalls,1);assert.equal(state().coins,50000);assert.equal(machine.visible,true);assert.equal(state().fusion.charges,10);assert.equal(w.BoxIntGem.balance,10);
+  const expanded=w.BoxEggRuntime.save();expanded.creatures=Array.from({length:26},(_,i)=>({uid:'loft-'+i,world:0,rarity:'common',mutation:'normal'}));w.BoxEggRuntime.apply(expanded);tick(2);let upperActors=0;adapter.scene().traverse(n=>{if(n.userData.actors)upperActors+=n.userData.actors.filter(a=>a.baseY>2).length;});assert.equal(upperActors,26-(3+state().upgrades.pen*2));assert.equal(state().creatures.length,26);w.document.getElementById('eggCloseSheet').click();
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert.equal(state().music.playing,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });
