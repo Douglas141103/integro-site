@@ -34,7 +34,7 @@ test('virtual character earns progress through the shared rules, persists physic
  assert.equal(g.save.coins,0);assert.deepEqual(g.save.vehicles,[]);
  advanceBot(bot,100000);assert(Math.abs(g.time-15)<1e-6);assert.equal(g.save.coins,0);assert(g.save.training<5);
  for(let t=15;t<3600;t+=15)advanceBot(bot,15);
- assert(g.save.delivered>0);assert(g.save.coins>0);assert(g.save.training>0);assert(g.save.vehicles.length>0);
+ assert(g.save.delivered>0);assert(g.save.coins>0);assert(g.save.training>0);assert(Object.values(g.save.upgrades).some(level=>level>0));
  const resumed=createBot(decodeBot(encodeBot(bot)));
  assert.deepEqual(resumed.game.player,g.player);assert.equal(resumed.game.time,g.time);assert.equal(resumed.game.save.coins,g.save.coins);
  assert.equal(g.buy('jetImperial'),false);assert(!g.save.vehicles.includes('jetImperial'));

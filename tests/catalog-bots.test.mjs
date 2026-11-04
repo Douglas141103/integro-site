@@ -44,7 +44,7 @@ test('140 identities rotate all games, respect human slots and moderate reportab
   await db.exec('alter table public.students add column active boolean default true');
   for(const name of ['20261021030058_room_equipped_appearance.sql','20261030211429_box_room_departure.sql','20261020210536_egg_balance_ranking.sql','20261030224808_egg_virtual_players.sql','20261031000651_egg_virtual_sessions.sql','20261031001331_egg_virtual_session_scope.sql','20261031002420_egg_virtual_push.sql','20261031032814_catalog_virtual_players.sql','20261031151044_optimize_bot_commit.sql','20261031151957_shard_bot_checkpoints.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
   assert.equal((await db.query('select count(*)::int n from private.egg_bots')).rows[0].n,140);
-  await db.exec("update private.egg_bot_control set enabled=true,token_hash=sha256(convert_to('test-token','UTF8')) where id;update private.egg_bots set next_login_at=now()-interval '1 minute' where id between 1 and 140");
+  await db.exec("update private.egg_bot_control set enabled=true,token_hash=sha256(convert_to('test-token','UTF8')) where id;update private.egg_bots set next_login_at='2026-11-01T16:59:00Z' where id between 1 and 140");
   const day='2026-11-01T17:00:00Z';let sessions=(await db.query('select private.egg_bot_sessions($1,$1) r',[day])).rows[0].r;
   assert.equal(Object.keys(sessions).length,140);assert.equal(new Set(Object.values(sessions).map(s=>s.game)).size,18);
   for(const s of Object.values(sessions)){assert(s.online);assert.equal(s.seconds,0);}

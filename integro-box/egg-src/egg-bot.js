@@ -1,9 +1,10 @@
-// Automated input for the SAME EggAdventure used by the browser. No balance,
-// speed, inventory, guardian, incubation or reward shortcuts are allowed here.
-import {EggAdventure,NESTS,CORRAL,TREADMILL,MISSIONS,VEHICLES,UPGRADES,distance} from './egg-rules.js';
+// Automated input uses the shared gameplay rules with robot-only quarter earnings.
+// Movement, costs, inventory, guardians and incubation follow the normal game.
+import {BotEggAdventure} from './egg-bot-economy.js';
+import {NESTS,CORRAL,TREADMILL,MISSIONS,VEHICLES,UPGRADES,distance} from './egg-rules.js';
 
 export function createBot(saved,seed=1,now=()=>Date.now()) {
- const game=new EggAdventure(null,{now});
+ const game=new BotEggAdventure(null,{now});
  if(saved){Object.assign(game,saved.game);game.now=now;}
  else game.save.rng=seed;
  const bot={game,brain:saved?.brain||{yaw:0},session:saved?.session||0};
@@ -24,7 +25,9 @@ export function prepareBotSession(saved,seed,session,now){
  // A new login uses the same persisted save/restart as a human game session.
  // Offline checkpoints retain their runtime without advancing any game clock.
  if(session?.online&&saved?.session!==session.number){
-  saved={game:new EggAdventure(saved?.game?.save,{now}),brain:{},session:session.number};
+  const game=new BotEggAdventure(saved?.game?.save,{now});
+  game.rewardRemainder=saved?.game?.rewardRemainder||0;
+  saved={game,brain:{},session:session.number};
  }
  return createBot(saved,seed,now);
 }
