@@ -1,0 +1,19 @@
+#dinoApp[hidden],#dinoApp [hidden]{display:none!important}
+#dinoApp{position:fixed;inset:0;z-index:1300;overflow:auto;overscroll-behavior:contain;background:#f7f3e7;color:#273d32;font-family:system-ui,sans-serif;touch-action:manipulation}
+.dino-shell{width:min(900px,94%);margin:auto;padding:14px 0 28px}
+#dinoApp button{appearance:none;color:#273d32;background:#fcf9ef;border:1px solid #9fa991;border-radius:8px;padding:9px 14px;font:650 14px system-ui;cursor:pointer}
+#dinoApp button:focus-visible{outline:3px solid #b66e11;outline-offset:2px}
+.dino-nav,.dino-title,.dino-console,.dino-rankhead,.dino-stats,.dino-controls{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dino-nav{border-bottom:1px solid #c6ceba;padding-bottom:12px}.dino-nav span,.dino-title small,.dino-stats{font:bold 11px ui-monospace,monospace;letter-spacing:.08em}
+.dino-title{padding:clamp(12px,3vh,30px) 0}.dino-title h1{font-size:clamp(29px,5vw,58px);letter-spacing:-.06em;line-height:1;margin:6px 0}
+.dino-title small{color:#57684d}.dino-best{text-align:right}.dino-best strong{display:block;font:bold clamp(21px,3vw,34px) ui-monospace,monospace}
+.dino-board{overflow:hidden;border:2px solid #354638;border-radius:12px;background:#fff2cf;box-shadow:0 4px 0 #c3cab5}
+.dino-stats{padding:10px 14px;background:#263e32;color:#f2f1d9;flex-wrap:wrap}.dino-stats b{color:#fed57e;font-size:16px}
+.dino-board canvas{display:block;width:100%;height:auto;touch-action:none;image-rendering:pixelated}
+.dino-progress{height:5px;background:#b8bda1}.dino-progress i{display:block;height:100%;background:#e1a040}
+.dino-console,.dino-ranking{margin-top:18px;background:#fffdf4;border:1px solid #b9c2aa;border-radius:12px;padding:18px}
+.dino-console h2,.dino-ranking h2{font-size:20px;margin:0}.dino-console p,.dino-ranking p,.dino-status{font-size:14px;line-height:1.45;margin:5px 0;color:#50614e}
+#dinoApp [data-action]{background:#294b39;color:white;min-width:125px;min-height:48px;font-size:16px}.dino-controls{flex-shrink:0}
+.dino-status{margin-top:10px}.dino-leaders{list-style:none;padding:0;margin:13px 0 0}.dino-leaders li{display:grid;grid-template-columns:36px 1fr auto auto;align-items:center;gap:12px;padding:9px;border-top:1px solid #d4dbc7;font-size:14px}.dino-leaders li span:last-child{font-weight:750}.dino-leaders .mine{background:#edf3de}.dino-rankhead{margin-bottom:10px}
+@media(max-width:620px){.dino-shell{width:95%}.dino-nav span{font-size:9px}.dino-console{align-items:stretch;flex-direction:column;padding:13px}.dino-controls{justify-content:flex-start}.dino-controls [data-action]{flex:1}.dino-board canvas{height:auto;aspect-ratio:2.1;object-fit:cover;object-position:left}.dino-best small{font-size:9px}.dino-leaders li{gap:6px;font-size:12px}.dino-stats{font-size:10px}}
+@media(max-height:550px) and (orientation:landscape){.dino-shell{padding-top:5px}.dino-title{padding:5px 0}.dino-title h1{font-size:24px}.dino-nav{padding-bottom:4px}.dino-board canvas{height:min(42vh,260px);object-fit:contain}.dino-console{margin-top:8px;padding:8px 14px}}
