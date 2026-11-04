@@ -2,7 +2,7 @@ export const NEW_WORLDS=[
  {name:'Jardim dos Cogumelos',short:'Cogumelos',creature:'Ouriço Trufa',value:18000,color:0xe99cad,ground:0x507e68,path:0xe9c7a0,sky:0xbadfd5,kind:'hedgehog'},
  {name:'Porto dos Ventos',short:'Porto',creature:'Lontra Marinheira',value:24000,color:0x6bcbd8,ground:0x278ea5,path:0xd9ba83,sky:0x9cdeed,kind:'otter'},
  {name:'Deserto Neon',short:'Neon',creature:'Escorpião Neon',value:32000,color:0xc588ed,ground:0x584779,path:0xb090bc,sky:0x62557f,kind:'scorpion'},
- {name:'Reino das Auroras',short:'Auroras',creature:'Lobo Aurora',value:42000,color:0x9de7d9,ground:0x729fae,path:0xd7ece9,sky:0x75aebf,kind:'auroraWolf'},
+ {name:'Reino das Auroras',short:'Auroras',creature:'Lobo Aurora',value:42000,color:0x9de7d9,ground:0x729fae,path:0xd7ece9,sky:0x263a5c,kind:'auroraWolf'},
  {name:'Portal das Galáxias',short:'Galáxias',creature:'Guardião Galáctico',value:56000,color:0xa8a0ff,ground:0x39385f,path:0x7f82b1,sky:0x292d50,kind:'galaxyAlien'},
  {name:'Estação Integro',short:'Integro',creature:'Condutor Integro',value:75000,color:0xa9d66c,ground:0x305c50,path:0xdbe2bd,sky:0xb9e2df,kind:'integroConductor'}
 ];
