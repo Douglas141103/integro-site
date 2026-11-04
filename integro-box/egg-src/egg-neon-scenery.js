@@ -1,5 +1,7 @@
 import * as T from 'three';
-export const NEON_CYCLE=20;
+import {createSphinxRig} from './egg-sphinx-rig.js';
+export const NEON_CYCLE=24;
+export const SPHINX_BACK_STEPS=5,SPHINX_STEP_SECONDS=.7;
 const clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>x*x*(3-2*x);
 export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
  const sites=[],up=new T.Vector3(0,1,0);
@@ -18,21 +20,7 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
     edges.push({a,direction,length,line,tip,start:k<4?k*.35:1.4+(k-4)*.35});
    }
    const sphinx=group(root);sphinx.name='NeonSphinx';
-   const body=group(sphinx);body.name='SphinxBody';
-   ball(body,.72,0xcba969,0,.82,.25,1,.8,1.65);
-   softBox(body,.85,.85,.65,0xd6ba7b,0,1.15,-.67);
-   for(const x of[-.49,.49]){
-    softBox(body,.42,.35,1.2,0xe1c789,x,.24,-1.05);
-    ball(body,.4,0xcba969,x,.46,.9,1,.9,1.2);
-    const cloth=softBox(body,.25,.94,.42,0x6f63a5,x,1.85,-.75);cloth.rotation.z=-Math.sign(x)*.16;
-    for(let k=0;k<4;k++)box(body,.27,.065,.44,0xead18c,x,1.53+k*.2,-.76);
-   }
-   softBox(body,.65,.65,.5,0xe4c68b,0,1.96,-.77);
-   cyl(body,.29,.4,.2,0x6f63a5,0,2.38,-.75,8);
-   for(const x of[-.15,.15])box(body,.11,.055,.035,0x8efbe6,x,2.05,-1.04);
-   box(body,.095,.17,.12,0xcba969,0,1.93,-1.07);box(body,.23,.035,.025,0x765e61,0,1.78,-1.035);
-   cyl(body,.055,.1,.26,0x6f63a5,0,1.58,-1.04,6);
-   rod(body,[0,.6,1.4],[.6,.4,1.85],.075,0xcba969);rod(body,[.6,.4,1.85],[.9,.55,1.6],.075,0xcba969);
+   const rig=createSphinxRig(sphinx,{group,box,softBox,cyl,ball}),body=rig.body;
    const materials=new Map();body.traverse(n=>{if(n.isMesh){if(!materials.has(n.material))materials.set(n.material,n.material.clone());n.material=materials.get(n.material);n.material.transparent=true;}});
    const tunnel=group(root,0,0,-4.7);tunnel.name='SphinxGroundTunnel';
    const darkness=box(tunnel,3.3,.025,5.5,0x151525,0,.035,0);
@@ -41,13 +29,14 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
    for(const x of[-1.7,1.7])box(rim,.055,.035,5.6,0x88f0e5,x,.14,0);
    for(const z of[-2.8,2.8])box(rim,3.45,.035,.055,0xeb9ee4,0,.14,z);
    rim.traverse(n=>{if(n.isMesh)n.material=new T.MeshBasicMaterial({color:n.material.color});});
-   sites.push({root,pyramid,shell,outline,edges,sphinx,body,materials:[...materials.values()],tunnel,darkness,shutters,rim,side,phase:sites.length*4.1});
+   sites.push({root,pyramid,shell,outline,edges,sphinx,body,rig,materials:[...materials.values()],tunnel,darkness,shutters,rim,side,phase:sites.length*4.1});
   }
  }
  function update(time,reducedMotion=false){for(const s of sites){
-  const {root,pyramid,shell,outline,edges,sphinx,body,materials,tunnel,shutters,rim,side,phase}=s,age=((time+phase)%NEON_CYCLE+NEON_CYCLE)%NEON_CYCLE;
-  root.userData.phase=age<4?'drawing':age<6?'pyramid':age<8?'transforming':age<9.5?'sphinx':age<11?'opening':age<15?'entering':age<17?'closing':'rest';
-  const morph=smooth(clamp((age-6)/2)),walk=smooth(clamp((age-11)/4)),sink=smooth(clamp((age-12)/3));
+  const {root,pyramid,shell,outline,edges,sphinx,body,rig,materials,tunnel,shutters,rim,side,phase}=s,age=((time+phase)%NEON_CYCLE+NEON_CYCLE)%NEON_CYCLE;
+  const backProgress=clamp((age-10.5)/(SPHINX_BACK_STEPS*SPHINX_STEP_SECONDS)),run=smooth(clamp((age-14)/4)),sink=smooth(clamp((age-16)/2.5));
+  root.userData.phase=age<4?'drawing':age<6?'pyramid':age<8?'transforming':age<8.5?'sphinx':age<10.5?'standing':age<14?'backsteps':age<18.5?'running':age<20.5?'closing':'rest';
+  const morph=smooth(clamp((age-6)/2));
   outline.visible=age<8;pyramid.visible=age>=3&&age<8;
   pyramid.scale.set(1+morph*.15,1-morph*.72,1+morph*.25);outline.scale.copy(pyramid.scale);
   shell.material.opacity=smooth(clamp((age-3)/1.5))*(1-morph);
@@ -55,11 +44,12 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod}){
    line.visible=progress>0;line.scale.y=Math.max(.001,length*progress);line.position.copy(a).addScaledVector(direction,length*progress/2);line.material.opacity=1-morph;
    tip.visible=progress>0&&progress<1;tip.position.copy(a).addScaledVector(direction,length*progress);
   }
-  sphinx.visible=age>=6&&age<15;sphinx.scale.setScalar(.1+.9*morph);sphinx.position.set(0,-3.7*sink,-5.3*walk);sphinx.rotation.y=side*Math.PI*.75*(1-smooth(clamp((age-9.5)/1.5)));
+  sphinx.visible=age>=6&&age<18.5;sphinx.scale.setScalar(.1+.9*morph);sphinx.position.set(0,-4*sink,2.1*backProgress-7.4*run);sphinx.rotation.y=side*Math.PI*.75*(1-smooth(clamp((age-8.5)/2)));
+  sphinx.userData.backwardSteps=Math.min(SPHINX_BACK_STEPS,Math.floor(backProgress*SPHINX_BACK_STEPS+1e-8));
+  if(sphinx.visible)rig.update({stand:clamp((age-8.5)/2),mode:age>=10.5&&age<14?'backstep':age>=14&&age<18.5?'run':'rest',elapsed:age>=14?age-14:Math.max(0,age-10.5),reducedMotion});
   for(const material of materials){material.opacity=morph;material.depthWrite=morph>=1;}
-  body.position.y=!reducedMotion&&age>=11&&age<15?Math.sin((age-11)*8)*.045*(1-sink):0;
-  const opened=smooth(clamp((age-9.5)/1.5))*(1-smooth(clamp((age-15.5)/1.5)));
-  tunnel.visible=age>=9.5&&age<17;rim.visible=opened>0;
+  const opened=smooth(clamp((age-12.5)/1.5))*(1-smooth(clamp((age-19)/1.5)));
+  tunnel.visible=age>=12.5&&age<20.5;rim.visible=opened>0;
   for(const {slab,sign}of shutters)slab.position.x=sign*(.825+opened*1.65);
  }}
  return{add,update};
