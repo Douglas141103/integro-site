@@ -21,7 +21,8 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
   const stationTrains=[];adapter.scene().traverse(n=>{if(n.name==='IntegroArrivingTrain')stationTrains.push(n);});assert.equal(stationTrains.length,2);
-  for(const name of ['GalaxyBirthScenery','PopcornCookerScenery']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
+  for(const name of ['GalaxyBirthScenery','PopcornCookerScenery','NeonSphinxCycle']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
+  let auroras=0;adapter.scene().traverse(n=>{if(n.name==='BorealAuroraCurtain')auroras++;});assert.equal(auroras,3);
   const eventClock=adapter.scene().getObjectByName('WinterEventClock');assert(eventClock);assert.equal(eventClock.userData.time,'06:00:00');
   const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgeDeadTree')barriers.push(n);});
   const fissures=[],stones=[];adapter.scene().traverse(n=>{if(n.name==='FlameFissure')fissures.push(n);if(n.name==='RisingFlamingStone')stones.push(n);});assert.equal(fissures.length,state().visited.length*2);assert.equal(stones.length,12);

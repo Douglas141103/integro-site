@@ -41,8 +41,7 @@ export function expansionScenery(g,index,z,h){
   const x=side*(7+j%2*2),zz=z-17+j*11;
   if(index===14){cyl(g,.25,.4,2.1,0xf7e1c2,x,1.0,zz,10);ball(g,1.6,j%2?0xd08fe3:0xec9eae,x,2.3,zz,1,.4,1);for(let k=0;k<5;k++){const a=k*1.25;ball(g,.17,0xfff2ce,x+Math.sin(a),2.75,zz+Math.cos(a),1,.3,1);}for(let k=0;k<3;k++)ball(g,.45,0x80bc7c,x+(k-1)*.5,.3,zz+1,1,.6,1);}
   if(index===15){box(g,4,.2,6,0x9b7857,x,.12,zz);for(const dx of[-1.7,1.7])cyl(g,.10,.12,1.4,0xf2d99b,x+dx,.7,zz,8);const boat=group(g,x,.45,zz);const hull=ball(boat,1,0x4a9ca8,0,0,0,1.1,.4,2);cyl(boat,.04,.04,3.3,0xffe7bf,0,1.7,0,8);const sail=cyl(boat,0,1.15,1.9,0xfff1d8,.6,2,0,3);sail.scale.z=.08;sail.rotation.z=-.25;animated.push({mesh:boat,y:.45,phase:j+side});}
-  if(index===16){cyl(g,0,1.2,2.2,0x8c69ab,x,1.1,zz,5);const ring=torus(g,1.0,.07,0x88f0e5,x,2.5,zz);animated.push({mesh:ring,y:2.5,phase:j,spin:true});for(let k=0;k<3;k++)box(g,.12,.08,3,0xeb9ee4,x+(k-1)*.45,.08,zz+1.5);}
-  if(index===17){cyl(g,0,.8,2.5,0xb6e9ea,x,1.25,zz,6);for(let k=0;k<4;k++)rod(g,[x-side*1.2,4.7+k*.28,zz],[x+side*2.5,5.5+k*.2,zz+5],.11,[0x90e8c7,0xa6b7f3,0xcba8e6,0x8ddde7][k]);ball(g,1.4,0xf2f7eb,x,.2,zz,1,.3,1);}
+  if(index===17){cyl(g,0,.8,2.5,0xb6e9ea,x,1.25,zz,6);ball(g,1.4,0xf2f7eb,x,.2,zz,1,.3,1);}
 
  }
 
