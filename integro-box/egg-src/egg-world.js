@@ -1,3 +1,5 @@
+import {createGalaxyScenery} from './egg-galaxy-scenery.js';
+import {createPopcornScenery} from './egg-popcorn-scenery.js';
 import {createStationScenery} from './egg-station-scenery.js';
 import {createRockWorld,stoneGiant} from './egg-rock-world.js';
 import {createFlameWorld} from './egg-flame-world.js';
@@ -99,6 +101,8 @@ export function createEggWorld(scene){
  function crystal(p,x,z,color,height=2){const g=group(p,x,0,z);cyl(g,0,.53,height,color,0,height/2,0,5);const c=cyl(g,0,.29,height*.7,color,.43,height*.33,.2,5);c.rotation.z=-.35;return g}
  const rock=createRockWorld({helpers:{group,cyl,torus,box}});
  const station=createStationScenery({group,box,softBox,cyl,ball,label});
+ const galaxy=createGalaxyScenery({group,ball,torus});
+ const popcorn=createPopcornScenery({group,box,softBox,ball,cyl,torus});
  const flame=createFlameWorld({helpers:{group,box,ball,cyl,rod,torus,seasonalSurface}});
  const root=group(scene),base=group(root),zoneGroups=[],nests=[],guardians=[],animated=[];
  seasonalSurface(box(base,28,.7,30,0xd1e8f5,0,-.43,12),0x69ad73);seasonalSurface(box(base,10,.04,30,0xc4dfef,0,-.025,12),0xe2cda0);box(base,28,.3,1,0x598961,0,-.22,27);
@@ -111,7 +115,7 @@ export function createEggWorld(scene){
   const gate=group(g,0,0,-i*LENGTH);for(const x of[-6,6]){box(gate,.42,4.3,.48,w.color,x,2.15,0);box(gate,.7,.2,.75,0xf9e9ba,x,4.35,0)}box(gate,12.6,.38,.48,w.color,0,4.6,0);label(gate,`${i+1} · ${w.name.toUpperCase()}`,0,5.25,0,6.3);
   for(let j=0;j<10;j++){const side=j%2?1:-1,x=side*(7+(j%3)*2),zz=-i*LENGTH-5-j*4.1;
    if(winterDisplayArea(i,x,zz))continue;
-   if(i===0){tree(g,x,zz,0,.8+(j%3)*.22);for(let k=0;k<3;k++){cyl(g,.03,.03,.55,0x528d4e,x+.4*k,.25,zz+1);ball(g,.15,0xf4ca5c,x+.4*k,.55,zz+1,1,.65,1)}}
+   if(i===0&&j%3===2){tree(g,x,zz,0,.8+(j%3)*.22);for(let k=0;k<3;k++){cyl(g,.03,.03,.55,0x528d4e,x+.4*k,.25,zz+1);ball(g,.15,0xf4ca5c,x+.4*k,.55,zz+1,1,.65,1)}}
    if(i===1){if(j%3===0){ball(g,2.4,0xe6b575,x,-.15,zz,1,.78,1.35);ball(g,1.4,0xf1c68a,x-side*.8,-.18,zz+1.8,1.4,.45,1.1)}else{cyl(g,.22,.26,2.2,0x6ba76c,x,1.05,zz,7);rod(g,[x,.8,zz],[x+side*.65,.8,zz],.15,0x6ba76c);cyl(g,.15,.15,.85,0x6ba76c,x+side*.65,1.2,zz,7)}}
    if(i===2){tree(g,x,zz,2,1.0);const mushroom=group(g,x-side*1.0,0,zz+1.4);cyl(mushroom,.16,.21,.85,0xebcfb6,0,.4,0);ball(mushroom,.68,j%2?0x9c80db:0xe990a9,0,1,0,1,.47,1);for(const dx of[-.2,.2])ball(mushroom,.10,0xffecd0,dx,1.28,.18,1,.3,1)}
    if(i===3){tree(g,x,zz,3,1);if(j%2)crystal(g,x-side,zz+1.7,0x88d6ea,1.6);ball(g,.75,0xf7faf0,x+side, .3,zz-1,1,.5,1.3)}
@@ -126,8 +130,8 @@ export function createEggWorld(scene){
   }
   if(i===12){for(const side of[-1,1]){const x=side*7;for(let j=0;j<4;j++){const zz=z-18+j*12;cyl(g,.55,.75,3.8,0x7777a8,x,1.9,zz,10);torus(g,.65,.10,0xa5eaf4,x,3.8,zz).rotation.x=Math.PI/2;const orb=ball(g,.32,0xffdf8a,x,4.3,zz);animated.push({mesh:orb,y:4.3,phase:j+side});rod(g,[x,4.6,zz],[x-side*.45,5.3,zz],.075,0xa8edff);rod(g,[x-side*.45,5.3,zz],[x+side*.2,5.3,zz],.075,0xa8edff);rod(g,[x+side*.2,5.3,zz],[x-side*.4,6.1,zz],.075,0xa8edff);for(let k=0;k<3;k++)ball(g,.9,0x8596bd,x+side*(1+k*.5),4.6,zz+k*.3,1,.5,1);}}}
   if(i===13){for(const side of[-1,1])for(let j=0;j<5;j++){const x=side*(7+j%2*2),zz=z-19+j*9;const monument=group(g,x,0,zz);if(j%2===0){cyl(monument,.7,.9,2.9,0x527e81,0,1.45,0,12);torus(monument,1.05,.12,0xf2ce81,0,3.4,0);ball(monument,.94,0xffedc8,0,3.4,0,1,1,.13);for(let k=0;k<12;k++){const a=k*Math.PI/6;softBox(monument,.07,.16,.04,0x527e81,Math.sin(a)*.81,3.4+Math.cos(a)*.81,-.15);}const hands=group(monument,0,3.4,-.2);rod(hands,[0,0,0],[0,.7,0],.045,0x527e81);rod(hands,[0,0,0],[.5,0,0],.035,0xdca655);animated.push({mesh:hands,y:3.4,phase:j,spin:true});}else{for(const y of[.3,3.5])cyl(monument,.9,.9,.18,0xe5bf75,0,y,0);for(const xx of[-.75,.75])rod(monument,[xx,.3,0],[xx,3.5,0],.09,0x527e81);cyl(monument,.7,.08,1.4,0xa5e4dd,0,2.65,0,16);cyl(monument,.08,.7,1.4,0xa5e4dd,0,1.15,0,16);cyl(monument,0,.5,.6,0xe5bf75,0,.7,-.15,12);}for(let k=0;k<3;k++)ball(g,.45,0x78baa6,x+side*(1+k*.3),.4,zz+1,1,.45,1);}const arch=torus(g,5.8,.18,0xe5bf75,0,3,z);arch.scale.y=1.2;}
-  station.add(g,i,z);
-  if(i>=14&&i<19)expansionScenery(g,i,z,{ball,cyl,torus,rod,softBox,box,group,label,animated});
+  station.add(g,i,z);galaxy.add(g,i);popcorn.add(g,i);
+  if(i>=14&&i<18)expansionScenery(g,i,z,{ball,cyl,torus,rod,softBox,box,group,label,animated});
   const n=NESTS[i],nest=group(g,n.x,0,n.z);cyl(nest,1.55,1.7,.2,0x9a7752,0,.1,0);for(let j=0;j<3;j++)torus(nest,1.45-j*.12,.065,0xe3c27b,0,.22+j*.035,0).rotation.x=Math.PI/2;const eggs=Array.from({length:nestSize(i)},(_,slot)=>{const e=egg(nest,w.color,.8,nestRarity(i,slot)),pos=nestPosition(i,slot);e.position.set(pos.x,.2,pos.z);return e});const plaque=trainingPlaque(nest);nests.push({g:nest,eggs,plaque});const guard=creature(g,w.kind,w.color,w.kind==='stoneGiant'?3.2:1.65);guard.g.position.set(n.x,0,n.z-2.5);label(guard.g,i===22?'GRANDE PEDREGULHO':i===WINTER.world?'FÊNIX GELADA':'DONO DO OVO',0,2.9,0,2.6);guardians.push(guard);
  }
  for(const o of OBSTACLES){const g=zoneGroups[o.world];if(o.edge){flame.deadTree(g,o);}else if(o.world===0||o.world===2){const log=cyl(g,.40,.40,1.55,0x9c7452,o.x,.37,o.z,8);log.rotation.z=Math.PI/2}else if(o.world===1)box(g,1.35,o.h,1.1,0xbb905e,o.x,o.h/2,o.z);else if(o.world===3)crystal(g,o.x,o.z,0xb2e4eb,o.h);else if(o.world===4)cyl(g,.35,.8,o.h,0x925961,o.x,o.h/2,o.z,6);else if(o.world===8){cyl(g,.55,.66,o.h,0xf7a7b6,o.x,o.h/2,o.z);torus(g,.5,.09,0xfff0d4,o.x,o.h,o.z).rotation.x=Math.PI/2}else if(o.world===9){const log=cyl(g,.32,.32,1.4,0x73bc71,o.x,.32,o.z,7);log.rotation.z=Math.PI/2}else if(o.world===10)box(g,1.2,o.h,1.2,0xdeb668,o.x,o.h/2,o.z);else crystal(g,o.x,o.z,WORLDS[o.world].color,o.h)}
@@ -143,5 +147,5 @@ export function createEggWorld(scene){
  const hazards=zoneGroups.map((g,i)=>{const node=group(g);const ring=torus(node,1.15,.06,0xffd568,0,.10,0);ring.rotation.x=Math.PI/2;const body=group(node);const w=WORLDS[i];if(i===19){softBox(body,2.2,.18,.24,0xe6cc79,0,.55,0);for(const x of[-.9,.9])cyl(body,.07,.08,.75,0x398c72,x,.35,0,8);}else if(i===14){cyl(body,.18,.22,.45,0xffe0b7,0,.25,0);ball(body,.6,0xe99cad,0,.60,0,1,.5,1);}else if(i===13){rod(body,[0,2.2,0],[0,.5,0],.05,0xf2ce81);ball(body,.48,0x91e4ce,0,.5,0);torus(body,.49,.035,0xf2ce81,0,.5,0);}else if(i===0||i===9){cyl(body,.18,.18,2.2,w.color,0,.45,0).rotation.z=Math.PI/2;}else if(i===4||i===5||i===6){cyl(body,0,.6,1.3,w.color,0,.7,0,6);}else if(i===3||i===7||i===8){ball(body,.8,w.color,0,.14,0,1.4,.12,1);}else if(i===10){box(body,1.4,.45,1.2,0xffbd5e,0,1.4,0);}else for(let j=0;j<3;j++)torus(body,.5+j*.2,.05,w.color,0,.3+j*.3,0).rotation.x=Math.PI/2;return{node,body,ring};});
  function updateHazards(game){hazards.forEach((v,i)=>{const h=game.hazard(i);v.node.position.set(h.x,0,h.z);v.ring.material=mat(h.active?0xff705a:h.warning?0xffdb62:0xcbdccd);v.body.visible=h.active||h.warning;v.body.scale.y=h.active?1:.3;v.body.rotation.y=game.time*(i+1)*.3;});}
  const winter=createWinterWorld({root,base,pen,zoneGroups,player,helpers:{box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}});
- return{station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
+ return{galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
 }
