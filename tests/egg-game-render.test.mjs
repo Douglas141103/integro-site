@@ -20,6 +20,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
+  const harborBoats=[];adapter.scene().traverse(n=>{if(n.name==='WindHarborSailboat')harborBoats.push(n);});assert.equal(harborBoats.length,4);
   const stationTrains=[];adapter.scene().traverse(n=>{if(n.name==='IntegroArrivingTrain')stationTrains.push(n);});assert.equal(stationTrains.length,2);
   for(const name of ['GalaxyBirthScenery','PopcornCookerScenery','NeonSphinxCycle']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
   let auroras=0;adapter.scene().traverse(n=>{if(n.name==='BorealAuroraCurtain')auroras++;});assert.equal(auroras,3);
