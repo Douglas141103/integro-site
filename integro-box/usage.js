@@ -1,5 +1,5 @@
 import {supabase} from './access.js?v=20261016-intgem1';
-const screens={towerApp:'tower',sharkApp:'shark',blueApp:'blueworld',bounceApp:'bounce',rushApp:'rush',danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
+const screens={dinoApp:'dino',towerApp:'tower',sharkApp:'shark',blueApp:'blueworld',bounceApp:'bounce',rushApp:'rush',danceApp:'interdance',snakeApp:'gosnake',houseApp:'house',eggApp:'egg',dollApp:'bairro',fruitApp:'fruit',interballApp:'interball',fcApp:'fuitcort',craftApp:'craft'};
 export function currentGame(doc=document){
  for(const [id,game] of Object.entries(screens)){const el=doc.getElementById(id);if(el&&!el.hidden&&!el.classList.contains('hidden'))return game;}
  const play=doc.getElementById('play');
@@ -16,7 +16,7 @@ export function startUsage({client=supabase}={}){
  function state(){
   const game=currentGame();const room=window.BoxMultiplayer?.usageRoom;
   const visible=!document.hidden;
-  const paused=!!document.querySelector('#integroUpdate:not([hidden]):not([data-compact="true"])')||(game==='tower'&&!!window.BoxTower?.getState()?.mode)||(game==='shark'&&!!window.BoxShark?.getState()?.mode)||(game==='blueworld'&&!window.BoxBlueRuntime?.playing());
+  const paused=(game==='dino'&&window.BoxDino?.mode!=='play')||!!document.querySelector('#integroUpdate:not([hidden]):not([data-compact="true"])')||(game==='tower'&&!!window.BoxTower?.getState()?.mode)||(game==='shark'&&!!window.BoxShark?.getState()?.mode)||(game==='blueworld'&&!window.BoxBlueRuntime?.playing());
   return {p_game:game,p_active:visible&&!paused&&Date.now()-lastInput<120000,p_visible:visible,p_room:room?.game===game?room.id:null};
  }
  async function pulse(action='pulse'){

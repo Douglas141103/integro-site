@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
+import {createDepartureClock} from '../integro-box/room-departure.mjs';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 const settle=()=>new Promise(r=>setImmediate(r));
 
@@ -24,7 +25,7 @@ test('loading stages wait for auth and real script completion; failures keep the
  for(const fail of [false,true]){
   const dom=new JSDOM(html,{url:'https://example.test/integro-box/jogar.html',runScripts:'outside-only'}),w=dom.window,d=w.document,loaded=[];let releaseAuth;
   w.requireFamily=()=>new Promise(r=>releaseAuth=r);w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
-  w.loadModule=async()=>({mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}});
+  w.loadModule=async()=>({mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},installDino(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}});
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT'){loaded.push(n.src);queueMicrotask(()=>fail&&n.src.includes('egg.js')?n.onerror():n.onload());}};
   try{
    const done=w.eval('(async()=>{'+source+'})()');assert.equal(loaded.length,0);assert(d.body.classList.contains('box-locked'));releaseAuth({id:'user-a'});await done;
@@ -47,7 +48,7 @@ test('portal entry shows the catalog for old game links and saved recent games; 
   w.localStorage.setItem('box:user-a:catalog-recent-v1',JSON.stringify(['interdance']));
   w.requireFamily=async()=>({id:'user-a'});w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
   d.getElementById('brandHome').onclick=()=>{d.getElementById('lobby').classList.remove('hidden');d.getElementById('footer').classList.remove('hidden');};
-  const idleModules={mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}};
+  const idleModules={mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},installDino(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}};
   w.loadModule=async url=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached an installer');return url.includes('/interdance.js')?w.eval('(function(){'+dance+';return {installInterDance};})()'):idleModules;};
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT')queueMicrotask(()=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached a script');if(n.src.includes('catalog.js'))w.eval(catalog);n.onload();});};
   try{
@@ -70,13 +71,13 @@ test('public game cards link to the catalog without an automatic game selection'
 });
 
 test('rooms drag, restore, resize and fullscreen stay in bounds and never open or request a room after dragging',async()=>{
- const source=(await read('integro-box/multiplayer.js')).replace(/^import .*;\n/,'');
+ const source=(await read('integro-box/multiplayer.js')).replace(/^import .*;\n/gm,'');
  async function fixture(saved){
   const dom=new JSDOM('<body></body>',{url:'https://example.test/integro-box/jogar.html',runScripts:'outside-only'}),w=dom.window,d=w.document;let calls=0;
   Object.defineProperty(w,'innerWidth',{value:360,configurable:true});Object.defineProperty(w,'innerHeight',{value:740,configurable:true});
   if(saved)w.localStorage.setItem('integro-box-rooms-position-v1',saved);
   w.HTMLElement.prototype.getBoundingClientRect=function(){let width=68,height=36,left,top;if(this.id==='boxOnlinePanel'){width=Math.min(340,w.innerWidth-16);height=Math.min(440,w.innerHeight-16);left=parseFloat(this.style.left)||0;top=parseFloat(this.style.top)||0;}else{left=w.innerWidth-(parseFloat(this.style.right)||14)-width;top=w.innerHeight-(parseFloat(this.style.bottom)||136)-height;}return {width,height,left,top,right:left+width,bottom:top+height};};
-  w.supabase={rpc:async()=>{calls++;return {data:{rooms:[]}};}};w.eval(source);return {dom,w,d,calls:()=>calls};
+  w.createDepartureClock=createDepartureClock;w.supabase={rpc:async()=>{calls++;return {data:{rooms:[]}};}};w.eval(source);return {dom,w,d,calls:()=>calls};
  }
  const f=await fixture(),{w,d}=f,button=d.getElementById('boxOnlineToggle'),root=d.getElementById('boxOnline'),sheet=d.getElementById('boxOnlinePanel');
  const pointer=(type,x,y,handle=button)=>{const e=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,button:0,clientX:x,clientY:y});(type==='pointerdown'?handle:w).dispatchEvent(e);};
