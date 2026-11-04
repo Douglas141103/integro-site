@@ -1,26 +1,31 @@
-// Original two-theme score. Both use the C-major/A-minor note family so the
-// short transition stays harmonious. Sixteenth-note grids form eight-bar loops.
+// Original eight-bar themes, with a single melody and a bass line. The shared
+// C-major/A-minor palette keeps transitions harmonious without stacked chords.
 export const MUSIC_TEMPOS={calm:84,chase:144};
-const calmChords=[['C4','E4','G4','B4'],['A3','C4','E4','G4'],['F3','A3','C4','E4'],['G3','B3','D4','A4']];
 const calmBass=['C2','A1','F2','G2'],chaseBass=['A1','F1','C2','G1'];
-const calmMelody=[['E5','G5','B5','G5','E5','D5'],['C5','E5','G5','E5','D5','C5'],['A4','C5','E5','G5','E5','C5'],['B4','D5','G5','A5','G5','D5']];
-const chaseArps=[['A4','C5','E5','A5'],['F4','A4','C5','E5'],['G4','C5','E5','G5'],['G4','B4','D5','G5']];
+const calmMelody=[['E5','G5','B5','G5'],['C5','E5','G5','E5'],['A4','C5','E5','C5'],['B4','D5','G5','D5']];
+const chaseMelody=[['A4','C5','E5','C5'],['A4','C5','E5','C5'],['G4','C5','E5','G5'],['G4','B4','D5','B4']];
 export function musicStep(mode,step){
- const p=step%16,bar=Math.floor(step/16)%8,h=bar%4,second=bar>=4,events=[];
+ const p=step%16,bar=Math.floor(step/16)%8,h=bar%4,second=bar>=4,fill=bar===3||bar===7,events=[];
  const note=(voice,notes,duration,velocity)=>events.push({voice,notes,duration,velocity});
+ const drum=(voice,velocity)=>note(voice,null,0,velocity);
  if(mode==='calm'){
-  if(p===0){note('pad',calmChords[h],'1n',.24);note('calmBass',calmBass[h],'2n',.38);}
-  if(p===8)note('calmBass',calmBass[h],'4n',.24);
-  const beats=second?[0,3,6,8,11,14]:[0,4,8,12];const at=beats.indexOf(p);
-  if(at>=0)note('bell',calmMelody[h][at],'8n',p===0?.42:.29);
-  if(second&&p===15&&h===3)note('bell','B4','16n',.22);
+  if(p===0||p===8)note('calmBass',calmBass[h],'8n',p===0?.48:.38);
+  const at=[0,6,10].indexOf(p);if(at>=0)note('bell',calmMelody[h][at+(second?1:0)],'8n',at===0?.5:.4);
+  if(p===0||p===8)drum('kick',p===0?.30:.24);
+  if(p===4||p===12)drum('rim',.25);
+  if(p%4===2)drum('hat',.12);
+  if(p%4===3)drum('shaker',.085);
+  if(fill&&p===15)drum('rim',.12);
  }else{
-  if(p%4===0)note('kick','C1','16n',.8);
-  if(p===4||p===12)note('snare',null,'32n',.42);
-  if(p%2===0||second&&p>=14)note('hat',null,'64n',p%4===2?.24:.12);
-  if([0,3,6,8,10,14].includes(p))note('chaseBass',chaseBass[h],'16n',p%4===0?.65:.44);
-  if(p%2===0||second&&p===15){const pattern=second?[0,2,1,3,2,1,3,2]:[0,1,2,1,3,2,1,2];note('lead',chaseArps[h][pattern[Math.floor(p/2)%8]],'16n',p%4===0?.4:.29);}
-  if(second&&h===3&&p===15)note('snare',null,'64n',.24);
+  if([0,3,8,11].includes(p))note('chaseBass',chaseBass[h],'16n',p%8===0?.58:.43);
+  const at=[0,6,8,14].indexOf(p);if(at>=0&&!(fill&&p===14))note('lead',chaseMelody[h][second?(at+2)%4:at],'16n',at%2===0?.46:.35);
+  if(p%4===0)drum('kick',p===0?.68:.58);
+  if(p===4||p===12)drum('snare',p===12?.53:.48);
+  if(p%2===0){const open=p===14&&bar%2===1&&!fill;drum(open?'openHat':'hat',p%4===2?(open?.18:.22):.11);}
+  if(p%2===1)drum('shaker',.09);
+  if(bar%2===1&&p===11)drum('snare',.12);
+  if(fill&&p===13)drum('snare',.24);
+  if(fill&&(p===14||p===15))drum('tom',p===14?.42:.30);
  }
  return events;
 }

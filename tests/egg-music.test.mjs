@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createEggMusic,musicMode} from '../integro-box/egg-src/egg-music.js';
+import {createDrumSamples} from '../integro-box/egg-src/egg-music-drums.js';
 import {musicStep,MUSIC_TEMPOS} from '../integro-box/egg-src/egg-music-score.js';
 function fixture(options={}){
  const calls=[],timers=new Map(),saved=new Map();let id=0;
@@ -42,7 +43,27 @@ test('original score loops harmonically and gives the chase a faster drum-driven
  assert(MUSIC_TEMPOS.chase>MUSIC_TEMPOS.calm*1.5);
  for(const mode of ['calm','chase'])for(let i=0;i<128;i++){
   const events=musicStep(mode,i);assert.deepEqual(events,musicStep(mode,i+128));
-  for(const e of events){assert(e.velocity>0&&e.velocity<=1);for(const n of [e.notes].flat().filter(Boolean))assert.match(n,/^[A-G][1-5]$/);if(mode==='calm')assert(!['kick','snare','hat'].includes(e.voice));}
+  for(const e of events){assert(e.velocity>0&&e.velocity<=1);for(const n of [e.notes].flat().filter(Boolean))assert.match(n,/^[A-G][1-5]$/);assert(!Array.isArray(e.notes),'melody and bass use single notes, without chord stacks');}
  }
  const voices=new Set(Array.from({length:16},(_,i)=>musicStep('chase',i)).flat().map(e=>e.voice));for(const v of ['kick','snare','hat','chaseBass','lead'])assert(voices.has(v));
+});
+
+test('sparser melodies leave room for distinct percussion in both themes',()=>{
+ for(const mode of ['calm','chase'])for(let bar=0;bar<8;bar++){
+  const events=Array.from({length:16},(_,i)=>musicStep(mode,bar*16+i)).flat();
+  const melody=events.filter(e=>['bell','lead'].includes(e.voice));assert(melody.length<=4);
+  for(const drum of mode==='calm'?['kick','rim','hat','shaker']:['kick','snare','hat','shaker'])assert(events.some(e=>e.voice===drum));
+ }
+ assert(musicStep('chase',62).some(e=>e.voice==='tom'),'phrase endings get a drum fill');
+});
+test('drum one-shots are finite, bounded and fade cleanly at common device sample rates',()=>{
+ for(const rate of [22050,44100,48000]){
+  const samples=createDrumSamples(rate);assert.equal(Object.keys(samples).length,7);
+  for(const data of Object.values(samples)){
+   assert.equal(Math.abs(data[0]),0);assert.equal(Math.abs(data.at(-1)),0);assert(data.length<rate/2);
+   let energy=0,peak=0;for(const sample of data){assert(Number.isFinite(sample));energy+=sample*sample;peak=Math.max(peak,Math.abs(sample));}
+   assert(energy/data.length>.001);assert(peak<=.851);
+  }
+  assert(samples.openHat.length>samples.hat.length*2);
+ }
 });

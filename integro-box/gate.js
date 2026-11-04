@@ -46,7 +46,7 @@ try {
   await script('./craft.js?v=20261015-craft6');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261104-egg-music');
+  await script('./egg.js?v=20261104-egg-drums');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261031-catalogbots1');
   phase('Conectando amigos e salas…');
