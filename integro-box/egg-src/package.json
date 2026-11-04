@@ -1,1 +1,1 @@
-{"name":"integro-egg","private":true,"type":"module","scripts":{"build":"node build.mjs"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.10"}}
+{"name":"integro-egg","private":true,"type":"module","scripts":{"build":"node build.mjs"},"dependencies":{"three":"0.180.0","tone":"15.1.22"},"devDependencies":{"esbuild":"0.25.10"}}
