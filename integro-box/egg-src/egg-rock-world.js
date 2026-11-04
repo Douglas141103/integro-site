@@ -1,4 +1,5 @@
 import {ROCK,rockSites} from './egg-rock-rules.js';
+import {createRockScenery} from './egg-rock-scenery.js';
 
 export function stoneGiant(g,limbs,{group,cyl,box}){
  g.name='GrandePedregulho';
@@ -16,7 +17,7 @@ export function stoneGiant(g,limbs,{group,cyl,box}){
 }
 
 export function createRockWorld({helpers}){
- const {group,cyl,torus,box}=helpers,mountains=[];
+ const {group,cyl,torus}=helpers,mountains=[],decoration=createRockScenery({helpers,stoneGiant});
  function ground(parent,world){
   for(const [slot,site]of rockSites(world).entries()){
    const node=group(parent,site.x,0,site.z);node.name='GrowingMountain';node.visible=false;
@@ -29,13 +30,7 @@ export function createRockWorld({helpers}){
    mountains.push({node,halo,world,slot});
   }
  }
- function scenery(parent,world){if(world!==ROCK.world)return;
-  for(const side of[-1,1])for(let j=0;j<6;j++){
-   const h=3+(j%3)*2,x=side*(7+(j%2)*2.3),z=-world*48-j*8-3;
-   cyl(parent,.2,2.2,h,j%2?0x69746c:0x929582,x,h/2,z,5);
-   box(parent,.9,.2,.7,0xc4be9f,x,.2,z-2);
-  }
- }
- function update(game,reducedMotion){for(const m of mountains){const s=game.mountain(m.world,m.slot);m.node.visible=s.visible;m.node.scale.setScalar(Math.max(.001,s.amount));m.halo.visible=s.warning;m.halo.scale.setScalar(reducedMotion?1:1+Math.sin(game.time*5)*.025);}}
+ function scenery(parent,world){if(world===ROCK.world)decoration.add(parent,world);}
+ function update(game,reducedMotion){for(const m of mountains){const s=game.mountain(m.world,m.slot);m.node.visible=s.visible;m.node.scale.setScalar(Math.max(.001,s.amount));m.halo.visible=s.warning;m.halo.scale.setScalar(reducedMotion?1:1+Math.sin(game.time*5)*.025);}decoration.update(game.time,reducedMotion);}
  return{ground,scenery,update};
 }
