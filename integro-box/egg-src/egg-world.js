@@ -104,7 +104,7 @@ export function createEggWorld(scene){
  const rock=createRockWorld({helpers:{group,cyl,torus,box}});
  const station=createStationScenery({group,box,softBox,cyl,ball,label});
  const aurora=createAuroraScenery();
- const neon=createNeonScenery({group,box,softBox,cyl,ball,rod});
+ const neon=createNeonScenery({group,box,softBox,cyl,ball,rod,actorArt});
  const galaxy=createGalaxyScenery({group,ball,torus});
  const popcorn=createPopcornScenery({group,box,softBox,ball,cyl,torus});
  const flame=createFlameWorld({helpers:{group,box,ball,cyl,rod,torus,seasonalSurface}});

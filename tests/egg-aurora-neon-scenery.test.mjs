@@ -51,7 +51,10 @@ test('sphinx transformation and opening tunnel leave the running path clear in b
 test('cartoon sphinx has exactly 54 unique functional joints which articulate its rise, backward steps and run',()=>{
  const {site,update}=fixture(createNeonScenery,16),sphinx=site.getObjectByName('NeonSphinx'),body=site.getObjectByName('SphinxBody'),bones=[];
  sphinx.traverse(n=>{if(n.isBone)bones.push(n);});assert.equal(bones.length,54);assert.equal(body.userData.jointCount,54);assert.equal(new Set(bones.map(n=>n.name)).size,54);
- for(const bone of bones){let visibleParts=0;bone.traverse(n=>{if(n.isMesh)visibleParts++;});assert(visibleParts>0,'each joint moves visible geometry');}
+ const weighted=new Set();let continuousSkins=0;
+ body.traverse(n=>{if(!n.isMesh||n.userData.contour)return;assert(n.material.isMeshToonMaterial,'same toon shading as explorer');assert.equal(n.material.gradientMap.image.width,4);if(!n.isSkinnedMesh)return;continuousSkins++;const indices=n.geometry.attributes.skinIndex,weights=n.geometry.attributes.skinWeight;for(let i=0;i<indices.count;i++){let total=0;for(let k=0;k<4;k++){const w=weights.array[i*4+k];total+=w;if(w>0)weighted.add(n.skeleton.bones[indices.array[i*4+k]]);}assert(Math.abs(total-1)<1e-6);}});
+ assert(continuousSkins>=8,'continuous torso, neck, legs, tail and headdress');
+ for(const bone of bones){let visibleParts=0;bone.traverse(n=>{if(n.isMesh||weighted.has(n))visibleParts++;});assert(visibleParts>0,'each joint moves visible geometry');}
  const pose=bone=>[...bone.position.toArray(),...bone.quaternion.toArray()];
  update(8.25);const initial=bones.map(pose),lying=site.getObjectByName('SphinxJoint_pelvis').position.y,animated=new Set();
  for(const time of[10.5,11,11.7,15.2]){update(time);bones.forEach((bone,i)=>{const p=pose(bone);assert(p.every(Number.isFinite));if(p.some((v,k)=>Math.abs(v-initial[i][k])>1e-5))animated.add(bone.name);});}
