@@ -1,34 +1,49 @@
 import {DinoRun,STAGES,stageAt,STAGE_TICKS} from './course.mjs';
-import {draw} from './art.mjs';
+import {dockServices,paintTrack} from './hud.mjs';
 
 const fmt = n => n.toLocaleString('pt-BR');
 const key = 'dino-expedicao-pendente-v1';
 const safeRead = (storage,k) => {try{return JSON.parse(storage.getItem(k));}catch{return null;}};
 const safeWrite = (storage,k,value) => {try{if(value===null)storage.removeItem(k);else storage.setItem(k,JSON.stringify(value));}catch{}};
 export function createGame(app,{rpc,storage,exit}) {
-  app.innerHTML=`<main class="dino-shell"><header class="dino-nav"><button data-back>← Catálogo</button><span>INTEGRO BOX / ARCADE</span><button data-ranks>Ranking</button></header>
-    <div class="dino-title"><div><small>CORRIDA JURÁSSICA</small><h1>Dino Expedição</h1></div>
-    <div class="dino-best"><small>SEU RECORDE</small><strong data-best>00000</strong></div></div>
-    <section class="dino-board" aria-label="Pista de corrida"><div class="dino-stats"><span data-stage></span><span><b data-points>00000</b> PTS</span></div>
-    <canvas width="800" height="264" aria-label="Dinossauro correndo e pulando obstáculos"></canvas><div class="dino-progress"><i></i></div></section>
-    <section class="dino-console"><div><h2 data-heading></h2><p data-info></p></div><div class="dino-controls"><button data-action></button><button data-pause hidden>Pausar</button></div></section>
-    <p class="dino-status" role="status"></p>
-    <section class="dino-ranking" hidden><div class="dino-rankhead"><h2>Ranking geral</h2><button data-close>Fechar</button></div><div data-board></div></section></main>`;
+  app.innerHTML=`<main class="dino-hud" aria-label="Dino Expedição">
+    <div class="dino-game">
+      <header class="dino-bar"><button data-back aria-label="Voltar ao catálogo">← Catálogo</button><h1>Dino Expedição</h1><button data-ranks aria-haspopup="dialog">Ranking</button></header>
+      <div class="dino-stats"><div class="dino-phase"><small>FASE</small><strong data-stage></strong></div>
+        <div><small>PONTOS</small><strong data-points>00000</strong></div><div><small>RECORDE</small><strong data-best>00000</strong></div></div>
+      <div class="dino-progress"><i></i></div>
+      <div class="dino-track"><canvas width="800" height="264" aria-label="Pista do dinossauro. Toque para pular."></canvas>
+        <div class="dino-tally"><span>Obstáculos <b data-clears>0</b></span><span>Âmbares <b data-amber>0</b></span></div>
+        <section class="dino-card"><h2 data-heading></h2><p data-info></p></section>
+      </div>
+      <footer class="dino-dock"><p class="dino-status" role="status"></p>
+        <div class="dino-row"><div class="dino-services" aria-label="Ferramentas do Integro Box"></div>
+        <div class="dino-controls"><button data-pause hidden>Pausar</button><button data-action></button></div></div>
+      </footer>
+    </div>
+    <section class="dino-ranking" role="dialog" aria-modal="true" aria-labelledby="dino-rank-title" hidden>
+      <div class="dino-rankhead"><h2 id="dino-rank-title">Ranking geral</h2><button data-close>Fechar</button></div><div data-board></div>
+    </section></main>`;
   const q=s=>app.querySelector(s),canvas=q('canvas'),ctx=canvas.getContext('2d');
   const heading=q('[data-heading]'),info=q('[data-info]'),action=q('[data-action]'),pause=q('[data-pause]');
   const ranking=q('.dino-ranking'),status=q('.dino-status');
   let run=new DinoRun(0),mode='menu',ticket=null,visible=false,epoch=0,raf=0,previous=0,debt=0,sending=null;
   let best=Number(safeRead(storage,'dino-best'))||0, pending=safeRead(storage,key);
+  const services=dockServices(q('.dino-services'),freeze);
   function paint(){
-    draw(ctx,run);
+    paintTrack(canvas,ctx,run);
     const stage=stageAt(run.tick);
     q('[data-stage]').textContent='0'+(stage+1)+' / 06   '+STAGES[stage].name;
     q('[data-points]').textContent=String(run.score).padStart(5,'0');
+    q('[data-clears]').textContent=String(run.clears);
+    q('[data-amber]').textContent=String(run.amber);
     q('[data-best]').textContent=String(best).padStart(5,'0');
     q('.dino-progress i').style.width=(run.tick===7200?100:100*(run.tick%STAGE_TICKS)/STAGE_TICKS)+'%';
   }
   function controls(){
-    pause.hidden=!['play','paused'].includes(mode);pause.textContent=mode==='paused'?'Retomar':'Pausar';
+    app.dataset.mode=mode;
+    q('.dino-card').hidden=mode==='play';
+    pause.hidden=mode!=='play';
     action.disabled=mode==='loading';action.textContent=({menu:'Começar corrida',loading:'Preparando…',play:'↑ Pular',paused:'Retomar',end:'Jogar de novo'})[mode];
     heading.textContent=({menu:'Atravesse as seis fases',loading:'Preparando a pista',play:STAGES[stageAt(run.tick)].name,paused:'Corrida pausada',end:run.result==='win'?'Expedição completa!':'Fim da corrida'})[mode];
     info.textContent=mode==='end'?fmt(run.score)+' pontos · '+run.clears+' obstáculos · '+run.amber+' âmbares':
@@ -40,7 +55,7 @@ export function createGame(app,{rpc,storage,exit}) {
     mode='paused';cancelAnimationFrame(raf);previous=0;debt=0;controls();
   }
   function resume(){
-    if(mode!=='paused'||document.hidden||!ranking.hidden)return;
+    if(mode!=='paused'||document.hidden||!ranking.hidden||services.opened())return;
     mode='play';previous=0;controls();raf=requestAnimationFrame(frame);
   }
   function frame(now){
@@ -98,9 +113,8 @@ export function createGame(app,{rpc,storage,exit}) {
     if(document.hidden||!ranking.hidden)freeze();else raf=requestAnimationFrame(frame);
   }
   async function showRanks(){
-    freeze();ranking.hidden=false;const board=q('[data-board]');board.textContent='Carregando classificação…';const current=epoch;
+    services.close();freeze();ranking.hidden=false;q('.dino-game').inert=true;const board=q('[data-board]');board.textContent='Carregando classificação…';const current=epoch;
     q('[data-close]').focus({preventScroll:true});
-    ranking.scrollIntoView?.({block:'nearest'});
     try{
       await submit();const data=await rpc('ranking');
       if(current!==epoch||!visible||ranking.hidden)return;
@@ -117,13 +131,15 @@ export function createGame(app,{rpc,storage,exit}) {
       }
     }catch{if(current===epoch&&visible)board.textContent='Não foi possível carregar o ranking. Confira a conexão e abra-o novamente.';}
   }
-  function closeRanks(){ranking.hidden=true;q('[data-ranks]').focus({preventScroll:true});}
+  function closeRanks(){ranking.hidden=true;q('.dino-game').inert=false;q('[data-ranks]').focus({preventScroll:true});}
   function primary(){
-    if(!ranking.hidden)return;
+    if(!ranking.hidden||services.opened())return;
     if(mode==='play')run.jump();else if(mode==='paused')resume();else void start();
   }
   function keydown(e){
     if(!visible||e.altKey||e.ctrlKey||e.metaKey)return;
+    if(services.opened()||e.target?.closest?.('input,textarea,[contenteditable=true],dialog[open]'))return;
+    if(!ranking.hidden&&e.code==='Tab'){e.preventDefault();q('[data-close]').focus();return;}
     if(e.code==='Escape'){e.preventDefault();if(!ranking.hidden)closeRanks();else if(mode==='play')freeze();else if(mode==='paused')resume();else exit();return;}
     if(!ranking.hidden)return;
     if(['Space','ArrowUp','KeyW'].includes(e.code)){
@@ -132,12 +148,15 @@ export function createGame(app,{rpc,storage,exit}) {
     }else if(e.code==='KeyP'&&!e.repeat){if(mode==='paused')resume();else freeze();}
   }
   action.onclick=primary;
-  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden){e.preventDefault();run.jump();}});
+  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden&&!services.opened()){e.preventDefault();run.jump();}});
   pause.onclick=()=>mode==='play'?freeze():resume();
   q('[data-ranks]').onclick=showRanks;q('[data-close]').onclick=closeRanks;q('[data-back]').onclick=exit;
   document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',()=>{if(document.hidden)freeze();});
+  const redraw=()=>{if(visible)paint();};
+  window.addEventListener('resize',redraw);
+  if(window.ResizeObserver)new window.ResizeObserver(redraw).observe(canvas);
   return {
-    open(){visible=true;epoch++;mode='menu';ticket=null;run=new DinoRun(0);ranking.hidden=true;status.textContent='';controls();paint();action.focus({preventScroll:true});if(pending)void submit();},
-    hide(){visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
+    open(){services.attach();q('.dino-game').inert=false;visible=true;epoch++;mode='menu';ticket=null;run=new DinoRun(0);ranking.hidden=true;status.textContent='';controls();paint();action.focus({preventScroll:true});if(pending)void submit();},
+    hide(){services.detach();visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
   };
 }
