@@ -1,7 +1,7 @@
 import {FLAME,flameGaps} from './egg-flame-rules.js';
 
 export function createFlameWorld({helpers}){
- const {group,box,ball,cyl,rod,torus,seasonalSurface}=helpers,gaps=[],rocks=[];
+ const {group,box,ball,cyl,torus,seasonalSurface}=helpers,gaps=[],rocks=[];
  function ground(g,w,world){
   const cuts=flameGaps(world).map(z=>-z-world*48),half=FLAME.halfLength;
   const slab=(parent,start,end,width=28,x=0)=>{
@@ -31,13 +31,13 @@ export function createFlameWorld({helpers}){
    rocks.push({rock,phase:j*.7});
   }
  }
- function deadTree(parent,o){const g=group(parent,o.x,0,o.z);g.name='TrackEdgeDeadTree';g.userData.obstacle={...o};
-  cyl(g,.07,.20,o.h,0x65504a,0,o.h/2,0,7);
-  for(const side of[-1,1]){rod(g,[0,1.3,0],[side*.48,2.1,.05],.055,0x796056);rod(g,[side*.3,1.8,0],[side*.26,2.4,-.12],.035,0x8c7160);}
+ function pebble(parent,o){const g=group(parent,o.x,0,o.z);g.name='TrackEdgePebble';g.userData.obstacle={...o};
+  const colors=[0x92a3b2,0xa6aaa1,0xa99a8d],stone=ball(g,1,colors[o.world%colors.length],0,o.h/2,0,o.r,o.h/2,o.r*.9);
+  stone.rotation.y=(o.world*.7+Math.abs(o.z)*.3)%Math.PI;
   return g;
  }
  function update(game,reducedMotion){for(const gap of gaps){const s=game.flameGap(gap.world,gap.slot);for(const {part,side}of gap.halves){part.position.x=side*s.amount*FLAME.halfGap;}gap.glow.visible=s.warning;gap.glow.scale.x=s.warning?(reducedMotion?1:1+Math.sin(game.time*5)*.3):1;gap.lava.visible=s.amount>0;}
   for(const {rock,phase}of rocks){const rise=(1-Math.cos((game.time*.9+phase)%(Math.PI*2)))/2;rock.position.y=-2+rise*5;rock.rotation.y=game.time*.18+phase;}
  }
- return{ground,scenery,deadTree,update};
+ return{ground,scenery,pebble,update};
 }

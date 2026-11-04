@@ -25,7 +25,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   for(const name of ['GalaxyBirthScenery','PopcornCookerScenery','NeonSphinxCycle']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
   let auroras=0;adapter.scene().traverse(n=>{if(n.name==='BorealAuroraCurtain')auroras++;});assert.equal(auroras,3);
   const eventClock=adapter.scene().getObjectByName('WinterEventClock');assert(eventClock);assert.equal(eventClock.userData.time,'06:00:00');
-  const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgeDeadTree')barriers.push(n);});
+  const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgePebble')barriers.push(n);});
   const fissures=[],stones=[];adapter.scene().traverse(n=>{if(n.name==='FlameFissure')fissures.push(n);if(n.name==='RisingFlamingStone')stones.push(n);});assert.equal(fissures.length,state().visited.length*2);assert.equal(stones.length,12);
   adapter.enter();adapter.applyFlame({id:'shared-test',castAt:1000000,closed:false},1007000);tick();
   const lips=[];adapter.scene().traverse(n=>{if(n.name==='FlameGroundLip')lips.push(n);});
@@ -35,8 +35,8 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   adapter.applyRock({id:'shared-rock',castAt:1000000,closed:false},1001000);tick();assert(mountains.every(m=>m.visible&&m.scale.y<.1));
   adapter.applyRock({id:'shared-rock',castAt:1000000,closed:false},1026000);tick();assert(mountains.every(m=>m.visible&&m.scale.y===1));
   adapter.leave();tick();assert(mountains.every(m=>!m.visible));assert.equal(adapter.state().rock,null);assert.equal(adapter.state().flame,null);
-  assert.equal(barriers.length,state().visited.length*8,'visible barricades cover both edges of every track');
-  for(const barrier of barriers){const o=barrier.userData.obstacle;assert.equal(barrier.position.x,o.x);assert.equal(barrier.position.z,o.z);const bounds=new T.Box3().setFromObject(barrier);assert(Math.abs(bounds.max.y-o.h)<.01,'visible height matches jump collision');}
+  let oldTrees=0;adapter.scene().traverse(n=>{if(n.name==='TrackEdgeDeadTree')oldTrees++;});assert.equal(oldTrees,0);assert.equal(barriers.length,state().visited.length*8,'visible pebbles cover both edges of every track');
+  for(const barrier of barriers){const o=barrier.userData.obstacle;assert(o.h<=.5);assert.equal(barrier.position.x,o.x);assert.equal(barrier.position.z,o.z);const bounds=new T.Box3().setFromObject(barrier);assert(Math.abs(bounds.max.y-o.h)<.01,'visible height matches jump collision');}
   w.BoxEggCloud={ready:true,dirty(){},ranking:async()=>({mine:{position:5,integros:100,intgem:2},rows:[],total:0,updated_at:new Date().toISOString()})};tick(10);await new Promise(setImmediate);assert.equal(w.document.querySelector('#eggRanking [data-rank-position]').textContent,'5º');
   w.document.getElementById('eggRanking').click();assert.equal(state().sheet,'ranking');assert.match(w.document.getElementById('eggSheetTitle').textContent,/Ranking do Pegue o Ovo/);w.document.querySelector('[data-egg-action="settings"]').click();assert.equal(state().sheet,'settings');const musicToggle=w.document.querySelector('[data-egg-music-enabled]'),musicVolume=w.document.querySelector('[data-egg-music-volume]');assert(musicToggle.checked);musicVolume.value='30';musicVolume.dispatchEvent(new w.Event('input'));assert.equal(state().music.volume,.3);musicToggle.click();assert.equal(state().music.enabled,false);musicToggle.click();w.document.querySelector('[data-egg-action="resume"]').click();
   key('w');tick(270);key('w',true);key('d');tick(20);key('d',true);assert.equal(state().interaction.type,'nest');

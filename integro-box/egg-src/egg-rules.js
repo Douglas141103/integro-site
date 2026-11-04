@@ -35,8 +35,8 @@ export function corridorHalfWidth(z){const t=Math.max(0,Math.min(1,(z-3)/5));ret
 export function constrainToCorridor(p,radius=PLAYER_RADIUS){p.z=Math.max(-LENGTH*WORLDS.length+.8,Math.min(25,p.z));const limit=corridorHalfWidth(p.z)-radius;p.x=Math.max(-limit,Math.min(limit,p.x));return p;}
 export const NESTS=WORLDS.map((w,i)=>({x:i%2?-3.2:3.2,z:-(i*LENGTH+25)}));
 export const guardianSpeed=i=>(7.7+i*1.1)*2*(i===FLAME.world?.6:1);
-// Four slender dead trees on each shoulder leave the nest and the central route clear.
-export const EDGE_OBSTACLES=WORLDS.flatMap((w,world)=>[-1,1].flatMap(side=>[6,16,30,43].map(offset=>({x:side*(TRACK_HALF_WIDTH-.5),z:-(world*LENGTH+offset),r:.26,h:2.8,world,edge:true}))));
+// Four low pebbles on each shoulder can be cleared with the default jump.
+export const EDGE_OBSTACLES=WORLDS.flatMap((w,world)=>[-1,1].flatMap(side=>[6,16,30,43].map(offset=>({x:side*(TRACK_HALF_WIDTH-.5),z:-(world*LENGTH+offset),r:.38,h:.48,world,edge:true}))));
 export const OBSTACLES=[...EDGE_OBSTACLES,...WORLDS.flatMap((w,i)=>[{x:-2.3,z:-(i*LENGTH+11),r:.72,h:.65,world:i},{x:2.15,z:-(i*LENGTH+37),r:.78,h:.72,world:i},...(i>=7?Array.from({length:3},(_,j)=>({x:[0,-3.1,3.1][j],z:-(i*LENGTH+17+j*8),r:.65,h:.8+j*.08,world:i})):[])])];
 export const UPGRADES={
  boots:{name:'Tênis velozes',icon:'👟',desc:'+0,8 de velocidade por nível.',max:10,base:80},
