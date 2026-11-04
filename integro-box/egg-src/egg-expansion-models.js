@@ -44,11 +44,9 @@ export function expansionScenery(g,index,z,h){
   if(index===16){cyl(g,0,1.2,2.2,0x8c69ab,x,1.1,zz,5);const ring=torus(g,1.0,.07,0x88f0e5,x,2.5,zz);animated.push({mesh:ring,y:2.5,phase:j,spin:true});for(let k=0;k<3;k++)box(g,.12,.08,3,0xeb9ee4,x+(k-1)*.45,.08,zz+1.5);}
   if(index===17){cyl(g,0,.8,2.5,0xb6e9ea,x,1.25,zz,6);for(let k=0;k<4;k++)rod(g,[x-side*1.2,4.7+k*.28,zz],[x+side*2.5,5.5+k*.2,zz+5],.11,[0x90e8c7,0xa6b7f3,0xcba8e6,0x8ddde7][k]);ball(g,1.4,0xf2f7eb,x,.2,zz,1,.3,1);}
   if(index===18){const planet=ball(g,1.05,j%2?0xa6b3ed:0xd3a4d7,x,3.7,zz);torus(g,1.55,.06,0xe6ce8b,x,3.7,zz).rotation.x=1.1;animated.push({mesh:planet,y:3.7,phase:j});cyl(g,.35,.8,1.2,0x6a719e,x,.6,zz,6);for(let k=0;k<3;k++){const star=cyl(g,0,.16,.30,0xffe9ad,x+(k-1)*.7,2+k*.5,zz+.6,5);animated.push({mesh:star,y:star.position.y,phase:k});}}
-  if(index===19){box(g,5,.38,10,0x8eaf9e,x,.1,zz);box(g,.14,.05,9,0xf1ce72,side*5.7,.32,zz);for(const dz of[-3.5,3.5]){cyl(g,.09,.12,3.8,0x285e51,x,1.9,zz+dz,8);box(g,4.8,.18,1,0xd8dfb1,x,3.8,zz+dz);}
-   if(j%2===0){const train=group(g,x,.4,zz);softBox(train,2.5,2.0,7.2,0xe6edce,0,1.05,0);softBox(train,2.55,.5,6.7,0x378c72,0,.65,0);for(const dz of[-2.2,0,2.2]){softBox(train,.04,.6,1.5,0x72c5ca,-side*1.27,1.45,dz);for(const dx of[-.8,.8])ball(train,.20,0xffe4a2,dx,.8,-3.6,1,1,.3);}box(train,1.7,.65,.05,0x72c5ca,0,1.5,-3.62);label(train,'INTEGRO',0,2.35,-.1,2.4,'#f8f3d3','#28644f');}
-  }
+
  }
- if(index===19){label(g,'ESTAÇÃO INTEGRO',0,4.2,z+8,6.8,'#f7f1d6','#245d48');label(g,'20 · DESTINO CONQUISTADO',0,5.2,z-15,5.8,'#244d3f','#e6dc93');}
+
 }
 
 export function expansionAccessory(id,g,{ball,cyl,torus,rod,softBox}){
