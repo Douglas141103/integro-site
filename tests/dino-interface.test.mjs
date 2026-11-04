@@ -38,7 +38,7 @@ test('launch through catalog, jump with touch and keyboard, pause, finish, rank 
     for(let i=0;i<60;i++)tick();
     d.dispatchEvent(new w.KeyboardEvent('keydown',{code:'ArrowUp',bubbles:true,cancelable:true}));tick();
     app.querySelector('[data-ranks]').click();await settle();assert.equal(w.BoxDino.mode,'paused');assert(app.querySelector('.mine'));
-    app.querySelector('[data-close]').click();app.querySelector('[data-pause]').click();tick();
+    assert(app.querySelector('.dino-game').inert);app.querySelector('[data-close]').click();app.querySelector('[data-action]').click();tick();
     for(let i=0;i<500&&!submitted;i++)tick();
     await settle();assert.equal(w.BoxDino.mode,'end');assert.equal(submitted.p_jumps.length,2);assert(submitted.p_tick<=makeCourse(seed)[0].center);assert(heights.some(y=>y<150));
     assert.deepEqual(requests,['start','ranking','finish']);

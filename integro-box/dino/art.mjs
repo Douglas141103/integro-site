@@ -32,9 +32,9 @@ function fillPoly(ctx,points,color) {
   ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(...points[0]);
   points.slice(1).forEach(point=>ctx.lineTo(...point));ctx.closePath();ctx.fill();
 }
-function landscape(ctx,stage,tick) {
+function landscape(ctx,stage,tick,width) {
   const s=STAGES[stage];
-  ctx.fillStyle=s.sky;ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.fillStyle=s.sky;ctx.fillRect(0,0,width,HEIGHT);
   ctx.fillStyle=stage===5?'#f9dfa4':'#ffdc82';ctx.fillRect(635,32,32,32);ctx.fillRect(630,37,42,22);
   if(stage===5) {
     ctx.fillStyle=s.sky;ctx.fillRect(646,30,25,28);
@@ -46,7 +46,7 @@ function landscape(ctx,stage,tick) {
   }
   for (let layer=0;layer<2;layer++) {
     const spacing=layer?144:205, slide=Math.floor(tick*(layer?.32:.16))%spacing, color=layer?s.near:s.far;
-    for(let i=-1;i<8;i++){
+    for(let i=-1;i<Math.ceil(width/spacing)+1;i++){
       const x=i*spacing-slide,y=156+layer*29;
       if(s.shape==='trees') {
         fillPoly(ctx,[[x-10,y+32],[x+27,y-55],[x+65,y+32]],color);
@@ -64,9 +64,9 @@ function landscape(ctx,stage,tick) {
       }
     }
   }
-  ctx.fillStyle=s.path;ctx.fillRect(0,FLOOR,WIDTH,HEIGHT-FLOOR);
-  ctx.fillStyle=s.ink;ctx.fillRect(0,FLOOR,WIDTH,3);
-  for(let i=0;i<35;i++)ctx.fillRect(((i*69-tick*3)%830+830)%830-10,FLOOR+8+(i*7)%32,3+i%7,2);
+  ctx.fillStyle=s.path;ctx.fillRect(0,FLOOR,width,HEIGHT-FLOOR);
+  ctx.fillStyle=s.ink;ctx.fillRect(0,FLOOR,width,3);
+  for(let i=0;i<Math.ceil(width/23);i++)ctx.fillRect(((i*69-tick*3)%(width+30)+width+30)%(width+30)-10,FLOOR+8+(i*7)%32,3+i%7,2);
 }
 function drawObstacle(ctx,o,x,stage){
   const s=STAGES[stage], h=o.height, w=20+(o.half-6)*6, y=FLOOR-h;
@@ -83,13 +83,13 @@ function drawObstacle(ctx,o,x,stage){
       ctx.fillStyle=s.obstacle==='lava'?'#ffb34f':s.near;ctx.fillRect(x-6,y+10,8,3);ctx.fillRect(x+1,y+13,3,7);
   }
 }
-export function draw(ctx,run) {
+export function draw(ctx,run,width=WIDTH) {
   const stage=stageAt(run.tick),s=STAGES[stage],speed=4+stage*.36;
   ctx.imageSmoothingEnabled=false;
-  landscape(ctx,stage,run.tick);
+  landscape(ctx,stage,run.tick,width);
   for (const o of run.obstacles) {
     const x=PLAYER+34+(o.center-run.tick)*speed;
-    if (x < -50 || x > WIDTH+30) continue;
+    if (x < -50 || x > width+30) continue;
     drawObstacle(ctx,o,Math.round(x),o.stage);
     if(o.amber && run.tick < o.center) {
       const y=FLOOR-159;
@@ -100,6 +100,6 @@ export function draw(ctx,run) {
   drawDino(ctx,PLAYER,FLOOR-53-run.height,s.ink,Math.floor(run.tick/6)%2,run.height>0);
   const phaseTick=run.tick%STAGE_TICKS;
   if(stage>0 && phaseTick<110 && run.tick<STAGE_TICKS*STAGES.length) {
-    ctx.font='bold 15px monospace';ctx.textAlign='center';ctx.fillStyle=s.ink;ctx.fillText('FASE '+(stage+1)+' / '+s.name.toUpperCase(),WIDTH/2,32);
+    ctx.font='bold 15px monospace';ctx.textAlign='center';ctx.fillStyle=s.ink;ctx.fillText('FASE '+(stage+1)+' / '+s.name.toUpperCase(),width/2,32);
   }
 }
