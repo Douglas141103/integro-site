@@ -8,7 +8,11 @@ ou autenticação; seus dados ficam em tabelas privadas separadas.
 O worker `egg-bots` reutiliza `EggAdventure`, com entradas automáticas em passos de
 50 ms. Inicia com o mesmo save vazio. Treino, guardiões, obstáculos, incubação,
 missões, vendas, renda, impostos, compras e equipamentos passam pelos métodos do
-jogo. O servidor limita cada execução ao tempo transcorrido, no máximo 15 segundos;
+jogo. Desde 04/11/2026, os robôs recebem **25% dos Integros** nas vendas, renda do
+curral, missões e expedição diária. Frações são preservadas entre checkpoints e
+logins; os custos continuam integrais e os impostos incidem sobre a renda recebida.
+Os jogadores humanos seguem recebendo 100%. O bônus diário de IntGem é separado
+dessa regra de Integros. O servidor limita cada execução ao tempo transcorrido, no máximo 15 segundos;
 uma interrupção não concede progresso retroativo. Os personagens podem acumular
 o mesmo bônus diário de um IntGem após 300 segundos ativos (dia UTC-4), com ledger
 idempotente. Não criam pagamentos, não compram Pix e não resgatam dinheiro.
@@ -100,3 +104,12 @@ automático fica desativado e os jogos continuam funcionando.
 Validação adicional: `node --test tests/catalog-bots.test.mjs` cobre os 18 motores,
 persistência, isolamento dos saldos, rotação dos 140 personagens, protocolo de
 checkpoint, moderação, rate limit e denúncias.
+
+## Redução do saldo em 04/11/2026
+
+A operação `bot-integros-quarter-20261104` reduz uma única vez os saldos atuais
+dos 140 robôs para `floor(saldo / 4)`. Atualiza o saldo público e o checkpoint
+privado de Pegue o Ovo na mesma transação, com o worker pausado e a lease antiga
+invalidada. A tabela privada `egg_bot_balance_adjustments` guarda o saldo e o
+checkpoint anteriores para auditoria. A referência única impede reaplicar o corte.
+Inventário, treino, histórico de renda e contas humanas não são reescritos.
