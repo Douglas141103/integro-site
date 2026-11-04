@@ -20,3 +20,8 @@ test('fractional rewards survive checkpoint and session changes and failed sales
 test('robot purchases still cost the full human price and selling pending income does not discount twice',()=>{
  const g=new BotEggAdventure();g.save.coins=10000;const price=g.itemPrice('boots');assert(g.buy('boots'));assert.equal(g.save.coins,10000-price);g.save.creatures=[{...pet(),incomeProgress:400}];const before=g.save.coins,sale=g.saleValue(0);assert(g.sell(1));assert.equal(g.save.coins-before,100+sale/4);assert.equal(g.save.incomeEarned,100);assert.equal(g.save.incomePending,0);
 });
+
+test('old robot checkpoints gain missing track runtimes without resetting inventory or applying another cut',()=>{
+ const old=createBot(null,11);old.game.save.coins=12345;old.game.save.creatures=[pet()];old.game.guardians=old.game.guardians.slice(0,20);old.game.nestEggs=old.game.nestEggs.slice(0,20);old.game.save.seen=old.game.save.seen.slice(0,20);old.game.save.visited=old.game.save.visited.slice(0,20);
+ const restored=createBot(decodeBot(encodeBot(old)),11);assert.equal(restored.game.guardians.length,new EggAdventure().guardians.length);assert.equal(restored.game.save.coins,12345);assert.deepEqual(restored.game.save.creatures,old.game.save.creatures);restored.game.update(.05,{});assert(restored.game.save.coins>=12345);
+});

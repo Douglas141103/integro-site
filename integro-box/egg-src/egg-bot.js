@@ -5,7 +5,16 @@ import {NESTS,CORRAL,TREADMILL,MISSIONS,VEHICLES,UPGRADES,distance} from './egg-
 
 export function createBot(saved,seed=1,now=()=>Date.now()) {
  const game=new BotEggAdventure(null,{now});
- if(saved){Object.assign(game,saved.game);game.now=now;}
+ if(saved){
+  const guardians=game.guardians,nestEggs=game.nestEggs;
+  Object.assign(game,saved.game);game.now=now;
+  // Old worker snapshots can predate newly added tracks. Retain each existing
+  // guardian/nest runtime and initialize only the missing worlds.
+  game.guardians=guardians.map((fresh,i)=>saved.game.guardians?.[i]||fresh);
+  game.nestEggs=nestEggs.map((fresh,i)=>saved.game.nestEggs?.[i]||fresh);
+  game.save.seen=guardians.map((_,i)=>game.save.seen?.[i]===true);
+  game.save.visited=guardians.map((_,i)=>game.save.visited?.[i]===true);
+ }
  else game.save.rng=seed;
  const bot={game,brain:saved?.brain||{yaw:0},session:saved?.session||0};
  if(bot.brain.version!==2){
