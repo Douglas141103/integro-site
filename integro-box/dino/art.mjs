@@ -1,4 +1,4 @@
-import {STAGES, STAGE_TICKS, stageAt} from './course.mjs';
+import {STAGES, STAGE_TICKS, stageAt} from './course.mjs?v=long2';
 export const WIDTH=800, HEIGHT=264, FLOOR=213, PLAYER=100;
 // Original pixel silhouette. The two feet alternate while grounded.
 const body=[

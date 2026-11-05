@@ -1,5 +1,7 @@
-import {DinoRun,STAGES,stageAt,STAGE_TICKS} from './course.mjs';
-import {dockServices,paintTrack} from './hud.mjs';
+import {DinoRun,STAGES,stageAt,STAGE_TICKS,FINISH} from './course.mjs?v=long2';
+import {dockServices,paintTrack} from './hud.mjs?v=long2';
+
+import {createDinoMusic} from './music.mjs?v=long2';
 
 const fmt = n => n.toLocaleString('pt-BR');
 const key = 'dino-expedicao-pendente-v1';
@@ -18,7 +20,7 @@ export function createGame(app,{rpc,storage,exit}) {
       </div>
       <footer class="dino-dock"><p class="dino-status" role="status"></p>
         <div class="dino-row"><div class="dino-services" aria-label="Ferramentas do Integro Box"></div>
-        <div class="dino-controls"><button data-pause hidden>Pausar</button><button data-action></button></div></div>
+        <div class="dino-controls"><button data-music type="button" aria-pressed="true" aria-label="Música ligada. Desligar música">♫ Som</button><button data-pause hidden>Pausar</button><button data-action></button></div></div>
       </footer>
     </div>
     <section class="dino-ranking" role="dialog" aria-modal="true" aria-labelledby="dino-rank-title" hidden>
@@ -29,6 +31,10 @@ export function createGame(app,{rpc,storage,exit}) {
   const ranking=q('.dino-ranking'),status=q('.dino-status');
   let run=new DinoRun(0),mode='menu',ticket=null,visible=false,epoch=0,raf=0,previous=0,debt=0,sending=null;
   let best=Number(safeRead(storage,'dino-best'))||0, pending=safeRead(storage,key);
+  const music=createDinoMusic({storage});
+  const sound=q('[data-music]');
+  function soundLabel(){sound.setAttribute('aria-pressed',String(music.enabled));sound.setAttribute('aria-label',music.enabled?'Música ligada. Desligar música':'Música desligada. Ligar música');sound.textContent=music.enabled?'♫ Som':'♫ Mudo';}
+  soundLabel();
   const services=dockServices(q('.dino-services'),freeze);
   function paint(){
     paintTrack(canvas,ctx,run);
@@ -38,17 +44,18 @@ export function createGame(app,{rpc,storage,exit}) {
     q('[data-clears]').textContent=String(run.clears);
     q('[data-amber]').textContent=String(run.amber);
     q('[data-best]').textContent=String(best).padStart(5,'0');
-    q('.dino-progress i').style.width=(run.tick===7200?100:100*(run.tick%STAGE_TICKS)/STAGE_TICKS)+'%';
+    q('.dino-progress i').style.width=(run.tick===FINISH?100:100*(run.tick%STAGE_TICKS)/STAGE_TICKS)+'%';
   }
   function controls(){
     app.dataset.mode=mode;
+    music.setStage(stageAt(run.tick));music.setPlaying(visible&&(mode==='play'||mode==='loading'));
     q('.dino-card').hidden=mode==='play';
     pause.hidden=mode!=='play';
     action.disabled=mode==='loading';action.textContent=({menu:'Começar corrida',loading:'Preparando…',play:'↑ Pular',paused:'Retomar',end:'Jogar de novo'})[mode];
     heading.textContent=({menu:'Atravesse as seis fases',loading:'Preparando a pista',play:STAGES[stageAt(run.tick)].name,paused:'Corrida pausada',end:run.result==='win'?'Expedição completa!':'Fim da corrida'})[mode];
     info.textContent=mode==='end'?fmt(run.score)+' pontos · '+run.clears+' obstáculos · '+run.amber+' âmbares':
       mode==='paused'?'Retome quando estiver pronto.':mode==='play'?'Toque na pista ou pressione espaço para pular.':
-      'Use espaço, ↑ ou toque na pista para pular. Cada obstáculo vale 25 pontos e cada âmbar vale 50.';
+      'Use espaço, ↑ ou toque na pista para pular. Cada fase dura 40 segundos. Cada obstáculo vale 25 pontos e cada âmbar vale 50.';
   }
   function freeze(){
     if(mode!=='play')return;
@@ -56,7 +63,7 @@ export function createGame(app,{rpc,storage,exit}) {
   }
   function resume(){
     if(mode!=='paused'||document.hidden||!ranking.hidden||services.opened())return;
-    mode='play';previous=0;controls();raf=requestAnimationFrame(frame);
+    void music.unlock();mode='play';previous=0;controls();raf=requestAnimationFrame(frame);
   }
   function frame(now){
     if(!visible||mode!=='play')return;
@@ -103,7 +110,7 @@ export function createGame(app,{rpc,storage,exit}) {
     try {
       await submit();
       if(!visible||epoch!==current)return;
-      if(!pending)entry=await rpc('start');
+      if(!pending)entry=await rpc('start_long');
     }catch{}
     if(!visible||current!==epoch)return;
     ticket=entry?.run||null;
@@ -134,6 +141,7 @@ export function createGame(app,{rpc,storage,exit}) {
   function closeRanks(){ranking.hidden=true;q('.dino-game').inert=false;q('[data-ranks]').focus({preventScroll:true});}
   function primary(){
     if(!ranking.hidden||services.opened())return;
+    void music.unlock();
     if(mode==='play')run.jump();else if(mode==='paused')resume();else void start();
   }
   function keydown(e){
@@ -147,8 +155,9 @@ export function createGame(app,{rpc,storage,exit}) {
       e.preventDefault();if(!e.repeat)primary();
     }else if(e.code==='KeyP'&&!e.repeat){if(mode==='paused')resume();else freeze();}
   }
+  sound.onclick=()=>{music.setEnabled(!music.enabled);soundLabel();if(music.enabled)void music.unlock();};
   action.onclick=primary;
-  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden&&!services.opened()){e.preventDefault();run.jump();}});
+  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden&&!services.opened()){e.preventDefault();void music.unlock();run.jump();}});
   pause.onclick=()=>mode==='play'?freeze():resume();
   q('[data-ranks]').onclick=showRanks;q('[data-close]').onclick=closeRanks;q('[data-back]').onclick=exit;
   document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',()=>{if(document.hidden)freeze();});
@@ -157,6 +166,6 @@ export function createGame(app,{rpc,storage,exit}) {
   if(window.ResizeObserver)new window.ResizeObserver(redraw).observe(canvas);
   return {
     open(){services.attach();q('.dino-game').inert=false;visible=true;epoch++;mode='menu';ticket=null;run=new DinoRun(0);ranking.hidden=true;status.textContent='';controls();paint();action.focus({preventScroll:true});if(pending)void submit();},
-    hide(){services.detach();visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
+    hide(){music.setPlaying(false);services.detach();visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
   };
 }

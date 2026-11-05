@@ -21,7 +21,7 @@ test('launch through catalog, jump with touch and keyboard, pause, finish, rank 
   const seed=4;
   const client={async rpc(name,params){
     assert.equal(name,'box_dino');requests.push(params.p_action);
-    if(params.p_action==='start')return {data:{run:'test-run',seed}};
+    if(params.p_action==='start_long')return {data:{run:'test-run',seed}};
     if(params.p_action==='finish'){submitted=params;return {data:{}};}
     return {data:{leaders:[{name:'Corredor 1',position:1,score:80,stage:1,mine:true}],me:{name:'Corredor 1',position:1,score:80}}};
   }};
@@ -32,6 +32,7 @@ test('launch through catalog, jump with touch and keyboard, pause, finish, rank 
     card.click();
     for(let i=0;i<50&&!d.querySelector('#dinoApp canvas');i++)await new Promise(r=>setTimeout(r,5));
     const app=d.querySelector('#dinoApp');assert(!app.hidden);
+    const sound=app.querySelector('[data-music]');assert.equal(sound.getAttribute('aria-pressed'),'true');sound.click();assert.equal(sound.getAttribute('aria-pressed'),'false');assert.equal(w.localStorage.getItem('dino-music-enabled'),'false');sound.click();
     app.querySelector('[data-action]').click();await settle();tick();
     for(let i=0;i<12;i++)tick();
     app.querySelector('canvas').dispatchEvent(new w.Event('pointerdown',{cancelable:true}));tick();
@@ -41,7 +42,7 @@ test('launch through catalog, jump with touch and keyboard, pause, finish, rank 
     assert(app.querySelector('.dino-game').inert);app.querySelector('[data-close]').click();app.querySelector('[data-action]').click();tick();
     for(let i=0;i<500&&!submitted;i++)tick();
     await settle();assert.equal(w.BoxDino.mode,'end');assert.equal(submitted.p_jumps.length,2);assert(submitted.p_tick<=makeCourse(seed)[0].center);assert(heights.some(y=>y<150));
-    assert.deepEqual(requests,['start','ranking','finish']);
+    assert.deepEqual(requests,['start_long','ranking','finish']);
     app.querySelector('[data-back]').click();assert(app.hidden);assert(!d.querySelector('#lobby').classList.contains('hidden'));assert.equal(d.activeElement,card);
   }finally{dom.window.close();}
 });
