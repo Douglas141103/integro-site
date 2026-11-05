@@ -1,4 +1,4 @@
-import {supabase,requireFamily} from './access.js?v=20261016-intgem1';
+import {supabase,requireFamily} from './access.js?v=20261104-auth1';
 // Old game links must enter through the catalog before any game installer runs.
 const gameAnchors=new Set(['#interdance','#interdace','#gosnake','#interball','#fruitbox','#egggame','#fuitcort','#integrocraft','#blueworld','#blue-world','#shark','#tower','#descubra']);
 if(gameAnchors.has(location.hash))history.replaceState(history.state,'',location.pathname+location.search);
