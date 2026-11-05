@@ -1,5 +1,5 @@
-import {STAGES,stageAt} from './course.mjs';
-import {draw,WIDTH,HEIGHT} from './art.mjs?v=hud2';
+import {STAGES,stageAt} from './course.mjs?v=long2';
+import {draw,WIDTH,HEIGHT} from './art.mjs?v=long2';
 
 // Keep the full jump arc and at least two seconds of approaching track on a phone.
 export function paintTrack(canvas,ctx,run) {

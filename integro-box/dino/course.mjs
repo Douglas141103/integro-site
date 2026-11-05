@@ -1,5 +1,5 @@
 // One tick is 1/60 s. The server replays the same jump and obstacle windows.
-export const STAGE_TICKS = 1200;
+export const STAGE_TICKS = 2400;
 export const STAGES = [
   {name:'Dunas do Sol', sky:'#fff2cf', far:'#dfc890', near:'#c6a46b', ink:'#473e30', path:'#f2dfa7', shape:'dunes', obstacle:'cacto'},
   {name:'Bosque das Samambaias', sky:'#e2edda', far:'#a8cbb3', near:'#80a58a', ink:'#294d43', path:'#c9d5a0', shape:'trees', obstacle:'tronco'},
@@ -18,10 +18,10 @@ export function altitude(age) {
 export function makeCourse(seed) {
   const obstacles = [];
   for (let stage = 0; stage < STAGES.length; stage++) {
-    const count = 5 + stage;
+    const count = 10 + stage*2;
     for (let i = 0; i < count; i++) {
       const variant = (seed + stage*17 + i*7) % 3;
-      const center = stage*STAGE_TICKS + 140 + Math.floor(i*970/(count-1)) + (seed+stage*31+i*13)%23;
+      const center = stage*STAGE_TICKS + 140 + Math.floor(i*2170/(count-1)) + (seed+stage*31+i*13)%23;
       obstacles.push({stage, center, half:6+variant, height:39+variant*8, amber:(i+stage)%2===0});
     }
   }

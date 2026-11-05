@@ -63,7 +63,7 @@ try {
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
   if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261022-tower2');installTower();}
-  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=hud2');installDino(supabase);}
+  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=long2');installDino(supabase);}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261104-dino1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-walk2');installDescubra();}
   phase('Organizando seu catálogo…');
