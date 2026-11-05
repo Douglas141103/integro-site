@@ -1,3 +1,4 @@
+import {bindPortalLogin} from './login-form.mjs';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const config = window.INTEGRO_SUPABASE || {};
@@ -195,35 +196,9 @@ function renderAnnouncements(items) {
 async function handleLoginPage() {
   const form = document.getElementById('login-form');
   const forgotButton = document.getElementById('forgot-password');
-  const loginButton = document.getElementById('login-button');
   if (!form || !supabase) return;
 
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    window.location.href = safePostLoginTarget();
-    return;
-  }
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    setFeedback('Entrando...', 'success');
-    loginButton.disabled = true;
-
-    const email = form.email.value.trim();
-    const password = form.password.value;
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    loginButton.disabled = false;
-
-    if (error) {
-      setFeedback(error.message || 'Falha ao entrar.', 'error');
-      return;
-    }
-
-    setFeedback('Login realizado. Redirecionando...', 'success');
-    window.location.href = safePostLoginTarget();
-  });
+  bindPortalLogin({form,client:supabase,feedback:setFeedback,go:()=>{window.location.href=safePostLoginTarget();}});
 
   forgotButton?.addEventListener('click', async () => {
     const email = form.email.value.trim();
