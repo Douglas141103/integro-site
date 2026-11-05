@@ -1,6 +1,6 @@
 # Personagens virtuais do Integro Box
 
-Há 140 personagens cadastrados e identificados como virtuais no mesmo ranking.
+Há 140 cadastros históricos. O agendador usa os jogadores 001–070; os jogadores 071–140 ficam fora das sessões e dos lotes de simulação, com seus saldos e checkpoints preservados.
 A contagem única de **participantes online** inclui somente sessões ativas e
 recentemente confirmadas pelo worker. Não são contas de alunos, responsáveis
 ou autenticação; seus dados ficam em tabelas privadas separadas.

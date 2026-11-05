@@ -1,7 +1,5 @@
 import {prepareParticipant,participantPush,advanceParticipant,participantPose,participantSnapshot,participantResult,decodeBot} from './simulation.mjs';
 
-import {reviewBotChat} from './chat.mjs';
-
 import {packCheckpoint,unpackCheckpoint,gameCheckpoint} from './checkpoint.mjs';
 
 Deno.serve(async req=>{
@@ -22,7 +20,11 @@ Deno.serve(async req=>{
   const sharded=job.format==='sharded-v1';
   const saved=!sharded&&job.checkpoint?unpackCheckpoint(job.checkpoint,decodeBot):{};
   const next:Record<string,unknown>={},results=[];
-  for(let id=1;id<=140;id++){
+  // Session keys are the database's roster for this lease. Older unsharded
+  // installations can still return a legacy checkpoint without a session map.
+  if(sharded && !job.sessions)throw new Error('missing_session_roster');
+  const ids=job.sessions?Object.keys(job.sessions).map(Number):Array.from({length:140},(_,index)=>index+1);
+  for(const id of ids){
    const session=job.sessions?.[id],seconds=Math.max(0,Math.min(15,session?.seconds??job.seconds));
    const baseline=job.baseline?.[id];
    if(sharded&&!session?.online&&seconds===0&&baseline){results.push({id,session:session?.number??0,...baseline,path:[]});continue;}
@@ -46,7 +48,7 @@ Deno.serve(async req=>{
   const outcome=await rpc({p_action:'commit',p_lease:job.lease,p_checkpoint:sharded?JSON.stringify(next):packCheckpoint(next),p_results:results});
   if(outcome.error)throw new Error('stale_checkpoint');
   lease=null;
-  const chat=await reviewBotChat(body=>rpc(body,'box_bot_chat'),{key:Deno.env.get('OPENAI_API_KEY'),model:Deno.env.get('BOX_CHAT_MODEL')||'gpt-4.1-mini'});
+  const chat='disabled';
   return Response.json({ok:true,participants:outcome.participants,chat});
  }catch(error){
   if(lease)try{await rpc({p_action:'abort',p_lease:lease});}catch{}
