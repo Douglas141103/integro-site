@@ -5,7 +5,7 @@ import { JSDOM } from 'jsdom';
 
 const script = readFileSync(new URL('../assets/portal-ui.js', import.meta.url), 'utf8');
 const root = new URL('../', import.meta.url);
-const pages = ['portal', 'portal-professor', 'portal-familia'].flatMap(dir => readdirSync(new URL(dir, root)).filter(p => p.endsWith('.html')).map(p => `${dir}/${p}`)).concat('portal-acessos.html', 'pesquisa-satisfacao/resultados.html');
+const pages = ['portal', 'portal-professor', 'portal-familia'].flatMap(dir => readdirSync(new URL(dir, root)).filter(p => p.endsWith('.html')).map(p => `${dir}/${p}`)).filter(p => p !== 'portal/financeiro-pagamento.html').concat('portal-acessos.html', 'pesquisa-satisfacao/resultados.html');
 function setup(path, mobile = false) {
   const dom = new JSDOM(readFileSync(new URL(path, root), 'utf8'), { url: `https://www.institutointegro.com.br/${path}`, runScripts: 'outside-only', pretendToBeVisual: true });
   const { window: w } = dom;

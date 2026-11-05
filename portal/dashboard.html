@@ -28,7 +28,8 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    [data-etelvina-survey][hidden] { display: none !important; }
+    [data-etelvina-survey][hidden], #panelRetry[hidden], #boxManagementCard[hidden] { display: none !important; }
+    #panelStatus:not(:empty) { margin: 12px 0; }
 
     body {
       font-family: Arial, Helvetica, sans-serif;
@@ -296,6 +297,8 @@
           <strong id="schoolName">Carregando...</strong>
           <span style="margin-top:12px;">Perfil de acesso</span>
           <strong id="userRole">Carregando...</strong>
+          <p id="panelStatus" role="status" aria-live="polite"></p>
+          <button type="button" class="btn btn-light" id="panelRetry" hidden>Tentar novamente</button>
         </div>
       </div>
     </div>
@@ -590,7 +593,7 @@
 
   <script>
     const cfg = window.INTEGRO_SUPABASE;
-    const supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+    const supabaseClient = window.supabase?.createClient && cfg ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
 
     const userNameEl = document.getElementById('userName');
     const userRoleEl = document.getElementById('userRole');
@@ -614,75 +617,110 @@
       });
     }
 
-    async function initDashboard() {
-      try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const session = sessionData?.session;
+    const statusEl = document.getElementById('panelStatus');
+    const retryBtn = document.getElementById('panelRetry');
+    const managementCard = document.getElementById('boxManagementCard');
+    let loading = false;
 
+    // Bound session refresh as well as REST reads. A late response never paints
+    // this screen: only the result of the current bounded read is consumed.
+    async function readPanel(request) {
+      const controller = new AbortController();
+      let timer;
+      const deadline = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error('panel_timeout'));
+          controller.abort();
+        }, 12000);
+      });
+      try {
+        const result = await Promise.race([deadline, request(controller.signal)]);
+        if (result.error) throw result.error;
+        return result.data;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function initDashboard() {
+      if (loading) return;
+      loading = true;
+      retryBtn.hidden = true;
+      managementCard.hidden = true;
+      setEtelvinaSurveyVisibility(false);
+      userNameEl.textContent = 'Carregando perfil…';
+      userRoleEl.textContent = schoolNameEl.textContent = 'Aguardando perfil…';
+      statusEl.textContent = '';
+      let profileReady = false;
+      try {
+        const { session } = await readPanel(() => supabaseClient.auth.getSession());
         if (!session) {
           window.location.href = './index.html';
           return;
         }
-
-        const { data: profile, error: profileError } = await supabaseClient
-          .from('profiles')
-          .select('id, full_name, role, school_id')
-          .eq('id', session.user.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (profileError || !profile) {
+        const profile = await readPanel(signal => supabaseClient.from('profiles')
+          .select('id, full_name, role, school_id').eq('id', session.user.id)
+          .limit(1).abortSignal(signal).maybeSingle());
+        if (!profile) {
           userNameEl.textContent = 'Perfil não encontrado';
-          schoolNameEl.textContent = '--';
-          userRoleEl.textContent = '--';
+          userRoleEl.textContent = schoolNameEl.textContent = '—';
+          statusEl.textContent = 'Seu acesso foi autenticado, mas o perfil não foi localizado. Contate a gestão do Instituto.';
           return;
         }
-
-        const allowed = ['integro_admin', 'diretor', 'coordenacao'];
-
-        if (!allowed.includes(profile.role)) {
+        if (!['integro_admin', 'diretor', 'coordenacao'].includes(profile.role)) {
           alert('Este painel é exclusivo para administradores, direção e coordenação.');
           await supabaseClient.auth.signOut();
           window.location.href = './index.html';
           return;
         }
 
-        document.getElementById('boxManagementCard').hidden=!['integro_admin','diretor'].includes(profile.role);
+        profileReady = true;
         userNameEl.textContent = profile.full_name || session.user.email || 'Usuário';
         userRoleEl.textContent = roleLabel(profile.role);
-
-        if (profile.role === 'integro_admin') {
-          setEtelvinaSurveyVisibility(true);
-        }
-
-        if (profile.school_id) {
-          const { data: school } = await supabaseClient
-            .from('schools')
-            .select('name')
-            .eq('id', profile.school_id)
-            .limit(1)
-            .maybeSingle();
-
-          schoolNameEl.textContent = school?.name || 'INSTITUTO INTEGRO';
-          const isEtelvina = /etelvina\s+pereira\s+braga/i.test(school?.name || '');
-          setEtelvinaSurveyVisibility(profile.role === 'integro_admin' || isEtelvina);
-        } else {
+        managementCard.hidden = !['integro_admin', 'diretor'].includes(profile.role);
+        setEtelvinaSurveyVisibility(profile.role === 'integro_admin');
+        if (!profile.school_id) {
           schoolNameEl.textContent = 'INSTITUTO INTEGRO';
+          return;
         }
+
+        schoolNameEl.textContent = 'Carregando escola…';
+        const school = await readPanel(signal => supabaseClient.from('schools')
+          .select('name').eq('id', profile.school_id).limit(1).abortSignal(signal).maybeSingle());
+        schoolNameEl.textContent = school?.name || 'Escola não localizada';
+        const isEtelvina = /etelvina\s+pereira\s+braga/i.test(school?.name || '');
+        setEtelvinaSurveyVisibility(profile.role === 'integro_admin' || isEtelvina);
       } catch (error) {
-        userNameEl.textContent = 'Erro ao carregar';
-        schoolNameEl.textContent = '--';
-        userRoleEl.textContent = '--';
-        console.error(error);
+        if (!profileReady) {
+          userNameEl.textContent = 'Perfil indisponível';
+          userRoleEl.textContent = '—';
+        }
+        schoolNameEl.textContent = '—';
+        statusEl.textContent = profileReady
+          ? 'Não foi possível carregar a escola agora. Tente novamente.'
+          : 'Não foi possível carregar os dados do painel agora. Tente novamente.';
+        retryBtn.hidden = false;
+        console.warn('Falha na leitura do painel:', error?.code || error?.message);
+      } finally {
+        loading = false;
       }
     }
+    if (supabaseClient) retryBtn.addEventListener('click', initDashboard);
 
     logoutBtn.addEventListener('click', async () => {
-      await supabaseClient.auth.signOut();
+      await supabaseClient?.auth.signOut();
       window.location.href = './index.html';
     });
 
-    initDashboard();
+    if (supabaseClient) {
+      initDashboard();
+    } else {
+      userNameEl.textContent = 'Perfil indisponível';
+      userRoleEl.textContent = schoolNameEl.textContent = '—';
+      statusEl.textContent = 'Não foi possível iniciar a conexão. Recarregue a página.';
+      retryBtn.hidden = false;
+      retryBtn.onclick = () => location.reload();
+    }
   </script>
 
   <script src="/pwa-install.js?v=20261012-box4"></script>
