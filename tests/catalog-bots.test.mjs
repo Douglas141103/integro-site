@@ -86,6 +86,7 @@ test('140 identities rotate all games, respect human slots and moderate reportab
   assert.equal((await run(1,'select public.box_chat($1) r',[room])).messages.length,1);
   await run(1,'select public.box_chat($1,null,$2) r',[room,candidate.id]);assert.equal((await db.query('select count(*)::int n from private.box_chat_reports')).rows[0].n,1);
   await assert.rejects(run(1,"select public.box_bot_chat('test-token','reserve') r"),/permission denied/);
+
   // Disabling bot chat also cancels a review already in flight.
   await db.query("update private.box_chat_messages set status='pending',approved_at=null where id=$1",[candidate.id]);
   const beforeBots=(await db.query('select id,is_online,room_id from private.egg_bots order by id')).rows;
@@ -95,5 +96,20 @@ test('140 identities rotate all games, respect human slots and moderate reportab
   assert.deepEqual((await db.query('select status,reason from private.box_chat_messages where id=$1',[candidate.id])).rows[0],{status:'blocked',reason:'bot_chat_disabled'});
   assert.deepEqual((await db.query('select id,is_online,room_id from private.egg_bots order by id')).rows,beforeBots);
   await assert.rejects(run(1,"select public.box_bot_chat('test-token','reserve') r"),/permission denied/);
+  const archived="select id,data,intgem,game_progress from private.egg_bots where id>70 order by id";
+  const archiveBefore=(await db.query(archived)).rows;
+  await db.exec(await readFile(new URL('../supabase/migrations/20261105003048_halve_virtual_roster.sql',import.meta.url),'utf8'));
+  await db.exec("update private.egg_bot_control set last_tick=now()-interval '20 seconds' where id");
+  const smaller=(await db.query("select public.box_bot_tick('test-token','claim') r")).rows[0].r;
+  const ids=Array.from({length:70},(_,i)=>String(i+1));
+  for(const field of ['sessions','baseline','pushes'])assert.deepEqual(Object.keys(smaller[field]),ids);
+  const batch=ids.map(key=>({id:Number(key),session:smaller.sessions[key].number,...smaller.baseline[key],path:[]}));
+  const shards=Object.fromEntries(ids.map(key=>[key,'checkpoint']));
+  const commitSmall="select public.box_bot_tick('test-token','commit',$1,$2,$3) r";
+  await assert.rejects(db.query(commitSmall,[smaller.lease,JSON.stringify(shards),JSON.stringify(results)]),/invalid_checkpoint/);
+  assert.equal((await db.query(commitSmall,[smaller.lease,JSON.stringify(shards),JSON.stringify(batch)])).rows[0].r.ok,true);
+  assert.deepEqual((await db.query(archived)).rows,archiveBefore);
+  assert.equal((await db.query("select count(*)::int n from private.egg_bots where id>70 and (is_online or next_login_at<>'infinity'::timestamptz)")).rows[0].n,0);
+
  }finally{await db.close();}
 });
