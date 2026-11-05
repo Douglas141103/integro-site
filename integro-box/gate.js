@@ -44,7 +44,7 @@ try {
   await script('./classic-games.js?v=20261020-i18n1');
   await script('./robot-core.js?v=20261017-robot1');
   await script('./robot-game.js?v=20261017-robot1');
-  await script('./craft.js?v=20261105-craft-area4');
+  await script('./craft.js?v=20261105-craft-villages1');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
   await script('./egg.js?v=20261104-egg-progression');
