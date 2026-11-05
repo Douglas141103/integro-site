@@ -36,18 +36,18 @@
         Falta configurar o arquivo <strong>portal/config.js</strong> do portal principal. Este portal reutiliza a mesma configuração do Supabase.
       </div>
 
-      <form id="login-form" class="form-stack">
+      <form method="post" id="login-form" class="form-stack">
         <label>
           <span>E-mail do responsável</span>
-          <input id="email" name="email" type="email" placeholder="responsavel@familia.com" required />
+          <input id="email" type="email" placeholder="responsavel@familia.com" required />
         </label>
 
         <label>
           <span>Senha</span>
-          <input id="password" name="password" type="password" placeholder="••••••••" required />
+          <input id="password" type="password" placeholder="••••••••" required />
         </label>
 
-        <button id="login-button" type="submit" class="btn btn-primary btn-block">Entrar</button>
+        <button id="login-button" type="submit" disabled class="btn btn-primary btn-block">Entrar</button>
       </form>
 
       <div class="auth-actions">
@@ -74,7 +74,7 @@
   </main>
 
   <script src="../portal/config.js"></script>
-  <script type="module" src="./app.js?v=20261012-box1"></script>
+  <script type="module" src="./app.js?v=20261104-auth2"></script>
   <!-- PWA INTEGRO -->
 <script src="/pwa-install.js?v=20261012-box4"></script>
   <script src="/voltar-site.js"></script>
