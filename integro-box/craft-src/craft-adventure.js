@@ -5,11 +5,14 @@ const directions=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1],[0,1,0],[0,-1,0]];
 const pos=n=>({x:n%SIZE,z:Math.floor(n/SIZE)%SIZE,y:Math.floor(n/(SIZE*SIZE))});
 const hash=(x,y,z)=>{const n=Math.sin(x*127.1+y*73.13+z*311.7)*43758.5453;return n-Math.floor(n)};
 export function upgradeSave(raw){
- if(!raw||![1,2].includes(raw.version))return null;
- if(raw.version===2)return raw;
- const convert=n=>index(n%48,Math.floor(n/(48*48)),Math.floor(n/48)%48);
- const entries=a=>(Array.isArray(a)?a:[]).filter(e=>Array.isArray(e)&&Number.isInteger(e[0])&&e[0]>=0&&e[0]<48*48*30).map(([n,v])=>[convert(n),v]);
- return {...raw,version:2,edits:entries(raw.edits),props:entries(raw.props)};
+ if(!raw||![1,2,3].includes(raw.version))return null;
+ if(raw.version===3)return raw.worldSize===SIZE?raw:null;
+ // Older arrays encode x/z/y with their original width. Remap every keyed field.
+ const oldSize=raw.version===1?48:96;
+ const convert=(n,scale=1)=>{const old=oldSize*scale,next=SIZE*scale;return n%old+next*(Math.floor(n/old)%old+next*Math.floor(n/(old*old)))};
+ const valid=(n,scale=1)=>Number.isInteger(n)&&n>=0&&n<oldSize*oldSize*HEIGHT*scale**3;
+ const entries=(a,scale=1)=>(Array.isArray(a)?a:[]).filter(e=>Array.isArray(e)&&valid(e[0],scale)).map(([n,v])=>[convert(n,scale),v]);
+ return {...raw,version:3,worldSize:SIZE,edits:entries(raw.edits),props:entries(raw.props),smallCells:entries(raw.smallCells),fluidSources:entries(raw.fluidSources),flowCells:(Array.isArray(raw.flowCells)?raw.flowCells:[]).filter(n=>valid(n)).map(n=>convert(n)),fineSources:entries(raw.fineSources,2)};
 }
 export function terrainHeight(x,z){
  if(x>=58&&x<=78&&z>=13&&z<=29)return 9;
@@ -19,7 +22,8 @@ export function terrainHeight(x,z){
  return Math.floor(7+Math.sin(x*.13)*2+Math.cos(z*.17)*2+Math.max(0,1-Math.hypot(x-81,z-39)/16)*11+Math.max(0,1-Math.hypot(x-27,z-77)/17)*12);
 }
 export function generateExpansion(w){
- for(let x=0;x<SIZE;x++)for(let z=0;z<SIZE;z++){
+ for(const region of [96,SIZE])for(let x=0;x<region;x++)for(let z=0;z<region;z++){
+  if(region>96&&x<96&&z<96)continue;
   if(x<48&&z<48)continue;const h=terrainHeight(x,z);
   for(let y=0;y<=h;y++){
    let id=y===0?11:y<h-2?3:y<h?2:h<6?6:h>14?10:1;
@@ -27,7 +31,7 @@ export function generateExpansion(w){
     const cave=y>1&&y<h-3&&Math.sin(x*.25)+Math.sin(z*.22)+Math.cos(y*.65)>2.25;if(cave)id=0;
    }w.cells[index(x,y,z)]=id;
   }
-  if(h>5&&h<13&&!(x>=56&&x<=80&&z>=11&&z<=32)&&hash(x,0,z)<.018&&x>2&&z>2&&x<SIZE-3&&z<SIZE-3){for(let y=h+1;y<=h+4;y++)w.cells[index(x,y,z)]=4;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let y=h+3;y<=h+5;y++)if(!w.get(x+a,y,z+b))w.cells[index(x+a,y,z+b)]=5;}
+  if(h>5&&h<13&&!(x>=56&&x<=80&&z>=11&&z<=32)&&hash(x,0,z)<.018&&x>2&&z>2&&x<region-3&&z<region-3&&(region===96||x>97||z>97)){for(let y=h+1;y<=h+4;y++)w.cells[index(x,y,z)]=4;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let y=h+3;y<=h+5;y++)if(!w.get(x+a,y,z+b))w.cells[index(x+a,y,z+b)]=5;}
  }
  const put=(x,y,z,id)=>{w.cells[index(x,y,z)]=id};
  // Village on a stable plateau, with doors facing its central path.
@@ -36,7 +40,7 @@ export function generateExpansion(w){
  put(66,10,20,21);put(68,10,20,19);put(70,10,20,60);
  // An open stair-shaped quarry gives access to ores without trapping beginners.
  for(let x=79;x<=89;x++){const floor=Math.max(2,7-Math.floor((89-x)/2));for(let z=34;z<=36;z++){for(let y=floor+1;y<HEIGHT;y++)put(x,y,z,0);put(x,floor,z,3);if(x%2===0)put(x,floor+1,z,12);}put(x,floor+1,33,x%4===0?42:x%3===0?41:x%2===0?40:39);}
- for(let x=90;x<SIZE;x++)for(let z=34;z<=36;z++){for(let y=8;y<HEIGHT;y++)put(x,y,z,0);put(x,7,z,3)}
+ for(let x=90;x<96;x++)for(let z=34;z<=36;z++){for(let y=8;y<HEIGHT;y++)put(x,y,z,0);put(x,7,z,3)}
  // Short working railway through the plaza. Players may extend it.
  for(let x=60;x<=78;x++)put(x,10,28,55);
 }
