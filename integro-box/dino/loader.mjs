@@ -3,9 +3,9 @@ export function installDino(client){
   const card=document.createElement('article');card.className='card';
   card.innerHTML='<div class="card-body"><h3>Dino Expedição</h3><p>Conduza o dinossauro por seis fases, salte obstáculos, recolha âmbares e dispute o ranking geral.</p><button id="playDino" class="btn">Jogar Dino Expedição</button></div>';
   lobby.querySelector('.cards').prepend(card);
-  window.BoxCatalogAssets={...window.BoxCatalogAssets,'dino-expedicao':'./dino/capa.svg'};
+  window.BoxCatalogAssets={...window.BoxCatalogAssets,'dino-expedicao':'./dino/capa-v1.webp'};
   const app=document.createElement('section');app.id='dinoApp';app.hidden=true;app.setAttribute('aria-label','Dino Expedição');document.body.append(app);
-  const css=document.createElement('link');css.rel='stylesheet';css.href='./dino/style.css?v=long2';document.head.append(css);
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./dino/style.css?v=art1';document.head.append(css);
   let game,opening=false,closed=false,sequence=0;
   const button=card.querySelector('button');
   async function rpc(action,extra={}){
@@ -22,7 +22,7 @@ export function installDino(client){
       home.click();const current=sequence;
       for(const id of ['lobby','play','posterView','footer'])document.getElementById(id)?.classList.add('hidden');
       app.hidden=false;
-      const {createGame}=await import('./game.mjs?v=long2');
+      const {createGame}=await import('./game.mjs?v=art1');
       if(closed||sequence!==current)return;
       game??=createGame(app,{rpc,storage:window.BoxStorage,exit});game.open();
     }catch{

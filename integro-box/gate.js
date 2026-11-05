@@ -17,6 +17,7 @@ function lock(){
  window.BoxRush?.stop();
  window.BoxShark?.stop();
  window.BoxDino?.stop();
+ window.BoxEngole?.stop();
  window.BoxTower?.stop();
  window.BoxDescubra?.stop();
  window.BoxBounce?.stop();
@@ -63,11 +64,12 @@ try {
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
   if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261022-tower2');installTower();}
-  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=long2');installDino(supabase);}
-  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261104-dino1');startUsage();}
+  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=art1');installDino(supabase);}
+  if(!unloaded){const {installEngole}=await import('./engole/loader.mjs?v=1');installEngole(supabase,user);}
+  if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-walk2');installDescubra();}
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261104-dino1');
+  if(!unloaded)await script('./catalog.js?v=20261105-engole1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};

@@ -32,3 +32,5 @@ body:has(#dinoApp:not([hidden])){overflow:hidden}
 
 .dino-tally{position:absolute;left:9px;top:7px;display:flex;gap:10px;align-items:center;padding:4px 8px;background:#203326dd;border-radius:5px;color:#f2f3d9;font:11px ui-monospace,monospace;pointer-events:none}
 .dino-tally b{color:#ffe09a}.dino-hud:not(:has(.dino-card[hidden])) .dino-tally{visibility:hidden}
+
+.dino-poster-link{color:#9a5000;font-size:12px;font-weight:800;text-decoration:underline;white-space:nowrap}
