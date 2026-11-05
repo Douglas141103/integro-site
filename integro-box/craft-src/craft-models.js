@@ -39,4 +39,4 @@ export function makeFarmAnimal(type){
 }
 export function disposeModel(g){const mats=new Set();g.traverse(o=>{o.geometry?.dispose();if(o.material)mats.add(o.material)});for(const m of mats)m.dispose()}
 
-export function makeVillager(kind){const g=new THREE.Group(),b=builder(g,0),color=kind==='farmer'?0x65996e:0x627e9f;b(.58,.73,.35,color,0,.96,0);b(.47,.48,.43,0xd6a374,0,1.59,0);b(.71,.1,.6,kind==='farmer'?0xd9b969:0x9badb2,0,1.86,0);for(const x of[-.14,.14]){b(.2,.6,.22,0x4a595c,x,.31,0);b(.07,.06,.035,0x283842,x,1.64,-.23)}for(const x of[-.39,.39])b(.17,.68,.2,color,x,1.02,0);return g;}
+export function makeVillager(kind){const g=new THREE.Group(),b=builder(g,0),color=({farmer:0x65996e,rancher:0xb77b60,builder:0x997cb8,miner:0x627e9f})[kind]||0x627e9f;b(.58,.73,.35,color,0,.96,0);b(.47,.48,.43,0xd6a374,0,1.59,0);b(.71,.1,.6,kind==='farmer'?0xd9b969:0x9badb2,0,1.86,0);for(const x of[-.14,.14]){b(.2,.6,.22,0x4a595c,x,.31,0);b(.07,.06,.035,0x283842,x,1.64,-.23)}for(const x of[-.39,.39])b(.17,.68,.2,color,x,1.02,0);return g;}

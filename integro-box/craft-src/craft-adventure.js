@@ -1,3 +1,4 @@
+import {VILLAGE_TRADES,VILLAGE_INFO} from './craft-villages.js';
 import {SIZE,HEIGHT,WATER_LEVEL,index} from './craft-config.js';
 import {BLOCKS,isProp,isCube} from './craft-items.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),finite=(n,d)=>Number.isFinite(n)?n:d;
@@ -63,7 +64,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   }
   this.vehicles=(Array.isArray(raw?.vehicles)?raw.vehicles:[]).filter(v=>[54,56].includes(v.type)&&['x','y','z','yaw'].every(k=>Number.isFinite(v[k]))&&v.x>0&&v.x<SIZE&&v.z>0&&v.z<SIZE).slice(0,12).map(v=>({...v}));
   if(!raw?.adventure){Object.assign(this.inventory,{34:8,35:8,47:1,52:1,54:1,55:24,56:1,57:16,58:2});
-   for(const [x,z]of [[73,61],[76,61],[86,65],[88,67]]){const y=this.surface(x,z)+1;if(this.animals.length<40)this.animals.push({type:'capybara',x:x+.5,z:z+.5,y:Math.max(y,WATER_LEVEL-.45),yaw:2,turn:0,feedAt:0,milkAt:0,bornAt:-300});}
+   for(const [x,z]of [[73,61],[76,61],[86,65],[88,67]]){const y=this.surface(x,z)+1;if(this.animals.length+(this.companions?.length||0)<40)this.animals.push({type:'capybara',x:x+.5,z:z+.5,y:Math.max(y,WATER_LEVEL-.45),yaw:2,turn:0,feedAt:0,milkAt:0,bornAt:-300});}
    this.vehicles.push({type:56,x:65.5,y:10.1,z:28.5,yaw:Math.PI/2});
   }
   this.villagers=[{x:65.5,y:10,z:23.5,name:'Lia · agricultora',trade:'farmer'},{x:69.5,y:10,z:23.5,name:'Bento · minerador',trade:'miner'}];
@@ -71,7 +72,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
  },
  trackFeature(n,id){if(!this.features)return;if(isProp(id))this.features.set(n,id);else this.features.delete(n);if(![22,23].includes(id)){this.fluidSources?.delete(n);this.flowCells?.delete(n)}},
  adventureSave(){return {adventure:1,worldSize:SIZE,toolWear:{...this.toolWear},enchants:{...this.enchants},vitals:{...this.vitals},xp:this.xp,respawn:this.respawn,vehicles:this.vehicles.map(v=>({...v})),fluidSources:[...this.fluidSources],flowCells:[...this.flowCells]};},
- biome(){const p=this.player;return p.x>=58&&p.x<=80&&p.z>=12&&p.z<=31?'VILA INTEGRO':p.x>55&&p.z>48?'RIO DAS CAPIVARAS':p.y>14?'MONTANHAS NEVADAS':p.x>74&&p.z>30&&p.z<45?'MINAS DE CRISTAL':p.y<6?'PRAIA DAS CONCHAS':'VALE VERDE';},
+ biome(){const p=this.player;const v=this.settlements?.find(v=>p.x>=v.x&&p.x<v.x+24&&p.z>=v.z&&p.z<v.z+24);if(v)return VILLAGE_INFO[v.id].name.toUpperCase();return p.x>=58&&p.x<=80&&p.z>=12&&p.z<=31?'VILA INTEGRO':p.x>55&&p.z>48?'RIO DAS CAPIVARAS':p.y>14?'MONTANHAS NEVADAS':p.x>74&&p.z>30&&p.z<45?'MINAS DE CRISTAL':p.y<6?'PRAIA DAS CONCHAS':'VALE VERDE';},
  home(){original.home.call(this);if(this.respawn&&this.respawn.x>1&&this.respawn.x<SIZE-1&&this.respawn.z>1&&this.respawn.z<SIZE-1&&this.respawn.y>0&&this.respawn.y<HEIGHT+10&&!this.collides(this.respawn.x,this.respawn.y,this.respawn.z)){Object.assign(this.player,this.respawn,{vy:0});}},
  update(dt,input={}){const vy=this.player.vy;original.update.call(this,dt,input);if(!this.creative&&vy<-12&&this.player.grounded&&!this.inWater())this.vitals.health=Math.max(25,this.vitals.health-Math.round((Math.abs(vy)-12)*2));},
  wear(id){const b=BLOCKS[id];if(!b?.durability||this.creative||!this.inventory[id])return;this.toolWear[id]=(this.toolWear[id]||b.durability)-1;if(this.toolWear[id]<=0){this.inventory[id]=Math.max(0,this.inventory[id]-1);this.toolWear[id]=b.durability;if(!this.inventory[id])this.notice=b.name+' gastou. Fabrique outra na bancada.';}},
@@ -116,7 +117,7 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
   const food=this.selected;if([31,36].includes(food)&&this.inventory[food]){
    if(this.lifeTime<a.feedAt)return 'Já está alimentado! Aguarde '+Math.ceil(a.feedAt-this.lifeTime)+' s.';
    this.inventory[food]--;a.feedAt=this.lifeTime+30;if(!this.creative)this.coins=Math.min(999999,this.coins+5);a.loveUntil=this.lifeTime+45;
-   if(!this.baby(a)&&this.lifeTime>=(a.breedAt||0)&&this.animals.length<40){const mate=this.animals.find(b=>b!==a&&b.type===a.type&&!this.baby(b)&&this.lifeTime<(b.loveUntil||0)&&this.lifeTime>=(b.breedAt||0)&&Math.hypot(a.x-b.x,a.z-b.z)<6);if(mate){a.babyDue=this.lifeTime+30;a.breedAt=mate.breedAt=this.lifeTime+240;a.loveUntil=mate.loveUntil=0;return 'Família crescendo! Um filhote chegará em 30 segundos.'}}
+   if(!this.baby(a)&&this.lifeTime>=(a.breedAt||0)&&this.animals.length+(this.companions?.length||0)<40){const mate=this.animals.find(b=>b!==a&&b.type===a.type&&!this.baby(b)&&this.lifeTime<(b.loveUntil||0)&&this.lifeTime>=(b.breedAt||0)&&Math.hypot(a.x-b.x,a.z-b.z)<6);if(mate){a.babyDue=this.lifeTime+30;a.breedAt=mate.breedAt=this.lifeTime+240;a.loveUntil=mate.loveUntil=0;return 'Família crescendo! Um filhote chegará em 30 segundos.'}}
    return (this.baby(a)?'Filhote alimentado!':'Animal alimentado! Alimente outro adulto da mesma espécie por perto para ter um filhote.')+(this.creative?'':' +5 integros');
   }
   return a.type==='capybara'?'Capivara tranquila! Ofereça trigo ou cenoura. Duas adultas alimentadas podem ter filhotes.':original.useAnimal.call(this,i);
@@ -160,10 +161,10 @@ export function adventureMethods(proto){const original={};for(const k of ['mine'
  tickLife(dt,move=true){original.tickLife.call(this,dt,move);this.gardenTime+=dt;this.flowTime+=dt;
   if(move&&!this.creative){this.vitals.hunger=Math.max(0,this.vitals.hunger-dt*.065);if(this.vitals.hunger>60)this.vitals.health=Math.min(100,this.vitals.health+dt*.5);if(this.vitals.hunger<=0)this.vitals.health=Math.max(25,this.vitals.health-dt*.2);}
   if(this.gardenTime>=1){const elapsed=this.gardenTime;this.gardenTime=0;for(const [n,id]of [...this.features])if([37,38].includes(id)){const p=pos(n),m={...this.meta(p)};if(this.get(p.x,p.y-1,p.z)!==33){this.set(p.x,p.y,p.z,0);continue}m.growth=Math.min(180,(m.growth||0)+elapsed*(this.irrigated(p)?1.5:1));const stage=Math.min(3,Math.floor(m.growth/60));if(stage!==m.stage){m.stage=stage;this.lifeDirty=true}this.props.set(n,m)}
-   for(const a of [...this.animals]){if(a.babyDue&&a.babyDue<=this.lifeTime&&this.animals.length<40){a.babyDue=0;this.animals.push({...a,bornAt:this.lifeTime,breedAt:this.lifeTime+240,loveUntil:0,feedAt:this.lifeTime+5,milkAt:this.lifeTime+240,turn:0});this.lifeDirty=true;this.notice='Nasceu um filhote de '+({capybara:'capivara',cow:'vaca',pig:'porco',ox:'boi',sheep:'ovelha'}[a.type])+'!';}}
+   for(const a of [...this.animals]){if(a.babyDue&&a.babyDue<=this.lifeTime&&this.animals.length+(this.companions?.length||0)<40){a.babyDue=0;this.animals.push({...a,bornAt:this.lifeTime,breedAt:this.lifeTime+240,loveUntil:0,feedAt:this.lifeTime+5,milkAt:this.lifeTime+240,turn:0});this.lifeDirty=true;this.notice='Nasceu um filhote de '+({capybara:'capivara',cow:'vaca',pig:'porco',ox:'boi',sheep:'ovelha'}[a.type])+'!';}}
   }
   if(this.flowTime>=1){this.flowTime=0;this.spreadFluids();}
  },
  };
 }
-export const TRADES={farmer:[{name:'Trocar 6 trigos por 4 cenouras',cost:{31:6},out:36,count:4},{name:'Trocar 3 cenouras por 6 sementes',cost:{36:3},out:34,count:6},{name:'Trocar 4 trigos por 2 pães',cost:{31:4},out:32,count:2}],miner:[{name:'Trocar 8 carvões por 2 barras de ferro',cost:{43:8},out:44,count:2},{name:'Trocar 4 barras de ouro por 1 cristal',cost:{45:4},out:46,count:1}]};
+export const TRADES={...VILLAGE_TRADES,farmer:[{name:'Trocar 6 trigos por 4 cenouras',cost:{31:6},out:36,count:4},{name:'Trocar 3 cenouras por 6 sementes',cost:{36:3},out:34,count:6},{name:'Trocar 4 trigos por 2 pães',cost:{31:4},out:32,count:2}],miner:[{name:'Trocar 8 carvões por 2 barras de ferro',cost:{43:8},out:44,count:2},{name:'Trocar 4 barras de ouro por 1 cristal',cost:{45:4},out:46,count:1}]};
