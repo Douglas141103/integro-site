@@ -78,8 +78,16 @@ document.addEventListener('click',async e=>{
   }else{state.fund=row.id;$('fund-form').reset();$('fund-feedback').textContent='';$('fund-description').textContent='Recibo '+row.receipt_number+' · '+money(row.amount_paid)+' · '+row.payment_method;$('fund-dialog').showModal();}
  }
 });
+// Bank-style entry: typed digits are cents; separators are presentation only.
+$('transfer-amount').addEventListener('input',e=>{
+ const input=e.target;let digits=input.value.replace(/\D/g,'').replace(/^0+(?=\d)/,'');
+ if(!digits){input.value='';return;}
+ digits=digits.padStart(3,'0');
+ input.value=digits.slice(0,-2).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+digits.slice(-2);
+ input.setSelectionRange(input.value.length,input.value.length);
+});
 $('transfer-form').addEventListener('submit',e=>{e.preventDefault();try{
- const draft=normalizeWithdrawal({request_id:crypto.randomUUID(),amount:$('transfer-amount').value,pix_type:$('pix-type').value,pix_key:$('pix-key').value});
+ const draft=normalizeWithdrawal({request_id:crypto.randomUUID(),amount:$('transfer-amount').value.replaceAll('.','').replace(',','.'),pix_type:$('pix-type').value,pix_key:$('pix-key').value});
  if(draft.amount>Number(state.data.balance.available))throw Error('O valor excede o saldo disponível.');state.draft=draft;
  $('review-amount').textContent=money(draft.amount);$('review-key').textContent=draft.pix_key;$('review-type').textContent=draft.pix_type;$('transfer-entry').hidden=true;$('transfer-review').hidden=false;$('transfer-feedback').textContent='';$('confirm-destination').checked=false;
  }catch(err){$('transfer-feedback').textContent=err.message;}});
