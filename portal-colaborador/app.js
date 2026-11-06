@@ -38,7 +38,7 @@ function render(){
  $('transfer-list').innerHTML=d.withdrawals.length?d.withdrawals.map(t=>'<div class="transfer-item"><span class="tx-icon debit">→</span><div class="tx-info"><strong>'+shown(t.amount)+' · Pix</strong><small>'+date(t.created_at)+' · '+esc(t.pix_type)+' '+esc(mask(t.pix_key))+'</small>'+badge(t.status)+'</div><button class="outline" data-transfer="'+esc(t.id)+'">Ver detalhes →</button></div>').join(''):empty('Sua primeira transferência começa aqui.','Quando houver saldo liberado, escolha “Nova transferência”.');
  if(c.is_admin)$('admin-list').innerHTML=d.pending_entries.length?d.pending_entries.map(e=>{
   const cash=e.payment_method.toLowerCase().includes('dinheiro');const delivered=e.status==='delivered';
-  return '<div class="admin-row"><div><h3>Recibo '+esc(e.receipt_number)+' · '+money(e.amount_paid)+'</h3><p>'+date(e.entry_date)+' · '+esc(e.payment_method)+'</p>'+badge(cash?(delivered?'awaiting_deposit':'awaiting_cash'):'awaiting_settlement')+'</div><button class="outline" data-fund="'+esc(e.id)+'" data-action="'+(cash&&!delivered?'cash_delivered':'fund_entry')+'">'+(cash&&!delivered?'Confirmar entrega':'Confirmar crédito')+'</button></div>';
+  return '<div class="admin-row"><div><h3>Recibo '+esc(e.receipt_number)+' · '+money(e.amount_paid)+'</h3><p>'+date(e.entry_date)+' · '+esc(e.payment_method)+'</p>'+badge(cash?(delivered?'awaiting_deposit':'awaiting_cash'):'awaiting_settlement')+'</div><div class="admin-actions"><button type="button" class="outline receipt-detail-button" data-receipt-detail="'+esc(e.id)+'" aria-label="Detalhes do recibo '+esc(e.receipt_number)+'">Detalhes</button><button type="button" class="outline" data-fund="'+esc(e.id)+'" data-action="'+(cash&&!delivered?'cash_delivered':'fund_entry')+'">'+(cash&&!delivered?'Confirmar entrega':'Confirmar crédito')+'</button></div></div>';
  }).join(''):empty('Conferência em dia.','Não há recebimentos externos pendentes de validação.');
 }
 async function load(reconcile=false){if(state.busy)return;state.busy=true;$('refresh').disabled=true;
@@ -64,6 +64,10 @@ document.addEventListener('click',async e=>{
  if(e.target.closest('.close-dialog'))e.target.closest('dialog').close();
  const entry=e.target.closest('[data-entry]');if(entry){const row=state.data.ledger.find(x=>x.id===entry.dataset.entry);if(row)detail([['Data',date(row.occurred_on)],['Situação',labels[row.state]],['Referência',row.reference],['Identificador',row.id]],row.title,row.amount);}
  const transfer=e.target.closest('[data-transfer]');if(transfer){const w=state.data.withdrawals.find(x=>x.id===transfer.dataset.transfer);if(w)detail([['Solicitada em',new Date(w.created_at).toLocaleString('pt-BR')],['Situação',labels[w.status]],['Chave Pix',w.pix_key],['Tipo de chave',w.pix_type],['Favorecido',w.recipient_name],['Identificador Asaas',w.provider_id],['Identificador Pix',w.end_to_end],['Observação',w.failure]],'Transferência Pix',w.amount,w.status==='DONE'?w.receipt_url:null);}
+ const receipt=e.target.closest('[data-receipt-detail]');if(receipt&&state.data?.context.is_admin){
+  const row=state.data.pending_entries.find(x=>x.id===receipt.dataset.receiptDetail);
+  if(row)detail([['Quem pagou',row.payer_name?.trim()||'Não informado no recibo'],['Aluno',row.student_name_snapshot?.trim()||'Não informado no recibo'],['Data do pagamento',date(row.entry_date)],['Forma de pagamento',row.payment_method],['Descrição',row.description],['Pacote',row.package_name_snapshot],['Competência',row.competence_month]],'Recibo '+row.receipt_number,row.amount_paid);
+ }
  const fund=e.target.closest('[data-fund]');if(fund){const row=state.data.pending_entries.find(x=>x.id===fund.dataset.fund);if(!row)return;
   if(fund.dataset.action==='cash_delivered'){
    if(!confirm('Confirma que recebeu e conferiu '+money(row.amount_paid)+' em dinheiro, do recibo '+row.receipt_number+'?'))return;
