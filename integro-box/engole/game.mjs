@@ -1,5 +1,5 @@
 import {Match,COLORS,DURATION,applySnapshot} from './core.mjs';
-import {renderer} from './render.mjs';
+import {renderer} from './render.mjs?v=20261106-cartoon1';
 import {Rooms,message} from './network.mjs';
 export function createGame(app,{client,user,exit,storage}){
  app.innerHTML=`<header class="eg-top"><button data-action="exit">← Catálogo</button><span class="eg-game-title">ENGOLE ENGOLE</span><span class="eg-brand">INTEGRO BOX</span><button data-action="pause" hidden>Pausar</button><button data-action="leave" hidden>Sair da sala</button></header>
