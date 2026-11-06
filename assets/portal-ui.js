@@ -46,7 +46,11 @@
     return;
   }
   if (body.dataset.portalUi === 'access') {
-    document.querySelectorAll('.card .icon').forEach((el, i) => el.replaceChildren(icon(['school', 'home', 'book'][i])));
+    const portalIcons = {'/portal/index.html':'school','/portal-familia/index.html':'home','/portal-professor/index.html':'book','/portal-colaborador/index.html':'money'};
+    document.querySelectorAll('.card .icon').forEach(el => {
+      const href = el.closest('.card')?.querySelector('a')?.getAttribute('href');
+      el.replaceChildren(icon(portalIcons[href] || 'arrow'));
+    });
     return;
   }
   const main = document.querySelector('main');
