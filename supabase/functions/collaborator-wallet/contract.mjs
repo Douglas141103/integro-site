@@ -1,5 +1,9 @@
 export const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const reference=id=>'integro-withdrawal:'+id;
+export function withdrawalIdFromReference(value){
+ const prefix=reference('');const id=typeof value==='string'&&value.startsWith(prefix)?value.slice(prefix.length):null;
+ return UUID.test(id||'')?id:null;
+}
 export function normalizeWithdrawal(input){
  const amount=Number(input.amount);
  if(!UUID.test(input.request_id||'')||!Number.isFinite(amount)||amount<1||amount>100000||Math.abs(amount*100-Math.round(amount*100))>0.00001)throw Error('Informe um valor válido, a partir de R$ 1,00.');

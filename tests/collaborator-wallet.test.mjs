@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
-import {normalizeWithdrawal,verifyTransfer,reference} from '../supabase/functions/collaborator-wallet/contract.mjs';
+import {normalizeWithdrawal,verifyTransfer,reference,withdrawalIdFromReference} from '../supabase/functions/collaborator-wallet/contract.mjs';
 import {createHandler} from '../supabase/functions/collaborator-wallet/handler.mjs';
+import {createAuthorizationHandler} from '../supabase/functions/collaborator-wallet/authorization.mjs';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const migration=await readFile(new URL('../supabase/migrations/20261106050857_collaborator_portal.sql',import.meta.url),'utf8');
 async function fixture(){const db=new PGlite();await db.exec(`
@@ -25,7 +26,9 @@ insert into private.collaborator_members(user_id,school_id,bucket,display_name) 
 insert into public.finance_entries values('${id(30)}','${id(10)}',current_date,100,'Dinheiro',1,null),('${id(31)}','${id(10)}',current_date,200,'Cartão',2,null),('${id(32)}','${id(10)}',current_date,500,'Pix',3,'${id(40)}');
 insert into private.finance_asaas_orders values('${id(40)}','${id(10)}','paid',now(),null);`);
 const rpc=(action,data={})=>db.transaction(async tx=>{await tx.exec('set local role service_role');return (await tx.query('select public.collaborator_wallet_service($1,$2) r',[action,data])).rows[0].r;});
-return {db,rpc,dashboard:()=>rpc('dashboard',{user_id:id(1)})};}
+await db.exec(await readFile(new URL('../supabase/migrations/20261106113658_collaborator_withdrawal_authorization.sql',import.meta.url),'utf8'));
+const authorizationRpc=(action,data={})=>db.transaction(async tx=>{await tx.exec('set local role service_role');return (await tx.query('select public.collaborator_authorization_service($1,$2) r',[action,data])).rows[0].r;});
+return {db,rpc,authorizationRpc,dashboard:()=>rpc('dashboard',{user_id:id(1)})};}
 test('cash needs physical validation and funding; card approval alone cannot fund; teacher limited to own account',async()=>{const {db,rpc,dashboard}=await fixture();try{
  let d=await dashboard();assert.equal(d.balance.available,100);assert.equal(d.balance.balance,160);assert.equal(d.balance.pending_cash,20);assert.equal(d.balance.pending_settlement,40);
  await assert.rejects(rpc('fund_entry',{user_id:id(1),entry_id:id(30),reference:'deposit-test',funds_confirmed:true}),/primeiro/);
@@ -67,6 +70,7 @@ test('provider ambiguous response never causes a second payment POST',async()=>{
  assert.equal((await (await send('valid')).json()).status,'uncertain');await send('valid');assert.equal(posts,1);
  }finally{await db.close();}});
 test('transfer contract rejects malformed amount, wrong recipient/reference and untrusted receipt URL',()=>{
+ assert.equal(withdrawalIdFromReference(reference(id(1))),id(1));assert.equal(withdrawalIdFromReference('other:'+id(1)),null);
  assert.throws(()=>normalizeWithdrawal({request_id:id(1),amount:1.001,pix_type:'CPF',pix_key:'123'}));
  const w={id:id(1),amount:20,pix_key:'a@example.com'};const t={id:id(2),externalReference:reference(w.id),value:20,status:'DONE',bankAccount:{pixAddressKey:w.pix_key},transactionReceiptUrl:'https://evil.example/fake'};
  assert.equal(verifyTransfer(w,t).receipt_url,undefined);assert.throws(()=>verifyTransfer(w,{...t,value:21}));assert.throws(()=>verifyTransfer(w,{...t,bankAccount:{pixAddressKey:'wrong@example.com'}}));
@@ -80,3 +84,49 @@ test('webhook authenticates, reads current provider status, recovers missing ref
  assert.equal((await hook('bad')).status,401);assert.equal((await hook(secret)).status,200);assert.equal((await dashboard()).withdrawals[0].status,'PENDING');
  providerStatus='DONE';await hook(secret);await hook(secret);assert.equal((await dashboard()).balance.available,80);assert.equal((await db.query('select count(*)::int n from public.finance_cash_cycle_movements')).rows[0].n,1);
  }finally{await db.close();}});
+
+async function authorizationFixture(){
+ const f=await fixture();const secret='a'.repeat(64);let t,reads=0,unavailable=false;
+ const h=createAuthorizationHandler({rpc:f.authorizationRpc,credentials:async()=>({enabled:true,hook_token:secret,api_key:'a-test-key-with-minimum-length',account_id:id(10)}),fetcher:async(url,opts)=>{
+  assert.equal(opts.method,'GET');assert.equal(url,'https://api.asaas.com/v3/transfers/'+t.id);reads++;
+  if(unavailable)throw Error('timeout');return Response.json(t);
+ }});
+ const reserved=await f.rpc('reserve',{user_id:id(1),request_id:id(90),amount:20,pix_key:'example@example.com',pix_type:'EMAIL',provider_balance:500});
+ await f.rpc('claim',{user_id:id(1),id:reserved.id});
+ t={id:id(91),externalReference:reference(reserved.id),value:20,status:'PENDING',operationType:'PIX',bankAccount:{pixAddressKey:'example@example.com'}};
+ return {...f,reserved,get transfer(){return t;},set transfer(v){t=v;},get reads(){return reads;},set unavailable(v){unavailable=v;},
+  enable:()=>f.db.exec(`insert into private.collaborator_authorization_settings values('${id(10)}',true,now()-interval '1 hour')`),
+  send:(input={type:'TRANSFER',transfer:t},token=secret)=>h(new Request('https://example.supabase.co/functions/v1/collaborator-wallet/authorize/'+id(10),{method:'POST',headers:{'asaas-access-token':token},body:JSON.stringify(input)}))};
+}
+test('automatic authorization is disabled by default and authenticates before provider queries',async()=>{const f=await authorizationFixture();try{
+ assert.equal((await f.send(undefined,'wrong')).status,401);assert.equal(f.reads,0);
+ assert.equal((await (await f.send()).json()).status,'REFUSED');assert.equal(f.reads,0);
+ await f.enable();assert.equal((await (await f.send({type:'BILL',bill:{id:'123'}})).json()).status,'REFUSED');assert.equal(f.reads,0);
+ await f.db.exec('set role authenticated');await assert.rejects(f.db.query("select public.collaborator_authorization_service('inspect','{}')"),/permission denied/);
+ }finally{await f.db.close();}});
+test('matching authorization binds provider ID once, handles replay, never pays or posts a debit',async()=>{const f=await authorizationFixture();try{
+ await f.enable();assert.deepEqual(await (await f.send()).json(),{status:'APPROVED'});
+ assert.deepEqual(await (await f.send()).json(),{status:'APPROVED'});
+ assert.equal((await f.dashboard()).balance.available,80);
+ assert.equal((await f.db.query('select count(*)::int n from public.finance_cash_cycle_movements')).rows[0].n,0);
+ assert.equal((await f.db.query('select attempts from private.collaborator_authorization_audit')).rows[0].attempts,2);
+ assert.equal((await f.rpc('get',{user_id:id(1),id:f.reserved.id})).withdrawal.provider_id,id(91));
+ // A second provider transfer cannot reuse the same reservation.
+ f.transfer={...f.transfer,id:id(92)};assert.equal((await (await f.send()).json()).status,'REFUSED');
+ assert.equal((await f.dashboard()).balance.reserved,20);
+ }finally{await f.db.close();}});
+test('authorization refuses missing or different destinations, amount/reference mismatches, and unknown operations',async()=>{
+ for(const change of [{value:21},{bankAccount:{}},{bankAccount:{pixAddressKey:'attacker@example.com'}},{externalReference:reference(id(99))},{operationType:'TED'},{status:'DONE'}]){
+  const f=await authorizationFixture();try{await f.enable();f.transfer={...f.transfer,...change};assert.equal((await (await f.send()).json()).status,'REFUSED');assert.equal((await f.dashboard()).balance.reserved,20);}finally{await f.db.close();}
+ }
+ const f=await authorizationFixture();try{await f.enable();const forged={type:'TRANSFER',transfer:{...f.transfer,value:999}};assert.equal((await (await f.send(forged)).json()).status,'REFUSED');assert.equal((await (await f.send()).json()).status,'REFUSED');}finally{await f.db.close();}
+});
+test('authorization rechecks funded balance, active membership, activation date, and terminal state',async()=>{
+ for(const sql of ["update private.finance_asaas_orders set status='refunded'",`update private.collaborator_members set active=false where user_id='${id(1)}'`,`update public.profiles set active=false where id='${id(1)}'`,`update private.collaborator_authorization_settings set enabled_at=now()+interval '1 second'`,"update private.collaborator_withdrawals set status='FAILED'"]){
+  const f=await authorizationFixture();try{await f.enable();await f.db.exec(sql);assert.equal((await (await f.send()).json()).status,'REFUSED');}finally{await f.db.close();}
+ }
+});
+test('provider outage never returns APPROVED and leaves reservation intact for retry',async()=>{const f=await authorizationFixture();try{
+ await f.enable();f.unavailable=true;assert.equal((await f.send()).status,503);assert.equal((await f.dashboard()).balance.reserved,20);
+ f.unavailable=false;assert.equal((await (await f.send()).json()).status,'APPROVED');
+ }finally{await f.db.close();}});

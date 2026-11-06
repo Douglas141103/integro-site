@@ -1,7 +1,10 @@
-import {UUID,reference,normalizeWithdrawal,transferBody,verifyTransfer} from './contract.mjs';
+import {UUID,reference,normalizeWithdrawal,transferBody,verifyTransfer,withdrawalIdFromReference} from './contract.mjs';
 import {provider,AsaasError,equalToken} from '../finance-asaas/contract.mjs';
-export function createHandler({rpc,credentials,getUser,baseUrl,fetcher=fetch}){
+import {createAuthorizationHandler} from './authorization.mjs';
+export function createHandler({rpc,authorizationRpc,credentials,getUser,baseUrl,fetcher=fetch}){
+ const authorize=createAuthorizationHandler({rpc:authorizationRpc,credentials,fetcher});
  return async req=>{
+  if(new URL(req.url).pathname.includes('/authorize/'))return authorize(req);
   const origin=req.headers.get('origin');const allowed=['https://www.institutointegro.com.br','https://institutointegro.com.br'];
   const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
   const reply=(value,status=200)=>new Response(JSON.stringify(value),{status,headers});
@@ -31,7 +34,7 @@ export function createHandler({rpc,credentials,getUser,baseUrl,fetcher=fetch}){
     if(!await equalToken(req.headers.get('asaas-access-token'),c.hook_token))return reply({error:'Evento não autorizado.'},401);
     if(input.account?.id&&input.account.id!==c.account_id)return reply({error:'Conta divergente.'},400);
     const ref=input.transfer?.externalReference;
-    const id=typeof ref==='string'&&ref.startsWith('integro-withdrawal:')&&UUID.test(ref.slice(18))?ref.slice(18):null;
+    const id=withdrawalIdFromReference(ref);
     if(!id&&!UUID.test(input.transfer?.id||''))return reply({ignored:true});
     const w=await rpc('inspect',{id,provider_id:input.transfer?.id,school_id:hook[1]});if(!w)return reply({ignored:true});
     if(!UUID.test(input.transfer?.id||'')||(w.provider_id&&w.provider_id!==input.transfer.id))return reply({error:'Transferência divergente.'},400);
