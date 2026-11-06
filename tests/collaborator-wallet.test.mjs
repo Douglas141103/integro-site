@@ -25,12 +25,18 @@ grant all on all tables in schema public to service_role;
 insert into private.collaborator_members(user_id,school_id,bucket,display_name) values('${id(1)}','${id(10)}','acionista_1','Andre'),('${id(2)}','${id(10)}','acionista_2','Lucilene'),('${id(3)}','${id(10)}','acionista_3','Douglas');
 insert into public.finance_entries values('${id(30)}','${id(10)}',current_date,100,'Dinheiro',1,null),('${id(31)}','${id(10)}',current_date,200,'Cartão',2,null),('${id(32)}','${id(10)}',current_date,500,'Pix',3,'${id(40)}');
 insert into private.finance_asaas_orders values('${id(40)}','${id(10)}','paid',now(),null);`);
+await db.exec(`alter table public.finance_entries add column payer_name text,add column student_name_snapshot text,add column description text,add column package_name_snapshot text,add column competence_month text;
+update public.finance_entries set payer_name='Responsável de teste',student_name_snapshot='Aluno de teste',description='Mensalidade',package_name_snapshot='Reforço',competence_month='2026-11' where id='${id(30)}';`);
+await db.exec(await readFile(new URL('../supabase/migrations/20261106130801_collaborator_receipt_details.sql',import.meta.url),'utf8'));
 const rpc=(action,data={})=>db.transaction(async tx=>{await tx.exec('set local role service_role');return (await tx.query('select public.collaborator_wallet_service($1,$2) r',[action,data])).rows[0].r;});
 await db.exec(await readFile(new URL('../supabase/migrations/20261106113658_collaborator_withdrawal_authorization.sql',import.meta.url),'utf8'));
 const authorizationRpc=(action,data={})=>db.transaction(async tx=>{await tx.exec('set local role service_role');return (await tx.query('select public.collaborator_authorization_service($1,$2) r',[action,data])).rows[0].r;});
 return {db,rpc,authorizationRpc,dashboard:()=>rpc('dashboard',{user_id:id(1)})};}
 test('cash needs physical validation and funding; card approval alone cannot fund; teacher limited to own account',async()=>{const {db,rpc,dashboard}=await fixture();try{
  let d=await dashboard();assert.equal(d.balance.available,100);assert.equal(d.balance.balance,160);assert.equal(d.balance.pending_cash,20);assert.equal(d.balance.pending_settlement,40);
+ const receipt=d.pending_entries.find(e=>e.id===id(30));
+ assert.equal(receipt.payer_name,'Responsável de teste');assert.equal(receipt.student_name_snapshot,'Aluno de teste');assert.equal(receipt.description,'Mensalidade');
+ assert.deepEqual((await rpc('dashboard',{user_id:id(2)})).pending_entries,[]);
  await assert.rejects(rpc('fund_entry',{user_id:id(1),entry_id:id(30),reference:'deposit-test',funds_confirmed:true}),/primeiro/);
  await assert.rejects(rpc('cash_delivered',{user_id:id(2),entry_id:id(30)}),/administração/);
  await rpc('cash_delivered',{user_id:id(1),entry_id:id(30)});assert.equal((await dashboard()).balance.available,100);
