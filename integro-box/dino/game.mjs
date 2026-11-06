@@ -10,7 +10,7 @@ const safeWrite = (storage,k,value) => {try{if(value===null)storage.removeItem(k
 export function createGame(app,{rpc,storage,exit}) {
   app.innerHTML=`<main class="dino-hud" aria-label="Dino Expedição">
     <div class="dino-game">
-      <header class="dino-bar"><button data-back aria-label="Voltar ao catálogo">← Catálogo</button><h1>Dino Expedição</h1><button data-ranks aria-haspopup="dialog">Ranking</button></header>
+      <header class="dino-bar"><button data-back aria-label="Voltar ao catálogo">← Catálogo</button><h1>Dino Expedição</h1><a class="dino-poster-link" href="./dino/cartaz-v1.webp" target="_blank" rel="noopener">Cartaz</a><button data-ranks aria-haspopup="dialog">Ranking</button></header>
       <div class="dino-stats"><div class="dino-phase"><small>FASE</small><strong data-stage></strong></div>
         <div><small>PONTOS</small><strong data-points>00000</strong></div><div><small>RECORDE</small><strong data-best>00000</strong></div></div>
       <div class="dino-progress"><i></i></div>

@@ -3,6 +3,7 @@
 const lobby=document.getElementById('lobby');
 if(!lobby||lobby.dataset.catalogReady)return;
 const games=[
+ ['engole-engole','Engole Engole','#playEngole','Ação','Engula objetos da cidade, cresça e dispute partidas solo ou salas para até 8 pessoas.'],
  ['dino-expedicao','Dino Expedição','#playDino','Corrida','Dinossauro de pixel: pule obstáculos em seis fases, recolha âmbares e dispute o ranking geral.'],
  ['descubra','Descubra!','#playDescubra','Desafios','Mistério na nave Integro! Tarefas, sabotagens e votação. Solo com bots ou salas online.'],
  ['tower','TOWER','#playTower','Criatividade','Construa torres, resolva 24 desafios de lógica e teste sua estrutura com gravidade e vento.'],
