@@ -1,4 +1,5 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/+esm';
+import {createAutoRefresh} from './auto-refresh.mjs';
 import {bindPortalLogin} from '../portal/login-form.mjs';
 import {normalizeWithdrawal} from '../supabase/functions/collaborator-wallet/contract.mjs';
 const cfg=window.INTEGRO_SUPABASE;
@@ -41,10 +42,10 @@ function render(){
   return '<div class="admin-row"><div><h3>Recibo '+esc(e.receipt_number)+' · '+money(e.amount_paid)+'</h3><p>'+date(e.entry_date)+' · '+esc(e.payment_method)+'</p>'+badge(cash?(delivered?'awaiting_deposit':'awaiting_cash'):'awaiting_settlement')+'</div><div class="admin-actions"><button type="button" class="outline receipt-detail-button" data-receipt-detail="'+esc(e.id)+'" aria-label="Detalhes do recibo '+esc(e.receipt_number)+'">Detalhes</button><button type="button" class="outline" data-fund="'+esc(e.id)+'" data-action="'+(cash&&!delivered?'cash_delivered':'fund_entry')+'">'+(cash&&!delivered?'Confirmar entrega':'Confirmar crédito')+'</button></div></div>';
  }).join(''):empty('Conferência em dia.','Não há recebimentos externos pendentes de validação.');
 }
-async function load(reconcile=false){if(state.busy)return;state.busy=true;$('refresh').disabled=true;
+async function load(reconcile=false,{silent=false}={}){if(state.busy)return;state.busy=true;$('refresh').disabled=true;
  try{state.data=await api(reconcile?'reconcile':'dashboard');
- if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=JSON.parse(stored);state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;return true;}
- catch(e){if(!state.data){$('auth-feedback').textContent=e.message;$('login-view').hidden=false;$('app-view').hidden=true;}else notify(e.message,true);return false;}
+ if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=JSON.parse(stored);state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;autoRefresh.markUpdated();$('refresh-status').textContent='Atualização automática · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Manaus'});return true;}
+ catch(e){if(!state.data){$('auth-feedback').textContent=e.message;$('login-view').hidden=false;$('app-view').hidden=true;}else{$('refresh-status').textContent='Atualização pendente · tentando novamente';if(!silent)notify(e.message,true);}return false;}
  finally{state.busy=false;$('refresh').disabled=false;}
 }
 function tab(name){if(name==='admin'&&!state.data?.context.is_admin)return;state.tab=name;document.querySelectorAll('.tab-section').forEach(el=>el.hidden=el.id!==name);document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('active',el.dataset.tab===name));window.scrollTo({top:0,behavior:'smooth'});}
@@ -96,5 +97,11 @@ $('toggle-balance').onclick=()=>{state.hidden=!state.hidden;$('toggle-balance').
 for(const id of ['search','date-from','date-to','type-filter'])$(id).addEventListener('input',renderStatement);
 function exportCsv(){const list=filtered();const cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';const data=[['Data','Descrição','Valor (R$)','Situação','Referência','Identificador'],...list.map(t=>[date(t.occurred_on),t.title,Number(t.amount).toFixed(2).replace('.',','),labels[t.state],t.reference,t.id])].map(r=>r.map(cell).join(';')).join('\r\n');const url=URL.createObjectURL(new Blob(['\ufeff'+data],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='extrato-integro-'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('export-overview').onclick=exportCsv;$('export-statement').onclick=exportCsv;
-$('logout').onclick=async()=>{await db.auth.signOut();state.data=null;state.draft=null;location.reload();};
+$('logout').onclick=async()=>{await db.auth.signOut();autoRefresh.stop();state.data=null;state.draft=null;location.reload();};
+const hasPendingTransfer=()=>state.data?.withdrawals.some(w=>!['DONE','FAILED','CANCELLED'].includes(w.status));
+const autoRefresh=createAutoRefresh({
+ refresh:()=>load(hasPendingTransfer(),{silent:true}),
+ canRefresh:()=>Boolean(state.data)&&!state.busy&&!document.querySelector('dialog[open]'),
+ interval:()=>hasPendingTransfer()?10000:30000
+});
 bindPortalLogin({form:$('login-form'),client:db,feedback:(msg)=>$('auth-feedback').textContent=msg,go:()=>load()});
