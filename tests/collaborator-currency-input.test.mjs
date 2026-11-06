@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {JSDOM} from 'jsdom';
+import {normalizeWithdrawal} from '../supabase/functions/collaborator-wallet/contract.mjs';
+
+test('Pix amount uses cents while typing and preserves the exact amount for review',async()=>{
+ const html=await readFile(new URL('../portal-colaborador/index.html',import.meta.url),'utf8');
+ const code=(await readFile(new URL('../portal-colaborador/app.js',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
+ const dom=new JSDOM(html,{url:'https://www.institutointegro.com.br/portal-colaborador/index.html',runScripts:'outside-only'});
+ const w=dom.window;let login;
+ w.INTEGRO_SUPABASE={url:'https://example.invalid',anonKey:'test'};w.AbortSignal=AbortSignal;w.normalizeWithdrawal=normalizeWithdrawal;
+ w.createClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'test'}}})}});
+ w.createAutoRefresh=()=>({markUpdated(){},stop(){}});w.bindPortalLogin=({go})=>{login=go();};
+ w.fetch=async(url,request)=>{assert.equal(JSON.parse(request.body).action,'dashboard');return {ok:true,json:async()=>({context:{name:'Teste',bucket:'acionista_1',is_admin:true,webhook_ready:true,start_date:'2026-10-11'},balance:{available:2000},ledger:[],withdrawals:[],pending_entries:[]})};};
+ w.eval(code);await login;
+ const $=id=>w.document.getElementById(id),input=$('transfer-amount');
+ const enter=value=>{input.value=value;input.dispatchEvent(new w.Event('input',{bubbles:true}));return input.value;};
+ assert.equal(input.inputMode,'numeric');
+ for(const [digit,expected] of [['1','0,01'],['0','0,10'],['0','1,00'],['0','10,00'],['0','100,00'],['0','1.000,00']])assert.equal(enter(input.value+digit),expected);
+ assert.equal(enter(input.value.slice(0,-1)),'100,00');
+ assert.equal(enter(''),'');assert.equal(enter('00000'),'0,00');
+ assert.equal(enter('R$ 1.234,56'),'1.234,56');
+ $('pix-type').value='EMAIL';$('pix-key').value='teste@example.com';
+ const submit=()=> $('transfer-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ submit();assert.match($('review-amount').textContent,/1\.234,56/);assert.equal($('transfer-review').hidden,false);
+ $('edit-transfer').click();assert.equal(input.value,'1.234,56');
+ enter('999999');submit();assert.match($('transfer-feedback').textContent,/excede o saldo/);assert.equal($('transfer-review').hidden,true);
+ enter('99');submit();assert.match($('transfer-feedback').textContent,/a partir de R\$ 1,00/);
+ enter('10444');submit();assert.match($('review-amount').textContent,/104,44/);
+ $('transfer-form').reset();assert.equal(input.value,'');dom.window.close();
+});
