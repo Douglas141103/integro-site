@@ -31,11 +31,11 @@ function render(){
  const d=state.data;if(!d)return;const c=d.context,b=d.balance;
  $('greeting').textContent=c.name;$('profile-name').textContent=c.name;$('profile-bucket').textContent=c.bucket.replace('acionista_','Acionista ');$('avatar').textContent=c.name.slice(0,1);
  $('today-label').textContent=new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Manaus'});
- for(const [id,key] of [['available','available'],['total-balance','balance'],['pending-cash','pending_cash'],['pending-settlement','pending_settlement'],['reserved','reserved']])$(id).textContent=shown(b[key]);
+ for(const [id,key] of [['available','available'],['total-balance','balance']])$(id).textContent=shown(b[key]);
  $('period-note').textContent='Histórico desde '+date(c.start_date)+' · Valores em reais';
- $('admin-nav').hidden=!c.is_admin;$('mobile-admin').hidden=!c.is_admin;
+ $('home-admin').hidden=!c.is_admin;$('admin-nav').hidden=!c.is_admin;$('mobile-admin').hidden=!c.is_admin;
  $('setup').textContent=c.webhook_ready?'Verificar conexão de retiradas':'Ativar conexão de retiradas';
- $('recent-list').innerHTML=rows(d.ledger.slice(0,6));renderStatement();
+ renderStatement();
  $('transfer-list').innerHTML=d.withdrawals.length?d.withdrawals.map(t=>'<div class="transfer-item"><span class="tx-icon debit">→</span><div class="tx-info"><strong>'+shown(t.amount)+' · Pix</strong><small>'+date(t.created_at)+' · '+esc(t.pix_type)+' '+esc(mask(t.pix_key))+'</small>'+badge(t.status)+'</div><button class="outline" data-transfer="'+esc(t.id)+'">Ver detalhes →</button></div>').join(''):empty('Sua primeira transferência começa aqui.','Quando houver saldo liberado, escolha “Nova transferência”.');
  if(c.is_admin)$('admin-list').innerHTML=d.pending_entries.length?d.pending_entries.map(e=>{
   const cash=e.payment_method.toLowerCase().includes('dinheiro');const delivered=e.status==='delivered';
@@ -44,7 +44,7 @@ function render(){
 }
 async function load(reconcile=false,{silent=false}={}){if(state.busy)return;state.busy=true;$('refresh').disabled=true;
  try{state.data=await api(reconcile?'reconcile':'dashboard');
- if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=JSON.parse(stored);state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;autoRefresh.markUpdated();$('refresh-status').textContent='Atualização automática · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Manaus'});return true;}
+ if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=JSON.parse(stored);state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;$('app-view').classList.add('portal-arrival');autoRefresh.markUpdated();$('refresh-status').textContent='Atualização automática · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Manaus'});return true;}
  catch(e){if(!state.data){$('auth-feedback').textContent=e.message;$('login-view').hidden=false;$('app-view').hidden=true;}else{$('refresh-status').textContent='Atualização pendente · tentando novamente';if(!silent)notify(e.message,true);}return false;}
  finally{state.busy=false;$('refresh').disabled=false;}
 }
@@ -62,6 +62,8 @@ function openTransfer(){if(!state.data)return;if(!state.data.context.webhook_rea
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t)tab(t.dataset.tab);
  if(e.target.closest('[data-open-transfer]'))openTransfer();
+ if(e.target.closest('[data-balance-details]')&&state.data){const b=state.data.balance;detail([['Saldo total',shown(b.balance)],['Dinheiro em conferência',shown(b.pending_cash)],['Recebimentos a liberar',shown(b.pending_settlement)],['Pix em processamento',shown(b.reserved)],['Como funciona','O saldo total inclui valores que ainda aguardam conferência. Apenas o saldo disponível pode ser transferido.']],'Seu saldo em detalhes',b.available);}
+
  if(e.target.closest('.close-dialog'))e.target.closest('dialog').close();
  const entry=e.target.closest('[data-entry]');if(entry){const row=state.data.ledger.find(x=>x.id===entry.dataset.entry);if(row)detail([['Data',date(row.occurred_on)],['Situação',labels[row.state]],['Referência',row.reference],['Identificador',row.id]],row.title,row.amount);}
  const transfer=e.target.closest('[data-transfer]');if(transfer){const w=state.data.withdrawals.find(x=>x.id===transfer.dataset.transfer);if(w)detail([['Solicitada em',new Date(w.created_at).toLocaleString('pt-BR')],['Situação',labels[w.status]],['Chave Pix',w.pix_key],['Tipo de chave',w.pix_type],['Favorecido',w.recipient_name],['Identificador Asaas',w.provider_id],['Identificador Pix',w.end_to_end],['Observação',w.failure]],'Transferência Pix',w.amount,w.status==='DONE'?w.receipt_url:null);}
