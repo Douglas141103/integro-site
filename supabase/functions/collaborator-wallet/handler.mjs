@@ -1,7 +1,7 @@
 import {UUID,reference,normalizeWithdrawal,transferBody,verifyTransfer,withdrawalIdFromReference} from './contract.mjs';
 import {provider,AsaasError,equalToken} from '../finance-asaas/contract.mjs';
 import {createAuthorizationHandler} from './authorization.mjs';
-export function createHandler({rpc,authorizationRpc,credentials,getUser,baseUrl,fetcher=fetch}){
+export function createHandler({rpc,pinRpc,authorizationRpc,credentials,getUser,baseUrl,fetcher=fetch}){
  const authorize=createAuthorizationHandler({rpc:authorizationRpc,credentials,fetcher});
  return async req=>{
   if(new URL(req.url).pathname.includes('/authorize/'))return authorize(req);
@@ -47,6 +47,19 @@ export function createHandler({rpc,authorizationRpc,credentials,getUser,baseUrl,
    const token=(req.headers.get('authorization')||'').match(/^Bearer\s+(\S+)$/i)?.[1];
    const user=token?await getUser(token):null;if(!user)return reply({error:'Entre no portal para continuar.'},401);
    const ctx=await rpc('context',{user_id:user.id});
+   const pinReply=result=>reply(result,result.code==='PIN_LOCKED'?429:result.code==='PIN_INVALID'?403:result.code==='PIN_NOT_SET'||result.code==='PIN_ALREADY_SET'?409:400);
+   if(input.action==='pin_setup'){
+    const result=await pinRpc('setup',{user_id:user.id,pin:input.pin,pin_confirmation:input.pin_confirmation});
+    return result.configured===true?reply(result):pinReply(result);
+   }
+   if(['dashboard','reconcile'].includes(input.action)){
+    const status=await pinRpc('status',{user_id:user.id});
+    ctx.pin_required=status.configured!==true;
+   }
+   if(input.action==='withdraw'){
+    const result=await pinRpc('verify',{user_id:user.id,pin:input.pin});
+    if(result.verified!==true)return pinReply(result);
+   }
    if(input.action==='dashboard')return reply({context:ctx,...await rpc('dashboard',{user_id:user.id})});
    if(['cash_delivered','fund_entry'].includes(input.action)){
     if(!ctx.is_admin)return reply({error:'Apenas a administração pode conferir recebimentos.'},403);
