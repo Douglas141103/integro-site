@@ -16,7 +16,7 @@ async function api(action,data={}){
  const {data:{session},error}=await db.auth.getSession();if(error||!session)throw Error('Sua sessão expirou. Entre novamente.');
  const response=await fetch(cfg.url+'/functions/v1/collaborator-wallet',{method:'POST',headers:{authorization:'Bearer '+session.access_token,apikey:cfg.anonKey,'Content-Type':'application/json'},body:JSON.stringify({action,...data}),signal:AbortSignal.timeout(55000)});
  let result;try{result=await response.json();}catch{throw Error('Não foi possível confirmar a resposta. Atualize o extrato antes de tentar novamente.');}
- if(!response.ok||result.error)throw Error(result.error||'Operação indisponível.');return result;
+ if(!response.ok||result.error)throw Object.assign(Error(result.error||'Operação indisponível.'),{code:result.code,retry_after:result.retry_after,attempts_remaining:result.attempts_remaining});return result;
 }
 function badge(status){return '<span class="badge '+(['FAILED','CANCELLED'].includes(status)?'failed':!['posted','available','DONE'].includes(status)?'pending':'')+'">'+esc(labels[status]||status)+'</span>';}
 function shown(amount){return state.hidden?'••••••':money(amount);}
@@ -44,7 +44,7 @@ function render(){
 }
 async function load(reconcile=false,{silent=false}={}){if(state.busy)return;state.busy=true;$('refresh').disabled=true;
  try{state.data=await api(reconcile?'reconcile':'dashboard');
- if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=JSON.parse(stored);state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;$('app-view').classList.add('portal-arrival');autoRefresh.markUpdated();$('refresh-status').textContent='Atualização automática · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Manaus'});return true;}
+ if(!state.draft){try{const stored=sessionStorage.getItem('integro-pix-draft:'+state.data.context.user_id);if(stored){state.draft=normalizeWithdrawal(JSON.parse(stored));state.draftLocked=true;}}catch{}}render();$('login-view').hidden=true;$('app-view').hidden=false;$('app-view').classList.add('portal-arrival');autoRefresh.markUpdated();$('refresh-status').textContent='Atualização automática · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Manaus'});requirePinSetup();return true;}
  catch(e){if(!state.data){$('auth-feedback').textContent=e.message;$('login-view').hidden=false;$('app-view').hidden=true;}else{$('refresh-status').textContent='Atualização pendente · tentando novamente';if(!silent)notify(e.message,true);}return false;}
  finally{state.busy=false;$('refresh').disabled=false;}
 }
@@ -53,12 +53,31 @@ function mask(key){return key.length<8?key:'•••• '+key.slice(-4);}
 function detail(fields,title,amount,receipt){$('detail-content').innerHTML='<h2>'+esc(title)+'</h2><div class="review-amount">'+shown(amount)+'</div><div class="details-grid">'+fields.map(([k,v])=>'<div><span>'+esc(k)+'</span><strong>'+esc(v||'—')+'</strong></div>').join('')+'</div>';
  if(receipt){try{const u=new URL(receipt);if(u.protocol==='https:'&&(u.hostname==='asaas.com'||u.hostname.endsWith('.asaas.com'))){const a=document.createElement('a');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.className='primary';a.textContent='Abrir comprovante Asaas →';$('detail-content').append(a);}}catch{}}
  $('detail-dialog').showModal();}
-function openTransfer(){if(!state.data)return;if(!state.data.context.webhook_ready){notify('A administração precisa ativar a conexão de retiradas na Conferência do caixa.',true);return;}
+function requirePinSetup(){
+ if(state.data?.context.pin_required!==true)return false;
+ if(!$('pin-setup-dialog').open){$('pin-setup-form').reset();$('pin-setup-feedback').textContent='';$('pin-setup-dialog').showModal();}
+ return true;
+}
+$('pin-setup-dialog').addEventListener('cancel',e=>e.preventDefault());
+$('pin-setup-form').addEventListener('submit',async e=>{
+ e.preventDefault();const button=$('save-pin');if(button.disabled)return;
+ const pin=$('new-pin').value,confirmation=$('confirm-new-pin').value;
+ if(!/^[0-9]{4}$/.test(pin)){$('pin-setup-feedback').textContent='Digite exatamente 4 números.';return;}
+ if(pin!==confirmation){$('pin-setup-feedback').textContent='As duas senhas precisam ser iguais.';$('confirm-new-pin').value='';$('confirm-new-pin').focus();return;}
+ button.disabled=true;$('new-pin').disabled=true;$('confirm-new-pin').disabled=true;
+ $('pin-setup-feedback').textContent='Cadastrando sua senha…';
+ try{await api('pin_setup',{pin,pin_confirmation:confirmation});state.data.context.pin_required=false;$('pin-setup-dialog').close();notify('Senha de saque cadastrada. Ela será solicitada em cada transferência.');}
+ catch(err){if(err.code==='PIN_ALREADY_SET'){$('pin-setup-dialog').close();await load();notify('Sua senha de saque já está cadastrada.');}else $('pin-setup-feedback').textContent=err.message;}
+ finally{$('pin-setup-form').reset();button.disabled=false;$('new-pin').disabled=false;$('confirm-new-pin').disabled=false;if($('pin-setup-dialog').open)$('new-pin').focus();}
+});
+for(const id of ['new-pin','confirm-new-pin','withdrawal-pin'])$(id).addEventListener('input',e=>{e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,4);});
+$('transfer-dialog').addEventListener('close',()=>{$('withdrawal-pin').value='';});
+function openTransfer(){if(!state.data||requirePinSetup())return;if(!state.data.context.webhook_ready){notify('A administração precisa ativar a conexão de retiradas na Conferência do caixa.',true);return;}
  if(Number(state.data.balance.available)<1){notify('Ainda não há saldo liberado suficiente para uma transferência Pix.',true);return;}
  // Preserve the same request ID across an uncertain network response until this draft is resolved.
  if(!state.draft){$('transfer-form').reset();$('transfer-entry').hidden=false;$('transfer-review').hidden=true;}
  if(state.draft){$('review-amount').textContent=money(state.draft.amount);$('review-key').textContent=state.draft.pix_key;$('review-type').textContent=state.draft.pix_type;$('transfer-entry').hidden=true;$('transfer-review').hidden=false;}$('edit-transfer').disabled=state.draftLocked;
- $('dialog-available').textContent='Disponível: '+money(state.data.balance.available);$('transfer-feedback').textContent='';$('transfer-dialog').showModal();}
+ $('withdrawal-pin').value='';$('dialog-available').textContent='Disponível: '+money(state.data.balance.available);$('transfer-feedback').textContent='';$('transfer-dialog').showModal();}
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t)tab(t.dataset.tab);
  if(e.target.closest('[data-open-transfer]'))openTransfer();
@@ -86,18 +105,27 @@ $('transfer-amount').addEventListener('input',e=>{
  input.value=digits.slice(0,-2).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+digits.slice(-2);
  input.setSelectionRange(input.value.length,input.value.length);
 });
-$('transfer-form').addEventListener('submit',e=>{e.preventDefault();try{
+$('transfer-form').addEventListener('submit',e=>{e.preventDefault();if(!$('transfer-review').hidden){$('send-transfer').click();return;}try{
  const draft=normalizeWithdrawal({request_id:crypto.randomUUID(),amount:$('transfer-amount').value.replaceAll('.','').replace(',','.'),pix_type:$('pix-type').value,pix_key:$('pix-key').value});
  if(draft.amount>Number(state.data.balance.available))throw Error('O valor excede o saldo disponível.');state.draft=draft;
  $('review-amount').textContent=money(draft.amount);$('review-key').textContent=draft.pix_key;$('review-type').textContent=draft.pix_type;$('transfer-entry').hidden=true;$('transfer-review').hidden=false;$('transfer-feedback').textContent='';$('confirm-destination').checked=false;
  }catch(err){$('transfer-feedback').textContent=err.message;}});
 $('edit-transfer').onclick=()=>{if(state.draftLocked)return;state.draft=null;$('transfer-entry').hidden=false;$('transfer-review').hidden=true;};
 $('send-transfer').onclick=async()=>{
+ if($('send-transfer').disabled)return;
  if(!state.draft||!$('confirm-destination').checked){$('transfer-feedback').textContent='Confirme o valor e a chave Pix para continuar.';return;}
+ const pin=$('withdrawal-pin').value;
+ if(!/^[0-9]{4}$/.test(pin)){$('transfer-feedback').textContent='Digite sua senha de saque de 4 dígitos.';$('withdrawal-pin').focus();return;}
+ $('withdrawal-pin').value='';const wasLocked=state.draftLocked;
  state.draftLocked=true;sessionStorage.setItem('integro-pix-draft:'+state.data.context.user_id,JSON.stringify(state.draft));
  const button=$('send-transfer');button.disabled=true;$('edit-transfer').disabled=true;$('transfer-feedback').textContent='Enviando solicitação. Aguarde a confirmação…';
- try{const result=await api('withdraw',state.draft);sessionStorage.removeItem('integro-pix-draft:'+state.data.context.user_id);state.draft=null;state.draftLocked=false;$('transfer-dialog').close();await load();tab('transfers');notify(result.message||(result.status==='DONE'?'Transferência concluída.':'Solicitação registrada. Acompanhe o processamento no extrato.'),result.status==='FAILED');}
- catch(e){$('transfer-feedback').textContent=e.message+' O pedido mantém o mesmo identificador para evitar duplicidade.';}
+ try{const result=await api('withdraw',{...state.draft,pin});sessionStorage.removeItem('integro-pix-draft:'+state.data.context.user_id);state.draft=null;state.draftLocked=false;$('transfer-dialog').close();await load();tab('transfers');notify(result.message||(result.status==='DONE'?'Transferência concluída.':'Solicitação registrada. Acompanhe o processamento no extrato.'),result.status==='FAILED');}
+ catch(e){
+  const pinError=typeof e.code==='string'&&e.code.startsWith('PIN_');
+  if(pinError&&!wasLocked){state.draftLocked=false;sessionStorage.removeItem('integro-pix-draft:'+state.data.context.user_id);}
+  $('transfer-feedback').textContent=e.message+(e.retry_after?' Tente novamente em '+Math.ceil(e.retry_after/60)+' minuto(s).':e.attempts_remaining>0?' Você tem mais '+e.attempts_remaining+' tentativa(s).':pinError?'':' O pedido mantém o mesmo identificador para evitar duplicidade.');
+  if(e.code==='PIN_NOT_SET'){$('transfer-dialog').close();state.data.context.pin_required=true;requirePinSetup();}
+ }
  finally{button.disabled=false;$('edit-transfer').disabled=state.draftLocked;}
 };
 $('fund-form').addEventListener('submit',async e=>{e.preventDefault();const button=e.target.querySelector('[type="submit"]');button.disabled=true;try{await api('fund_entry',{entry_id:state.fund,reference:$('fund-reference').value,funds_confirmed:$('fund-confirmed').checked});$('fund-dialog').close();await load();notify('Crédito conferido. As participações foram liberadas.');}catch(err){$('fund-feedback').textContent=err.message;}finally{button.disabled=false;}});
@@ -107,7 +135,8 @@ $('toggle-balance').onclick=()=>{state.hidden=!state.hidden;$('toggle-balance').
 for(const id of ['search','date-from','date-to','type-filter'])$(id).addEventListener('input',renderStatement);
 function exportCsv(){const list=filtered();const cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';const data=[['Data','Descrição','Valor (R$)','Situação','Referência','Identificador'],...list.map(t=>[date(t.occurred_on),t.title,Number(t.amount).toFixed(2).replace('.',','),labels[t.state],t.reference,t.id])].map(r=>r.map(cell).join(';')).join('\r\n');const url=URL.createObjectURL(new Blob(['\ufeff'+data],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='extrato-integro-'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('export-overview').onclick=exportCsv;$('export-statement').onclick=exportCsv;
-$('logout').onclick=async()=>{await db.auth.signOut();autoRefresh.stop();state.data=null;state.draft=null;location.reload();};
+const logout=async()=>{for(const id of ['new-pin','confirm-new-pin','withdrawal-pin'])$(id).value='';await db.auth.signOut();autoRefresh.stop();state.data=null;state.draft=null;location.reload();};
+$('logout').onclick=logout;$('pin-setup-logout').onclick=logout;
 const hasPendingTransfer=()=>state.data?.withdrawals.some(w=>!['DONE','FAILED','CANCELLED'].includes(w.status));
 const autoRefresh=createAutoRefresh({
  refresh:()=>load(hasPendingTransfer(),{silent:true}),

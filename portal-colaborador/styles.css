@@ -6,3 +6,5 @@
 
 .admin-row>div:first-child{min-width:0}.admin-row h3{overflow-wrap:anywhere}.admin-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}.admin-actions button{justify-content:center;min-height:44px}.admin-actions .receipt-detail-button{background:#f1f5eb;border-color:#d9e4cf}.admin-row:last-child{border-bottom:0}
 @media(max-width:380px){.admin-row{flex-wrap:wrap}.admin-actions{width:100%;flex-direction:row;flex-wrap:wrap}.admin-actions button{flex:1;max-width:none}}
+
+.pin-input{font-size:21px;letter-spacing:8px;min-height:54px}.pin-input::placeholder{font-size:13px;letter-spacing:0}#pin-setup-feedback{font-size:12px;color:#a3634a;line-height:1.6;min-height:20px}#pin-setup-logout{display:block;margin:12px auto 0;min-height:44px}#pin-setup-dialog .small-note,#withdrawal-pin-hint{font-size:11px;color:#64745f}

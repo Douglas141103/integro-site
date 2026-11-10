@@ -65,7 +65,7 @@ test('pending and confirmed withdrawal survive cycle changes and failed accounti
  await db.exec("update public.finance_cash_cycles set status='aberto'");await rpc('update',{id:a.id,status:'DONE',provider_id:id(81)});assert.equal((await dashboard()).balance.available,75);
  }finally{await db.close();}});
 test('provider ambiguous response never causes a second payment POST',async()=>{const {db,rpc}=await fixture();try{
- let posts=0;const h=createHandler({rpc,getUser:async token=>token==='valid'?{id:id(1),email:'admin@example.com'}:null,credentials:async()=>({api_key:'a-test-key-with-minimum-length',enabled:true,hook_token:'x'.repeat(64),account_id:id(10)}),baseUrl:'https://example.supabase.co',fetcher:async(url,opts)=>{
+ let posts=0;const h=createHandler({rpc,pinRpc:async()=>({verified:true}),getUser:async token=>token==='valid'?{id:id(1),email:'admin@example.com'}:null,credentials:async()=>({api_key:'a-test-key-with-minimum-length',enabled:true,hook_token:'x'.repeat(64),account_id:id(10)}),baseUrl:'https://example.supabase.co',fetcher:async(url,opts)=>{
  if(url.endsWith('/finance/balance'))return Response.json({balance:500});
  if(opts.method==='POST'){posts++;throw Error('connection lost');}
  return Response.json({data:[],hasMore:false});
