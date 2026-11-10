@@ -36,7 +36,10 @@ export function createHandler({rpc,authorizationRpc,credentials,getUser,baseUrl,
     const ref=input.transfer?.externalReference;
     const id=withdrawalIdFromReference(ref);
     if(!id&&!UUID.test(input.transfer?.id||''))return reply({ignored:true});
-    const w=await rpc('inspect',{id,provider_id:input.transfer?.id,school_id:hook[1]});if(!w)return reply({ignored:true});
+    const w=await rpc('inspect',{id,provider_id:input.transfer?.id,school_id:hook[1]});
+    // A missing SQL row can serialize as an object whose fields are all null.
+    // Only portal withdrawals with a valid ID may proceed to reconciliation.
+    if(!UUID.test(w?.id||''))return reply({ignored:true});
     if(!UUID.test(input.transfer?.id||'')||(w.provider_id&&w.provider_id!==input.transfer.id))return reply({error:'Transferência divergente.'},400);
     try{const t=await provider(c.api_key,{fetcher})('/transfers/'+input.transfer.id);await rpc('update',verifyTransfer(w,t));}catch{return reply({error:'Conferência pendente. Reenvie o evento.'},503);}
     return reply({received:true});

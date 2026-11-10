@@ -91,6 +91,37 @@ test('webhook authenticates, reads current provider status, recovers missing ref
  providerStatus='DONE';await hook(secret);await hook(secret);assert.equal((await dashboard()).balance.available,80);assert.equal((await db.query('select count(*)::int n from public.finance_cash_cycle_movements')).rows[0].n,1);
  }finally{await db.close();}});
 
+test('webhook acknowledges unrelated transfers without provider requests or financial writes',async()=>{const {db,rpc}=await fixture();try{
+ const secret='h'.repeat(64);let inspections=0;
+ const h=createHandler({rpc:async(action,data)=>{assert.equal(action,'inspect');inspections++;return rpc(action,data);},getUser:async()=>null,credentials:async()=>({api_key:'a-test-key-with-minimum-length',hook_token:secret,account_id:id(10)}),baseUrl:'https://example.supabase.co',fetcher:async()=>{assert.fail('An unrelated transfer must not query the provider');}});
+ const missing=await rpc('inspect',{school_id:id(10),provider_id:id(83)});
+ // SELECT INTO a row variable produces an object of null fields, not JSON null.
+ assert.ok(missing);assert.equal(missing.id,null);
+ const hook=(token,externalReference)=>h(new Request('https://example.supabase.co/functions/v1/collaborator-wallet/webhook/'+id(10),{method:'POST',headers:{'asaas-access-token':token},body:JSON.stringify({event:'TRANSFER_DONE',transfer:{id:id(83),externalReference}})}));
+ assert.equal((await hook('bad',null)).status,401);assert.equal(inspections,0);
+ for(const ref of [null,'external-transfer',reference(id(84))]){
+  const res=await hook(secret,ref);assert.equal(res.status,200);assert.deepEqual(await res.json(),{ignored:true});
+ }
+ assert.equal(inspections,3);
+ assert.equal((await db.query('select count(*)::int n from private.collaborator_withdrawals')).rows[0].n,0);
+ assert.equal((await db.query('select count(*)::int n from public.finance_cash_cycle_movements')).rows[0].n,0);
+ }finally{await db.close();}});
+test('matched webhook keeps retrying provider failures and rejects mismatched transfer data',async()=>{const {db,rpc,dashboard}=await fixture();try{
+ const r=await rpc('reserve',{user_id:id(1),request_id:id(55),amount:20,pix_key:'example@example.com',pix_type:'EMAIL',provider_balance:500});
+ await rpc('claim',{user_id:id(1),id:r.id});await rpc('update',{id:r.id,status:'PENDING',provider_id:id(85)});
+ const secret='h'.repeat(64);let mode='unavailable',updates=0;
+ const h=createHandler({rpc:async(action,data)=>{if(action==='update')updates++;return rpc(action,data);},getUser:async()=>null,credentials:async()=>({api_key:'a-test-key-with-minimum-length',hook_token:secret,account_id:id(10)}),baseUrl:'https://example.supabase.co',fetcher:async(url,opts)=>{
+  assert.equal(opts.method,'GET');assert.equal(url,'https://api.asaas.com/v3/transfers/'+id(85));
+  if(mode==='unavailable')throw Error('Provider unavailable');
+  return Response.json({id:id(85),externalReference:reference(r.id),value:mode==='amount'?21:20,status:'DONE',bankAccount:{pixAddressKey:mode==='recipient'?'wrong@example.com':'example@example.com'}});
+ }});
+ const hook=()=>h(new Request('https://example.supabase.co/functions/v1/collaborator-wallet/webhook/'+id(10),{method:'POST',headers:{'asaas-access-token':secret},body:JSON.stringify({event:'TRANSFER_DONE',transfer:{id:id(85),externalReference:reference(r.id)}})}));
+ for(mode of ['unavailable','amount','recipient']){assert.equal((await hook()).status,503);assert.equal((await dashboard()).withdrawals[0].status,'PENDING');}
+ assert.equal(updates,0);
+ mode='valid';assert.equal((await hook()).status,200);assert.equal((await dashboard()).withdrawals[0].status,'DONE');assert.equal(updates,1);
+ assert.equal((await db.query('select count(*)::int n from public.finance_cash_cycle_movements')).rows[0].n,1);
+ }finally{await db.close();}});
+
 async function authorizationFixture(){
  const f=await fixture();const secret='a'.repeat(64);let t,reads=0,unavailable=false;
  const h=createAuthorizationHandler({rpc:f.authorizationRpc,credentials:async()=>({enabled:true,hook_token:secret,api_key:'a-test-key-with-minimum-length',account_id:id(10)}),fetcher:async(url,opts)=>{
