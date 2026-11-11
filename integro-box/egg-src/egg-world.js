@@ -1,3 +1,4 @@
+import {createHouseWorld} from './egg-house-world.js';
 import {createProgressionWorld} from './egg-progression-world.js';
 import {createHarborScenery} from './egg-harbor-scenery.js';
 import {createAuroraScenery} from './egg-aurora-scenery.js';
@@ -112,7 +113,7 @@ export function createEggWorld(scene){
  const popcorn=createPopcornScenery({group,box,softBox,ball,cyl,torus});
  const flame=createFlameWorld({helpers:{group,box,ball,cyl,rod,torus,seasonalSurface}});
  const root=group(scene),base=group(root),zoneGroups=[],nests=[],guardians=[],animated=[];
- seasonalSurface(box(base,28,.7,30,0xd1e8f5,0,-.43,12),0x69ad73);seasonalSurface(box(base,10,.04,30,0xc4dfef,0,-.025,12),0xe2cda0);box(base,28,.3,1,0x598961,0,-.22,27);
+ seasonalSurface(box(base,28,.7,30,0xd1e8f5,0,-.43,12),0x69ad73);seasonalSurface(box(base,10,.04,30,0xc4dfef,0,-.025,12),0xe2cda0);box(base,28,.3,1,0x598961,0,-.22,50);
  // Safe base: fenced pasture, shaded nests, shop cart and a physical treadmill.
  for(const side of[-1,1]){rod(base,[side*TRACK_HALF_WIDTH,.57,0],[side*TRACK_HALF_WIDTH,.57,3],.06,0xf4dfb3);rod(base,[side*TRACK_HALF_WIDTH,.57,3],[side*BASE_HALF_WIDTH,.57,8],.06,0xf4dfb3);cyl(base,.075,.10,.8,0x39b4ac,side*TRACK_HALF_WIDTH,.4,3,8);cyl(base,.075,.10,.8,0x39b4ac,side*BASE_HALF_WIDTH,.4,8,8);}
  const pen=group(base,CORRAL.x,0,CORRAL.z);const penFloor=box(pen,7,.08,7.8,0x94c67d,0,.02,0);for(const x of[-3.5,3.5])for(let z=-3.5;z<4;z+=1.4){box(pen,.13,.9,.13,0xf4dfb3,x,.5,z);box(pen,.10,.13,1.45,0xf4dfb3,x,.72,z+.5);box(pen,.10,.13,1.45,0xf4dfb3,x,.33,z+.5)}for(let x=-3.5;x<4;x+=1.4){box(pen,.13,.9,.13,0xf4dfb3,x,.5,3.8);box(pen,1.4,.12,.12,0xf4dfb3,x+.5,.72,3.8)}for(const x of[-2.8,2.8])box(pen,.18,2.9,.18,0xb28d60,x,1.45,2.5);const roof=cyl(pen,0,4.5,1.2,0x7764b1,0,3.2,2.5,4);roof.rotation.y=Math.PI/4;roof.scale.z=.48;label(pen,'SEU CURRAL',0,2.1,-3.7,3.7);const penContent=group(pen);const penDecor=group(pen);
@@ -154,5 +155,6 @@ export function createEggWorld(scene){
  const hazards=zoneGroups.map((g,i)=>{const node=group(g);const ring=torus(node,1.15,.06,0xffd568,0,.10,0);ring.rotation.x=Math.PI/2;const body=group(node);const w=WORLDS[i];if(i===19){softBox(body,2.2,.18,.24,0xe6cc79,0,.55,0);for(const x of[-.9,.9])cyl(body,.07,.08,.75,0x398c72,x,.35,0,8);}else if(i===14){cyl(body,.18,.22,.45,0xffe0b7,0,.25,0);ball(body,.6,0xe99cad,0,.60,0,1,.5,1);}else if(i===13){rod(body,[0,2.2,0],[0,.5,0],.05,0xf2ce81);ball(body,.48,0x91e4ce,0,.5,0);torus(body,.49,.035,0xf2ce81,0,.5,0);}else if(i===0||i===9){cyl(body,.18,.18,2.2,w.color,0,.45,0).rotation.z=Math.PI/2;}else if(i===4||i===5||i===6){cyl(body,0,.6,1.3,w.color,0,.7,0,6);}else if(i===3||i===7||i===8){ball(body,.8,w.color,0,.14,0,1.4,.12,1);}else if(i===10){box(body,1.4,.45,1.2,0xffbd5e,0,1.4,0);}else for(let j=0;j<3;j++)torus(body,.5+j*.2,.05,w.color,0,.3+j*.3,0).rotation.x=Math.PI/2;return{node,body,ring};});
  function updateHazards(game){hazards.forEach((v,i)=>{const h=game.hazard(i);v.node.position.set(h.x,0,h.z);v.ring.material=mat(h.active?0xff705a:h.warning?0xffdb62:0xcbdccd);v.body.visible=h.active||h.warning;v.body.scale.y=h.active?1:.3;v.body.rotation.y=game.time*(i+1)*.3;});}
  const winter=createWinterWorld({root,base,pen,zoneGroups,player,helpers:{box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}});
- return{progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
+ const house=createHouseWorld({base,helpers:{group,box,cyl,rod,ball,label}});
+ return{house,progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
 }
