@@ -1,3 +1,5 @@
+import {corralFloors,corralSurface,nearCorral,FLOOR_HEIGHT,FLOOR_SLOTS,MAX_CORRAL_FLOORS,CORRAL_FLOOR_PRICES} from './egg-corral.js';
+export * from './egg-corral.js';
 export const TRAIN_SPEED_GAIN=.45;
 export const TRAINING_PASS_SECONDS=300;
 export const TREADMILLS={
@@ -9,13 +11,13 @@ export const SECOND_FLOOR_PRICE=250000,SECOND_FLOOR_SLOTS=24,FUSION_PACK_PRICE=1
 export const FUSION_MACHINE={x:-5,z:20.3};
 export const trainingTarget=level=>8+Math.min(200,level)*.22;
 export const groundCapacity=save=>3+(save.upgrades?.pen||0)*2;
-export const corralCapacity=save=>groundCapacity(save)+(save.secondFloor?SECOND_FLOOR_SLOTS:0);
-export function corralSlot(index,save){const ground=groundCapacity(save),upper=!!save.secondFloor&&index>=ground,i=upper?index-ground:index;return{x:(i%4-1.5)*1.45,y:upper?2.65:0,z:Math.floor(i/4)*1.1-2.7,floor:upper?2:1};}
+export const corralCapacity=save=>groundCapacity(save)+(corralFloors(save)-1)*FLOOR_SLOTS;
+export function corralSlot(index,save){const ground=groundCapacity(save),upper=index>=ground&&corralFloors(save)>1,floor=upper?2+Math.floor((index-ground)/FLOOR_SLOTS):1,i=upper?(index-ground)%FLOOR_SLOTS:index;return{x:(i%4-1.5)*1.45,y:(floor-1)*FLOOR_HEIGHT,z:Math.floor(i/4)*1.1-2.7,floor};}
 const bounded=(v,max)=>Number.isFinite(v)?Math.max(0,Math.min(max,v)):0;
-export function cleanProgression(raw={}){return{progressionVersion:1,secondFloor:raw.secondFloor===true,trainingPasses:{gold:bounded(raw.trainingPasses?.gold,300),galaxy:bounded(raw.trainingPasses?.galaxy,300)},fusion:{owned:raw.fusion?.owned===true,charges:raw.fusion?.owned===true?Math.floor(bounded(raw.fusion?.charges,1000)):0}};}
+export function cleanProgression(raw={}){return{progressionVersion:1,corralVersion:1,corralFloors:corralFloors(raw),secondFloor:corralFloors(raw)>1,trainingPasses:{gold:bounded(raw.trainingPasses?.gold,300),galaxy:bounded(raw.trainingPasses?.galaxy,300)},fusion:{owned:raw.fusion?.owned===true,charges:raw.fusion?.owned===true?Math.floor(bounded(raw.fusion?.charges,1000)):0}};}
 export const cleanFusion=pet=>({fusionBonus:bounded(pet.fusionBonus,1e6),fusionLevel:Math.floor(bounded(pet.fusionLevel,1000))});
 export function installProgression(Game){Object.assign(Game.prototype,{
- nearestTreadmill(){return Object.values(TREADMILLS).find(t=>Math.hypot(this.player.x-t.x,this.player.z-t.z)<2.2);},
+ nearestTreadmill(){if(this.player.y>.3)return null;return Object.values(TREADMILLS).find(t=>Math.hypot(this.player.x-t.x,this.player.z-t.z)<2.2);},
  treadmill(){return TREADMILLS[this.activeTreadmill]||TREADMILLS.normal;},
  startTraining(id='normal'){
   const t=TREADMILLS[id];if(!t||this.raceMode||this.jetFlight||this.carrying!==null||this.mode!=='run'||this.save.training>=600||this.nearestTreadmill()?.id!==id)return false;
@@ -29,8 +31,15 @@ export function installProgression(Game){Object.assign(Game.prototype,{
   while(this.save.training<600&&this.save.trainXP+1e-9>=this.trainTarget()){this.save.trainXP=Math.max(0,this.save.trainXP-this.trainTarget());this.save.training++;this.emit('level',`Treino nível ${this.save.training}! Velocidade: ${this.speed().toFixed(2).replace('.',',')}.`);}
   if(this.save.training>=600){this.save.trainXP=0;this.stopTraining();}else if(t.price&&this.save.trainingPasses[t.id]<=1e-9){this.save.trainingPasses[t.id]=0;this.stopTraining();this.emit('notice','Seu passe de 5 minutos acabou. Renove para continuar nesta esteira.');}
  },
- buySecondFloor(){if(!this.inBase()||this.raceMode||this.save.secondFloor||this.spendable()<SECOND_FLOOR_PRICE)return false;this.save.coins-=SECOND_FLOOR_PRICE;this.save.secondFloor=true;this.emit('upgrade','Segundo andar construído! +24 espaços no curral.');return true;},
- nearFusion(){return this.inBase()&&!this.raceMode&&!this.jetFlight&&this.save.fusion?.owned&&Math.hypot(this.player.x-FUSION_MACHINE.x,this.player.z-FUSION_MACHINE.z)<2.3;},
+ buySecondFloor(){return corralFloors(this.save)===1&&this.buyCorralFloor(2);},
+ buyCorralFloor(expected=corralFloors(this.save)+1){const next=corralFloors(this.save)+1,price=CORRAL_FLOOR_PRICES[next];if(expected!==next||next>MAX_CORRAL_FLOORS||!this.inBase()||this.raceMode||this.corralView||this.spendable()<price)return false;this.save.coins-=price;this.save.corralFloors=next;this.save.secondFloor=true;this.save.corralVersion=1;this.emit('upgrade',next+'º andar construído! +24 ninhos. Suba pela escada lateral.');return true;},
+ corralSave(){return this.corralView||this.save;},
+ floorSupport(p=this.player,ceiling=p.y+.025){return this.raceMode?0:corralSurface(this.corralSave(),p,ceiling);},
+ onFloor(){return Math.abs(this.player.y-this.floorSupport())<.001&&this.player.vy<=0;},
+ stepCorral(previous){if(this.raceMode||this.jetFlight||this.player.vy>0)return;const old=this.floorSupport(previous);if(Math.abs(previous.y-old)>.035)return;const next=this.floorSupport(this.player,previous.y+.2);if(next>=previous.y-.2&&next<=previous.y+.2){this.player.y=next;this.player.vy=0;this.airJumps=0;}},
+ advanceGravity(dt){const old=this.player.y,support=this.floorSupport(this.player,old+.025);if(this.player.vy||old>support+.025){this.player.vy-=(this.zone()===6?13:22)*dt;this.player.y+=this.player.vy*dt;}if(this.player.y<=support&&this.player.vy<=0){this.player.y=support;this.player.vy=0;this.airJumps=0;}},
+ corralWalking(){return !this.raceMode&&corralFloors(this.corralSave())>1&&nearCorral(this.player);},
+ nearFusion(){return this.player.y<.3&&this.inBase()&&!this.raceMode&&!this.jetFlight&&this.save.fusion?.owned&&Math.hypot(this.player.x-FUSION_MACHINE.x,this.player.z-FUSION_MACHINE.z)<2.3;},
  fusionPreview(mainId,donorId){
   const main=this.save.creatures.find(c=>c.uid===mainId),donor=this.save.creatures.find(c=>c.uid===donorId);if(!main||!donor||main===donor)return null;
   const before=this.baseCreatureIncomeRate(main)+this.baseCreatureIncomeRate(donor),base=this.baseCreatureIncomeRate({...main,fusionBonus:0}),bonus=before*1.25-base;
