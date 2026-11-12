@@ -1,5 +1,5 @@
-import {ROOMS,movePlayer,nearTerminal,distance,enableWalking,placeCrew,botRoute} from './world.mjs?v=20261023-walk2';
-export {ROOMS} from './world.mjs?v=20261023-walk2';
+import {ROOMS,movePlayer,nearTerminal,distance,enableWalking,placeCrew,botRoute} from './world.mjs?v=20261112-update1';
+export {ROOMS} from './world.mjs?v=20261112-update1';
 export const COLORS=['#4dc5ed','#f5ba4c','#ec6682','#8f7ae2','#7dce85','#f08b52'];
 export const NAMES=['Azul','Dourado','Rosa','Violeta','Verde','Laranja'];
 export const neighbors=id=>id===6?[0,1,2,3,4,5]:[6];
@@ -15,12 +15,12 @@ export function resolveVote(s,now,random=Math.random){
  const ranked=Object.entries(votes).sort((a,b)=>b[1]-a[1]);let out=0;
  if(ranked.length&&ranked[0][0]!=='0'&&(!ranked[1]||ranked[0][1]>ranked[1][1]))out=Number(ranked[0][0]);
  if(out){s.players[out-1].alive=false;notice(s,NAMES[out-1]+' foi enviado à cápsula de segurança.');}else notice(s,'Votação empatada ou pulada. Ninguém saiu.');
- s.phase='play';s.killReady=now+18;s.sabotageReady=now+25;s.players.forEach(p=>p.room=6);if(s.walking)placeCrew(s,now);checkWin(s,now);
+ s.lastVote={round:s.round,counts:votes,out};s.phase='play';s.killReady=now+18;s.sabotageReady=now+25;s.players.forEach(p=>p.room=6);if(s.walking)placeCrew(s,now);checkWin(s,now);
 }
 export function action(s,slot,type,arg={},now=0){
  const p=s.players[slot-1];if(!p||s.phase==='ended')return false;
  if(type==='vote'&&s.phase==='meeting'&&p.alive&&p.vote===null){const target=Number(arg.target);if(target!==0&&!s.players.some(q=>q.slot===target&&q.alive))return false;p.vote=target;return true;}
- if(s.phase!=='play'||!p.alive)return false;
+ if(s.phase!=='play')return false;if(type==='walk'&&s.walking&&!p.alive){movePlayer(p,arg.dx,arg.dy,arg.dt);return true;}if(!p.alive)return false;
  if(s.walking){
   if(type==='walk'){movePlayer(p,arg.dx,arg.dy,arg.dt);return true;}
   if(type==='move')return false;

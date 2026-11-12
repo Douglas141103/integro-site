@@ -30,7 +30,7 @@ const inside=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
 export function walkable(x,y){return Number.isFinite(x)&&Number.isFinite(y)&&[[-RADIUS,0],[RADIUS,0],[0,-RADIUS],[0,RADIUS],[-11,-11],[11,-11],[-11,11],[11,11]].every(([dx,dy])=>[...ROOMS,...CORRIDORS].some(r=>inside(x+dx,y+dy,r)))&&!OBSTACLES.some(r=>x+RADIUS>r.x&&x-RADIUS<r.x+r.w&&y+RADIUS>r.y&&y-RADIUS<r.y+r.h);}
 export const roomAt=(x,y)=>ROOMS.find(r=>inside(x,y,r))?.id??-1;
 export const distance=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
-export function movePlayer(p,dx,dy,dt){if(!Number.isFinite(dx+dy+dt)||dt<=0)return;const len=Math.max(1,Math.hypot(dx,dy)),d=Math.min(dt,.1)*SPEED,n=Math.max(1,Math.ceil(d/7));dx=dx/len*d/n;dy=dy/len*d/n;for(let i=0;i<n;i++){if(walkable(p.x+dx,p.y))p.x+=dx;if(walkable(p.x,p.y+dy))p.y+=dy;}if(dx)p.facing=dx<0?-1:1;p.room=roomAt(p.x,p.y);}
+export function movePlayer(p,dx,dy,dt){if(!Number.isFinite(dx+dy+dt)||dt<=0)return;const len=Math.max(1,Math.hypot(dx,dy)),d=Math.min(dt,.1)*SPEED,n=Math.max(1,Math.ceil(d/7));dx=dx/len*d/n;dy=dy/len*d/n;if(p.alive===false){p.x=Math.max(16,Math.min(2184,p.x+dx*n));p.y=Math.max(16,Math.min(1684,p.y+dy*n));}else for(let i=0;i<n;i++){if(walkable(p.x+dx,p.y))p.x+=dx;if(walkable(p.x,p.y+dy))p.y+=dy;}if(dx)p.facing=dx<0?-1:1;p.room=roomAt(p.x,p.y);}
 export const nearTerminal=p=>p.room>=0&&distance(p,ROOMS[p.room].terminal)<=REACH;
 export function placeCrew(s,t=0){s.players.forEach((p,i)=>Object.assign(p,{x:1045+(i%3)*60,y:880+Math.floor(i/3)*65,room:6,facing:1,moveSeq:0,moveAt:t,moveBudget:.3,path:[],botWait:0}));return s;}
 export function enableWalking(s,t=0){s.walking=true;s.botTick=t;return placeCrew(s,t);}

@@ -1,3 +1,4 @@
+import {growthGuide} from './guide.mjs?v=20261112-update1';
 import {WORLD,COLORS} from './core.mjs';
 
 // All artwork is drawn once into reusable sprites; gameplay and room snapshots stay unchanged.
@@ -129,6 +130,7 @@ export function renderer(canvas){
     if(p){c.save();c.globalAlpha=a;for(let k=0;k<5;k++){const angle=k*TAU/5+o.id,d=(1-a)*25+8,x=o.x+Math.cos(angle)*d,y=o.y+Math.sin(angle)*d*.6;S.poly([[x,y-3],[x+1,y-1],[x+4,y],[x+1,y+1],[x,y+4],[x-1,y+1],[x-4,y],[x-1,y-1]],k%2?'#fff9d2':COLORS[p.slot%8],null);}c.restore();}
    }
   }
+  const guide=me&&growthGuide(world,me);if(guide?.target&&me.respawn<=0){const o=guide.target;c.save();c.strokeStyle='#ffe478';c.lineWidth=3;c.setLineDash([7,6]);c.beginPath();c.ellipse(o.x,o.y+4,o.r+10,(o.r+10)*.75,0,0,TAU);c.stroke();c.setLineDash([]);if(Math.hypot(o.x-me.x,o.y-me.y)>me.r+45){const a=Math.atan2(o.y-me.y,o.x-me.x),x=me.x+Math.cos(a)*(me.r+32),y=me.y+Math.sin(a)*(me.r+32);c.translate(x,y);c.rotate(a);S.poly([[10,0],[-6,-7],[-3,0],[-6,7]],'#ffe478',INK,2);}c.restore();}
   for(const p of world.players){if(p.respawn>0)continue;const label=p.id===myId?'VOCÊ':p.bot?'Bot '+p.slot:'Jogador '+(p.slot+1);c.font='900 12px system-ui';c.textAlign='center';const tw=c.measureText(label).width,ly=p.y-p.r*.74-27;S.box(p.x-tw/2-9,ly,tw+18,21,8,p.id===myId?'#fff6d6':INK,INK,1.5);c.fillStyle=p.id===myId?INK:'#fff';c.fillText(label,p.x,ly+14);}
   c.restore();
   const sz=Math.min(108,width*.2),x=width-sz-14,y=height-sz-14;S.box(x-5,y-5,sz+10,sz+10,13,'#fffae9',INK,2.5);c.save();c.beginPath();c.roundRect(x,y,sz,sz,8);c.clip();c.drawImage(layer,x,y,sz,sz);

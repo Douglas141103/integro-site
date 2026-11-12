@@ -1,3 +1,4 @@
+import {jumpBuffer,obstacleHint} from './assist.mjs?v=20261112-update1';
 import {DinoRun,STAGES,stageAt,STAGE_TICKS,FINISH} from './course.mjs?v=long2';
 import {dockServices,paintTrack} from './hud.mjs?v=long2';
 
@@ -16,11 +17,11 @@ export function createGame(app,{rpc,storage,exit}) {
       <div class="dino-progress"><i></i></div>
       <div class="dino-track"><canvas width="800" height="264" aria-label="Pista do dinossauro. Toque para pular."></canvas>
         <div class="dino-tally"><span>Obstáculos <b data-clears>0</b></span><span>Âmbares <b data-amber>0</b></span></div>
-        <section class="dino-card"><h2 data-heading></h2><p data-info></p></section>
+        <div class="dino-guide" data-guide></div><div class="dino-stage-banner" role="status" hidden></div><section class="dino-card"><h2 data-heading></h2><p data-info></p></section>
       </div>
       <footer class="dino-dock"><p class="dino-status" role="status"></p>
         <div class="dino-row"><div class="dino-services" aria-label="Ferramentas do Integro Box"></div>
-        <div class="dino-controls"><button data-music type="button" aria-pressed="true" aria-label="Música ligada. Desligar música">♫ Som</button><button data-pause hidden>Pausar</button><button data-action></button></div></div>
+        <div class="dino-controls"><button data-assist type="button" aria-pressed="true">Dicas: ligadas</button><button data-music type="button" aria-pressed="true" aria-label="Música ligada. Desligar música">♫ Som</button><button data-pause hidden>Pausar</button><button data-action></button></div></div>
       </footer>
     </div>
     <section class="dino-ranking" role="dialog" aria-modal="true" aria-labelledby="dino-rank-title" hidden>
@@ -35,10 +36,12 @@ export function createGame(app,{rpc,storage,exit}) {
   const sound=q('[data-music]');
   function soundLabel(){sound.setAttribute('aria-pressed',String(music.enabled));sound.setAttribute('aria-label',music.enabled?'Música ligada. Desligar música':'Música desligada. Ligar música');sound.textContent=music.enabled?'♫ Som':'♫ Mudo';}
   soundLabel();
+  const buffer=jumpBuffer();let guidance=safeRead(storage,'dino-guidance')!==false,bannerUntil=0;const assist=q('[data-assist]');function assistLabel(){assist.textContent=guidance?'Dicas: ligadas':'Dicas: desligadas';assist.setAttribute('aria-pressed',String(guidance));}assistLabel();assist.onclick=()=>{guidance=!guidance;safeWrite(storage,'dino-guidance',guidance);assistLabel();paint();};
   const services=dockServices(q('.dino-services'),freeze);
   function paint(){
     paintTrack(canvas,ctx,run);
     const stage=stageAt(run.tick);
+    q('[data-guide]').hidden=!guidance||mode!=='play';q('[data-guide]').textContent=obstacleHint(run);q('[data-guide]').classList.toggle('ready',!!run.obstacles[run.next]&&run.obstacles[run.next].center-run.tick<48);q('.dino-stage-banner').hidden=mode!=='play'||run.tick>=bannerUntil;
     q('[data-stage]').textContent='0'+(stage+1)+' / 06   '+STAGES[stage].name;
     q('[data-points]').textContent=String(run.score).padStart(5,'0');
     q('[data-clears]').textContent=String(run.clears);
@@ -59,7 +62,7 @@ export function createGame(app,{rpc,storage,exit}) {
   }
   function freeze(){
     if(mode!=='play')return;
-    mode='paused';cancelAnimationFrame(raf);previous=0;debt=0;controls();
+    buffer.clear();mode='paused';cancelAnimationFrame(raf);previous=0;debt=0;controls();
   }
   function resume(){
     if(mode!=='paused'||document.hidden||!ranking.hidden||services.opened())return;
@@ -70,8 +73,8 @@ export function createGame(app,{rpc,storage,exit}) {
     if(previous)debt+=Math.min(100,now-previous);
     previous=now;
     const stage=stageAt(run.tick);
-    while(debt>=1000/60&&!run.result){run.advance();debt-=1000/60;}
-    if(stage!==stageAt(run.tick))controls();
+    while(debt>=1000/60&&!run.result){buffer.flush(run);run.advance();debt-=1000/60;}
+    if(stage!==stageAt(run.tick)){bannerUntil=run.tick+180;q('.dino-stage-banner').textContent='Nova fase · '+STAGES[stageAt(run.tick)].name;controls();}
     paint();
     if(run.result){finish();return;}
     raf=requestAnimationFrame(frame);
@@ -114,7 +117,7 @@ export function createGame(app,{rpc,storage,exit}) {
     }catch{}
     if(!visible||current!==epoch)return;
     ticket=entry?.run||null;
-    run=new DinoRun(entry?.seed??Math.floor(Math.random()*99991));
+    run=new DinoRun(entry?.seed??Math.floor(Math.random()*99991));buffer.clear();bannerUntil=0;
     status.textContent=ticket?'Corrida válida para o ranking geral.':'Treino offline · pontuação salva apenas neste aparelho.';
     mode='play';previous=0;debt=0;controls();paint();action.focus({preventScroll:true});
     if(document.hidden||!ranking.hidden)freeze();else raf=requestAnimationFrame(frame);
@@ -142,7 +145,7 @@ export function createGame(app,{rpc,storage,exit}) {
   function primary(){
     if(!ranking.hidden||services.opened())return;
     void music.unlock();
-    if(mode==='play')run.jump();else if(mode==='paused')resume();else void start();
+    if(mode==='play')buffer.request(run);else if(mode==='paused')resume();else void start();
   }
   function keydown(e){
     if(!visible||e.altKey||e.ctrlKey||e.metaKey)return;
@@ -157,7 +160,7 @@ export function createGame(app,{rpc,storage,exit}) {
   }
   sound.onclick=()=>{music.setEnabled(!music.enabled);soundLabel();if(music.enabled)void music.unlock();};
   action.onclick=primary;
-  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden&&!services.opened()){e.preventDefault();void music.unlock();run.jump();}});
+  canvas.addEventListener('pointerdown',e=>{if(visible&&mode==='play'&&ranking.hidden&&!services.opened()){e.preventDefault();void music.unlock();buffer.request(run);}});
   pause.onclick=()=>mode==='play'?freeze():resume();
   q('[data-ranks]').onclick=showRanks;q('[data-close]').onclick=closeRanks;q('[data-back]').onclick=exit;
   document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',()=>{if(document.hidden)freeze();});
@@ -166,6 +169,6 @@ export function createGame(app,{rpc,storage,exit}) {
   if(window.ResizeObserver)new window.ResizeObserver(redraw).observe(canvas);
   return {
     open(){services.attach();q('.dino-game').inert=false;visible=true;epoch++;mode='menu';ticket=null;run=new DinoRun(0);ranking.hidden=true;status.textContent='';controls();paint();action.focus({preventScroll:true});if(pending)void submit();},
-    hide(){music.setPlaying(false);services.detach();visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
+    hide(){buffer.clear();music.setPlaying(false);services.detach();visible=false;epoch++;cancelAnimationFrame(raf);}, pause:freeze,get mode(){return mode;}
   };
 }
