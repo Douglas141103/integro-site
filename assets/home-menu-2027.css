@@ -1,0 +1,77 @@
+/* Campaign and progressive, hash-addressable exploration menu. */
+.enroll-hero { padding:64px 0 54px; background:#f8f9f3; }
+.enroll-hero-layout { display:grid; grid-template-columns:1.12fr 1fr; align-items:center; gap:68px; }
+.enroll-kicker { color:#365c40; font-size:11px; letter-spacing:.16em; font-weight:700; display:flex; align-items:center; gap:9px; }
+.enroll-kicker>span { width:7px; height:7px; border-radius:50%; background:#6b852e; }
+.home-public .enroll-copy h1 { font-size:clamp(44px,5.1vw,66px); line-height:1.06; margin:24px 0; letter-spacing:-.055em; }
+.enroll-copy h1 em { color:#527335; font-style:normal; }
+.enroll-lead { max-width:490px; color:#43513f; font-size:19px; line-height:1.55; }
+.enroll-lead strong { color:#203f2e; font-weight:600; }
+.home-public .enroll-support { margin-top:20px; color:#5d6859; font-size:13px; }
+.enroll-actions { display:flex; align-items:center; flex-wrap:wrap; gap:16px 24px; margin-top:28px; }
+.enroll-primary { display:inline-flex; gap:22px; justify-content:center; align-items:center; background:#244c37; color:#fff!important; padding:15px 24px; border:0; border-radius:9px; font:inherit; font-weight:600; font-size:14px; min-height:52px; cursor:pointer; text-align:center; }
+.enroll-primary:hover { background:#163c29; }
+.enroll-secondary { font-size:13px; padding:12px 0; border-bottom:1px solid #9da991; }
+.home-public .enroll-note { margin-top:18px; max-width:440px; font-size:11px; color:#66715d; }
+.enroll-offer { background:#254b36; color:#f7f9ef; padding:30px 32px 22px; border-radius:22px; position:relative; overflow:hidden; box-shadow:0 20px 50px #1d472b12; }
+.enroll-offer:before { content:''; position:absolute; width:280px; height:280px; border:1px solid #e0ef9d26; border-radius:50%; right:-140px; top:-100px; pointer-events:none; }
+.enroll-offer-top { display:flex; align-items:center; justify-content:space-between; font-size:9px; letter-spacing:.14em; position:relative; }
+.enroll-offer-top span:last-child { font-size:24px; }
+.enroll-percentage { font-size:clamp(100px,12vw,162px); letter-spacing:-.07em; font-weight:700; line-height:1.15; color:#e0ef9d; margin:22px 0 0; }
+.enroll-percentage span { font-size:.52em; letter-spacing:-.05em; }
+.enroll-offer-label { font-size:24px; letter-spacing:-.02em; }
+.enroll-offer-bottom { display:flex; justify-content:space-between; align-items:end; gap:14px; border-top:1px solid #ffffff33; margin-top:24px; padding-top:20px; font-size:14px; }
+.enroll-offer-bottom strong { font-weight:500; }
+.enroll-year { color:#deee9c; font-size:24px; font-weight:500; }
+.enroll-poster { display:inline-block; margin-top:20px; font-size:11px; text-decoration:underline!important; text-underline-offset:4px; color:#e0ef9d!important; }
+.explore-menu { padding:48px 0 56px; border-top:1px solid #e0e5d8; background:#fff; }
+.explore-heading { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:26px; }
+.home-public .explore-heading h2 { margin:12px 0 0; font-size:clamp(27px,3.1vw,38px); }
+.explore-heading>p { color:#68735f; font-size:13px; }
+.explore-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.explore-tile { display:flex; gap:16px; align-items:start; border:1px solid #dce2d4; border-radius:12px; padding:23px 20px; background:#fbfcf8; min-height:132px; transition:background .2s,border-color .2s,transform .2s; }
+.explore-tile:hover { background:#f0f4e7; border-color:#7c996c; transform:translateY(-3px); }
+.explore-tile[aria-current=true] { background:#eaf1db; border-color:#527335; }
+.explore-icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; width:36px; height:36px; background:#edf1df; color:#365736; font-size:21px; border-radius:8px; }
+.explore-tile>span:nth-child(2) { flex:1; }
+.explore-tile strong { display:block; font-size:15px; font-weight:600; margin-top:3px; }
+.explore-tile small { display:block; color:#65705d; font-size:12px; line-height:1.55; margin-top:7px; }
+.explore-tile>b { font-weight:400; color:#6d8061; }
+.explore-tile-box .explore-icon { background:#dfeaab; }
+.explore-backbar { background:#f0f4e7; border-block:1px solid #dce2d4; }
+.explore-backbar .container { display:flex; align-items:center; justify-content:space-between; gap:18px; padding-block:16px; font-size:12px; }
+.explore-backbar a { padding:8px 0; text-decoration:underline; text-underline-offset:4px; }
+#explore-current { color:#526445; }
+.enroll-section { padding:64px 0; background:#f1f4e9; }
+.enroll-form-layout { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+.enroll-form-layout>div>p { font-size:16px; color:#4b5d42; max-width:460px; }
+.enroll-steps { list-style:none; padding:0; margin:30px 0; }
+.enroll-steps li { display:flex; gap:20px; margin:24px 0; }
+.enroll-steps li>span { color:#5c7547; font-size:12px; padding-top:3px; }
+.enroll-steps strong { font-size:15px; font-weight:600; }
+.enroll-steps p { font-size:13px; color:#65705e; margin-top:4px; }
+.enroll-terms { border-block:1px solid #ced7c1; padding:16px 0; font-size:13px; }
+.enroll-terms summary { cursor:pointer; font-weight:600; min-height:30px; }
+.home-public .enroll-terms p { padding:10px 0 0; color:#55664b; }
+.enroll-form-card { padding:32px; background:#fff; border:1px solid #d7dfcb; border-radius:16px; }
+.enroll-form-card h3 { font-size:24px; }
+.home-public .enroll-form-intro { font-size:12px; color:#68735f; margin:10px 0 22px; }
+.enroll-form-card label:not(.enroll-consent) { display:block; font-size:13px; font-weight:600; margin:17px 0 7px; }
+.enroll-form-card input:not([type=checkbox]),.enroll-form-card select { display:block; width:100%; max-width:100%; min-height:48px; padding:11px 12px; border:1px solid #b6c3ab; border-radius:7px; color:#243923; background:#fff; font:inherit; font-size:16px; }
+.home-public .enroll-field-note { font-size:11px; color:#68735f; margin-top:6px; }
+.enroll-consent { display:flex; gap:10px; align-items:start; margin:22px 0; font-size:12px; color:#53634b; cursor:pointer; }
+.enroll-consent input { width:19px; height:19px; margin-top:2px; flex-shrink:0; accent-color:#315639; }
+.enroll-form-card .enroll-primary { width:100%; }
+.home-public .enroll-privacy { margin-top:16px; font-size:11px; line-height:1.6; color:#6c7566; }
+#enroll-review>p:not(.home-eyebrow):not(.enroll-privacy) { font-size:14px; margin-top:15px; }
+#enroll-message { white-space:pre-wrap; overflow-wrap:anywhere; background:#f4f6ef; border:1px solid #dce2d4; border-radius:8px; padding:16px; font:13px/1.7 Arial,sans-serif; }
+.enroll-edit { display:block; min-height:44px; padding:12px 0; margin:12px auto 0; border:0; background:transparent; font:inherit; font-size:13px; color:#385832; }
+#enroll-fallback p { margin:16px 0; font-size:14px; }
+.home-public .results-intro h2 { font-size:clamp(40px,6vw,70px); }
+@media(max-width:1000px) { .enroll-hero-layout { gap:30px; }.enroll-form-layout { gap:32px; }.explore-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.explore-heading { display:block; }.explore-heading>p { margin-top:14px; } }
+@media(max-width:650px) { .enroll-hero { padding:34px 0 32px; }.enroll-hero-layout,.enroll-form-layout { grid-template-columns:1fr; gap:30px; }.home-public .enroll-copy h1 { font-size:46px; }.enroll-lead { font-size:17px; }.enroll-actions { gap:14px; }.enroll-actions .enroll-primary { width:100%; }.enroll-offer { padding:22px 24px; }.enroll-percentage { font-size:110px; margin-top:6px; line-height:1.1; }.enroll-offer-label { font-size:20px; }.enroll-offer-bottom { margin-top:16px; padding-top:14px; }.enroll-offer-top { font-size:9px; }.explore-menu { padding:34px 0; }.explore-grid { grid-template-columns:1fr; gap:10px; }.explore-tile { min-height:100px; padding:18px; }.explore-tile strong { font-size:16px; }.explore-tile small { font-size:13px; }.explore-backbar .container { flex-wrap:wrap; gap:4px 16px; }#explore-current { display:none; }.enroll-section { padding:40px 0; }.enroll-form-card { padding:22px; }.home-public .enroll-form-layout h2 { font-size:38px; } }
+@media(prefers-reduced-motion:reduce) { .explore-tile { transition:none; }.explore-tile:hover { transform:none; } }
+@media print { .explore-menu,.explore-backbar,.enroll-actions,.enroll-form-card { display:none!important; }.home-public [data-explore-panel][hidden] { display:block!important; }.enroll-hero-layout { display:block; }.enroll-offer { color:#203f2e; background:#fff; }.enroll-percentage { color:#203f2e; } }
+
+.menu-arrow { display:inline-block; width:15px; height:15px; vertical-align:middle; flex-shrink:0; }
+.explore-icon svg { width:23px; height:23px; }
