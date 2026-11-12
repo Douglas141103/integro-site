@@ -381,7 +381,7 @@ async function loadDiscounts() {
     throw new Error(error.message);
   }
 
-  state.discounts = data || [];
+  state.discounts = (data || []).filter(d => !d.is_reservation_credit);
 }
 
 async function loadEntries() {

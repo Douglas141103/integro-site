@@ -1,8 +1,12 @@
 // Isolated financial doubles: no external network and no real charges.
-export function installFixture(w) {
+export function installFixture(w, options={}) {
  const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
  const t=w.PDV_TEST={entries:[],insertCount:0,printCount:0,lostResponse:false,asaas:[],infinitepay:[],requests:[],failCreation:false};
  const fixed={profiles:[{id:id(1),school_id:id(10),role:'diretor'}],schools:[{id:id(10),name:'Instituto Integro',slug:'instituto-integro'}],students:[{id:id(3),full_name:'Aluno de teste',active:true,enrollment_status:'matriculado',guardian_1_name:'Pagador de teste',guardian_1_cpf:'24971563792'}],finance_packages:[{id:id(4),name:'Reforço escolar',default_amount:140,active:true}],finance_discounts:[]};
+ if(options.preEnrollment)fixed.students[0].enrollment_status='pre_matricula';
+ fixed.finance_packages.push({id:id(6),name:'RESERVA / PRÉ-MATRÍCULA 2027',default_amount:50,active:true,is_reservation:true});
+ t.reservation=options.credit?{amount:50,discount_id:id(7),ready:true,held:false,used:false}:{amount:0,ready:false,held:false,used:false};
+ fixed.finance_discounts.push({id:id(7),name:'Crédito automático',discount_type:'valor',value:50,active:true,is_reservation_credit:true});
  class Query {
   constructor(table){this.table=table;this.filters=[];this.mode='read';}
   select(){return this;} eq(k,v){this.filters.push([k,v]);return this;} order(){return this;} maybeSingle(){this.single=true;return this;} insert(rows){this.mode='insert';this.rows=rows;return this;}
@@ -21,6 +25,11 @@ export function installFixture(w) {
  t.pixSettings=null;t.pixCanConfigure=true;t.pixRpcError=null;t.pixRpcCalls=[];t.copied='';
  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{t.copied=text;}}});
  const db={auth:{getUser:async()=>({data:{user:{id:id(1)}}}),getSession:async()=>({data:{session:{access_token:'test-only'}}})},from:table=>new Query(table),rpc:async(name,args)=>{
+  if(name==='finance_reservation_credit'){
+    if(args.p_action==='hold')t.reservation.holdId=args.p_sale_id;
+    if(args.p_action==='release')t.reservation.holdId=null;
+    return{data:{...t.reservation},error:null};
+  }
   t.pixRpcCalls.push({name,args});
   if(t.pixRpcError)return{error:{message:t.pixRpcError},data:null};
   if(args.p_settings){if(!t.pixCanConfigure)return{error:{message:'Sem acesso'},data:null};t.pixSettings={...args.p_settings};}

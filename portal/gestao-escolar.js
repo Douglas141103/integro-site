@@ -231,7 +231,7 @@
 
     const { data, error } = await client
       .from('finance_packages')
-      .select('id, name, default_amount, active')
+      .select('id, name, default_amount, active, is_reservation')
       .eq('school_id', profile.school_id)
       .eq('active', true)
       .order('name', { ascending: true });
@@ -242,7 +242,7 @@
       return;
     }
 
-    financePackages = data || [];
+    financePackages = (data || []).filter(p => !p.is_reservation);
 
     const options = '<option value="">Selecione um pacote</option>' +
       financePackages.map((p) =>

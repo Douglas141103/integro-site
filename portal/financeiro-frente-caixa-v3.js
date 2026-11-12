@@ -10,6 +10,7 @@
   const sale = { customer: null, items: [] };
   let step = 1, method = null, busy = false, activeOrder = null, receipt = null, manualRequest = null, receiptLoading = false;
   let directPix = null, directSettings = null;
+  let reservationCredit = null, reservationRequest = null;
   const dataStore = { user: null, profile: null, school: null, students: [], packages: [], discounts: [] };
   const $ = (id) => document.getElementById(id);
 
@@ -93,8 +94,8 @@
     const [schoolRes, studentsRes, packagesRes, discountsRes] = await Promise.all([
       db.from("schools").select("id, name, slug").eq("id", profile.school_id).maybeSingle(),
       db.from("students").select("id, full_name, active, enrollment_status, guardian_1_name, guardian_1_cpf, guardian_1_phone, guardian_1_email").eq("school_id", profile.school_id).order("full_name", { ascending: true }),
-      db.from("finance_packages").select("id, name, default_amount, active").eq("school_id", profile.school_id).order("name", { ascending: true }),
-      db.from("finance_discounts").select("id, name, discount_type, value, active").eq("school_id", profile.school_id).order("name", { ascending: true })
+      db.from("finance_packages").select("id, name, default_amount, active, is_reservation").eq("school_id", profile.school_id).order("name", { ascending: true }),
+      db.from("finance_discounts").select("id, name, discount_type, value, active, is_reservation_credit").eq("school_id", profile.school_id).order("name", { ascending: true })
     ]);
 
     if (schoolRes.error) throw schoolRes.error;
@@ -103,9 +104,9 @@
     if (discountsRes.error) throw discountsRes.error;
 
     dataStore.school = schoolRes.data;
-    dataStore.students = (studentsRes.data || []).filter(isEnrolled);
+    dataStore.students = (studentsRes.data || []).filter(student => isEnrolled(student) || student.enrollment_status === "pre_matricula");
     dataStore.packages = (packagesRes.data || []).filter((item) => item.active !== false);
-    dataStore.discounts = (discountsRes.data || []).filter((item) => item.active !== false);
+    dataStore.discounts = (discountsRes.data || []).filter((item) => item.active !== false && !item.is_reservation_credit);
   }
 
   function css() {
@@ -131,7 +132,7 @@
     screen.setAttribute('role','dialog'); screen.setAttribute('aria-modal','true'); screen.setAttribute('aria-labelledby','pdvTitle');
     screen.innerHTML = `<header class="pdv-top"><div class="pdv-brand"><img src="../logo-whatsapp.png" alt="Instituto Integro"><div><small>INSTITUTO INTEGRO</small><h1 id="pdvTitle">Frente de caixa</h1></div></div><button type="button" id="pdvClose" class="pdv2-btn ghost">Voltar ao financeiro</button></header>
     <div class="pdv-workspace"><nav class="pdv-steps" aria-label="Etapas da venda"><span data-step-label="1">1 <b>Cliente / pagador</b></span><span data-step-label="2">2 <b>Itens da venda</b></span><span data-step-label="3">3 <b>Pagamento</b></span></nav>
-    <p id="pdvMessage" class="pdv-message" role="status" aria-live="polite"></p>
+    <p id="pdvMessage" class="pdv-message" role="status" aria-live="polite"></p><button id="pdvReservationRecovery" class="pdv2-btn ghost" type="button" hidden>Conferir reserva de uma venda anterior</button>
     <section id="pdvStep1" class="pdv-step pdv-customer-step"><div class="pdv2-card"><p class="pdv-eyebrow">NOVA VENDA</p><h2>Quem está comprando?</h2><p class="pdv2-muted">Selecione um aluno ou informe o beneficiário e o pagador.</p>
       <div class="pdv2-grid"><label>Aluno da base<select id="pdv2Student"><option value="">Selecione um aluno</option></select></label><label>Ou digite o aluno / beneficiário<input id="pdv2ManualStudent" placeholder="Nome do aluno ou beneficiário"></label><label>Responsável / pagador *<input id="pdv2Payer" placeholder="Nome completo" autocomplete="name"></label><label>CPF/CNPJ do pagador *<input id="pdv2Doc" placeholder="CPF ou CNPJ" inputmode="numeric"></label></div>
       <div class="pdv2-actions pdv-spread"><button id="pdv2ReloadOptions" class="pdv2-btn ghost" type="button">Atualizar alunos e pacotes</button><button id="pdvNextCustomer" class="pdv2-btn primary" type="button">Avançar para itens →</button></div></div>
@@ -234,7 +235,8 @@
       const settings=await readDirectSettings();
       if(!settings?.enabled)throw Error('Cadastre e ative a chave Pix para gerar o código.');
       currentOpenCycle();
-      const saleId=crypto.randomUUID(),txid=saleId.replace(/-/g,'').slice(0,25),amount=Math.round(totals().total*100);
+      await ensureReservationHold();
+      const saleId=reservationRequest || crypto.randomUUID(),txid=saleId.replace(/-/g,'').slice(0,25),amount=Math.round(totals().total*100);
       const payload=window.INTEGRO_PIX.build(settings,amount,txid);
       const qr=window.qrcode(0,'M');qr.addData(payload,'Byte');qr.make();
       $('pdvPixImage').innerHTML=qr.createSvgTag({cellSize:6,margin:24,scalable:true,alt:'QR Code Pix da venda'});
@@ -276,8 +278,16 @@
   function openCash() { $('pdv2').hidden=false; document.body.classList.add('pdv-open'); updateControls(); $('pdv2Student').focus(); }
   function closeCash() { if(busy){showMsg('Aguarde a conclusão da operação.');return;} $('pdv2').hidden=true; document.body.classList.remove('pdv-open'); $('pdvOpen')?.focus(); }
   function setStep(value) { step=value; showMsg(''); updateControls(); $('pdv2').scrollTop=0; }
-  function setMethod(value) {
+  async function setMethod(value) {
     if(busy||activeOrder||directPix||manualRequest||receipt)return;
+    if (sale.items.some(i => i.reservationCredit)) {
+      busy=true; updateControls();
+      try {
+        if (['cash','other','direct_pix'].includes(value)) await ensureReservationHold();
+        else await releaseReservationHold();
+      } catch(e) { showMsg(e.message,'error'); return; }
+      finally { busy=false; updateControls(); }
+    }
     method=value; $('pdvReceivedConfirmed').checked=false;
     $('pdv2Pay').value=value==='cash'?'Dinheiro':value==='direct_pix'||$('pdvOtherType').value==='pix'?'Pix':$('pdvCardKind').value;
     if(value!=='cash')$('pdv2Received').value=totals().total.toFixed(2); else $('pdv2Received').value='';
@@ -331,15 +341,45 @@
   }
 
   function bind() {
+    $('pdvReservationRecovery').onclick=async()=>{
+      if(busy||!reservationCredit?.manual_hold_id)return;
+      if(!confirm('Confira a venda anterior e seus recibos. Confirma que NÃO houve recebimento nessa venda e que deseja liberar o crédito da reserva?'))return;
+      busy=true;updateControls();
+      try{
+        const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId,p_action:'release',p_sale_id:reservationCredit.manual_hold_id});
+        if(r.error)throw Error(r.error.message);
+        reservationCredit=r.data; $('pdvReservationRecovery').hidden=true; calcFinal();showMsg('Crédito liberado. Adicione a primeira mensalidade para aplicar o abatimento.');
+      }catch(e){showMsg(e.message,'error');}finally{busy=false;updateControls();}
+    };
     $("pdv2Student").onchange = fillCustomer;
     $("pdv2Package").onchange = applyPackage;
     $("pdv2Discount").onchange = applyDiscount;
+    $("pdv2Type").onchange = calcFinal;
     ["pdv2Gross", "pdv2DiscValue"].forEach((id) => $(id).oninput = calcFinal);
     ["pdv2Final", "pdv2Qty", "pdv2Received"].forEach((id) => $(id).oninput = calcChange);
-    $('pdvNextCustomer').onclick=()=>{try{sale.customer=null;sale.customer=getCustomer();lockCustomer();setStep(2);}catch(e){showMsg(e.message,'error');}};
+    $('pdvNextCustomer').onclick=async()=>{
+      if(busy)return;
+      try {
+        const previous=sale.customer;
+        sale.customer=null; const next=getCustomer();
+        if(sale.items.length && (previous?.studentId!==next.studentId || previous?.studentName!==next.studentName)){
+          sale.customer=previous; $('pdv2Student').value=previous?.studentId||'';
+          throw Error('Limpe a venda antes de trocar o aluno, para manter o crédito vinculado à pessoa correta.');
+        }
+        sale.customer=next; reservationCredit=null; $('pdvReservationRecovery').hidden=true;
+        busy=true; updateControls();
+        if(sale.customer.studentId){
+          const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId});
+          if(r.error)throw Error(r.error.message||'Não foi possível conferir a reserva.');
+          reservationCredit=r.data; $('pdvReservationRecovery').hidden=!r.data?.manual_hold_id;
+        }
+        lockCustomer(); setStep(2); calcFinal();
+        if(reservationCredit?.ready && Number(reservationCredit.amount)>0)showMsg(reservationCredit.held?'A reserva está vinculada a outra cobrança. Confira a cobrança antes de receber.':'Reserva paga: R$ 50,00 serão abatidos automaticamente da primeira mensalidade.');
+      }catch(e){showMsg(e.message,'error');}finally{busy=false;updateControls();}
+    };
     $('pdvBackCustomer').onclick=()=>{if(!busy&&!activeOrder&&!directPix&&!manualRequest)setStep(1);};
     $('pdvNextPayment').onclick=()=>{if(sale.items.length)setStep(3);};
-    $('pdvBackItems').onclick=()=>{if(!busy&&!activeOrder&&!directPix&&!manualRequest)setStep(sale.items.length?2:1);};
+    $('pdvBackItems').onclick=async()=>{if(!busy&&!activeOrder&&!directPix&&!manualRequest){try{await releaseReservationHold();method=null;setStep(sale.items.length?2:1);}catch(e){showMsg(e.message,'error');}}};
     document.querySelectorAll('[data-method]').forEach(el=>el.onclick=()=>setMethod(el.dataset.method));
     ['pdvOtherType','pdvCardKind'].forEach(id=>$(id).onchange=()=>setMethod('other'));
     $('pdvPrintReceipt').onclick=()=>{if(receipt)printReceipt(receipt);};
@@ -357,7 +397,7 @@
     $('pdvPixReset').onclick=()=>{if(busy||manualRequest||receipt)return;if(confirm('O QR Code já compartilhado continua pagável. Confira que esta venda não foi paga antes de trocar o pagamento. Continuar?')){resetDirectPix();showMsg('Volte aos itens ou selecione outra forma de pagamento.');updateControls();}};
     $("pdv2ReloadOptions").onclick = async () => { await loadContextAndOptions(); refreshOptions(); showMsg("Lista atualizada."); };
     document.querySelectorAll("[data-type]").forEach((button) => button.onclick = () => {
-      $("pdv2Type").value = button.dataset.type;
+      $("pdv2Type").value = button.dataset.type; calcFinal();
       if (!$("pdv2Desc").value.trim()) $("pdv2Desc").value = `Recebimento referente a ${typeLabel(button.dataset.type).toLowerCase()}.`;
     });
   }
@@ -366,7 +406,7 @@
     if (!$("pdv2")) return;
     const selectedStudentId = $("pdv2Student").value;
     const studentSelect = $("pdv2Student");
-    studentSelect.innerHTML = '<option value="">Selecione um aluno</option>' + dataStore.students.map((student) => `<option value="${student.id}">${safe(student.full_name)}</option>`).join("");
+    studentSelect.innerHTML = '<option value="">Selecione um aluno</option>' + dataStore.students.map((student) => `<option value="${student.id}">${safe(student.full_name)}${student.enrollment_status === "pre_matricula" ? " — Pré-matrícula" : ""}</option>`).join("");
     studentSelect.value = selectedStudentId;
 
     const selectedPackageId = $("pdv2Package").value;
@@ -415,6 +455,10 @@
     const pkg = dataStore.packages.find((item) => item.id === $("pdv2Package").value);
     if (pkg) {
       $("pdv2Gross").value = Number(pkg.default_amount || 0).toFixed(2);
+      if(pkg.is_reservation){
+        $("pdv2Type").value='servico'; $("pdv2Qty").value='1'; $("pdv2Discount").value='';
+        $("pdv2Desc").value='Reserva / pré-matrícula 2027 — crédito de R$ 50,00 na primeira mensalidade após a ativação.';
+      }
       if (!$("pdv2Desc").value.trim()) $("pdv2Desc").value = `Pagamento referente ao pacote ${pkg.name}.`;
     }
     applyDiscount();
@@ -432,8 +476,31 @@
   function calcFinal() {
     const gross = n($("pdv2Gross").value);
     const discount = Math.min(n($("pdv2DiscValue").value), gross);
-    $("pdv2Final").value = Math.max(gross - discount, 0).toFixed(2);
+    const credit=automaticReservationAmount();
+    $("pdv2Final").value = Math.max(gross - discount - credit, 0).toFixed(2);
+    let hint=$('pdvReservationHint');
+    if(!hint){hint=document.createElement('p');hint.id='pdvReservationHint';hint.className='pdv2-muted';hint.setAttribute('role','status');$('pdv2Final').parentElement.append(hint);}
+    hint.textContent=credit?'Crédito da reserva: − R$ 50,00 (uso único).':'';
     calcChange();
+  }
+
+  function automaticReservationAmount() {
+    return reservationCredit?.ready && !reservationCredit.held && Number(reservationCredit.amount)===50
+      && $('pdv2Type').value==='mensalidade' && !sale.items.some(i=>i.reservationCredit) ? 50 : 0;
+  }
+
+  async function ensureReservationHold() {
+    if(!sale.items.some(i=>i.reservationCredit))return;
+    reservationRequest ||= crypto.randomUUID();
+    const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId,p_action:'hold',p_sale_id:reservationRequest});
+    if(r.error)throw Error(r.error.message||'Não foi possível confirmar o crédito da reserva.');
+  }
+
+  async function releaseReservationHold() {
+    if(!reservationRequest)return;
+    const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId,p_action:'release',p_sale_id:reservationRequest});
+    if(r.error)throw Error(r.error.message||'Não foi possível liberar o crédito da reserva.');
+    reservationRequest=null;
   }
 
   function clearItem() {
@@ -452,15 +519,23 @@
       if(!Number.isInteger(qty)||qty<1||qty>1000)throw Error("Informe uma quantidade inteira entre 1 e 1.000.");
       if(n($("pdv2DiscValue").value)<0)throw Error("O desconto não pode ser negativo.");
       const gross = Math.round(n($("pdv2Gross").value)*100)/100;
-      const discount = Math.round(Math.min(n($("pdv2DiscValue").value), gross)*100)/100;
+      const credit=automaticReservationAmount();
+      const discount = Math.round(Math.min(n($("pdv2DiscValue").value), gross)*100)/100 + credit;
+      if($('pdv2Type').value==='mensalidade' && sale.items.some(i=>i.reservationCredit))throw Error('Conclua a primeira mensalidade com o crédito antes de receber outra mensalidade.');
+      if(credit && qty!==1)throw Error('Use quantidade 1 na primeira mensalidade para abater a reserva uma única vez.');
+      if($('pdv2Type').value==='mensalidade' && reservationCredit?.held && !reservationRequest)throw Error('Crédito da reserva vinculado a outra cobrança. Confira a cobrança pendente.');
       const finalUnit = (Math.round(gross*100)-Math.round(discount*100))/100;
       if (finalUnit <= 0 || qty > 1000) throw Error("Confira a quantidade e o valor final do item.");
       const description = $("pdv2Desc").value.trim();
       if (gross <= 0) throw new Error("Informe o valor bruto do item.");
       if (!description) throw new Error("Informe a descrição do item.");
       const pkg = dataStore.packages.find((item) => item.id === $("pdv2Package").value);
+      if(pkg?.is_reservation && (!sale.customer.studentId || selectedStudent()?.enrollment_status!=='pre_matricula'))throw Error('Selecione um aluno cadastrado como pré-matrícula para pagar a reserva.');
+      if(pkg?.is_reservation && (qty!==1 || gross!==50 || discount!==0 || $('pdv2Type').value!=='servico'))throw Error('A reserva deve ser uma cobrança única de R$ 50,00, sem desconto.');
+      if(pkg?.is_reservation && sale.items.some(i=>i.packageId===pkg.id))throw Error('A reserva já está no carrinho.');
+      if(selectedStudent()?.enrollment_status==='pre_matricula' && $('pdv2Type').value==='mensalidade')throw Error('Ative a matrícula antes de receber a primeira mensalidade.');
       const discountData = dataStore.discounts.find((item) => item.id === $("pdv2Discount").value);
-      sale.items.push({ id: Date.now() + "-" + Math.random().toString(16).slice(2), type: $("pdv2Type").value, typeLabel: typeLabel($("pdv2Type").value), packageId: pkg?.id || null, packageName: pkg?.name || null, discountId: discountData?.id || null, discountName: discountData?.name || null, qty, grossUnit: gross, discountUnit: discount, finalUnit, grossTotal: Math.round(gross*100) * qty/100, discountTotal: Math.round(discount*100) * qty/100, total: Math.round(finalUnit*100) * qty/100, ref: $("pdv2Ref").value.trim() || null, desc: description });
+      sale.items.push({ id: Date.now() + "-" + Math.random().toString(16).slice(2), type: $("pdv2Type").value, typeLabel: typeLabel($("pdv2Type").value), packageId: pkg?.id || null, packageName: pkg?.name || null, reservationCredit: credit, discountId: credit ? reservationCredit.discount_id : discountData?.id || null, discountName: [discountData?.name,credit ? "Crédito da reserva: R$ 50,00" : null].filter(Boolean).join(" + ") || null, qty, grossUnit: gross, discountUnit: discount, finalUnit, grossTotal: Math.round(gross*100) * qty/100, discountTotal: Math.round(discount*100) * qty/100, total: Math.round(finalUnit*100) * qty/100, ref: $("pdv2Ref").value.trim() || null, desc: description + (credit ? " • Abatimento da reserva: R$ 50,00" : "") });
       lockCustomer();
       clearItem();
       drawCart();
@@ -478,6 +553,7 @@
   function drawCart() {
     const cart = $("pdv2Cart");
     const total = totals();
+    calcFinal();
     if (!sale.items.length) cart.innerHTML = '<div class="pdv2-empty">Nenhum item no carrinho.</div>';
     else cart.innerHTML = sale.items.map((item) => `<article class="pdv2-item"><div class="pdv2-head"><div><strong>${safe(item.desc)}</strong><br><span class="pdv2-small">${safe(item.typeLabel)} • Qtd. ${item.qty}${item.packageName ? ` • ${safe(item.packageName)}` : ""}</span></div><span class="amount">${money(item.total)}</span></div><span class="pdv2-small">Bruto: ${money(item.grossTotal)} • Desconto: ${money(item.discountTotal)}</span><br><button class="pdv2-remove" data-rm="${item.id}" type="button">Remover</button></article>`).join("");
     cart.querySelectorAll("[data-rm]").forEach((button) => button.onclick = () => { if(busy||activeOrder||directPix||manualRequest||receipt)return; sale.items = sale.items.filter((item) => item.id !== button.dataset.rm); lockCustomer(); drawCart(); });
@@ -501,8 +577,10 @@
     clearSaleNow();
   }
 
-  function clearSaleNow() {
+  async function clearSaleNow() {
     if(busy||(manualRequest&&!receipt))return;
+    try{await releaseReservationHold();}catch(e){showMsg(e.message,'error');return;}
+    reservationCredit=null; $('pdvReservationRecovery').hidden=true;
     resetDirectPix();
     activeOrder=null;receipt=null;manualRequest=null;method=null;step=1;
     $("pdvReceivedConfirmed").checked=false;showMsg("");
@@ -541,6 +619,7 @@
       if(method==='direct_pix'&&(!directPix||directPix.amount!==Math.round(totals().total*100)))throw Error('Gere o QR Code desta venda antes de confirmar o recebimento.');
       if(!$("pdvReceivedConfirmed").checked)throw Error("Confirme o recebimento antes de dar baixa.");
       if (!db || !dataStore.school?.id || !dataStore.user?.id) throw new Error("Sistema ainda carregando. Aguarde e tente novamente.");
+      if(sale.items.some(i=>i.reservationCredit) && !reservationRequest)throw Error('Selecione novamente a forma de pagamento para confirmar o crédito da reserva.');
       const transactionMoment = new Date();
       const liveCycle = currentOpenCycle(transactionMoment);
       if (!sale.customer || !sale.items.length) throw new Error("Adicione pelo menos um item ao carrinho.");
@@ -549,7 +628,7 @@
       if (!received && $("pdv2Pay").value !== "Dinheiro") { received = total.total; $("pdv2Received").value = received.toFixed(2); }
       if (received < total.total) throw new Error("O valor recebido não pode ser menor que o total da venda.");
       const change = Math.max(received - total.total, 0);
-      manualRequest ||= directPix?.saleId || crypto.randomUUID();
+      manualRequest ||= directPix?.saleId || reservationRequest || crypto.randomUUID();
       const saleCode = "VENDA-" + manualRequest.slice(0,8).toUpperCase();
       busy=true;updateControls();
       const note = [$("pdv2Note").value.trim(),directPix?`Pix direto · InfinitePay · Ref. ${directPix.txid} · Recebimento conferido manualmente`:null].filter(Boolean).join(' • ');

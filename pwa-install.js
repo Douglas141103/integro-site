@@ -341,7 +341,7 @@
 
     const isSchoolManagementPage = location.pathname.endsWith("/portal/gestao-escolar.html") || location.pathname.includes("/portal/gestao-escolar");
     if (isSchoolManagementPage) {
-      loadScript("schoolShiftStudentsScript", "/portal/gestao-escolar-turnos.js?v=20260704-turnos-v1");
+      loadScript("schoolShiftStudentsScript", "/portal/gestao-escolar-turnos.js?v=20261112-reserva1");
       loadScript("schoolStatusSeparatedScript", "/portal/gestao-escolar-status-separado.js?v=20260704-status-separado-v1");
     }
 

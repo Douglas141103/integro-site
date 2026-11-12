@@ -342,7 +342,7 @@
 
     const { data, error } = await client
       .from("finance_packages")
-      .select("id, name, default_amount, active")
+      .select("id, name, default_amount, active, is_reservation")
       .eq("school_id", currentProfile.school_id)
       .eq("active", true)
       .order("name", { ascending: true });
@@ -352,7 +352,7 @@
       return;
     }
 
-    packages = data || [];
+    packages = (data || []).filter(p => !p.is_reservation);
   }
 
   async function loadStudents() {
