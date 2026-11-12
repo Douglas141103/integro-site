@@ -84,7 +84,7 @@
     card.prepend(art);
   }
   document.querySelectorAll('[data-home-service]').forEach(addIcon);
-  document.querySelectorAll('.home-portal').forEach((card, index) => addIcon(card, [5,1,4][index]));
+  document.querySelectorAll('.home-portal').forEach((card, index) => addIcon(card, [5,1,2,4][index]));
   addIcon(document.querySelector('.home-diagnostic'), 0);
   document.querySelectorAll('.reading-card-icon,.reading-step-art,.reading-house').forEach(svg => {
     svg.querySelectorAll('path,rect,circle').forEach((shape, index) => {
