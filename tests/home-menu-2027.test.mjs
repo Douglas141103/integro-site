@@ -7,6 +7,8 @@ const code = readFileSync(new URL('../assets/home-menu-2027.js', import.meta.url
 function page(hash = '') {
   const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://www.institutointegro.com.br/' + hash });
   dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   dom.window.eval(code);
   return { w: dom.window, d: dom.window.document };
 }
@@ -20,9 +22,12 @@ test('initial menu hides content; routes reveal only their group and return rest
   d.querySelector('[data-explore-link="portais"]').click();
   assert.equal(d.querySelectorAll('[data-explore-panel]:not([hidden])').length, 1);
   assert.equal(d.getElementById('portais').hidden, false);
-  d.querySelector('.explore-backbar a').click();
+  assert.equal(d.getElementById('explore-dialog').open, true);
+  d.getElementById('explore-close').click();
+  assert.equal(d.getElementById('explore-dialog').open, false);
   assert.equal(d.querySelectorAll('[data-explore-panel]:not([hidden])').length, 0);
-  assert.equal(d.activeElement.id, 'menu-integro');
+  assert.equal(d.activeElement.dataset.exploreLink, 'portais');
+  assert.equal(d.activeElement.getAttribute('tabindex'), null);
 });
 test('direct links, hash changes and history navigation reveal preserved content', () => {
   const { d, w } = page('#aprendizagem-em-movimento');
@@ -71,4 +76,21 @@ test('without JavaScript all content and a direct reservation link remain availa
   const link = d.querySelector('#enroll-fallback a');
   assert.match(link.href, /wa.me\/5592984833301/);
   assert.equal(d.getElementById('enroll-form').hidden, true);
+});
+
+test('Escape closes the modal, unlocks the page and preserves a direct-link route', () => {
+  const {d,w} = page('#pre-matricula');
+  const dialog = d.getElementById('explore-dialog');
+  assert.equal(dialog.open,true);
+  dialog.dispatchEvent(new w.Event('cancel',{cancelable:true}));
+  assert.equal(dialog.open,false);
+  assert.equal(d.body.classList.contains('explore-modal-open'),false);
+  assert.equal(w.location.hash,'#menu-integro');
+});
+test('campaign displays the actual uncropped poster as a reservation link', () => {
+  const d = new JSDOM(html).window.document;
+  const img = d.querySelector('#campanha-2027 img');
+  assert.equal(img.getAttribute('src'),'/assets/prematricula-2027.webp');
+  assert.equal(img.closest('a').hash,'#pre-matricula');
+  assert.match(img.alt,/10%.*2027/);
 });
