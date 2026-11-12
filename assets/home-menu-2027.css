@@ -132,3 +132,8 @@ body.explore-modal-open { overflow:hidden; }
  .explore-dialog { width:calc(100% - 16px); max-height:calc(100dvh - 24px); border-radius:16px; }.explore-dialog-header { padding:16px; }.home-public .explore-dialog-header h2 { font-size:22px; }.explore-dialog-nav { padding:0 16px 12px; }.explore-dialog .container { width:calc(100% - 32px); }.explore-dialog :is(.home-section,.hero,.results,.enroll-section) { padding:28px 0; }.explore-dialog .enroll-form-card { padding:20px; }
 }
 @media(prefers-reduced-motion:reduce) { .explore-tile,.explore-tile:before,.explore-icon,.explore-open>span { transition:none; }.explore-dialog[open] { animation:none; }.explore-tile:hover,.explore-tile:hover .explore-icon { transform:none; } }
+
+/* Original full logo from the institutional worksheet, including its wordmark. */
+.home-brand img.home-official-logo { width:166px; height:auto; display:block; object-fit:contain; }
+@media(max-width:900px) { .home-brand img.home-official-logo { width:142px; height:auto; } }
+@media(max-width:360px) { .home-brand img.home-official-logo { width:125px; } }
