@@ -21,3 +21,11 @@ A flag `is_reservation` mantém esse pacote fora da seleção de pacote mensal d
 Testes PGlite executam a migração com o fluxo real de postagem das duas operadoras; testes DOM cobrem pré-matriculados, valor fixo, abatimento automático, desconto combinado, quantidade e recibo. Foram executados 53 testes financeiros relacionados, sem cobranças reais. Prévia do caixa conferida com dados fictícios.
 
 Para interromper novas reservas, desative o pacote marcado `is_reservation` na escola Instituto Integro. Preserve a tabela de créditos, os guards e o desconto técnico para honrar reservas já pagas e conciliar cobranças pendentes. Não reverta apenas o JavaScript enquanto houver créditos em aberto: clientes antigos serão bloqueados ao tentar receber mensalidade sem o abatimento. Uma remoção completa exige primeiro conciliar créditos/recibos e cobranças das operadoras.
+
+## Register in Financeiro
+
+The **Reservas de matrícula** tab lists pre-enrolled students, confirmed reservation credits (including those already used), and students with reservation charges. Search by student/guardian and filter by payment/credit status. Summary totals include all rows, regardless of search; unused credits include those awaiting activation or held by a checkout. Receipts and first-tuition usage remain available after activation.
+
+`finance_reservations_list()` is read-only. Its private definer helper checks the caller's active financial role and scopes every source to their school. The public invoker wrapper grants no private-table access. It returns no documents, tokens, payment payloads, or provider errors. Pending/expired charges do not count as paid; refunded sources and inconsistent settlement need reconciliation. Data refreshes when opening the tab, manually, and once per minute while visible. Failed refreshes hide stale results.
+
+Validation: `node --test tests/finance-reservations-panel.test.mjs tests/finance-reservation-credit.test.mjs tests/finance-reservation-ui.test.mjs tests/financeiro-single-renderer.test.mjs` (24 tests), plus desktop/mobile visual inspection with synthetic data.

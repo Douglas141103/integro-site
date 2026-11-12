@@ -80,6 +80,7 @@
     <section class="tabs" aria-label="Áreas financeiras">
       <button class="tab active" data-tab="caixa" type="button">Frente de caixa</button>
       <button class="tab" data-tab="mensalidades" type="button">Mensalidades</button>
+      <button class="tab" data-tab="reservas" type="button">Reservas de matrícula</button>
       <button class="tab" data-tab="recolho" type="button">Recolho do caixa</button>
       <button class="tab" data-tab="entradas" type="button">Entradas</button>
       <button class="tab" data-tab="saidas" type="button">Saídas</button>
@@ -232,6 +233,9 @@
       </div>
     </section>
 
+    <section id="reservas" class="panel" aria-label="Reservas de matrícula">
+      <div id="reservasRoot"></div>
+    </section>
     <section id="mensalidades" class="panel">
       <div id="monthlyTuitionPanelMount"></div>
     </section>
@@ -498,6 +502,7 @@
   <script src="./pix-brcode.js?v=20261028-pix-direct1"></script>
   <script src="./financeiro-frente-caixa.js?v=20261112-reserva1"></script>
   <script src="./financeiro-mensalidades.js?v=20260521-baixa-painel"></script>
+  <script src="./financeiro-reservas.js?v=20261112-1"></script>
   <script src="./financeiro-recolho.js?v=20261010-admin-balances-v1"></script>
   <script src="./financeiro-diretor.js?v=20261028-pdv1"></script>
 
