@@ -1,36 +1,28 @@
-// One geometry contract for nest slots, rendered stairs and player support.
+// Shared geometry for nest floors, elevator platforms and player support.
 export const CORRAL_ORIGIN={x:-5,z:14};
 export const MAX_CORRAL_FLOORS=5,FLOOR_HEIGHT=2.65,FLOOR_SLOTS=24;
 export const CORRAL_FLOOR_PRICES={2:250000,3:500000,4:1000000,5:2000000};
-export const CORRAL_STAIRS={x:4.2,width:1.25,laneGap:1.5,halfRun:3.25,steps:18,landingZ:3.65,landingDepth:.8};
+export const CORRAL_ELEVATOR={x:6.2,z:0,width:1.9,depth:2.4,speed:4.2,exitX:5.15};
+export function elevatorFloor(save,p){
+ const e=CORRAL_ELEVATOR,floor=1+Math.round(p.y/FLOOR_HEIGHT);
+ return floor>=1&&floor<=corralFloors(save)&&Math.abs(p.y-(floor-1)*FLOOR_HEIGHT)<.06&&Math.abs(p.vy||0)<.1&&Math.abs(p.x-CORRAL_ORIGIN.x-e.x)<=.72&&Math.abs(p.z-CORRAL_ORIGIN.z-e.z)<=.85?floor:0;
+}
 export function corralFloors(save={}){
  const floors=Number.isInteger(save.corralFloors)?Math.max(1,Math.min(MAX_CORRAL_FLOORS,save.corralFloors)):1;
  return Math.max(save.secondFloor===true?2:1,floors);
 }
-export function stairPoint(level,t){
- const s=CORRAL_STAIRS,direction=level%2?-1:1;
- return{x:s.x+(level%2?0:s.laneGap),y:(level-1+t)*FLOOR_HEIGHT,z:direction*(t*2-1)*s.halfRun};
-}
 export function corralSurface(save,p,ceiling=p.y+.025){
- const x=p.x-CORRAL_ORIGIN.x,z=p.z-CORRAL_ORIGIN.z,s=CORRAL_STAIRS,n=corralFloors(save);
+ const x=p.x-CORRAL_ORIGIN.x,z=p.z-CORRAL_ORIGIN.z,e=CORRAL_ELEVATOR,n=corralFloors(save);
  let support=0;
- const consider=h=>{if(h<=ceiling+1e-6&&h>support)support=h;};
  for(let floor=1;floor<n;floor++){
   const y=floor*FLOOR_HEIGHT;
-  if(Math.abs(x)<=3.55&&Math.abs(z)<=3.9)consider(y);
-  if(x>=3.1&&x<=s.x+s.laneGap+s.width/2&&Math.abs(Math.abs(z)-s.landingZ)<=s.landingDepth/2+.02)consider(y);
- }
- if(Math.abs(z)<=s.halfRun+.02){
-  for(let level=1;level<n;level++){
-   const lane=stairPoint(level,0).x;if(Math.abs(x-lane)>s.width/2)continue;
-   const direction=level%2?-1:1,t=Math.max(0,Math.min(1,(direction*z/s.halfRun+1)/2));
-   // Actual stair treads, not a floating or decorative ladder.
-   consider((level-1+Math.ceil(t*s.steps-1e-7)/s.steps)*FLOOR_HEIGHT);
-  }
+  const deck=Math.abs(x)<=3.55&&Math.abs(z)<=3.9;
+  const landing=x>=3.1&&x<=e.x+e.width/2&&Math.abs(z-e.z)<=e.depth/2;
+  if((deck||landing)&&y<=ceiling+1e-6)support=y;
  }
  return support;
 }
-export function nearCorral(p){return p.x>=-9&&p.x<=1.5&&p.z>=9.7&&p.z<=18.2;}
+export function nearCorral(p){return p.x>=-9&&p.x<=2.5&&p.z>=9.7&&p.z<=18.2;}
 export const CORRAL_DESIGNS={
  meadow:{name:'Prado',price:0,color:0x94c67d,roof:0x7764b1,rail:0xf4dfb3,trim:0xb28d60,desc:'Madeira, flores e ninhos em um jardim campestre.'},
  candy:{name:'Doceria',price:600,color:0xf1b1cc,roof:0x7dcccf,rail:0xffefc5,trim:0xc76d9c,desc:'Colunas de doce, pirulitos e cobertura de confeitaria.'},

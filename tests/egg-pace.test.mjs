@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {JSDOM} from 'jsdom';
-import {EggAdventure,CORRAL,FLOOR_HEIGHT,stairPoint} from '../integro-box/egg-src/egg-rules.js';
+import {EggAdventure,CORRAL,FLOOR_HEIGHT,CORRAL_ELEVATOR} from '../integro-box/egg-src/egg-rules.js';
 import {createPaceControl,PACE_STORAGE_KEY} from '../integro-box/egg-src/egg-pace-ui.js';
 const tick=(g,seconds,input={})=>{for(let t=0;t<seconds-1e-9;t+=.02)g.update(.02,input);};
 const make=(training=80)=>new EggAdventure({version:4,training,coins:1000000});
@@ -18,9 +18,9 @@ test('reduction preserves jump physics, clocks, training, eggs, income, and onli
  b.stopTraining();b.raceMode=true;Object.assign(b.player,{x:0,z:24});const before=b.player.z;b.update(.02,{z:-1});assert(Math.abs(before-b.player.z-.44)<1e-8);assert(!b.setPace(5));b.raceMode=false;assert.equal(b.movementDivisor(),10);
  assert(b.startJetFlight('pace-flight'));assert.equal(b.movementDivisor(),1);assert(!b.setPace(2));
 });
-test('slow movement still climbs, stops and jumps on a purchased platform',()=>{
- const g=new EggAdventure({version:4,training:80,secondFloor:true});assert(g.setPace(10));const start=stairPoint(1,0),end=stairPoint(1,1);Object.assign(g.player,{x:CORRAL.x+start.x,z:CORRAL.z+3.65});
- for(let i=0;i<600&&g.player.z>CORRAL.z-3.65;i++)g.update(.02,{z:-1});assert(Math.abs(g.player.y-FLOOR_HEIGHT)<1e-8);tick(g,1);assert.equal(g.player.y,FLOOR_HEIGHT);assert(g.jump());tick(g,2);assert.equal(g.player.y,FLOOR_HEIGHT);
+test('pace reduction leaves elevator travel and stable platforms usable',()=>{
+ const g=new EggAdventure({version:4,training:80,secondFloor:true});assert(g.setPace(10));Object.assign(g.player,{x:CORRAL.x+CORRAL_ELEVATOR.x,z:CORRAL.z});
+ assert(g.rideElevator(2));tick(g,1);assert.equal(g.player.y,FLOOR_HEIGHT);assert.equal(g.movementDivisor(),10);tick(g,1);assert.equal(g.player.y,FLOOR_HEIGHT);assert(g.jump());tick(g,2);assert.equal(g.player.y,FLOOR_HEIGHT);
 });
 test('HUD selection persists by profile, unlocks live, survives runtime replacement, and blocks paused modes without losing joystick input',()=>{
  const dom=new JSDOM('<div id="pad"><div class="egg-run-metrics"></div><div id="joy"></div></div><canvas></canvas>',{pretendToBeVisual:true}),d=dom.window.document,values=new Map();const storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)};let g=make(79),blocked=false,changes=0,joy=0;d.getElementById('joy').addEventListener('pointerdown',()=>joy++);

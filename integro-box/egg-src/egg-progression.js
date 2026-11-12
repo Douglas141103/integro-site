@@ -1,4 +1,4 @@
-import {corralFloors,corralSurface,nearCorral,FLOOR_HEIGHT,FLOOR_SLOTS,MAX_CORRAL_FLOORS,CORRAL_FLOOR_PRICES} from './egg-corral.js';
+import {CORRAL_ORIGIN,CORRAL_ELEVATOR,elevatorFloor,corralFloors,corralSurface,nearCorral,FLOOR_HEIGHT,FLOOR_SLOTS,MAX_CORRAL_FLOORS,CORRAL_FLOOR_PRICES} from './egg-corral.js';
 export * from './egg-corral.js';
 export const TRAIN_SPEED_GAIN=.45;
 export const TRAINING_PASS_SECONDS=300;
@@ -32,8 +32,23 @@ export function installProgression(Game){Object.assign(Game.prototype,{
   if(this.save.training>=600){this.save.trainXP=0;this.stopTraining();}else if(t.price&&this.save.trainingPasses[t.id]<=1e-9){this.save.trainingPasses[t.id]=0;this.stopTraining();this.emit('notice','Seu passe de 5 minutos acabou. Renove para continuar nesta esteira.');}
  },
  buySecondFloor(){return corralFloors(this.save)===1&&this.buyCorralFloor(2);},
- buyCorralFloor(expected=corralFloors(this.save)+1){const next=corralFloors(this.save)+1,price=CORRAL_FLOOR_PRICES[next];if(expected!==next||next>MAX_CORRAL_FLOORS||!this.inBase()||this.raceMode||this.corralView||this.spendable()<price)return false;this.save.coins-=price;this.save.corralFloors=next;this.save.secondFloor=true;this.save.corralVersion=1;this.emit('upgrade',next+'º andar construído! +24 ninhos. Suba pela escada lateral.');return true;},
+ buyCorralFloor(expected=corralFloors(this.save)+1){const next=corralFloors(this.save)+1,price=CORRAL_FLOOR_PRICES[next];if(expected!==next||next>MAX_CORRAL_FLOORS||!this.inBase()||this.raceMode||this.corralView||this.spendable()<price)return false;this.save.coins-=price;this.save.corralFloors=next;this.save.secondFloor=true;this.save.corralVersion=1;this.emit('upgrade',next+'º andar construído! +24 ninhos. Use o elevador lateral para escolher o andar.');return true;},
  corralSave(){return this.corralView||this.save;},
+ elevatorFloor(){return this.raceMode||this.jetFlight||this.elevatorRide||this.falling||this.mode!=='run'?0:elevatorFloor(this.corralSave(),this.player);},
+ rideElevator(floor){
+  const from=this.elevatorFloor();if(!from||!Number.isInteger(floor)||floor<1||floor>corralFloors(this.corralSave())||floor===from)return false;
+  this.clearPush();this.jumpBuffer=0;this.airJumps=0;this.iceVelocity={x:0,z:0};this.elevatorRide={from,to:floor};
+  Object.assign(this.player,{x:CORRAL_ORIGIN.x+CORRAL_ELEVATOR.x,z:CORRAL_ORIGIN.z+CORRAL_ELEVATOR.z,vy:0});return true;
+ },
+ updateElevator(dt){
+  const ride=this.elevatorRide;if(!ride)return false;
+  if(this.raceMode||this.mode!=='run'||this.jetFlight){this.elevatorRide=null;return false;}
+  ride.to=Math.min(ride.to,corralFloors(this.corralSave()));const target=(ride.to-1)*FLOOR_HEIGHT,delta=target-this.player.y,step=CORRAL_ELEVATOR.speed*dt;
+  Object.assign(this.player,{x:CORRAL_ORIGIN.x+CORRAL_ELEVATOR.x,z:CORRAL_ORIGIN.z+CORRAL_ELEVATOR.z,vy:0});this.moving=0;this.motionSpeed=0;this.sprinting=false;
+  if(Math.abs(delta)<=step){this.player.y=target;this.player.x=CORRAL_ORIGIN.x+CORRAL_ELEVATOR.exitX;this.elevatorRide=null;this.emit('elevator',ride.to+'º andar: você chegou! Saia pela plataforma para visitar os ninhos.');}
+  else this.player.y+=Math.sign(delta)*step;
+  return true;
+ },
  floorSupport(p=this.player,ceiling=p.y+.025){return this.raceMode?0:corralSurface(this.corralSave(),p,ceiling);},
  onFloor(){return Math.abs(this.player.y-this.floorSupport())<.001&&this.player.vy<=0;},
  stepCorral(previous){if(this.raceMode||this.jetFlight||this.player.vy>0)return;const old=this.floorSupport(previous);if(Math.abs(previous.y-old)>.035)return;const next=this.floorSupport(this.player,previous.y+.2);if(next>=previous.y-.2&&next<=previous.y+.2){this.player.y=next;this.player.vy=0;this.airJumps=0;}},

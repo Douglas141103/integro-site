@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {EggAdventure,cleanSave,corralCapacity,corralFloors,corralSlot,CORRAL,DECORATIONS,FLOOR_HEIGHT,CORRAL_FLOOR_PRICES,stairPoint} from '../integro-box/egg-src/egg-rules.js';
+import {EggAdventure,cleanSave,corralCapacity,corralFloors,corralSlot,CORRAL,DECORATIONS,FLOOR_HEIGHT,CORRAL_FLOOR_PRICES,CORRAL_ELEVATOR} from '../integro-box/egg-src/egg-rules.js';
 const wait=(g,seconds=1)=>{for(let i=0;i<seconds*50;i++)g.update(.02);};
 function walk(g,x,z){for(let i=0;i<300;i++){const dx=x-g.player.x,dz=z-g.player.z,len=Math.hypot(dx,dz);if(len<.045)return;const speed=Math.min(g.speed(),7);g.update(Math.min(.02,len/speed),{x:dx/len,z:dz/len});}assert.fail('walk did not reach target');}
 test('all five floors buy in sequence once, respect spendable balance and preserve 119 residents on reload',()=>{
@@ -12,14 +12,23 @@ test('all five floors buy in sequence once, respect spendable balance and preser
  const legacy=cleanSave({version:4,secondFloor:true});assert.equal(legacy.corralFloors,2);assert.equal(corralFloors({corralFloors:Infinity}),1);
  const poor=new EggAdventure({version:4,coins:249999});assert(!poor.buyCorralFloor());poor.save.coins=250000;poor.raceMode=true;assert(!poor.buyCorralFloor());
 });
-test('walks up and down every switchback stair, rests and jumps on each platform without falling through',()=>{
- const g=new EggAdventure({version:4,secondFloor:true,corralFloors:5});Object.assign(g.player,{x:CORRAL.x+stairPoint(1,0).x,z:CORRAL.z+3.65});
- for(let n=1;n<5;n++){
-  const start=stairPoint(n,0),end=stairPoint(n,1);walk(g,CORRAL.x+start.x,CORRAL.z+Math.sign(start.z)*3.65);walk(g,CORRAL.x+end.x,CORRAL.z+Math.sign(end.z)*3.65);assert(Math.abs(g.player.y-n*FLOOR_HEIGHT)<.001,'climbed to '+(n+1));
-  walk(g,CORRAL.x,CORRAL.z+Math.sign(end.z)*3.65);wait(g,2);assert.equal(g.player.y,n*FLOOR_HEIGHT);assert(g.jump());wait(g,2);assert.equal(g.player.y,n*FLOOR_HEIGHT);
-  walk(g,CORRAL.x+end.x,CORRAL.z+Math.sign(end.z)*3.65);
+test('elevator reaches all owned floors, releases onto a supported platform and preserves residents and coins',()=>{
+ const g=new EggAdventure({version:4,coins:123,secondFloor:true,corralFloors:5});
+ for(const floor of [2,3,4,5,3,1]){
+  Object.assign(g.player,{x:CORRAL.x+CORRAL_ELEVATOR.x,z:CORRAL.z,vy:0});assert(g.elevatorFloor());assert(g.rideElevator(floor));
+  assert(!g.rideElevator(1));assert(!g.jump());assert(!g.requestJump());assert(!g.startJetFlight('during-ride'));assert(!g.push({x:1,z:0}));
+  const oldY=g.player.y;g.update(.05,{x:1,z:1,sprint:true});assert(Math.abs(g.player.y-oldY)<=CORRAL_ELEVATOR.speed*.05+.001);assert.equal(g.player.x,CORRAL.x+CORRAL_ELEVATOR.x);
+  wait(g,4);assert.equal(g.elevatorRide,null);assert.equal(g.player.y,(floor-1)*FLOOR_HEIGHT);assert.equal(g.player.y,g.floorSupport());assert.equal(g.elevatorFloor(),0);assert.equal(g.save.coins,123);
+  walk(g,CORRAL.x,CORRAL.z);wait(g);assert.equal(g.player.y,(floor-1)*FLOOR_HEIGHT);assert(g.jump());wait(g,2);assert.equal(g.player.y,(floor-1)*FLOOR_HEIGHT);
  }
- for(let n=4;n>0;n--){const start=stairPoint(n,0),end=stairPoint(n,1);walk(g,CORRAL.x+end.x,CORRAL.z+Math.sign(end.z)*3.65);walk(g,CORRAL.x+start.x,CORRAL.z+Math.sign(start.z)*3.65);assert(Math.abs(g.player.y-(n-1)*FLOOR_HEIGHT)<.001,'descended from '+(n+1));}
+});
+test('elevator rejects distant, airborne, unbuilt and race destinations and follows the visited corral',()=>{
+ const g=new EggAdventure({version:4,corralFloors:5});assert(!g.rideElevator(2));Object.assign(g.player,{x:CORRAL.x+CORRAL_ELEVATOR.x,z:CORRAL.z});
+ for(const invalid of [0,6,1,1.5,'2',Infinity,NaN])assert(!g.rideElevator(invalid));
+ g.player.y=.5;assert(!g.rideElevator(2));g.player.y=0;g.raceMode=true;assert(!g.rideElevator(2));g.raceMode=false;
+ g.corralView={corralFloors:2};assert(!g.rideElevator(3));assert(g.rideElevator(2));wait(g,2);assert.equal(g.player.y,FLOOR_HEIGHT);
+ Object.assign(g.player,{x:CORRAL.x+CORRAL_ELEVATOR.x,z:CORRAL.z});assert(g.rideElevator(1));wait(g,2);assert.equal(g.player.y,0);
+ g.corralView={corralFloors:1};assert(!g.rideElevator(2));assert.equal(g.elevatorFloor(),0);
 });
 test('does not teleport through upper slabs; falling and jetpack landing use the actual platform height',()=>{
  const g=new EggAdventure({version:4,corralFloors:5});Object.assign(g.player,{x:CORRAL.x,z:CORRAL.z});wait(g);assert.equal(g.player.y,0);

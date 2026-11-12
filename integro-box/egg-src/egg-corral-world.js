@@ -1,8 +1,8 @@
-import {CORRAL_DESIGNS,CORRAL_STAIRS,FLOOR_HEIGHT,corralFloors,stairPoint} from './egg-corral.js';
+import {CORRAL_DESIGNS,CORRAL_ELEVATOR,FLOOR_HEIGHT,corralFloors} from './egg-corral.js';
 export function createCorralWorld({pen,roof,penContent,penDecor,helpers}){
- const {group,box,cyl,rod,torus,ball,label}=helpers,upper=group(pen),levels=[],stairs=[];
+ const {group,box,cyl,rod,torus,ball,label}=helpers,upper=group(pen),levels=[];let cabin=null;
  upper.name='CorralWalkableFloors';let signature='';
- function clear(){upper.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});upper.clear();levels.length=0;stairs.length=0;}
+ function clear(){upper.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});upper.clear();levels.length=0;cabin=null;}
  function theme(g,id,d,y){
   const deco=group(g,0,y,0);deco.name='CorralDesign-'+id;
   for(const x of[-3.25,3.25]){
@@ -28,30 +28,38 @@ export function createCorralWorld({pen,roof,penContent,penDecor,helpers}){
    const y=(floor-1)*FLOOR_HEIGHT,g=group(upper);g.name='CorralFloor-'+floor;g.userData.floor=floor;levels.push(g);
    if(floor>1){const deck=box(g,7.1,.18,7.8,d.color,0,y-.09,0);deck.name='WalkableCorralDeck';deck.userData.surfaceY=y;
     for(const x of[-3.4,3.4])for(const z of[-3.55,3.55])box(g,.17,FLOOR_HEIGHT,.17,d.trim,x,y-FLOOR_HEIGHT/2,z);
-    for(const x of[-3.45,3.45]){const length=x>0?5.6:7.5;for(const h of[.45,.85])box(g,.1,.1,length,d.rail,x,y+h,0);for(const z of[-2.5,0,2.5])box(g,.1,.9,.1,d.trim,x,y+.45,z);}
+    for(const x of[-3.45,3.45]){for(const h of[.45,.85]){if(x>0){for(const z of[-2.5,2.5])box(g,.1,.1,2.4,d.rail,x,y+h,z);}else box(g,.1,.1,7.5,d.rail,x,y+h,0);}for(const z of[-2.5,2.5])box(g,.1,.9,.1,d.trim,x,y+.45,z);}
     for(const z of[-3.78,3.78]){for(const h of[.45,.85])box(g,6.9,.1,.1,d.rail,0,y+h,z);for(const x of[-3.4,0,3.4])box(g,.1,.9,.1,d.trim,x,y+.45,z);}
     label(g,floor+'º ANDAR · 24 NINHOS',0,y+1.55,-3.8,3.3);
    }
-   if(n>1)for(const z of[-CORRAL_STAIRS.landingZ,CORRAL_STAIRS.landingZ]){const edge=CORRAL_STAIRS.x+CORRAL_STAIRS.laneGap+CORRAL_STAIRS.width/2,width=edge-3.1,center=(edge+3.1)/2;const landing=box(g,width,.18,CORRAL_STAIRS.landingDepth,d.color,center,y-.09,z);landing.name='CorralLanding';landing.userData.surfaceY=y;box(g,width,.1,.1,d.rail,center,y+.85,z+Math.sign(z)*.36);}
+   const e=CORRAL_ELEVATOR,edge=e.x+e.width/2,width=edge-3.1,center=(edge+3.1)/2;
+   const landing=box(g,width,.18,e.depth,d.color,center,y-.09,e.z);landing.name='CorralLanding';landing.userData.surfaceY=y;
+   if(floor>1)for(const z of[-e.depth/2,e.depth/2]){box(g,width,.08,.08,d.rail,center,y+.85,z);for(const x of[3.6,edge])box(g,.08,.9,.08,d.trim,x,y+.45,z);}
+   label(g,floor+'º',e.x,y+2.15,-e.depth/2,1);
    theme(g,id,d,y);
   }
-  for(let level=1;level<n;level++){
-   const ramp=group(upper);ramp.name='CorralStairs-'+level;ramp.userData.fromFloor=level;stairs.push(ramp);
-   const s=CORRAL_STAIRS,run=s.halfRun*2/s.steps,rise=FLOOR_HEIGHT/s.steps;
-   for(let j=0;j<s.steps;j++){const p=stairPoint(level,(j+.5)/s.steps),top=(level-1)*FLOOR_HEIGHT+(j+1)*rise;const tread=box(ramp,s.width,.12,run+.005,d.trim,p.x,top-.06,p.z);tread.name='CorralStairTread';tread.userData.surfaceY=top;box(ramp,s.width,.025,.035,d.rail,p.x,top+.012,p.z+(level%2?1:-1)*run*.45);}
-   const a=stairPoint(level,0),b=stairPoint(level,1);
-   for(const x of[a.x-s.width/2,a.x+s.width/2]){rod(ramp,[x,a.y+.85,a.z],[x,b.y+.85,b.z],.055,d.rail);for(const t of[0,.5,1]){const p=stairPoint(level,t);rod(ramp,[x,p.y,p.z],[x,p.y+.85,p.z],.045,d.trim);}}
-  }
-  if(n>1)label(upper,'ESCADAS · SUBA AQUI',CORRAL_STAIRS.x,1.5,4.2,2.8);
+  const e=CORRAL_ELEVATOR,tower=group(upper,e.x,0,e.z),height=(n-1)*FLOOR_HEIGHT+2.55;tower.name='CorralElevator';
+  for(const x of[-e.width/2,e.width/2])for(const z of[-e.depth/2,e.depth/2]){box(tower,.13,height,.13,d.trim,x,height/2,z);ball(tower,.13,d.rail,x,height,z);}
+  box(tower,e.width+.25,.18,e.depth+.25,d.roof,0,height,0);label(tower,'ELEVADOR',0,2.8,e.depth/2+.08,2.1);label(tower,'ENTRE · ESCOLHA O ANDAR',0,1.7,e.depth/2+.15,2.1);
+  cabin=group(tower);cabin.name='CorralElevatorCabin';
+  box(cabin,e.width,.16,e.depth,d.roof,0,.04,0);box(cabin,e.width-.2,.025,e.depth-.2,d.rail,0,.13,0);
+  box(cabin,e.width,.14,e.depth,d.roof,0,2.25,0);
+  for(const x of[-e.width/2+.1,e.width/2-.1])for(const z of[-e.depth/2+.1,e.depth/2-.1])box(cabin,.1,2.12,.1,d.rail,x,1.15,z);
+  box(cabin,e.width-.15,1.5,.07,d.color,0,.9,-e.depth/2+.08);
+  for(const y of[.5,1])box(cabin,.07,.07,e.depth,d.rail,e.width/2-.07,y,0);
+  box(cabin,.4,.65,.12,d.trim,e.width/2-.3,1.05,-e.depth/2+.16);
+  for(let i=0;i<Math.min(n,5);i++)ball(cabin,.055,0xffe58d,e.width/2-.3,1.25-i*.1,-e.depth/2+.24);
+  label(cabin,'↕',0,1.65,-e.depth/2+.2,.7);
+
  }
  function animate(game){
   // Cut away upper slabs only while inside, so the active floor stays readable.
-  const p=game.player,inside=p.x>-8.55&&p.x<.35&&p.z>10.1&&p.z<17.95;
+  const p=game.player,inside=p.x>-8.55&&p.x<2.3&&p.z>10.1&&p.z<17.95;
   const active=1+Math.floor((p.y+.12)/FLOOR_HEIGHT);
   for(const g of levels)g.visible=!inside||g.userData.floor<=active;
-  for(const g of stairs)g.visible=!inside||g.userData.fromFloor<=active;
+  if(cabin)cabin.position.y=game.elevatorRide?p.y:Math.max(0,Math.min(corralFloors(game.corralSave())-1,Math.round(p.y/FLOOR_HEIGHT)))*FLOOR_HEIGHT;
   for(const container of [penContent,penDecor])for(const child of container.children)child.visible=!inside||child.position.y<active*FLOOR_HEIGHT;
   roof.visible=!inside||active>=corralFloors(game.corralSave());
  }
- return{sync,animate,upper,levels,stairs};
+ return{sync,animate,upper,levels,get cabin(){return cabin;}};
 }
