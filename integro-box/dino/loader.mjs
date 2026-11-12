@@ -5,7 +5,7 @@ export function installDino(client){
   lobby.querySelector('.cards').prepend(card);
   window.BoxCatalogAssets={...window.BoxCatalogAssets,'dino-expedicao':'./dino/capa-v1.webp'};
   const app=document.createElement('section');app.id='dinoApp';app.hidden=true;app.setAttribute('aria-label','Dino Expedição');document.body.append(app);
-  const css=document.createElement('link');css.rel='stylesheet';css.href='./dino/style.css?v=art1';document.head.append(css);
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./dino/style.css?v=20261112-update1';document.head.append(css);
   let game,opening=false,closed=false,sequence=0;
   const button=card.querySelector('button');
   async function rpc(action,extra={}){
@@ -22,7 +22,7 @@ export function installDino(client){
       home.click();const current=sequence;
       for(const id of ['lobby','play','posterView','footer'])document.getElementById(id)?.classList.add('hidden');
       app.hidden=false;
-      const {createGame}=await import('./game.mjs?v=art1');
+      const {createGame}=await import('./game.mjs?v=20261112-update1');
       if(closed||sequence!==current)return;
       game??=createGame(app,{rpc,storage:window.BoxStorage,exit});game.open();
     }catch{

@@ -1,5 +1,5 @@
-import {COLORS,NAMES} from './rules.mjs?v=20261023-walk2';
-import {ROOMS,CORRIDORS,OBSTACLES,nearTerminal} from './world.mjs?v=20261023-walk2';
+import {COLORS,NAMES} from './rules.mjs?v=20261112-update1';
+import {ROOMS,CORRIDORS,OBSTACLES,nearTerminal} from './world.mjs?v=20261112-update1';
 export function astronaut(ctx,x,y,color,scale=1,walk=0,dead=false){
  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.lineWidth=3.4;ctx.strokeStyle='#172333';
  const box=(x,y,w,h,r,fill)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();ctx.stroke();};
@@ -9,6 +9,7 @@ export function astronaut(ctx,x,y,color,scale=1,walk=0,dead=false){
  box(-7,-28,34,23,9,'#c3e9ee');ctx.fillStyle='#f6ffff';ctx.beginPath();ctx.roundRect(-2,-24,21,6,3);ctx.fill();
  ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('i',3,10);ctx.restore();
 }
+export function ghost(ctx,color,time){ctx.save();ctx.translate(0,Math.sin(time*3)*4);ctx.globalAlpha*=.58;ctx.fillStyle=color;ctx.strokeStyle='#5b477d';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-21,20);ctx.lineTo(-21,-16);ctx.quadraticCurveTo(-20,-42,0,-42);ctx.quadraticCurveTo(22,-42,22,-16);ctx.lineTo(22,20);for(let x=22;x>-20;x-=14)ctx.quadraticCurveTo(x-7,8,x-14,20);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#e8ffff';ctx.beginPath();ctx.roundRect(-10,-29,33,20,9);ctx.fill();ctx.fillStyle='#739da9';ctx.fillRect(-3,-24,16,3);ctx.restore();}
 const scenes=new WeakMap();
 function box(c,x,y,w,h,r,fill,stroke='#152a3b',width=4){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();if(width){c.lineWidth=width;c.strokeStyle=stroke;c.stroke();}}
 function floor(c){
@@ -38,8 +39,9 @@ export function drawShip(canvas,state,selected,time=0){
  for(let i=0;i<65;i++){c.fillStyle=i%5?'#b0d8ec55':'#ffe0a2';c.beginPath();c.arc(((i*173-cx*.09)%w+w)%w,((i*97-cy*.09)%h+h)%h,i%5?1:2,0,7);c.fill();}
  c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-cx,-cy);floor(c);for(const o of OBSTACLES)furniture(c,o,state,time);
  if(me.alive&&me.room>=0){const r=ROOMS[me.room],t=r.terminal,needed=me.room===6?!me.meetingUsed:state.role==='crew'&&!me.done.includes(me.room)||state.sabotage&&me.room===2;if(needed){c.beginPath();c.ellipse(t.x,t.y+15,55+Math.sin(time*3)*3,28,0,0,7);c.strokeStyle=nearTerminal(me)?'#ffe275':'#fff7b570';c.lineWidth=5;c.stroke();c.fillStyle='#ffe275';c.font='bold 26px system-ui';c.textAlign='center';c.fillText('!',t.x,t.y-35);}}
+ for(const report of state.reports.filter(r=>!r.reported&&Number.isFinite(r.x+r.y)))astronaut(c,report.x,report.y-22,COLORS[report.slot-1],1,0,true);
  const people=state.players.slice().sort((a,b)=>a.y-b.y);
- for(const p of people){if(!p.alive&&!state.reports.some(r=>r.slot===p.slot&&!r.reported)&&p.slot!==state.slot)continue;let pose=scene.poses.get(p.slot);if(!pose){pose={x:p.x,y:p.y};scene.poses.set(p.slot,pose);}const moving=Math.hypot(p.x-pose.x,p.y-pose.y)>1;if(p.slot===state.slot){pose.x=p.x;pose.y=p.y;}else{pose.x+=(p.x-pose.x)*Math.min(1,dt*10);pose.y+=(p.y-pose.y)*Math.min(1,dt*10);}c.save();c.translate(pose.x,pose.y-22);c.scale(p.facing||1,1);if(!p.alive)c.globalAlpha=.65;astronaut(c,0,0,COLORS[p.slot-1],1,moving||p.walking?time*14:0,!p.alive);c.restore();c.fillStyle='#132e42';c.font='bold 15px system-ui';c.textAlign='center';c.fillText(p.slot===state.slot?'VOCÊ':p.name,pose.x,pose.y+24);if(p.slot===state.slot){c.fillStyle='#ffe286';c.beginPath();c.moveTo(pose.x-8,pose.y-78);c.lineTo(pose.x+8,pose.y-78);c.lineTo(pose.x,pose.y-66);c.fill();}}
+ for(const p of people){if(!p.alive&&me.alive)continue;let pose=scene.poses.get(p.slot);if(!pose){pose={x:p.x,y:p.y};scene.poses.set(p.slot,pose);}const moving=Math.hypot(p.x-pose.x,p.y-pose.y)>1;if(p.slot===state.slot){pose.x=p.x;pose.y=p.y;}else{pose.x+=(p.x-pose.x)*Math.min(1,dt*10);pose.y+=(p.y-pose.y)*Math.min(1,dt*10);}c.save();c.translate(pose.x,pose.y-22);c.scale(p.facing||1,1);if(!p.alive)ghost(c,COLORS[p.slot-1],time);else astronaut(c,0,0,COLORS[p.slot-1],1,moving||p.walking?time*14:0,false);c.restore();c.fillStyle='#132e42';c.font='bold 15px system-ui';c.textAlign='center';c.fillText(p.slot===state.slot?(p.alive?'VOCÊ':'VOCÊ · FANTASMA'):p.name,pose.x,pose.y+24);if(p.slot===state.slot){c.fillStyle='#ffe286';c.beginPath();c.moveTo(pose.x-8,pose.y-78);c.lineTo(pose.x+8,pose.y-78);c.lineTo(pose.x,pose.y-66);c.fill();}}
  c.restore();if(state.sabotage){c.strokeStyle='#f2798477';c.lineWidth=12+4*Math.sin(time*4);c.strokeRect(0,0,w,h);}
 }
 export function drawOverview(canvas,state){const c=canvas.getContext('2d');c.clearRect(0,0,660,510);c.save();c.scale(.3,.3);floor(c);for(const r of ROOMS){if(r.id===6)continue;c.fillStyle=state.players[state.slot-1].done.includes(r.id)?'#6ec89e':'#ffdc77';c.beginPath();c.arc(r.terminal.x,r.terminal.y,25,0,7);c.fill();}const p=state.players[state.slot-1];c.fillStyle=COLORS[p.slot-1];c.strokeStyle='#fff';c.lineWidth=7;c.beginPath();c.arc(p.x,p.y,23,0,7);c.fill();c.stroke();c.restore();}

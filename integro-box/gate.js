@@ -64,10 +64,10 @@ try {
   if(!unloaded){const {installRush}=await import('./rush.js?v=20261016-eggshop1');installRush();}
   if(!unloaded){const {installShark}=await import('./shark-loader.js?v=20261021-economy1');installShark();}
   if(!unloaded){const {installTower}=await import('./tower-loader.js?v=20261022-tower2');installTower();}
-  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=art1');installDino(supabase);}
-  if(!unloaded){const {installEngole}=await import('./engole/loader.mjs?v=20261106-cartoon1');installEngole(supabase,user);}
+  if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=20261112-update1');installDino(supabase);}
+  if(!unloaded){const {installEngole}=await import('./engole/loader.mjs?v=20261112-update1');installEngole(supabase,user);}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
-  if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261023-walk2');installDescubra();}
+  if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261112-update1');installDescubra();}
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261105-engole1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
