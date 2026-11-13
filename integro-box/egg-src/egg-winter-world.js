@@ -1,3 +1,4 @@
+import {HEAVEN} from './egg-heaven.js';
 import {TRACK_SCALE,TRACK_WIDTH,TRACK_HALF_WIDTH,TRACK_GATE_WIDTH,trackSideX} from './egg-track.js';
 import {createEventClock} from './egg-event-clock.js';
 import * as T from 'three';
@@ -24,7 +25,7 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  const eventBase=seasonalGroup(base),eventPen=seasonalGroup(pen);
  const totem=createWinterTotem(),banner=createWinterBanner();
  // Snow settles in every biome; their landmarks and colours remain recognizable.
- for(let i=0;i<zoneGroups.length;i++){
+ for(let i=0;i<Math.min(HEAVEN.world,zoneGroups.length);i++){
   const g=seasonalGroup(zoneGroups[i]),z=-(i*48+24);
   for(const side of [-1,1])for(let j=0;j<5;j++){
    const x=trackSideX(side*(6.1+j%2*2.6)),zz=z-19+j*9;

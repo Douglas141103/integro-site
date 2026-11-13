@@ -64,3 +64,14 @@ test('fast peer movement retains server appearance and ignores cosmetics claimed
  const rendered=a.api.peers([peer])[0];assert.equal(rendered.state.appearance,appearance);assert.notEqual(rendered.state.x,0);
  for(const u of f.users)u.api.stop();
 });
+
+test('fast poses, shoves and dropped celestial eggs remain valid on the wide inverted bonus track',async()=>{
+ const f=fixture(),[a,b,c]=f.users;
+ for(const u of f.users){u.normal=true;u.game.raceMode=false;u.game.roomMode=true;u.game.player.z=-1240;}
+ a.game.player.x=10;b.game.player.x=12.5;c.game.player.x=-10;f.tick();f.tick();
+ assert.equal(a.api.state().target,2);assert.equal(await a.api.push(),true);assert.equal(b.effects[0].kind,'received');
+ for(let i=0;i<35;i++)b.game.update(.02,{});assert(b.game.player.x<=13.85);assert(b.game.player.z<-1200);
+ const drop={world:23,rarity:'rare',mutation:'gold',x:12,z:-1240};
+ f.emit({v:2,kind:'pose',room:'room-1',scope:'room',from:2,at:f.now(),seq:9999,playing:true,x:12,y:0,z:-1240,yaw:0,droppedEgg:drop});
+ const peer=a.api.peers([{slot:2,state:{x:12,y:0,z:-1240,yaw:0}}])[0];assert.deepEqual(peer.state.droppedEgg,drop);assert.equal(peer.state.x,12);assert.equal(peer.state.z,-1240);
+});

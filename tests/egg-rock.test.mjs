@@ -6,7 +6,7 @@ import {ROCK,rockSites,mountainState} from '../integro-box/egg-src/egg-rock-rule
 import {intgemDatabase} from './intgem-db-fixture.mjs';
 
 test('track 23 preserves earlier eggs, and its power grows from pebble to mountain everywhere',()=>{
- assert.equal(WORLDS.length,23);assert.equal(WORLDS[21].name,'Pedras Flamejantes');assert.equal(WORLDS[22].kind,'stoneGiant');
+ assert.equal(WORLDS.length,24);assert.equal(WORLDS[21].name,'Pedras Flamejantes');assert.equal(WORLDS[22].kind,'stoneGiant');
  const old=cleanSave({version:4,creatures:[{world:21,uid:'dragon',rarity:'rare',mutation:'gold'}],eggs:[{world:22,rarity:'epic',mutation:'normal',remaining:120}],seen:Array(22).fill(true)});
  assert.equal(old.creatures[0].world,21);assert.equal(old.eggs[0].world,22);assert.equal(old.seen[22],false);
  const g=new EggAdventure();Object.assign(g.player,NESTS[22]);assert(g.steal(0));assert.equal(g.rock.castAt,0);

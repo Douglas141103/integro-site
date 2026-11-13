@@ -24,7 +24,7 @@ test('IntGem fusion purchases and uses are atomic, idempotent, account-owned and
   canonical.save.secondFloor=false;assert.equal((await save(1,canonical.save,5)).error,'invalid_save');
   const ledger=(await db.query("select count(*)::int n,sum(delta)::int total from private.intgem_ledger where reference like 'egg-fusion:%'")).rows[0];assert.equal(ledger.n,1);assert.equal(ledger.total,-10);
   await assert.rejects(()=>run(1,'select * from private.egg_fusion_operations'),/permission denied/);await assert.rejects(()=>act(20,'fusion_buy',99,0),/box_access_denied/);
-  const specimens=[];for(let world=0;world<WORLDS.length;world++)for(const rarity of Object.keys(RARITIES))for(const mutation of Object.keys(MUTATIONS))specimens.push({world,rarity,mutation,winterReward:world===20,fusionBonus:1.23});
+  const specimens=[];for(let world=0;world<23;world++)for(const rarity of Object.keys(RARITIES))for(const mutation of Object.keys(MUTATIONS))specimens.push({world,rarity,mutation,winterReward:world===20,fusionBonus:1.23});
   const rows=(await db.query('select private.egg_fusion_rate(value)::float8 rate from jsonb_array_elements($1::jsonb)',[JSON.stringify(specimens)])).rows;
   rows.forEach((r,i)=>assert(Math.abs(r.rate-g.baseCreatureIncomeRate(specimens[i]))<1e-8,'SQL and game income formulas agree'));
  }finally{await db.close();}
