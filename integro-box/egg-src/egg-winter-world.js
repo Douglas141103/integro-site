@@ -1,3 +1,4 @@
+import {TRACK_SCALE,TRACK_WIDTH,TRACK_HALF_WIDTH,TRACK_GATE_WIDTH,trackSideX} from './egg-track.js';
 import {createEventClock} from './egg-event-clock.js';
 import * as T from 'three';
 import {createWinterTotem,createWinterBanner,winterDisplayLayout,winterDisplayArea} from './egg-winter-totem.js';
@@ -26,14 +27,14 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  for(let i=0;i<zoneGroups.length;i++){
   const g=seasonalGroup(zoneGroups[i]),z=-(i*48+24);
   for(const side of [-1,1])for(let j=0;j<5;j++){
-   const x=side*(6.1+j%2*2.6),zz=z-19+j*9;
+   const x=trackSideX(side*(6.1+j%2*2.6)),zz=z-19+j*9;
    ball(g,1.35,snow,x,.06,zz,1.35,.23,1.7);
-   if(j%2===0&&!winterDisplayArea(i,side*11,zz))tree(g,side*11,zz,3,.85+j*.1);
+   if(j%2===0&&!winterDisplayArea(i,trackSideX(side*11),zz))tree(g,trackSideX(side*11),zz,3,.85+j*.1);
   }
   const layout=winterDisplayLayout(i);
   for(const p of layout.totems){const t=totem.clone(true);t.position.set(p.x,0,p.z);t.rotation.y=p.x<0?-.18:.18;g.add(t);}
   const flag=banner.clone(true);flag.position.set(layout.banner.x,0,layout.banner.z);g.add(flag);
-  const cap=box(g,12.8,.13,.66,snow,0,4.84,-i*48);cap.castShadow=false;
+  const cap=box(g,TRACK_GATE_WIDTH+.2,.13,.66,snow,0,4.84,-i*48);cap.castShadow=false;
  }
  // Winter games village with the custom red-circle event emblem.
  const podium=group(eventBase,-5,0,22.5);
@@ -45,12 +46,12 @@ export function createWinterWorld({root,base,pen,zoneGroups,player,helpers}){
  for(const x of [-2.8,2.8])ball(eventPen,.5,snow,x,2.88,2.5,1.8,.22,1.3);
  const eventClock=createEventClock(eventBase);
  const winter=zoneGroups[WINTER.world],z=-(WINTER.world*48+24);
- for(const side of [-1,1])for(let j=0;j<5;j++){const zz=z-20+j*9;if(winterDisplayArea(WINTER.world,side*7.5,zz))continue;crystal(winter,side*(6.5+j%2),zz,j%2?0xa6e8fb:0x7fb5de,2.5+j%3);tree(winter,side*10,zz,3,1.4);}
- const arch=torus(winter,6,.28,0x8aceed,0,3,z-13);arch.scale.y=1.3;label(winter,'FÊNIX GELADA',0,7,z-13,6,'#154b75','#eafbff');
+ for(const side of [-1,1])for(let j=0;j<5;j++){const zz=z-20+j*9;if(winterDisplayArea(WINTER.world,trackSideX(side*7.5),zz))continue;crystal(winter,trackSideX(side*(6.5+j%2)),zz,j%2?0xa6e8fb:0x7fb5de,2.5+j%3);tree(winter,trackSideX(side*10),zz,3,1.4);}
+ const arch=torus(winter,6,.28,0x8aceed,0,3,z-13);arch.scale.set(TRACK_SCALE,1.3,1);label(winter,'FÊNIX GELADA',0,7,z-13,6,'#154b75','#eafbff');
  const frost=new T.Group();winter.add(frost);frost.visible=false;
  const iceMat=new T.MeshStandardMaterial({color:0x7bcbea,roughness:.12,metalness:.25,transparent:true,opacity:.8});
- const sheet=new T.Mesh(new T.BoxGeometry(9.4,.025,47.8),iceMat);sheet.position.set(0,.065,z);sheet.receiveShadow=true;frost.add(sheet);
- const cracks=[];for(let j=0;j<20;j++){const x=Math.sin(j*12.31)*4,zz=z-23+j*2.3;cracks.push(x,.085,zz,x+Math.cos(j)*1.4,.085,zz+1.2,x+Math.cos(j)*1.4,.085,zz+1.2,x-.7,.085,zz+1.8);}
+ const sheet=new T.Mesh(new T.BoxGeometry(TRACK_WIDTH-.1,.025,47.8),iceMat);sheet.position.set(0,.065,z);sheet.receiveShadow=true;frost.add(sheet);
+ const cracks=[];for(let j=0;j<20;j++){const x=Math.sin(j*12.31)*(TRACK_HALF_WIDTH-.75),zz=z-23+j*2.3;cracks.push(x,.085,zz,x+Math.cos(j)*1.4,.085,zz+1.2,x+Math.cos(j)*1.4,.085,zz+1.2,x-.7,.085,zz+1.8);}
  const cracksGeo=new T.BufferGeometry();cracksGeo.setAttribute('position',new T.Float32BufferAttribute(cracks,3));frost.add(new T.LineSegments(cracksGeo,new T.LineBasicMaterial({color:0xe7ffff,transparent:true,opacity:.7})));
  const snowGeo=new T.BufferGeometry(),positions=new Float32Array(150*3);
  for(let i=0;i<150;i++){positions[i*3]=(Math.random()-.5)*26;positions[i*3+1]=Math.random()*13;positions[i*3+2]=(Math.random()-.5)*32;}

@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from '../integro-box/egg-src/egg-track.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
@@ -36,7 +37,7 @@ test('station platforms, trains and passengers stay beside the path throughout b
    const train=site.getObjectByName('IntegroArrivingTrain');assert.equal(train.rotation.x,0);
    for(const node of site.children){if(!node.visible)continue;
     const bounds=new T.Box3().setFromObject(node,true);if(bounds.isEmpty())continue;
-    assert(bounds.max.x<-4.75||bounds.min.x>4.75,'scenery must not block the running path');
+    assert(bounds.max.x<-TRACK_HALF_WIDTH||bounds.min.x>TRACK_HALF_WIDTH,'scenery must not block the running path');
     assert(Number.isFinite(bounds.min.y)&&Number.isFinite(bounds.max.y));
    }
   }

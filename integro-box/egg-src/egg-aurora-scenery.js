@@ -1,3 +1,4 @@
+import {TRACK_GROUND_WIDTH} from './egg-track.js';
 import * as T from 'three';
 export function createAuroraScenery(){
  const curtains=[],columns=64,rows=6;
@@ -22,7 +23,7 @@ export function createAuroraScenery(){
  function update(time,reducedMotion=false){const t=reducedMotion?0:time;
   for(const {mesh,band,index}of curtains){const position=mesh.geometry.attributes.position;
    for(let x=0;x<=columns;x++)for(let y=0;y<=rows;y++){
-    const u=x/columns,v=y/rows,xx=-15+u*30;
+    const u=x/columns,v=y/rows,xx=(u-.5)*(TRACK_GROUND_WIDTH+2);
     const lower=7.8+band*.55+Math.sin(u*7+t*.24+band)*.8;
     const height=2.8+Math.sin(u*10-t*.18+band)*.8;
     position.setXYZ(x*(rows+1)+y,xx,lower+v*height,-index*48-10-band*14+Math.sin(u*8+t*.2+v*.7)*2.1);

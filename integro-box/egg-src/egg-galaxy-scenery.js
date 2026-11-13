@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 export const GALAXY_CYCLE=15;
 const clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>x*x*(3-2*x);
@@ -5,7 +6,7 @@ export function createGalaxyScenery({group,ball,torus}){
  const sites=[],dummy=new T.Object3D(),starGeometry=new T.IcosahedronGeometry(.075,0);
  function add(parent,index){if(index!==18)return;
   for(const side of[-1,1])for(let j=0;j<2;j++){
-   const root=group(parent,side*9.4,3.9,-index*48-12-j*24);root.name='GalaxyBirthScenery';
+   const root=group(parent,trackSideX(side*9.4),3.9,-index*48-12-j*24);root.name='GalaxyBirthScenery';
    const hole=group(root);hole.name='ImplodingBlackHole';
    const core=ball(hole,1.08,0x060714);core.material=new T.MeshBasicMaterial({color:0x050611});
    const disk=group(hole);disk.rotation.x=1.15;

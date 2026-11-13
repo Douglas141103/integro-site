@@ -1,20 +1,21 @@
+import {TRACK_WIDTH,TRACK_GROUND_WIDTH,trackSideX} from './egg-track.js';
 import {FLAME,flameGaps} from './egg-flame-rules.js';
 
 export function createFlameWorld({helpers}){
  const {group,box,ball,cyl,torus,seasonalSurface}=helpers,gaps=[],rocks=[];
  function ground(g,w,world){
   const cuts=flameGaps(world).map(z=>-z-world*48),half=FLAME.halfLength;
-  const slab=(parent,start,end,width=28,x=0)=>{
+  const slab=(parent,start,end,width=TRACK_GROUND_WIDTH,x=0,pathWidth=TRACK_WIDTH,pathX=0)=>{
    const z=-world*48-(start+end)/2;
    seasonalSurface(box(parent,width,.8,end-start,w.ground,x,-.46,z),w.ground);
-   seasonalSurface(box(parent,width===28?9.5:4.75,.06,end-start,w.path,width===28?0:x/14*4.75,-.03,z),w.path);
+   const path=box(parent,pathWidth,.06,end-start,w.path,pathX,-.03,z);path.name='TrackSurface';seasonalSurface(path,w.path);
   };
   let start=0;
   for(let slot=0;slot<cuts.length;slot++){
    const cut=cuts[slot],z=-world*48-cut;slab(g,start,cut-half);
    const node=group(g);node.name='FlameFissure';node.userData.world=world;
    // A long seam follows the track; the left and right banks move sideways.
-   const halves=[-1,1].map(side=>{const part=group(node);part.name='FlameGroundLip';slab(part,cut-half,cut+half,14,side*7);return{part,side};});
+   const halves=[-1,1].map(side=>{const part=group(node);part.name='FlameGroundLip';slab(part,cut-half,cut+half,TRACK_GROUND_WIDTH/2,side*TRACK_GROUND_WIDTH/4,TRACK_WIDTH/2,side*TRACK_WIDTH/4);return{part,side};});
    box(node,FLAME.halfGap*2,.2,half*2,0x160f19,0,-2,z);
    const lava=box(node,FLAME.halfGap*2,.08,half*2,0xff5b19,0,-1.35,z);lava.material=lava.material.clone();lava.material.emissive.setHex(0xff3b05);lava.material.emissiveIntensity=1.4;
    const glow=box(node,.10,.02,half*2,0xffbe43,0,.015,z);glow.material=glow.material.clone();glow.material.emissive.setHex(0xff7a14);glow.material.emissiveIntensity=1;
@@ -23,7 +24,7 @@ export function createFlameWorld({helpers}){
  }
  function scenery(g,world){if(world!==FLAME.world)return;
   for(let j=0;j<12;j++){
-   const x=(j%2?-1:1)*(6.3+(j%3)*1.4),z=-world*48-3-Math.floor(j/2)*7.8;
+   const x=trackSideX((j%2?-1:1)*(6.3+(j%3)*1.4)),z=-world*48-3-Math.floor(j/2)*7.8;
    const crater=cyl(g,.85,1.15,.20,0x211c25,x,.02,z,8);crater.name='FlameCrater';
    torus(g,.75,.08,0xff822c,x,.13,z).rotation.x=Math.PI/2;
    const rock=group(g,x,-2,z);rock.name='RisingFlamingStone';cyl(rock,.3,.72,1.35,0x49343b,0,.65,0,6);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
 import {createEggWorld} from '../integro-box/egg-src/egg-world.js';
-import {WORLDS,ACCESSORIES,VEHICLES} from '../integro-box/egg-src/egg-rules.js';
+import {WORLDS,ACCESSORIES,VEHICLES,TRACK_HALF_WIDTH,PLAYER_RADIUS} from '../integro-box/egg-src/egg-rules.js';
 import {installEggPeerVisuals} from '../integro-box/egg-src/egg-peers.js';
 globalThis.document={createElement:()=>({getContext:()=>new Proxy({},{get:(o,k)=>o[k]||(()=>{})})})};
 const scene=new T.Scene(),world=createEggWorld(scene),position=b=>b.getWorldPosition(new T.Vector3());
@@ -42,7 +42,7 @@ test('remote explorers validate slots, interpolate, obey boundaries and release 
  const adapter={scene:()=>scene,state:()=>({zone:'world'})},base=scene.children.length;installEggPeerVisuals(adapter,()=>world);
  adapter.setPeers([{slot:1,state:{x:0,y:0,z:-10,yaw:0,zone:'world'}},{slot:5,state:{x:1,y:0,z:-10,yaw:0}},{slot:2,state:{x:NaN,y:0,z:0,yaw:0}}]);assert.equal(scene.children.length,base+1);
  const node=scene.children.at(-1),actor=node.userData.actor;assert.equal(actor.model.skeleton.bones.length,21);
- adapter.setPeers([{slot:1,state:{x:30,y:0,z:-20,yaw:1,zone:'world'}}]);for(let i=0;i<60;i++)adapter.tick(1/60);assert(node.position.x<=4.35);assert(node.position.z<-19);assert.equal(node.visible,true);
+ adapter.setPeers([{slot:1,state:{x:30,y:0,z:-20,yaw:1,zone:'world'}}]);for(let i=0;i<60;i++)adapter.tick(1/60);assert(node.position.x<=TRACK_HALF_WIDTH-PLAYER_RADIUS);assert(node.position.z<-19);assert.equal(node.visible,true);
  let sharedDisposed=false;actor.art.toonRamp.addEventListener('dispose',()=>sharedDisposed=true);adapter.clearPeers();assert.equal(scene.children.length,base);assert.equal(sharedDisposed,false);
 });
 

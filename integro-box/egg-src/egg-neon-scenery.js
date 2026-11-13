@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 import {createSphinxRig} from './egg-sphinx-rig.js';
 export const NEON_CYCLE=24;
@@ -7,7 +8,7 @@ export function createNeonScenery({group,box,softBox,cyl,ball,rod,actorArt}){
  const sites=[],up=new T.Vector3(0,1,0);
  function add(parent,index){if(index!==16)return;
   for(const side of[-1,1])for(let j=0;j<2;j++){
-   const root=group(parent,side*9.4,0,-index*48-12-j*24);root.name='NeonSphinxCycle';
+   const root=group(parent,trackSideX(side*9.4),0,-index*48-12-j*24);root.name='NeonSphinxCycle';
    const pyramid=group(root);pyramid.name='NeonPyramid';
    const shell=cyl(pyramid,0,2.2,3.8,0x8c69ab,0,1.9,0,4);shell.rotation.y=Math.PI/4;
    shell.material=shell.material.clone();shell.material.transparent=true;shell.material.depthWrite=false;

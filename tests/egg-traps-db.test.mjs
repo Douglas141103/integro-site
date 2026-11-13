@@ -50,3 +50,26 @@ test('paid traps charge once, hit opponents once and refund only unused deployme
   await assert.rejects(()=>trap(20,'trap_buy',null,'mine',100),/box_access_denied/);
  }finally{await db.close();}
 });
+
+
+test('widened track accepts and triggers paid traps on both new shoulders without weakening bounds or ownership',async()=>{
+ const {db,call,run}=await intgemDatabase();
+ try{
+  await db.exec(sql);
+  const migration=await readFile(new URL('../supabase/migrations/20261113205038_egg_triple_track_width.sql',import.meta.url),'utf8');
+  await db.exec(migration);await db.exec(migration);
+  const room=(await call(1,'create_public',{p_game:'egg'})).id;await call(2,'join_public',{p_room:room});
+  await db.exec(`insert into private.egg_trap_stock(user_id,kind,quantity) values('${uid(1)}','bear',2)`);
+  const sync=async(n,x,z)=>{await db.exec("update private.box_limits set last_sync='2000-01-01'");assert.equal((await call(n,'sync',{p_room:room,p_state:{x,z,y:0,yaw:0,zone:'world'}})).error,undefined);};
+  for(const side of [-1,1]){
+   const x=side*13.85;await sync(1,x,-20);await sync(2,x,-15);
+   const r=await run(1,'select public.box_egg(p_action=>$1,p_room=>$2,p_data=>$3,p_id=>$4) r',['trap_place',room,{kind:'bear'},uid(side<0?110:111)]);
+   assert.equal(r.error,undefined);assert.equal(r.traps.at(-1).x,x);
+   await db.exec("update private.egg_traps set placed_at=now()-interval '2 seconds';update private.egg_traps set hit_at=now()-interval '5 seconds' where status='spent'");
+   await sync(2,x,-25);
+   assert.equal((await db.query("select count(*)::int n from private.egg_traps where status='spent'")).rows[0].n,side<0?1:2);
+  }
+  for(const x of [-14.26,14.26])await assert.rejects(()=>db.query('update private.egg_traps set x=$1',[x]),/egg_traps_x_check/);
+  await assert.rejects(()=>run(2,'select * from private.egg_traps'),/permission denied/);
+ }finally{await db.close();}
+});

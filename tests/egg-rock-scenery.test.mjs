@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from '../integro-box/egg-src/egg-track.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
@@ -36,7 +37,7 @@ test('decorative guardians stay outside the path and reduced motion preserves th
     if(['PyramidDustRing','PyramidStoneChip'].includes(n.name))assert.equal(n.visible,false);
     if(n.visible&&['LittlePedregulho','RisingRockPyramid'].includes(n.name)){
      const bounds=new T.Box3().setFromObject(n,true);
-     assert(bounds.max.x<-4.75||bounds.min.x>4.75,'animation leaves the running path clear');
+     assert(bounds.max.x<-TRACK_HALF_WIDTH||bounds.min.x>TRACK_HALF_WIDTH,'animation leaves the running path clear');
      assert(Number.isFinite(bounds.min.y)&&Number.isFinite(bounds.max.y));
     }
    }

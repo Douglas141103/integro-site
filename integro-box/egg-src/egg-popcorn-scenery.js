@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 export const POPCORN_CYCLE=14;
@@ -9,7 +10,7 @@ export function createPopcornScenery({group,box,softBox,ball,cyl,torus}){
  function batch(parent,geometry,count,color,name){const m=new T.InstancedMesh(geometry,new T.MeshStandardMaterial({color,roughness:.85}),count);m.name=name;m.frustumCulled=false;m.instanceMatrix.setUsage(T.DynamicDrawUsage);parent.add(m);return m;}
  function add(parent,index){if(index!==0)return;
   for(const side of[-1,1])for(let j=0;j<2;j++){
-   const root=group(parent,side*8.8,0,-12-j*24);root.name='PopcornCookerScenery';
+   const root=group(parent,trackSideX(side*8.8),0,-12-j*24);root.name='PopcornCookerScenery';
    const pot=group(root);pot.name='PressureCooker';pot.rotation.y=side*Math.PI/2;
    cyl(pot,1.1,1.2,.2,0xc95d4f,0,.16,0,16);
    cyl(pot,1.06,.88,1.4,0xa8bcc2,0,.95,0,20);

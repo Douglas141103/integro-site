@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 
 // Custom angular numerals follow the supplied sketch instead of a system font.
@@ -58,7 +59,7 @@ export function createWinterTotem(){
 // Set dressing stays beyond the running rails and alternates sides along the route.
 export function winterDisplayLayout(index){
  const side=index%2?-1:1,z=-index*48;
- return {totems:[{x:side*7.6,z:z-8},{x:-side*7.6,z:z-36}],banner:{x:-side*9,z:z-21}};
+ return {totems:[{x:trackSideX(side*7.6),z:z-8},{x:trackSideX(-side*7.6),z:z-36}],banner:{x:trackSideX(-side*9),z:z-21}};
 }
 export function winterDisplayArea(index,x,z){
  const {totems,banner}=winterDisplayLayout(index);

@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 import {ArtResources} from '../rush-src/art.js';
 export const HARBOR_CYCLE=26;
@@ -35,7 +36,7 @@ export function createHarborScenery({group,box,softBox,cyl,ball,torus,rod,actorA
  const ports=[];
  function add(parent,index,z){if(index!==15)return;
   for(const side of[-1,1])for(let j=0;j<2;j++){
-   const root=group(parent,side*10.7,0,z-11+j*22);root.name='AnimatedWindHarbor';
+   const root=group(parent,trackSideX(side*10.7),0,z-11+j*22);root.name='AnimatedWindHarbor';
    box(root,9,.055,20,0x48b8c9,side*.3,.04,0);
    const dock=group(root,-side*2.1,.2,0);dock.name='WindHarborPier';
    box(dock,1.55,.22,7,0xa36f48,0,.06,0);

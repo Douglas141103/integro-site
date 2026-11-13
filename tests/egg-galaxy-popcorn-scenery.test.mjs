@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from '../integro-box/egg-src/egg-track.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
@@ -48,7 +49,7 @@ test('both animations remain outside the running path with finite particles thro
     if(!n.isMesh)return;
     if(n.isInstancedMesh){assert(Array.from(n.instanceMatrix.array).every(Number.isFinite));n.computeBoundingBox();}
     const bounds=new T.Box3().setFromObject(n,true);
-    assert(bounds.max.x<-4.75||bounds.min.x>4.75,'decoration stays beside the path');
+    assert(bounds.max.x<-TRACK_HALF_WIDTH||bounds.min.x>TRACK_HALF_WIDTH,'decoration stays beside the path');
    });
   }
  }
