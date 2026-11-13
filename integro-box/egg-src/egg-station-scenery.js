@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 export const STATION_CYCLE=18;
 const clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>x*x*(3-2*x);
 
@@ -5,7 +6,7 @@ export function createStationScenery({group,box,softBox,cyl,ball,label}){
  const stations=[];
  function add(parent,index,z){if(index!==19)return;
   for(const side of[-1,1]){
-   const root=group(parent,side*9.4,0,z);root.name='AnimatedIntegroStation';
+   const root=group(parent,trackSideX(side*9.4),0,z);root.name='AnimatedIntegroStation';
    const platform=box(root,2.2,.35,16,0x8eaf9e,-side*2.65,.15,-1);
    platform.name='StationPlatform';
    box(root,.12,.035,15,0xf1ce72,-side*1.65,.345,-1);

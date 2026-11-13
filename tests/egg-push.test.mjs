@@ -14,7 +14,7 @@ function fixture(){
 test('two runners exchange a shove, show confirmation, and physically recover inside the track',async()=>{
  const f=fixture(),[a,b]=f.users;assert.equal(a.api.state().target,2);assert.equal(a.api.state().ready,true);
  const original=JSON.stringify(b.game.save);assert.equal(await a.api.push(),true);assert.equal(b.effects[0].kind,'received');assert.equal(a.effects[0].kind,'sent');assert.equal(JSON.stringify(b.game.save),original,'shove does not charge money or change inventory');
- const before=b.game.player.x;for(let i=0;i<40;i++)b.game.update(.02,{});assert.ok(b.game.player.x>before+1.5);assert.equal(b.game.player.x,TRACK_HALF_WIDTH-PLAYER_RADIUS,'shove stops at the physical track edge');assert.ok(b.game.player.y>=0);assert.equal(b.game.pushVelocity,null);
+ const before=b.game.player.x;for(let i=0;i<40;i++)b.game.update(.02,{});assert.ok(b.game.player.x>before+1.5);assert(b.game.player.x<=TRACK_HALF_WIDTH-PLAYER_RADIUS,'shove stays within the widened track');assert(b.game.player.x-before<4,'widening does not amplify shove distance');assert.ok(b.game.player.y>=0);assert.equal(b.game.pushVelocity,null);
  assert.equal(await a.api.push(),false,'button cooldown prevents repeated shoves');assert.ok(a.api.state().remaining>2000);
 });
 test('victim protection, replay detection and sender cooldown reject repeated impacts',async()=>{

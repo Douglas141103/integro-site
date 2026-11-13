@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from '../integro-box/egg-src/egg-track.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
@@ -43,7 +44,7 @@ test('sphinx transformation and opening tunnel leave the running path clear in b
  const {root,update}=fixture(createNeonScenery,16);
  for(const reduced of[false,true])for(let time=0;time<NEON_CYCLE;time+=.25){
   update(time,reduced);root.updateMatrixWorld(true);
-  for(const site of root.children)site.traverseVisible(n=>{if(!n.isMesh)return;const bounds=new T.Box3().setFromObject(n,true);assert(bounds.max.x<-4.75||bounds.min.x>4.75);assert(Number.isFinite(bounds.min.y)&&Number.isFinite(bounds.max.y));});
+  for(const site of root.children)site.traverseVisible(n=>{if(!n.isMesh)return;const bounds=new T.Box3().setFromObject(n,true);assert(bounds.max.x<-TRACK_HALF_WIDTH||bounds.min.x>TRACK_HALF_WIDTH);assert(Number.isFinite(bounds.min.y)&&Number.isFinite(bounds.max.y));});
  }
  update(12,true);for(const site of root.children)assert.equal(site.getObjectByName('SphinxBody').position.y,0);
 });

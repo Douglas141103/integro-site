@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from '../integro-box/egg-src/egg-track.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../integro-box/egg-src/node_modules/three/build/three.module.js';
@@ -34,5 +35,5 @@ test('curved sails have sewn panels, stay anchored and billow without replacing 
 });
 test('ports and sailing routes keep all visible meshes outside the running path throughout the cycle',()=>{
  const {root,update}=fixture(createHarborScenery,15);
- for(const reduced of[false,true])for(let time=0;time<HARBOR_CYCLE;time+=.5){update(time,reduced);root.updateMatrixWorld(true);root.traverseVisible(n=>{if(!n.isMesh&&!n.isLine)return;const b=new T.Box3().setFromObject(n,true);assert(Number.isFinite(b.min.x)&&Number.isFinite(b.max.y));assert(b.max.x<-4.75||b.min.x>4.75,n.name);});}
+ for(const reduced of[false,true])for(let time=0;time<HARBOR_CYCLE;time+=.5){update(time,reduced);root.updateMatrixWorld(true);root.traverseVisible(n=>{if(!n.isMesh&&!n.isLine)return;const b=new T.Box3().setFromObject(n,true);assert(Number.isFinite(b.min.x)&&Number.isFinite(b.max.y));assert(b.max.x<-TRACK_HALF_WIDTH||b.min.x>TRACK_HALF_WIDTH,n.name);});}
 });

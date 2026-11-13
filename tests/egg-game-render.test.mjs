@@ -24,6 +24,12 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   const stationTrains=[];adapter.scene().traverse(n=>{if(n.name==='IntegroArrivingTrain')stationTrains.push(n);});assert.equal(stationTrains.length,2);
   for(const name of ['GalaxyBirthScenery','PopcornCookerScenery','NeonSphinxCycle']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
   let auroras=0;adapter.scene().traverse(n=>{if(n.name==='BorealAuroraCurtain')auroras++;});assert.equal(auroras,3);
+  const surfaces=[],gates=[];adapter.scene().traverse(n=>{if(n.name==='TrackSurface')surfaces.push(n);if(n.name==='TrackGate')gates.push(n);});
+  assert.equal(gates.length,23);
+  for(const gate of gates){const posts=gate.children.filter(n=>n.geometry?.parameters?.height===4.3);assert.equal(posts.length,2);assert(posts.every(n=>Math.abs(n.position.x)-.21>14.25));}
+  const segments=new Map();
+  for(const n of surfaces){const b=new T.Box3().setFromObject(n);const key=n.position.z;const ext=segments.get(key)||[Infinity,-Infinity];ext[0]=Math.min(ext[0],b.min.x);ext[1]=Math.max(ext[1],b.max.x);segments.set(key,ext);}
+  assert(segments.size>100);for(const [min,max] of segments.values()){assert.equal(min,-14.25);assert.equal(max,14.25);}
   const eventClock=adapter.scene().getObjectByName('WinterEventClock');assert(eventClock);assert.equal(eventClock.userData.time,'06:00:00');
   const barriers=[];adapter.scene().traverse(n=>{if(n.name==='TrackEdgePebble')barriers.push(n);});
   const fissures=[],stones=[];adapter.scene().traverse(n=>{if(n.name==='FlameFissure')fissures.push(n);if(n.name==='RisingFlamingStone')stones.push(n);});assert.equal(fissures.length,state().visited.length*2);assert.equal(stones.length,12);

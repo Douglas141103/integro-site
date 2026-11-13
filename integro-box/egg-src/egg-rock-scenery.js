@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 // Decorative cycle beside track 23. Objects are created once and reused forever.
 export const PYRAMID_CYCLE=14;
 const clamp=x=>Math.max(0,Math.min(1,x));
@@ -7,7 +8,7 @@ export function createRockScenery({helpers,stoneGiant}){
  const {group,cyl,box,torus}=helpers,sites=[];
  function add(parent,world){
   for(const side of[-1,1])for(let j=0;j<6;j++){
-   const root=group(parent,side*(7+(j%2)*2.3),0,-world*48-j*8-3);
+   const root=group(parent,trackSideX(side*(7+(j%2)*2.3)),0,-world*48-j*8-3);
    root.name='PedregulhoScenery';
    const height=3+(j%3)*2,phase=sites.length*.93;
    const pyramid=group(root);pyramid.name='RisingRockPyramid';

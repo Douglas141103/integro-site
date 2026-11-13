@@ -1,3 +1,4 @@
+import {trackSideX} from './egg-track.js';
 import * as T from 'three';
 export function expansionCreature(g,kind,color,limbs,{ball,cyl,torus,rod,softBox,group}){
  const cream=0xffe8c6,dark=0x294455;
@@ -38,7 +39,7 @@ export function expansionCreature(g,kind,color,limbs,{ball,cyl,torus,rod,softBox
 export function expansionScenery(g,index,z,h){
  const {ball,cyl,torus,rod,softBox,box,group,label,animated}=h;
  for(const side of[-1,1])for(let j=0;j<4;j++){
-  const x=side*(7+j%2*2),zz=z-17+j*11;
+  const x=trackSideX(side*(7+j%2*2)),zz=z-17+j*11;
   if(index===14){cyl(g,.25,.4,2.1,0xf7e1c2,x,1.0,zz,10);ball(g,1.6,j%2?0xd08fe3:0xec9eae,x,2.3,zz,1,.4,1);for(let k=0;k<5;k++){const a=k*1.25;ball(g,.17,0xfff2ce,x+Math.sin(a),2.75,zz+Math.cos(a),1,.3,1);}for(let k=0;k<3;k++)ball(g,.45,0x80bc7c,x+(k-1)*.5,.3,zz+1,1,.6,1);}
   if(index===17){cyl(g,0,.8,2.5,0xb6e9ea,x,1.25,zz,6);ball(g,1.4,0xf2f7eb,x,.2,zz,1,.3,1);}
 

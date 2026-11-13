@@ -1,3 +1,4 @@
+import {TRACK_HALF_WIDTH} from './egg-track.js';
 import {HOUSE,cleanHouse,installHouse} from './egg-house.js';
 import {CORRAL_ORIGIN,CORRAL_DESIGNS} from './egg-corral.js';
 import {TRAIN_SPEED_GAIN,TREADMILLS,FUSION_MACHINE,trainingTarget,corralCapacity,cleanProgression,cleanFusion,installProgression} from './egg-progression.js';
@@ -34,7 +35,8 @@ export const TRAINING_MAX=600;
 // Applies only to new automatic corral income; balances and sale values are retained.
 export const CORRAL_INCOME_MULTIPLIER=.35;
 export const LENGTH=48,CORRAL=CORRAL_ORIGIN,TREADMILL={x:5,z:14};
-export const TRACK_HALF_WIDTH=4.75,BASE_HALF_WIDTH=9.4,PLAYER_RADIUS=.4;
+export {TRACK_HALF_WIDTH};
+export const BASE_HALF_WIDTH=9.4,PLAYER_RADIUS=.4;
 export function corridorHalfWidth(z){const t=Math.max(0,Math.min(1,(z-3)/5));return TRACK_HALF_WIDTH+(BASE_HALF_WIDTH-TRACK_HALF_WIDTH)*t;}
 export function constrainToCorridor(p,radius=PLAYER_RADIUS){p.z=Math.max(-LENGTH*WORLDS.length+.8,Math.min(HOUSE.baseEnd,p.z));const limit=corridorHalfWidth(p.z)-radius;p.x=Math.max(-limit,Math.min(limit,p.x));return p;}
 export const NESTS=WORLDS.map((w,i)=>({x:i%2?-3.2:3.2,z:-(i*LENGTH+25)}));
