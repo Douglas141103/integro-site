@@ -1,8 +1,10 @@
+import {TRACK_HALF_WIDTH,constrainTrackPosition} from './egg-src/egg-track.js';
+import {HEAVEN} from './egg-src/egg-heaven.js';
 // Ephemeral room interactions. Only anonymous slots and bounded game coordinates are sent.
 // As with movement, this casual game uses client validation; it awards no currency.
 export const PUSH_RULES=Object.freeze({range:3.6,cooldown:3000,protection:1250,poseAge:700,eventAge:850});
-const finitePose=s=>s&&['x','y','z','yaw'].every(k=>Number.isFinite(s[k]))&&Math.abs(s.x)<=9.5&&s.y>=0&&s.y<=15&&s.z>=-1012&&s.z<=25;
-const cleanDrop=e=>e&&Number.isInteger(e.world)&&e.world>=0&&e.world<20&&['common','rare','epic','legendary','secret'].includes(e.rarity)&&['normal','gold','rainbow','cosmic'].includes(e.mutation)&&Number.isFinite(e.x)&&Math.abs(e.x)<=9.5&&Number.isFinite(e.z)&&e.z>=-964&&e.z<=25?{world:e.world,rarity:e.rarity,mutation:e.mutation,x:e.x,z:e.z}:null;
+const finitePose=s=>s&&['x','y','z','yaw'].every(k=>Number.isFinite(s[k]))&&Math.abs(s.x)<=TRACK_HALF_WIDTH&&s.y>=0&&s.y<=15&&s.z>=HEAVEN.end&&s.z<=50;
+const cleanDrop=e=>e&&Number.isInteger(e.world)&&e.world>=0&&e.world<=HEAVEN.world&&['common','rare','epic','legendary','secret'].includes(e.rarity)&&['normal','gold','rainbow','cosmic'].includes(e.mutation)&&Number.isFinite(e.x)&&Math.abs(e.x)<=TRACK_HALF_WIDTH&&Number.isFinite(e.z)&&e.z>=HEAVEN.end&&e.z<=50?{world:e.world,rarity:e.rarity,mutation:e.mutation,x:e.x,z:e.z}:null;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export function createEggPush({client,getRoom,getRace,getRuntime,getAdapter,healthy=()=>true,now=Date.now,id=()=>crypto.randomUUID(),onState=()=>{},onEffect=()=>{}}){
  let channel=null,key='',connected=false,stopped=false,sequence=0,nextPush=0,protectedUntil=0,lastPose=0;
@@ -21,11 +23,10 @@ export function createEggPush({client,getRoom,getRace,getRuntime,getAdapter,heal
   if(!effect)return {...s,playing:true};
   const age=Math.max(0,(c.clock-effect.start)/1000);
   if(age>16){botVisuals.delete(key);return {...s,playing:true};}
-  const travel=3.75*(1-Math.exp(-4*Math.min(age,.55))),z=Math.max(-1012,Math.min(25,s.z+effect.z*travel));
-  const limit=4.75+(9.4-4.75)*Math.max(0,Math.min(1,(z-3)/5))-.4;
-  return {...s,x:Math.max(-limit,Math.min(limit,s.x+effect.x*travel)),z,y:s.y+Math.max(0,3.3*age-11*age*age),activity:'pushed',playing:true};
+  const travel=3.75*(1-Math.exp(-4*Math.min(age,.55))),pose=constrainTrackPosition({...s,x:s.x+effect.x*travel,z:s.z+effect.z*travel});
+  return {...pose,y:s.y+Math.max(0,3.3*age-11*age*age),activity:'pushed',playing:true};
  }
- function poseFor(slot,c){const bot=c.room.players.find(p=>p.slot===slot&&p.automated);if(bot)return virtualPose(bot,c);const entry=poses.get(slot);if(!entry||c.clock-entry.received>=PUSH_RULES.poseAge||!entry.playing)return null;const dt=Math.min(.18,Math.max(0,(c.clock-entry.at)/1000));return{...entry,x:Math.max(-9,Math.min(9,entry.x+entry.vx*dt)),z:Math.max(-1007.2,Math.min(25,entry.z+entry.vz*dt))};}
+ function poseFor(slot,c){const bot=c.room.players.find(p=>p.slot===slot&&p.automated);if(bot)return virtualPose(bot,c);const entry=poses.get(slot);if(!entry||c.clock-entry.received>=PUSH_RULES.poseAge||!entry.playing)return null;const dt=Math.min(.18,Math.max(0,(c.clock-entry.at)/1000));return constrainTrackPosition({...entry,x:entry.x+entry.vx*dt,z:entry.z+entry.vz*dt});}
  function target(c){if(!c||!playing(c))return null;const own=getAdapter()?.state();if(!finitePose(own)||own.jetpack)return null;return c.room.players.filter(p=>p.slot!==c.room.slot&&racing(c,p.slot)).map(p=>({slot:p.slot,state:poseFor(p.slot,c)})).filter(p=>p.state&&!p.state.jetpack&&Math.abs(p.state.y-own.y)<1.6&&distance(own,p.state)<=PUSH_RULES.range).sort((a,b)=>distance(own,a.state)-distance(own,b.state))[0]||null;}
  function state(){const c=context(),visible=!!c&&racing(c,c.room.slot)&&c.runtime.active(),other=target(c),remaining=Math.max(0,nextPush-now());return{visible,racing:!!c?.race,ready:visible&&connected&&!!other&&remaining===0&&playing(c),connected,target:other?.slot||null,remaining};}
  function refresh(){onState(state());}

@@ -41,7 +41,7 @@ test('explorer IK handles rotated parents; jump, carrying and all 82 accessories
 test('remote explorers validate slots, interpolate, obey boundaries and release only owned resources',()=>{
  const adapter={scene:()=>scene,state:()=>({zone:'world'})},base=scene.children.length;installEggPeerVisuals(adapter,()=>world);
  adapter.setPeers([{slot:1,state:{x:0,y:0,z:-10,yaw:0,zone:'world'}},{slot:5,state:{x:1,y:0,z:-10,yaw:0}},{slot:2,state:{x:NaN,y:0,z:0,yaw:0}}]);assert.equal(scene.children.length,base+1);
- const node=scene.children.at(-1),actor=node.userData.actor;assert.equal(actor.model.skeleton.bones.length,21);
+ const node=scene.children.at(-1).children[0],actor=node.userData.actor;assert.equal(actor.model.skeleton.bones.length,21);
  adapter.setPeers([{slot:1,state:{x:30,y:0,z:-20,yaw:1,zone:'world'}}]);for(let i=0;i<60;i++)adapter.tick(1/60);assert(node.position.x<=TRACK_HALF_WIDTH-PLAYER_RADIUS);assert(node.position.z<-19);assert.equal(node.visible,true);
  let sharedDisposed=false;actor.art.toonRamp.addEventListener('dispose',()=>sharedDisposed=true);adapter.clearPeers();assert.equal(scene.children.length,base);assert.equal(sharedDisposed,false);
 });

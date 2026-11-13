@@ -1,3 +1,4 @@
+import {inHeaven,heavenPosition} from './egg-heaven.js';
 import * as THREE from 'three';
 
 // Toy-like, readable ground hazards. Resources belong to the manager, not to
@@ -136,7 +137,7 @@ export function createEggTrapVisuals(parent) {
         entry = create(row);
         entries.set(row.id, entry);
       }
-      entry.group.position.set(row.x, 0, row.z);
+      const pos=heavenPosition({...row,y:0});entry.group.position.set(pos.x,pos.y,pos.z);entry.group.rotation.z=inHeaven(row)?Math.PI:0;
       const owned = row.mine === true, armed = row.armed === true;
       if (entry.owned !== owned || entry.armed !== armed) {
         const tint = owned ? palette.own : palette.other;
