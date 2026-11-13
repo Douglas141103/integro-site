@@ -48,13 +48,13 @@ try {
   await script('./craft.js?v=20261105-craft-villages1');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261113-heaven1');
+  await script('./egg.js?v=20261113-subsoil1');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261031-catalogbots1');
   phase('Conectando amigos e salas…');
   await import('./multiplayer.js?v=20261103-original1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');
-  if(!unloaded)await import('./egg-cloud.js?v=20261113-heaven1');
+  if(!unloaded)await import('./egg-cloud.js?v=20261113-subsoil1');
   if(!unloaded){const {mountEggHud}=await import('./egg-hud.mjs?v=20261031-hud2');window.BoxEggHud=mountEggHud();}
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
   if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-moves1');installInterDance();}

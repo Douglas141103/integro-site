@@ -1,5 +1,5 @@
 import {supabase} from './access.js?v=20261016-intgem1';
-import {createEggPush} from './egg-push.js?v=20261113-heaven1';
+import {createEggPush} from './egg-push.js?v=20261113-subsoil1';
 const clientWorlds=()=>window.BoxEgg?.worldNames?.length||24;
 const runtime=()=>window.BoxEggRuntime;
 const room=()=>window.BoxMultiplayer?.roomInfo;

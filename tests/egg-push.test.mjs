@@ -75,3 +75,13 @@ test('fast poses, shoves and dropped celestial eggs remain valid on the wide inv
  f.emit({v:2,kind:'pose',room:'room-1',scope:'room',from:2,at:f.now(),seq:9999,playing:true,x:12,y:0,z:-1240,yaw:0,droppedEgg:drop});
  const peer=a.api.peers([{slot:2,state:{x:12,y:0,z:-1240,yaw:0}}])[0];assert.deepEqual(peer.state.droppedEgg,drop);assert.equal(peer.state.x,12);assert.equal(peer.state.z,-1240);
 });
+
+ test('fast room poses and shoves reach the underground bonus without clamping to heaven',async()=>{
+ const f=fixture(),[a,b,c]=f.users;
+ for(const u of f.users){u.normal=true;u.game.raceMode=false;u.game.roomMode=true;u.game.player.z=-1609;}
+ a.game.player.x=7;b.game.player.x=9;c.game.player.x=-10;f.tick();f.tick();
+ assert.equal(a.api.state().target,2);assert.equal(await a.api.push(),true);assert.equal(b.effects[0].kind,'received');
+ const peer=a.api.peers([{slot:2,state:{x:0,y:0,z:15,yaw:0}}])[0];assert.equal(peer.state.z,-1609);assert.equal(peer.state.x,9);
+ for(let i=0;i<20;i++)b.game.update(.02,{});assert(b.game.inSubsoil());assert(!b.game.inHeaven());
+ for(const u of f.users)u.api.stop();
+});
