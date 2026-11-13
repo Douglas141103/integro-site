@@ -6,7 +6,7 @@ const at=(g,p)=>Object.assign(g.player,{x:0,y:0,vy:0,...p});
 const walk=(g,target,done)=>{for(let i=0;i<5000&&!done();i++){const dx=target.x-g.player.x,dz=target.z-g.player.z,d=Math.hypot(dx,dz);g.update(Math.min(1/60,d/Math.max(1,g.speed())),{x:dx/d||0,z:dz/d||0});}assert(done(),'destination reached');};
 
 test('heaven is a six-track-length bonus behind an explicit grounded gate, isolated from ordinary movement and races',()=>{
- const g=new EggAdventure();assert.equal(WORLDS.length,24);assert.equal(HEAVEN.length,6*48);assert.equal(HEAVEN.start-HEAVEN.end,HEAVEN.length);
+ const g=new EggAdventure();assert.equal(WORLDS.length,25);assert.equal(HEAVEN.length,6*48);assert.equal(HEAVEN.start-HEAVEN.end,HEAVEN.length);
  assert.equal(g.useHeavenDoor(),false);at(g,HEAVEN.gate);assert.equal(g.interaction().type,'heavenEnter');
  g.raceMode=true;assert.equal(g.useHeavenDoor(),false);g.raceMode=false;g.player.y=1;assert.equal(g.useHeavenDoor(),false);g.player.y=0;
  g.movePlayer(0,-100);assert(!g.inHeaven());at(g,HEAVEN.gate);assert.equal(g.interact(),'heavenEnter');assert(g.inHeaven());assert.equal(g.zone(),23);assert.equal(g.startJetFlight('flight'),false);

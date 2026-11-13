@@ -83,5 +83,6 @@ test('fast poses, shoves and dropped celestial eggs remain valid on the wide inv
  assert.equal(a.api.state().target,2);assert.equal(await a.api.push(),true);assert.equal(b.effects[0].kind,'received');
  const peer=a.api.peers([{slot:2,state:{x:0,y:0,z:15,yaw:0}}])[0];assert.equal(peer.state.z,-1609);assert.equal(peer.state.x,9);
  for(let i=0;i<20;i++)b.game.update(.02,{});assert(b.game.inSubsoil());assert(!b.game.inHeaven());
+ const drop={world:24,rarity:'rare',mutation:'gold',x:9,z:-1609};f.emit({v:2,kind:'pose',room:'room-1',scope:'room',from:2,at:f.now(),seq:9999,playing:true,x:9,y:0,z:-1609,yaw:0,droppedEgg:drop});assert.deepEqual(a.api.peers([{slot:2,state:{x:9,y:0,z:-1609,yaw:0}}])[0].state.droppedEgg,drop);
  for(const u of f.users)u.api.stop();
 });

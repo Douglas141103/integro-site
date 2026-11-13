@@ -10,7 +10,8 @@ test('celestial eggs persist and appear in visited corrals with valid fusion inc
   await db.exec(await migration('20261113205038_egg_triple_track_width.sql'));
   await db.exec(await migration('20261113210051_egg_heaven_bonus.sql'));
   await db.exec(await migration('20261113212115_egg_subsoil_bonus.sql'));
-  assert.equal((await run(1,"select public.box_egg('capabilities') r")).worlds,24);
+  await db.exec(await migration('20261113213317_egg_subsoil_guardian.sql'));
+  assert.equal((await run(1,"select public.box_egg('capabilities') r")).worlds,25);
   const g=new EggAdventure();g.save.eggs=[{id:1,world:23,rarity:'rare',mutation:'gold',remaining:100}];
   const save=(n,data,rev)=>run(n,"select public.box_egg('save',p_data=>$1,p_revision=>$2) r",[data,rev]);
   assert.equal((await save(1,g.save,0)).revision,1);const loaded=await run(1,"select public.box_egg('load') r");assert.equal(loaded.save.eggs[0].world,23);
@@ -18,8 +19,13 @@ test('celestial eggs persist and appear in visited corrals with valid fusion inc
   const rate=(await db.query('select private.egg_fusion_rate($1)::float8 rate',[g.save.creatures[0]])).rows[0].rate;assert(Math.abs(rate-g.baseCreatureIncomeRate(g.save.creatures[0]))<1e-8);
   const wealthValue=(await db.query('select private.egg_economic_wealth($1) value',[g.save])).rows[0].value;assert.equal(Number(wealthValue),Math.ceil(85000*3*1.5*4.2));
   const stale=structuredClone(g.save);stale.contentVersion=23;stale.creatures=[];assert.equal((await save(1,stale,2)).error,'progression_update_required');
-  const bad=structuredClone(g.save);bad.creatures[0].world=24;assert.equal((await save(1,bad,2)).error,'invalid_save');
-  assert.equal((await save(2,new EggAdventure().save,0)).revision,1);
+  const bad=structuredClone(g.save);bad.creatures[0].world=25;assert.equal((await save(1,bad,2)).error,'invalid_save');
+  const magma=new EggAdventure();magma.save.eggs=[{id:1,world:24,rarity:'rare',mutation:'gold',remaining:100}];
+  assert.equal((await save(2,magma.save,0)).revision,1);assert.equal((await run(2,"select public.box_egg('load') r")).save.eggs[0].world,24);
+  magma.save.eggs=[];magma.save.creatures=[{uid:'magma-pet',world:24,rarity:'rare',mutation:'gold'}];assert.equal((await save(2,magma.save,1)).revision,2);
+  const magmaRate=(await db.query('select private.egg_fusion_rate($1)::float8 rate',[magma.save.creatures[0]])).rows[0].rate;assert(Math.abs(magmaRate-magma.baseCreatureIncomeRate(magma.save.creatures[0]))<1e-8);
+  assert.equal(Number((await db.query('select private.egg_economic_wealth($1) value',[magma.save])).rows[0].value),Math.ceil(100000*3*1.5*4.2));
+  const oldMagma=structuredClone(magma.save);oldMagma.contentVersion=24;oldMagma.creatures=[];assert.equal((await save(2,oldMagma,2)).error,'progression_update_required');
   const room=(await call(1,'create_public',{p_game:'egg'})).id;await call(2,'join_public',{p_room:room});
   const sync=async(n,x,z)=>{await db.exec("update private.box_limits set last_sync='-infinity'");return call(n,'sync',{p_room:room,p_state:{x,z,y:0,yaw:0,zone:'world'}});};
   assert.equal((await sync(1,12,-1468)).error,undefined);const peers=await sync(2,0,-1207);assert(peers.players.some(p=>p.state.z===-1468));
@@ -30,6 +36,7 @@ test('celestial eggs persist and appear in visited corrals with valid fusion inc
   const undergroundTrap=await run(2,"select public.box_egg('trap_place',p_room=>$1,p_id=>$2,p_data=>$3) r",[room,uid(501),{kind:'mine'}]);assert.equal(undergroundTrap.error,undefined);assert(undergroundTrap.traps.some(t=>t.z===-1607));
   await sync(1,0,15);await sync(2,0,15);
   assert.equal((await run(1,"select public.box_egg('race_start',p_room=>$1,p_world=>23) r",[room])).error,'invalid_world');
+  assert.equal((await run(1,"select public.box_egg('race_start',p_room=>$1,p_world=>24) r",[room])).error,'invalid_world');
   assert.equal((await run(1,"select public.box_egg('race_start',p_room=>$1,p_world=>22) r",[room])).error,undefined);
   const visit=await run(2,"select public.box_egg('visit',p_room=>$1,p_slot=>1) r",[room]);assert.equal(visit.corral.creatures[0].world,23);
  }finally{await db.close();}

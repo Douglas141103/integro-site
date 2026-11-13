@@ -4,7 +4,7 @@ import {EggAdventure,WORLDS,NESTS,LENGTH,CORRAL,TREADMILL,TRACK_HALF_WIDTH,PLAYE
 const legal=p=>assert(Math.abs(p.x)<=corridorHalfWidth(p.z)-PLAYER_RADIUS+1e-8,`outside track at ${p.x}, ${p.z}`);
 
 test('all tracks contain running, sprinting and airborne players at maximum training',()=>{
- for(let world=0;world<WORLDS.length-1;world++)for(const sign of[-1,1]){
+ for(let world=0;world<WORLDS.filter(w=>!w.bonus).length;world++)for(const sign of[-1,1]){
   const g=new EggAdventure();g.save.training=600;g.save.upgrades.turbo=10;g.save.upgrades.boots=10;g.save.abilityStock.doubleJump=1;g.useAbility('doubleJump');
   g.player.z=-world*LENGTH-20;g.jump();
   for(let i=0;i<90;i++){if(i===8)g.jump();g.update(1/60,{x:sign,sprint:true});legal(g.player);}
@@ -34,7 +34,7 @@ test('guardians stay inside the same corridor during pursuit, avoidance and retu
 });
 
 test('both shoulders of every track stop a grounded max-speed runner in either direction',()=>{
- for(let world=0;world<WORLDS.length-1;world++)for(const side of[-1,1])for(const direction of[-1,1]){
+ for(let world=0;world<WORLDS.filter(w=>!w.bonus).length;world++)for(const side of[-1,1])for(const direction of[-1,1]){
   const g=new EggAdventure();g.save.training=600;g.save.upgrades.turbo=10;g.save.upgrades.boots=10;g.save.abilityStock.rush=1;g.useAbility('rush');
   const barrierZ=-world*LENGTH-6;
   Object.assign(g.player,{x:side*(TRACK_HALF_WIDTH-PLAYER_RADIUS),z:barrierZ-direction*3});
@@ -45,7 +45,7 @@ test('both shoulders of every track stop a grounded max-speed runner in either d
 });
 
 test('edge pebbles allow an inward detour, a deliberate jump and access to every nest',()=>{
- for(let world=0;world<WORLDS.length-1;world++)for(const side of[-1,1]){
+ for(let world=0;world<WORLDS.filter(w=>!w.bonus).length;world++)for(const side of[-1,1]){
   const g=new EggAdventure(),z=-world*LENGTH-6;
   Object.assign(g.player,{x:side*(TRACK_HALF_WIDTH-PLAYER_RADIUS),z:z+3});g.movePlayer(0,-6);assert(g.player.z>z);
   g.movePlayer(-side*2.2,0);g.movePlayer(0,-6);assert(g.player.z<z-2,'a route through the middle remains open');
@@ -74,7 +74,7 @@ test('a player carrying an egg can jump over a pebble with no spring upgrade',()
 
 test('the track is exactly three times wider while world lengths and base destinations stay unchanged',()=>{
  assert.equal(TRACK_HALF_WIDTH*2,28.5);assert.equal(LENGTH,48);
- for(let world=0;world<WORLDS.length-1;world++)for(const side of [-1,1]){
+ for(let world=0;world<WORLDS.filter(w=>!w.bonus).length;world++)for(const side of [-1,1]){
   const g=new EggAdventure();Object.assign(g.player,{x:side*12,z:-world*LENGTH-21});
   g.movePlayer(side,0);assert.equal(g.player.x,side*13);legal(g.player);
  }

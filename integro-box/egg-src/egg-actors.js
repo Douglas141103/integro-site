@@ -85,6 +85,7 @@ const SPECIES={
  scorpion:{head:[.43,-.35],hip:.24,leg:.18,foot:.06,r:.04,quad:true,low:true,legPairs:4},
  auroraWolf:{head:[1.04,-.22],hip:.52,leg:.46,foot:.06,r:.075,quad:true},
  galaxyAlien:{head:[1.14,-.1],hip:.45,leg:.39,foot:.065,r:.09,arms:true},
+ magmaGuardian:{head:[1.38,-.06],hip:.45,leg:.39,foot:.10,r:.17,arms:true},
  stoneGiant:{head:[1.38,-.06],hip:.45,leg:.39,foot:.10,r:.17,arms:true},
  integroConductor:{head:[1.23,-.05],hip:.45,leg:.39,foot:.065,r:.10,arms:true}
 };
