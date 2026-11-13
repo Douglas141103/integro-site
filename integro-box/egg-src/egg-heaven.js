@@ -2,7 +2,7 @@
 // This keeps jumps, carried eggs and multiplayer positions consistent under gravity.
 export const HEAVEN={world:23,start:-1200,length:288,end:-1488,ceiling:12,gate:{x:0,z:-1098},exit:{x:0,z:-1202},nest:{x:0,z:-1468}};
 export const HEAVEN_WORLD={name:'Porta do Céu',short:'Céu',creature:'Guardião Celestial',value:85000,color:0xffd77c,ground:0xd6e6ff,path:0xfff5dc,sky:0x91bce5,kind:'skyGuardian',bonus:true};
-export const inHeaven=p=>Number.isFinite(p?.z)&&p.z<-1152;
+export const inHeaven=p=>Number.isFinite(p?.z)&&p.z<-1152&&p.z>-1536;
 export function heavenPosition(p){return inHeaven(p)?{x:-p.x,y:HEAVEN.ceiling-(p.y||0),z:p.z}:{x:p.x,y:p.y||0,z:p.z};}
 export function heavenFrame(frame,inverted){frame.rotation.z=inverted?Math.PI:0;frame.position.y=inverted?HEAVEN.ceiling:0;}
 export const HEAVEN_OBSTACLES=Array.from({length:10},(_,i)=>({world:HEAVEN.world,x:(i%2?1:-1)*5,z:HEAVEN.start-28-i*22,r:.95,h:.65}));

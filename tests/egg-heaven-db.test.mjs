@@ -9,6 +9,7 @@ test('celestial eggs persist and appear in visited corrals with valid fusion inc
   await db.exec('create or replace function private.egg_economic_wealth'+wealth);
   await db.exec(await migration('20261113205038_egg_triple_track_width.sql'));
   await db.exec(await migration('20261113210051_egg_heaven_bonus.sql'));
+  await db.exec(await migration('20261113212115_egg_subsoil_bonus.sql'));
   assert.equal((await run(1,"select public.box_egg('capabilities') r")).worlds,24);
   const g=new EggAdventure();g.save.eggs=[{id:1,world:23,rarity:'rare',mutation:'gold',remaining:100}];
   const save=(n,data,rev)=>run(n,"select public.box_egg('save',p_data=>$1,p_revision=>$2) r",[data,rev]);
@@ -24,6 +25,9 @@ test('celestial eggs persist and appear in visited corrals with valid fusion inc
   assert.equal((await sync(1,12,-1468)).error,undefined);const peers=await sync(2,0,-1207);assert(peers.players.some(p=>p.state.z===-1468));
   await db.exec(`insert into private.egg_trap_stock(user_id,kind,quantity) values('${uid(1)}','mine',1)`);
   const trap=await run(1,"select public.box_egg('trap_place',p_room=>$1,p_id=>$2,p_data=>$3) r",[room,uid(500),{kind:'mine'}]);assert.equal(trap.error,undefined);assert.equal(trap.traps[0].z,-1468);
+  await sync(1,7,-1815);const underground=await sync(2,0,-1607);assert(underground.players.some(p=>p.state.z===-1815));
+  await db.exec(`insert into private.egg_trap_stock(user_id,kind,quantity) values('${uid(2)}','mine',1)`);
+  const undergroundTrap=await run(2,"select public.box_egg('trap_place',p_room=>$1,p_id=>$2,p_data=>$3) r",[room,uid(501),{kind:'mine'}]);assert.equal(undergroundTrap.error,undefined);assert(undergroundTrap.traps.some(t=>t.z===-1607));
   await sync(1,0,15);await sync(2,0,15);
   assert.equal((await run(1,"select public.box_egg('race_start',p_room=>$1,p_world=>23) r",[room])).error,'invalid_world');
   assert.equal((await run(1,"select public.box_egg('race_start',p_room=>$1,p_world=>22) r",[room])).error,undefined);
