@@ -1,5 +1,5 @@
-import {SUBSOIL,inSubsoil} from './egg-subsoil.js';
-import {HEAVEN,inHeaven} from './egg-heaven.js?v=20261113-subsoil1';
+import {SUBSOIL,inSubsoil} from './egg-subsoil.js?v=20261113-magma1';
+import {HEAVEN,inHeaven} from './egg-heaven.js?v=20261113-magma1';
 // Shared lateral dimensions: widening does not change world length or movement speed.
 export const TRACK_SCALE=3;
 export const TRACK_HALF_WIDTH=4.75*TRACK_SCALE;

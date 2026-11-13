@@ -1,11 +1,11 @@
-import {TRACK_HALF_WIDTH,constrainTrackPosition} from './egg-src/egg-track.js?v=20261113-subsoil1';
-import {SUBSOIL} from './egg-src/egg-subsoil.js';
+import {TRACK_HALF_WIDTH,constrainTrackPosition} from './egg-src/egg-track.js?v=20261113-magma1';
+import {SUBSOIL} from './egg-src/egg-subsoil.js?v=20261113-magma1';
 import {HEAVEN} from './egg-src/egg-heaven.js';
 // Ephemeral room interactions. Only anonymous slots and bounded game coordinates are sent.
 // As with movement, this casual game uses client validation; it awards no currency.
 export const PUSH_RULES=Object.freeze({range:3.6,cooldown:3000,protection:1250,poseAge:700,eventAge:850});
 const finitePose=s=>s&&['x','y','z','yaw'].every(k=>Number.isFinite(s[k]))&&Math.abs(s.x)<=TRACK_HALF_WIDTH&&s.y>=0&&s.y<=15&&s.z>=SUBSOIL.end&&s.z<=50;
-const cleanDrop=e=>e&&Number.isInteger(e.world)&&e.world>=0&&e.world<=HEAVEN.world&&['common','rare','epic','legendary','secret'].includes(e.rarity)&&['normal','gold','rainbow','cosmic'].includes(e.mutation)&&Number.isFinite(e.x)&&Math.abs(e.x)<=TRACK_HALF_WIDTH&&Number.isFinite(e.z)&&e.z>=SUBSOIL.end&&e.z<=50?{world:e.world,rarity:e.rarity,mutation:e.mutation,x:e.x,z:e.z}:null;
+const cleanDrop=e=>e&&Number.isInteger(e.world)&&e.world>=0&&e.world<=SUBSOIL.world&&['common','rare','epic','legendary','secret'].includes(e.rarity)&&['normal','gold','rainbow','cosmic'].includes(e.mutation)&&Number.isFinite(e.x)&&Math.abs(e.x)<=TRACK_HALF_WIDTH&&Number.isFinite(e.z)&&e.z>=SUBSOIL.end&&e.z<=50?{world:e.world,rarity:e.rarity,mutation:e.mutation,x:e.x,z:e.z}:null;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export function createEggPush({client,getRoom,getRace,getRuntime,getAdapter,healthy=()=>true,now=Date.now,id=()=>crypto.randomUUID(),onState=()=>{},onEffect=()=>{}}){
  let channel=null,key='',connected=false,stopped=false,sequence=0,nextPush=0,protectedUntil=0,lastPose=0;

@@ -11,7 +11,7 @@ test('subsoil entry is explicit, grounded, empty-handed and separated from heave
  g.player.y=1;assert.equal(g.useSubsoilDoor(),false);g.player.y=0;g.carrying=0;assert.equal(g.useSubsoilDoor(),false);g.carrying=null;
  g.movePlayer(0,-500);assert(!inSubsoil(g.player));at(g,SUBSOIL.gate);assert.equal(g.interact(),'subsoilEnter');assert(g.inSubsoil());assert(!g.inHeaven());assert.equal(g.startJetFlight('flight'),false);
  g.movePlayer(0,500);assert.equal(g.player.z,SUBSOIL.start-.8);assert(g.inSubsoil());
- assert.equal(WORLDS.length,24);assert.equal(NESTS.length,24);assert.equal(inHeaven({z:HEAVEN.nest.z}),true);assert.equal(inHeaven({z:SUBSOIL.finish.z}),false);
+ assert.equal(WORLDS.length,25);assert.equal(NESTS.length,25);assert.equal(inHeaven({z:HEAVEN.nest.z}),true);assert.equal(inHeaven({z:SUBSOIL.finish.z}),false);
  for(const x of [-100,100]){const p=constrainToCorridor({x,z:SUBSOIL.end-30,y:0});assert.equal(p.z,SUBSOIL.end+.8);assert(Math.abs(p.x)<=13.85);assert.deepEqual(heavenPosition(p),p);}
 });
 test('every lake and puddle ejects to the surface; high-speed sweeps cannot tunnel through lava',()=>{

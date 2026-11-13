@@ -1,8 +1,22 @@
 import {SUBSOIL,SUBSOIL_LAVA} from './egg-subsoil.js';
 import {TRACK_WIDTH,TRACK_HALF_WIDTH} from './egg-track.js';
 
-export function createSubsoilWorld({root,entrance,helpers}){
- const {group,box,ball,cyl,torus,label}=helpers,g=group(root),lava=[],embers=[];
+export function magmaGuardian(g,limbs,{group,ball,cyl,box}){
+ g.name='MagmaGuardian';
+ box(g,.85,.85,.58,0x4d3541,0,.87,0);
+ box(g,.66,.48,.52,0x62404b,0,1.38,-.06);
+ const core=ball(g,.23,0xffa13d,0,.88,-.32,1,1.3,.4);core.material=core.material.clone();core.material.emissive.setHex(0xff671c);core.material.emissiveIntensity=.8;
+ for(const side of [-1,1]){
+  const arm=group(g,side*.59,.87,0);box(arm,.28,.65,.36,0x62404b);box(arm,.1,.45,.04,0xff963c,0,0,-.2);limbs.push(arm);
+  box(g,.28,.39,.38,0x4d3541,side*.23,.23,-.03);
+  cyl(g,0,.12,.33,0xffae4b,side*.23,1.76,-.02,5);
+  box(g,.07,.37,.035,0xffb34f,side*.22,.88,-.3).rotation.z=side*.38;
+ }
+ return{faceY:1.42,faceZ:-.34};
+}
+
+export function createSubsoilWorld({root,entrance,content,helpers}){
+ const {group,box,ball,cyl,torus,label}=helpers,g=content||group(root),lava=[],embers=[];
  g.name='SubsoilBonusTrack';g.visible=false;
  function door(parent,pos,text){
   const d=group(parent,pos.x,0,pos.z);d.name=text==='PORTA DO SUBSOLO'?'SubsoilEntranceDoor':'SubsoilExitDoor';
@@ -13,6 +27,8 @@ export function createSubsoilWorld({root,entrance,helpers}){
   label(d,text==='PORTA DO SUBSOLO'?'DESVIE DOS LAGOS DE LAVA':'VOLTE AO MUNDO NORMAL',0,5.35,0,6.4,'#ffddb0','#342732');
  }
  door(entrance,SUBSOIL.gate,'PORTA DO SUBSOLO');door(g,SUBSOIL.exit,'SAÍDA DO SUBSOLO');door(g,SUBSOIL.finish,'SUPERFÍCIE');
+ const dais=cyl(g,2.4,2.6,.12,0x3e303b,SUBSOIL.nest.x,.01,SUBSOIL.nest.z,24);dais.name='MagmaNestDais';
+ label(g,'OVOS DO GUARDIÃO DE MAGMA',0,5.5,SUBSOIL.nest.z,8,'#fff0c8','#62303a');
  const floor=box(g,TRACK_WIDTH,.6,SUBSOIL.length,0x554752,0,-.3,SUBSOIL.start-SUBSOIL.length/2);floor.name='SubsoilGround';
  for(const h of SUBSOIL_LAVA){
   const rim=cyl(g,1,1,.12,0x2c2530,h.x,.015,h.z,40);rim.scale.set(h.rx+.3,1,h.rz+.3);rim.name='SubsoilLavaRim';
