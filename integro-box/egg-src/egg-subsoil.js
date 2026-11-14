@@ -15,25 +15,61 @@ export function subsoilLavaShape(h,time=0){
 }
 export function touchesSubsoilLava(p,radius=.4,time=0){return inSubsoil(p)&&(p.y||0)<=.18&&SUBSOIL_LAVA.some(base=>{const h=subsoilLavaShape(base,time);return((p.x-h.x)/(h.rx+radius))**2+((p.z-h.z)/(h.rz+radius))**2<=1;});}
 export const emergenceOffset=remaining=>remaining>0?-2.4*Math.min(1,remaining/SUBSOIL.emergeSeconds)**2:0;
+export const SUBSOIL_ESCAPE={sinkSeconds:1.4,revealSeconds:1.6,countdownSeconds:3,triggerZ:-1803,doorZ:-1782.5,doorX:10};
+const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+export function subsoilEscapeView(e){
+ if(!e)return null;
+ const sinking=e.phase==='sink',rising=e.phase==='reveal',counting=e.phase==='countdown';
+ return{phase:e.phase,door:e.door,spawn:e.spawn,locked:sinking||rising||counting,
+  doorVisible:sinking||rising||counting||e.phase==='chase',
+  doorY:sinking?-8*smooth(e.elapsed/SUBSOIL_ESCAPE.sinkSeconds):rising?-8*(1-smooth(e.elapsed/.8)):0,
+  guardianY:sinking?-7*smooth(e.elapsed/SUBSOIL_ESCAPE.sinkSeconds):e.phase==='return'?-7:rising?-7*(1-smooth((e.elapsed-.6)/1)):0,
+  countdown:counting?Math.max(1,Math.ceil(SUBSOIL_ESCAPE.countdownSeconds-e.elapsed)):null};
+}
 export const subsoilMethods={
  inSubsoil(){return inSubsoil(this.player)},
+ subsoilLocked(){return !!subsoilEscapeView(this.subsoilEscape)?.locked;},
+ resetSubsoilEscape(){this.subsoilEscape=null;if(this.guardians?.[SUBSOIL.world])this.guardians[SUBSOIL.world].y=0;},
+ startSubsoilEscape(){
+  if(this.subsoilEscape||!this.inSubsoil()||this.carrying!==SUBSOIL.world)return false;
+  const side=this.random()<.5?-1:1,spawn=SUBSOIL_LAVA.filter(h=>h.lake).at(-1);
+  this.subsoilEscape={phase:'sink',elapsed:0,door:{x:side*SUBSOIL_ESCAPE.doorX,z:SUBSOIL_ESCAPE.doorZ},spawn:{x:spawn.x,z:spawn.z}};
+  this.jumpBuffer=0;this.player.y=0;this.player.vy=0;this.clearPush();this.moving=0;this.sprinting=false;
+  this.guardians[SUBSOIL.world].state='sinking';this.guardians[SUBSOIL.world].grace=0;
+  this.emit('subsoilSink','A porta e o guardião estão sendo sugados! Prepare-se para voltar pela pista.');return true;
+ },
+ subsoilGoal(){const e=this.subsoilEscape;return e?(e.phase==='sink'||e.phase==='return'?{x:0,z:SUBSOIL_ESCAPE.triggerZ}:e.door):Math.hypot(this.player.x-SUBSOIL.exit.x,this.player.z-SUBSOIL.exit.z)<Math.hypot(this.player.x-SUBSOIL.finish.x,this.player.z-SUBSOIL.finish.z)?SUBSOIL.exit:SUBSOIL.finish;},
+ updateSubsoilEscape(dt){
+  const e=this.subsoilEscape;if(!e)return false;
+  if(!this.inSubsoil()||this.raceMode||(this.carrying!==SUBSOIL.world&&this.droppedEgg?.world!==SUBSOIL.world)){this.resetSubsoilEscape();return false;}
+  e.elapsed+=dt;const g=this.guardians[SUBSOIL.world];
+  if(e.phase==='sink'&&e.elapsed>=SUBSOIL_ESCAPE.sinkSeconds){e.phase='return';e.elapsed=0;g.state='submerged';this.emit('subsoilReturn','Volte pela pista! A porta da superfície vai reaparecer em uma lateral.');}
+  if(e.phase==='return'&&this.player.z>=SUBSOIL_ESCAPE.triggerZ&&this.player.y<=.18&&!touchesSubsoilLava(this.player,.4,this.time)){e.phase='reveal';e.elapsed=0;Object.assign(g,e.spawn,{state:'emerging'});this.player.vy=0;this.jumpBuffer=0;this.clearPush();this.emit('subsoilReveal','A saída apareceu na lateral! O guardião está saindo da lava.');}
+  else if(e.phase==='reveal'&&e.elapsed>=SUBSOIL_ESCAPE.revealSeconds){e.phase='countdown';e.elapsed=0;g.state='waiting';this.emit('subsoilCountdown','3… 2… 1… Prepare-se para correr até a porta!');}
+  else if(e.phase==='countdown'&&e.elapsed>=SUBSOIL_ESCAPE.countdownSeconds){e.phase='chase';e.elapsed=0;g.state='chase';g.grace=0;this.emit('subsoilChase','CORRA! Leve o ovo até a porta lateral!');}
+  if(e.phase!=='chase')g.y=subsoilEscapeView(e).guardianY;
+  const locked=this.subsoilLocked();if(locked){this.moving=0;this.motionSpeed=0;this.sprinting=false;this.player.vy=0;this.jumpBuffer=0;this.clearPush();}return locked;
+ },
  subsoilAction(){
   if(this.emerging)return{type:'walk',label:'Surgindo do chão…'};
   if(this.raceMode||this.mode!=='run'||this.falling||this.jetFlight||this.player.y>.2)return null;
   const near=q=>Math.hypot(this.player.x-q.x,this.player.z-q.z)<3;
-  if(this.inSubsoil())return near(SUBSOIL.exit)||near(SUBSOIL.finish)?{type:'subsoilExit',label:this.carrying!==null?'Sair com o ovo':'Voltar à superfície'}:null;
+  if(this.inSubsoil()){
+   const e=this.subsoilEscape;if(e){if(e.phase!=='chase')return{type:'walk',label:e.phase==='return'?'Volte pela pista':e.phase==='countdown'?'Prepare-se…':'Aguarde a animação…'};return near(e.door)?{type:'subsoilExit',label:this.carrying!==null?'Sair com o ovo':'Voltar à superfície'}:null;}
+   return near(SUBSOIL.exit)||near(SUBSOIL.finish)?{type:'subsoilExit',label:this.carrying!==null?'Sair com o ovo':'Voltar à superfície'}:null;
+  }
   if(!this.inHeaven()&&near(SUBSOIL.gate)&&this.carrying===null)return{type:'subsoilEnter',label:'Entrar na Porta do Subsolo'};
   return null;
  },
  useSubsoilDoor(){
   const a=this.subsoilAction();if(a?.type==='subsoilExit'){this.returnFromSubsoil(false);return a.type;}if(a?.type!=='subsoilEnter')return false;
-  this.endEggPower();this.clearPush();this.endSkates();this.clearDroppedEgg();this.iceVelocity={x:0,z:0};this.jumpBuffer=0;
+  this.resetSubsoilEscape();this.endEggPower();this.clearPush();this.endSkates();this.clearDroppedEgg();this.iceVelocity={x:0,z:0};this.jumpBuffer=0;
   Object.assign(this.player,{...SUBSOIL.entry,y:0,vy:0});this.energy=this.maxEnergy();
   this.emit('subsoilEnter','Porta do Subsolo! A lava cresce e encolhe até as bordas. Espere a abertura e pegue um ovo do Guardião de Magma no final da pista.');return a.type;
  },
  returnFromSubsoil(lava){
   if(!this.inSubsoil()||this.emerging)return false;
-  this.endEggPower();this.clearPush();this.endSkates();this.clearDroppedEgg();this.iceVelocity={x:0,z:0};this.jumpBuffer=0;
+  this.resetSubsoilEscape();this.endEggPower();this.clearPush();this.endSkates();this.clearDroppedEgg();this.iceVelocity={x:0,z:0};this.jumpBuffer=0;
   if(lava&&this.carriedEgg){this.save.caught++;this.nestEggs[this.carrying][this.carriedEgg.slot].availableAt=this.time+5;this.guardians[this.carrying].state='return';this.carrying=null;this.carriedEgg=null;}
   this.guardians[SUBSOIL.world].state='return';
   const complete=!lava&&Math.hypot(this.player.x-SUBSOIL.finish.x,this.player.z-SUBSOIL.finish.z)<3;
