@@ -413,3 +413,68 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 .egg-house-intro{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid #d7bf87;border-radius:16px;background:#fff5d8;color:#3d503f}.egg-house-intro>div{flex:1}.egg-house-intro p{margin:6px 0}.egg-house-editor{display:grid;grid-template-columns:1fr 1fr;gap:22px}.egg-house-editor section{min-width:0}.egg-house-editor h3{margin-bottom:6px}.egg-house-editor p{font-size:13px;line-height:1.5}.egg-house-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;background:#e7edda;border-radius:16px;padding:10px}.egg-house-grid button{min-width:0;min-height:99px;border:2px dashed #9aae8b;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:7px 2px;color:#334c3c;background:#f7faef}.egg-house-grid button.built{background:#f4dfab;border-style:solid;border-color:#bb9353}.egg-house-grid strong{font-size:25px}.egg-house-grid small{font-size:10px}.egg-house-grid button:disabled{opacity:.55}.egg-house-editor .selected{outline:3px solid #327868;outline-offset:1px}.egg-house-entrance{text-align:center;color:#56755a;font-size:12px;margin:10px}.egg-house-catalog{display:grid;grid-template-columns:1fr 1fr;gap:10px}.egg-house-catalog button{display:flex;flex-direction:column;gap:9px;text-align:left;border:1px solid #d7bf87;border-radius:12px;padding:12px;background:#fffaf0;color:#334c3c}.egg-house-catalog span{font-size:12px;line-height:1.4}.egg-house-catalog strong{font-size:12px;margin-top:auto}.egg-house-editor button:focus-visible{outline:3px solid #125dcb;outline-offset:2px}@media(max-width:650px){.egg-house-editor{grid-template-columns:1fr;gap:8px}.egg-house-intro{align-items:stretch;flex-direction:column}.egg-house-grid{padding:7px;gap:6px}.egg-house-grid button{min-height:88px}}
 
 .egg-elevator-panel{text-align:center;max-width:560px;margin:auto}.egg-elevator-icon{display:inline-grid;place-items:center;width:62px;height:62px;border-radius:18px;background:#d9f3df;color:#245442;font-size:38px;font-weight:900}.egg-elevator-floors{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}.egg-elevator-floors button{min-height:86px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:5px}.egg-elevator-floors b{font-size:30px;line-height:1}.egg-elevator-floors span{font-size:14px}.egg-elevator-floors [aria-current]{outline:3px solid #58a48e;opacity:1!important}@media(max-width:480px){.egg-elevator-floors{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.egg-elevator-floors button{min-height:76px}}
+
+/* Compact HUD: keep the playfield clear; reveal secondary tools on demand. */
+.egg-quick-toggle[hidden],.egg-quick-tray[hidden],.egg-pace-buttons[hidden]{display:none!important}
+.egg-immersive .egg-pace{position:relative;padding:0;border:0;background:none;box-shadow:none;max-width:100%}
+.egg-immersive .egg-pace-label{display:none}
+.egg-immersive .egg-pace .egg-pace-toggle{min-height:44px;padding:6px 10px;border-radius:22px;font-size:11px;background:#173d49b8;border:1px solid #ffffff65}
+.egg-immersive .egg-pace-buttons{position:absolute;left:0;bottom:calc(100% + 6px);z-index:14;padding:6px;background:#173d49f5;border:1px solid #ffffff70;border-radius:13px;box-shadow:0 4px 18px #10233155}
+.egg-immersive .egg-pace-buttons button{min-width:44px;min-height:44px}
+#eggApp .egg-compact-hud .egg-hud-top{inset:8px 10px auto;display:block;min-height:76px}
+#eggApp .egg-compact-hud .egg-navigation{max-width:calc(100% - 112px)}
+#eggApp .egg-compact-hud .egg-place{gap:4px;min-height:36px}
+#eggApp .egg-compact-hud .egg-place>svg{width:18px;height:18px}
+#eggApp .egg-compact-hud .egg-place strong{font-size:13px;max-width:100%}
+#eggApp .egg-compact-hud .egg-place small{font-size:8px;letter-spacing:.3px}
+#eggApp .egg-compact-hud .egg-objective{font-size:10px;margin:2px 0 0;gap:3px;white-space:normal}
+#eggApp .egg-compact-hud .egg-winter-status{display:none}
+#eggApp .egg-compact-hud .egg-winter-status.frozen{display:block;font-size:9px}
+#eggApp .egg-compact-hud .egg-hud-tools{position:static;display:block}
+#eggApp .egg-compact-hud .egg-money{position:absolute;right:0;top:2px;gap:3px;padding:0;max-width:112px}
+#eggApp .egg-compact-hud .egg-money b{font-size:13px;white-space:nowrap}
+#eggApp .egg-compact-hud .egg-money small{font-size:8px}
+#eggApp .egg-compact-hud .egg-money>svg{width:17px;height:17px}
+#eggApp .egg-compact-hud #eggSettings{position:absolute;top:36px;right:48px;width:44px;height:44px;min-width:44px}
+#eggApp .egg-compact-hud #eggPause,#eggApp .egg-compact-hud #eggFullscreen{display:none}
+#eggApp .egg-quick-toggle{position:absolute;top:44px;right:10px;z-index:13;width:44px;height:44px;min-width:44px;flex-direction:column;gap:0;background:#173d49b8;font-size:14px;line-height:12px}
+#eggApp .egg-quick-toggle small{font-size:9px;line-height:12px}
+#eggApp .egg-quick-toggle i{position:absolute;right:0;top:0;width:9px;height:9px;border-radius:50%;background:#ffad58;border:1px solid white}
+#eggApp .egg-quick-toggle i[hidden]{display:none}
+#eggApp .egg-quick-toggle[aria-expanded=true]{background:#d8f3a5;color:#203d35}
+#eggApp .egg-quick-tray{position:absolute;right:10px;top:94px;z-index:12;display:flex;flex-direction:column;gap:12px;width:min(290px,calc(100% - 20px));max-height:calc(100% - 108px);overflow:auto;box-sizing:border-box;padding:12px;background:#132c40f5;color:#f5fff4;border:1px solid #9ac8bf88;border-radius:16px;box-shadow:0 6px 22px #071b3955;overscroll-behavior:contain;pointer-events:auto}
+#eggApp .egg-quick-heading{font-size:12px;font-weight:800;padding:0 2px}
+#eggApp .egg-compact-hud .egg-mobile-tools{position:static!important;display:flex;flex-wrap:wrap;gap:6px;width:100%;height:auto;inset:auto;pointer-events:auto;align-items:flex-start}
+#eggApp .egg-compact-hud .egg-mobile-tools .ig-dock,#eggApp .egg-compact-hud .egg-mobile-tools #boxOnline,#eggApp .egg-compact-hud .egg-mobile-tools #boxChat{position:static!important;inset:auto!important;transform:none!important;margin:0;max-width:100%;width:auto;flex:1 1 auto}
+#eggApp .egg-compact-hud .egg-mobile-tools .ig-wallet-button,#eggApp .egg-compact-hud #boxOnlineToggle,#eggApp .egg-compact-hud #boxChatToggle{width:100%;min-height:44px!important;font-size:11px!important;padding:8px!important;float:none!important;touch-action:manipulation!important;cursor:pointer!important}
+#eggApp .egg-compact-hud .ig-companion,#eggApp .egg-compact-hud .ig-hide-companion{display:none!important}
+#eggApp .egg-compact-hud #boxOnline:has(#boxOnlinePanel:not([hidden])),#eggApp .egg-compact-hud #boxChat:has(#boxChatPanel:not([hidden])){flex-basis:100%}
+#eggApp .egg-compact-hud #boxOnline #boxOnlinePanel,#eggApp .egg-compact-hud #boxChatPanel{position:static!important;inset:auto!important;transform:none!important;box-sizing:border-box;width:100%!important;max-width:100%!important;max-height:55dvh!important;min-height:0!important;margin-top:6px;overflow:auto;padding:10px!important}
+#eggApp .egg-compact-hud .egg-ability-dock{position:static!important;inset:auto!important;transform:none!important;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start!important;margin:0;pointer-events:auto}
+#eggApp .egg-compact-hud .egg-ability-button{width:44px;height:44px;min-width:44px;padding:8px}
+#eggApp .egg-compact-hud #eggTrapOpen{margin:0;min-height:44px}
+#eggApp .egg-compact-hud .egg-quick-tray #eggRanking{border-radius:12px;width:auto;padding:0 12px;gap:8px;font-size:11px}
+#eggApp .egg-compact-hud .egg-quick-tray #eggRanking:after{content:'Ranking'}
+#eggApp .egg-compact-hud .egg-quick-tray #eggRanking [data-rank-position]{position:static;margin:0;transform:none;font-size:10px;min-width:20px}
+#eggApp .egg-compact-hud .egg-controls{left:10px;right:10px;bottom:10px;gap:8px}
+#eggApp .egg-compact-hud .egg-move-pad{gap:5px}
+#eggApp .egg-compact-hud .egg-steering{gap:5px}
+#eggApp .egg-compact-hud .egg-joystick{width:76px;height:76px}
+#eggApp .egg-compact-hud .egg-stick{width:34px;height:34px;margin:-17px}
+#eggApp .egg-compact-hud .egg-look{width:44px;height:44px;min-width:44px;margin:0}
+#eggApp .egg-compact-hud .egg-run-metrics{font-size:10px;gap:5px}
+#eggApp .egg-compact-hud .egg-run-metrics svg{width:15px;height:15px}
+#eggApp .egg-compact-hud .egg-action-pad{grid-template-columns:48px 48px;gap:6px}
+#eggApp .egg-compact-hud .egg-round{width:48px;height:48px;min-height:48px}
+#eggApp .egg-compact-hud .egg-round svg{width:22px;height:22px}
+#eggApp .egg-compact-hud .egg-interact{min-height:44px;font-size:11px;padding:6px;border-radius:16px}
+#eggApp .egg-compact-hud .egg-training{top:90px;left:10px;right:10px;max-width:none;gap:5px;align-items:center;flex-wrap:wrap;font-size:11px}
+#eggApp .egg-compact-hud .egg-training-clock{width:20px;height:20px}
+#eggApp .egg-compact-hud #eggTrainText{font-size:12px}
+#eggApp .egg-compact-hud .egg-training-gain{font-size:12px;margin:0}
+#eggApp .egg-compact-hud .egg-training-gain small{font-size:10px;margin-left:3px}
+#eggApp .egg-compact-hud .egg-chase,#eggApp .egg-compact-hud .egg-race-hud{top:94px;max-width:85%;font-size:10px}
+#eggApp .egg-compact-hud .egg-toast{bottom:184px;max-width:80%;font-size:11px}
+#eggApp[data-egg-mode=train] .egg-compact-hud #eggJump,#eggApp[data-egg-mode=train] .egg-compact-hud #eggSprint,#eggApp[data-egg-mode=train] .egg-compact-hud .egg-stamina{display:none}
+#eggApp .egg-compact-hud:has(.egg-sheet:not([hidden])) .egg-quick-toggle,#eggApp .egg-compact-hud:has(.egg-sheet:not([hidden])) .egg-quick-tray{visibility:hidden;pointer-events:none}
+@media(max-height:450px) and (orientation:landscape){#eggApp .egg-compact-hud .egg-training{top:60px;right:115px}#eggApp .egg-compact-hud .egg-chase,#eggApp .egg-compact-hud .egg-race-hud{top:62px}#eggApp .egg-compact-hud .egg-toast{bottom:12px;max-width:calc(100% - 300px)}#eggApp .egg-compact-hud .egg-joystick{width:68px;height:68px}}

@@ -30,3 +30,11 @@ test('HUD selection persists by profile, unlocks live, survives runtime replacem
  blocked=true;ui.update();button(10).click();assert.equal(g.movementDivisor(),2);blocked=false;g.raceMode=true;ui.update();assert(button(2).disabled);assert.equal(g.movementDivisor(),1);g.raceMode=false;ui.update();assert.equal(g.movementDivisor(),2);
  ui.root.remove();ui=makeControl();assert.equal(g.movementDivisor(),2);button(1).click();assert.equal(g.movementDivisor(),1);assert.equal(values.get(PACE_STORAGE_KEY),'1');assert.equal(g.save.paceDivisor,undefined);dom.window.close();
 });
+
+test('pace options collapse after selection, outside input, Escape, and training while retaining selection',()=>{
+ const dom=new JSDOM('<div id="pad"></div><button id="outside"></button>'),d=dom.window.document,g=make();
+ const ui=createPaceControl({host:d.getElementById('pad'),getGame:()=>g,storage:{getItem:()=>null,setItem(){}}}),toggle=ui.root.querySelector('.egg-pace-toggle'),options=ui.root.querySelector('.egg-pace-buttons');
+ assert(!ui.root.hidden);assert(options.hidden);toggle.click();assert(!options.hidden);ui.root.querySelector('[data-pace="10"]').click();assert(options.hidden);assert.equal(g.movementDivisor(),10);assert.equal(toggle.textContent,'Ritmo ÷10');
+ toggle.click();d.getElementById('outside').dispatchEvent(new dom.window.Event('pointerdown',{bubbles:true}));assert(options.hidden);toggle.click();toggle.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(options.hidden);
+ g.mode='train';ui.update();assert(ui.root.hidden);g.mode='run';ui.update();assert(!ui.root.hidden);assert.equal(g.movementDivisor(),10);dom.window.close();
+});

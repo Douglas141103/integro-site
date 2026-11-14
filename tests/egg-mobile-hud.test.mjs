@@ -13,7 +13,7 @@ test('mobile controls preserve handlers and stay draggable after rotation and re
 
 test('all three launchers drag independently, stay in bounds, retain taps and remember positions',()=>{
  const dom=new JSDOM('<body><section id="eggApp"><div id="eggStage"></div><div class="ig-dock"><button class="ig-wallet-button">46</button></div></section><aside id="boxOnline"><button id="boxOnlineToggle">Sala</button></aside><aside id="boxChat"><button id="boxChatToggle">Chat</button><section id="boxChatPanel" hidden></section></aside></body>',{url:'https://test.example',pretendToBeVisual:true});
- const w=dom.window,d=w.document,media={matches:true,addEventListener(){},removeEventListener(){}};let sync,stageWidth=360,stageHeight=600;
+ const w=dom.window,d=w.document,media={matches:false,addEventListener(){},removeEventListener(){}};let sync,stageWidth=360,stageHeight=600;
  w.matchMedia=()=>media;w.setInterval=fn=>(sync=fn,1);w.clearInterval=()=>{};
  const rect=(x,y,width,height)=>({left:x,top:y,right:x+width,bottom:y+height,width,height});
  d.getElementById('eggStage').getBoundingClientRect=()=>rect(10,100,stageWidth,stageHeight);
@@ -31,4 +31,18 @@ test('all three launchers drag independently, stay in bounds, retain taps and re
  const panel=d.getElementById('boxChatPanel');panel.getBoundingClientRect=()=>rect(0,0,240,200);panel.hidden=false;sync();const x=parseFloat(chat.style.getPropertyValue('--egg-tool-x'))+parseFloat(chat.style.getPropertyValue('--egg-panel-x')),y=parseFloat(chat.style.getPropertyValue('--egg-tool-y'))+parseFloat(chat.style.getPropertyValue('--egg-panel-y'));assert(x>=8&&x+240<=272);assert(y>=8&&y+200<=392);
  const saved=chat.style.getPropertyValue('--egg-tool-y');hud.stop();hud=mountEggHud({doc:d,win:w});assert.equal(chat.style.getPropertyValue('--egg-tool-y'),saved);
  pointer(b,'pointerdown',30,30);pointer(w,'pointercancel',30,30);assert.equal(chat.dataset.eggDragging,undefined);hud.stop();dom.window.close();
+});
+
+test('compact tray closes without losing chat drafts or blocking movement and restores controls on desktop',()=>{
+ const dom=new JSDOM('<body><section id="eggApp"><div id="eggStage"><canvas></canvas><button id="eggRanking">Ranking</button><div class="egg-ability-dock"><button id="power">Poder</button></div><div id="eggSheet" hidden></div><div id="joy"></div></div><div class="ig-dock"><button class="ig-wallet-button">40</button></div></section><aside id="boxChat"><button id="boxChatToggle">Chat</button><i id="boxChatUnread" hidden></i><section id="boxChatPanel" hidden><input value="rascunho"></section></aside></body>',{url:'https://test.example'});
+ const w=dom.window,d=w.document,media={matches:true,addEventListener(){},removeEventListener(){}};let sync,moves=0,powers=0,escapes=0;
+ w.matchMedia=()=>media;w.setInterval=fn=>(sync=fn,1);w.clearInterval=()=>{};
+ const stage=d.getElementById('eggStage'),rank=d.getElementById('eggRanking'),panel=d.getElementById('boxChatPanel'),power=d.getElementById('power');
+ power.onclick=()=>powers++;d.getElementById('joy').addEventListener('pointerdown',()=>moves++);d.getElementById('boxChatToggle').onclick=()=>panel.hidden=!panel.hidden;
+ const hud=mountEggHud({doc:d,win:w}),tray=d.getElementById('eggQuickTray'),toggle=d.getElementById('eggQuickToggle');
+ assert(tray.hidden);assert(tray.contains(rank));assert(tray.contains(power));toggle.click();assert(!tray.hidden);assert.equal(toggle.getAttribute('aria-expanded'),'true');power.click();assert.equal(powers,1);
+ d.getElementById('boxChatToggle').click();assert(!panel.hidden);d.getElementById('joy').dispatchEvent(new w.Event('pointerdown',{bubbles:true}));assert.equal(moves,1);assert(tray.hidden);assert(panel.hidden);assert.equal(panel.querySelector('input').value,'rascunho');
+ toggle.click();d.addEventListener('keydown',()=>escapes++);power.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert(tray.hidden);assert.equal(escapes,0);assert.equal(d.activeElement,toggle);
+ d.getElementById('boxChatUnread').hidden=false;sync();assert(!toggle.querySelector('i').hidden);toggle.click();d.getElementById('eggSheet').hidden=false;sync();assert(tray.hidden);
+ media.matches=false;sync();assert.equal(rank.parentNode,stage);assert.equal(power.parentNode.parentNode,stage);assert(toggle.hidden);hud.stop();assert.equal(d.getElementById('boxChat').parentNode,d.body);assert(!d.getElementById('eggQuickToggle'));w.close();
 });
