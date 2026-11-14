@@ -19,7 +19,7 @@ export function createEggMusic({storage,loadEngine=()=>import('./egg-music-engin
    // Resume in the input handler, before loading the engine, for mobile policies.
    if(!raw)raw=createContext();if(!raw)return false;
    const resumed=raw.resume();
-   pending=(async()=>{await resumed;if(disposed)return false;if(!engine){const {createMusicEngine}=await loadEngine();if(disposed)return false;engine=createMusicEngine({rawContext:raw,mode:musicMode(state.carrying),volume});}reconcile();return true;})().catch(()=>{engine?.dispose();engine=null;running=false;const failed=raw;raw=null;void failed?.close().catch(()=>{});return false;}).finally(()=>{pending=null;});
+   pending=(async()=>{await resumed;if(disposed)return false;if(!engine){const {createMusicEngine}=await loadEngine();if(disposed)return false;const loaded=await createMusicEngine({rawContext:raw,mode:musicMode(state.carrying),volume});if(disposed){loaded.dispose();return false;}engine=loaded;}reconcile();return true;})().catch(()=>{engine?.dispose();engine=null;running=false;const failed=raw;raw=null;void failed?.close().catch(()=>{});return false;}).finally(()=>{pending=null;});
    return pending;
   }catch{return false;}
  }

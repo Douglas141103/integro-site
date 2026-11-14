@@ -67,3 +67,14 @@ test('drum one-shots are finite, bounded and fade cleanly at common device sampl
   assert(samples.openHat.length>samples.hat.length*2);
  }
 });
+
+test('uploaded soundtrack loops at its original speed and resumes after pausing',async()=>{
+ const {createMusicEngine,MUSIC_URL}=await import('../integro-box/egg-src/egg-music-engine.js');
+ const sources=[],levels=[];let fetched;
+ const raw={currentTime:0,destination:{},decodeAudioData:async()=>({duration:179}),createGain:()=>({gain:{value:0,setTargetAtTime:v=>levels.push(v)},connect(){},disconnect(){}}),createBufferSource(){const source={connect(){},disconnect(){},start:(_when,offset)=>{source.offset=offset},stop(){source.stopped=true}};sources.push(source);return source;}};
+ const engine=await createMusicEngine({rawContext:raw,fetchAudio:async url=>{fetched=url;return{ok:true,arrayBuffer:async()=>new ArrayBuffer(1)}}});
+ assert.equal(fetched,MUSIC_URL);engine.play();engine.play();assert.equal(sources.length,1);assert.equal(sources[0].loop,true);
+ raw.currentTime=12;engine.setMode('chase');assert.equal(sources.length,1);engine.pause();assert(sources[0].stopped);
+ raw.currentTime=30;engine.play();assert.equal(sources[1].offset,12);engine.setVolume(.2);assert.equal(levels.at(-1),.2);
+ engine.dispose();engine.play();assert.equal(sources.length,2);assert(sources[1].stopped);
+});
