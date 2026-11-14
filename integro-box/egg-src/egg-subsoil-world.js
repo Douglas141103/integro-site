@@ -1,4 +1,4 @@
-import {SUBSOIL,SUBSOIL_LAVA,subsoilLavaShape} from './egg-subsoil.js';
+import {SUBSOIL,SUBSOIL_LAVA,subsoilLavaShape,subsoilEscapeView} from './egg-subsoil.js';
 import {TRACK_WIDTH,TRACK_HALF_WIDTH} from './egg-track.js';
 
 export function magmaGuardian(g,limbs,{group,ball,cyl,box}){
@@ -24,9 +24,12 @@ export function createSubsoilWorld({root,entrance,content,helpers}){
   box(d,5.9,.7,.9,0x5f3543,0,4.5,0);
   const glow=box(d,4.5,4,.08,0xff6b24,0,2,.2);glow.material=glow.material.clone();glow.material.emissive.setHex(0xff4a16);glow.material.emissiveIntensity=.6;glow.material.transparent=true;glow.material.opacity=.28;glow.material.depthWrite=false;
   label(d,text,0,6,0,6.5,'#fff1cb','#663040');
-  label(d,text==='PORTA DO SUBSOLO'?'A LAVA CRESCE: ESPERE A ABERTURA':'VOLTE AO MUNDO NORMAL',0,5.35,0,6.4,'#ffddb0','#342732');
+  label(d,text==='PORTA DO SUBSOLO'?'A LAVA CRESCE: ESPERE A ABERTURA':'VOLTE AO MUNDO NORMAL',0,5.35,0,6.4,'#ffddb0','#342732');return d;
  }
- door(entrance,SUBSOIL.gate,'PORTA DO SUBSOLO');door(g,SUBSOIL.exit,'SAÍDA DO SUBSOLO');door(g,SUBSOIL.finish,'SUPERFÍCIE');
+ door(entrance,SUBSOIL.gate,'PORTA DO SUBSOLO');const backDoor=door(g,SUBSOIL.exit,'SAÍDA DO SUBSOLO'),escapeDoor=door(g,SUBSOIL.finish,'SUPERFÍCIE');escapeDoor.name='SubsoilSurfaceDoor';
+ const suction=group(g,0,.06,SUBSOIL.finish.z);suction.name='SubsoilDoorSuction';suction.visible=false;const vortex=cyl(suction,2.8,2.8,.05,0x1b1725,0,0,0,32);const swirl=torus(suction,2.5,.13,0xff9c43,0,.04,0);swirl.rotation.x=Math.PI/2;
+ const guardianVortex=group(g);guardianVortex.name='SubsoilGuardianVortex';guardianVortex.visible=false;const splash=torus(guardianVortex,1.6,.16,0xffae4b,0,.08,0);splash.rotation.x=Math.PI/2;
+ const beacon=group(escapeDoor,0,7.5,0);label(beacon,'↓ SAÍDA COM O OVO',0,0,0,6,'#e6ffb9','#234b3e');beacon.visible=false;
  const dais=cyl(g,2.4,2.6,.12,0x3e303b,SUBSOIL.nest.x,.01,SUBSOIL.nest.z,24);dais.name='MagmaNestDais';
  label(g,'OVOS DO GUARDIÃO DE MAGMA',0,5.5,SUBSOIL.nest.z,8,'#fff0c8','#62303a');
  const floor=box(g,TRACK_WIDTH,.6,SUBSOIL.length,0x554752,0,-.3,SUBSOIL.start-SUBSOIL.length/2);floor.name='SubsoilGround';
@@ -52,6 +55,11 @@ export function createSubsoilWorld({root,entrance,content,helpers}){
  const ring=torus(eruption,1.2,.12,0xbca08b,0,.06,0);ring.rotation.x=Math.PI/2;
  const stones=Array.from({length:8},(_,i)=>{const a=i*Math.PI/4,s=ball(eruption,.18,0x8c746c,Math.sin(a),.1,Math.cos(a),1,.8,1);s.userData.angle=a;return s;});
  return{group:g,update(game,reduced){
+  const e=game.subsoilEscape,v=subsoilEscapeView(e);backDoor.visible=!e;
+  escapeDoor.visible=!v||v.doorVisible;escapeDoor.position.set(e&&e.phase!=='sink'?e.door.x:SUBSOIL.finish.x,v?.doorY||0,e&&e.phase!=='sink'?e.door.z:SUBSOIL.finish.z);escapeDoor.rotation.y=e&&e.phase!=='sink'?-Math.sign(e.door.x)*Math.PI/2:0;
+  beacon.visible=!!e&&['reveal','countdown','chase'].includes(e.phase);
+  suction.visible=e?.phase==='sink';if(suction.visible){const size=reduced?1:1+Math.sin(e.elapsed*10)*.09;suction.scale.setScalar(size);swirl.rotation.z=e.elapsed*6;}
+  guardianVortex.visible=!!e&&['sink','reveal'].includes(e.phase);if(guardianVortex.visible){const guardian=game.guardians[SUBSOIL.world];guardianVortex.position.set(guardian.x,.07,guardian.z);const size=reduced?1:1+Math.sin(e.elapsed*8)*.2;guardianVortex.scale.setScalar(size);}
   g.visible=game.inSubsoil();if(g.visible){for(const {pool,rim,center,h,bubbles} of lava){const shape=subsoilLavaShape(h,game.time);pool.scale.set(shape.rx,1,shape.rz);rim.scale.set(shape.rx+.3,1,shape.rz+.3);center.scale.set(shape.rx*.65,1,shape.rz*.63);pool.userData.hazard=shape;for(const b of bubbles){b.mesh.position.x=h.x+Math.cos(b.angle)*shape.rx*.5;b.mesh.position.z=h.z+Math.sin(b.angle)*shape.rz*.5;}pool.material.emissiveIntensity=reduced?.65:.6+Math.sin(game.time*1.5+h.z)*.12;}}
   if(g.visible&&!reduced){for(const e of embers){const t=(game.time*(e.smoke?.35:e.small?.6:1)+e.phase)%1,phase=t<0?t+1:t;e.mesh.position.y=e.y+(e.small?Math.sin(game.time*2+e.phase)*.06:phase*(e.smoke?2.5:3));if(!e.small)e.mesh.position.x=e.x+Math.sin(phase*3+e.phase)*.4;}}
   eruption.visible=!!game.emerging;eruption.position.set(SUBSOIL.surface.x,0,SUBSOIL.surface.z);if(eruption.visible){const t=1-game.emerging/SUBSOIL.emergeSeconds;opening.scale.setScalar(1-t*.7);ring.scale.setScalar(1+t*.5);for(const s of stones){const r=1+t*.9;s.position.set(Math.sin(s.userData.angle)*r,reduced?.1:.1+Math.sin(t*Math.PI)*.7,Math.cos(s.userData.angle)*r);}}

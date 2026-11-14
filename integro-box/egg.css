@@ -478,3 +478,9 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 #eggApp[data-egg-mode=train] .egg-compact-hud #eggJump,#eggApp[data-egg-mode=train] .egg-compact-hud #eggSprint,#eggApp[data-egg-mode=train] .egg-compact-hud .egg-stamina{display:none}
 #eggApp .egg-compact-hud:has(.egg-sheet:not([hidden])) .egg-quick-toggle,#eggApp .egg-compact-hud:has(.egg-sheet:not([hidden])) .egg-quick-tray{visibility:hidden;pointer-events:none}
 @media(max-height:450px) and (orientation:landscape){#eggApp .egg-compact-hud .egg-training{top:60px;right:115px}#eggApp .egg-compact-hud .egg-chase,#eggApp .egg-compact-hud .egg-race-hud{top:62px}#eggApp .egg-compact-hud .egg-toast{bottom:12px;max-width:calc(100% - 300px)}#eggApp .egg-compact-hud .egg-joystick{width:68px;height:68px}}
+
+/* Brief story cues leave the controls and playfield accessible. */
+.egg-subsoil-cue{position:absolute;left:50%;top:26%;transform:translateX(-50%);z-index:8;max-width:85%;width:max-content;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 16px;border-radius:16px;background:#241d31db;color:#fff0c8;text-align:center;pointer-events:none;text-shadow:0 2px 3px #0008}
+.egg-subsoil-cue strong{font-size:clamp(16px,3vw,25px);line-height:1.15}.egg-subsoil-cue small{font-size:12px;max-width:260px}.egg-subsoil-cue.countdown{background:transparent}.egg-subsoil-cue.countdown strong{font-size:72px;color:#ffdf8a}.egg-subsoil-cue[hidden]{display:none!important}
+.egg-stage:has(.egg-sheet:not([hidden])) .egg-subsoil-cue{visibility:hidden}
+@media(max-height:450px){.egg-subsoil-cue{top:24%;padding:7px 12px}.egg-subsoil-cue.countdown strong{font-size:48px}}
