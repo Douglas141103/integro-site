@@ -1,4 +1,4 @@
-import {SUBSOIL,SUBSOIL_LAVA} from './egg-subsoil.js';
+import {SUBSOIL,SUBSOIL_LAVA,subsoilLavaShape} from './egg-subsoil.js';
 import {TRACK_WIDTH,TRACK_HALF_WIDTH} from './egg-track.js';
 
 export function magmaGuardian(g,limbs,{group,ball,cyl,box}){
@@ -24,7 +24,7 @@ export function createSubsoilWorld({root,entrance,content,helpers}){
   box(d,5.9,.7,.9,0x5f3543,0,4.5,0);
   const glow=box(d,4.5,4,.08,0xff6b24,0,2,.2);glow.material=glow.material.clone();glow.material.emissive.setHex(0xff4a16);glow.material.emissiveIntensity=.6;glow.material.transparent=true;glow.material.opacity=.28;glow.material.depthWrite=false;
   label(d,text,0,6,0,6.5,'#fff1cb','#663040');
-  label(d,text==='PORTA DO SUBSOLO'?'DESVIE DOS LAGOS DE LAVA':'VOLTE AO MUNDO NORMAL',0,5.35,0,6.4,'#ffddb0','#342732');
+  label(d,text==='PORTA DO SUBSOLO'?'A LAVA CRESCE: ESPERE A ABERTURA':'VOLTE AO MUNDO NORMAL',0,5.35,0,6.4,'#ffddb0','#342732');
  }
  door(entrance,SUBSOIL.gate,'PORTA DO SUBSOLO');door(g,SUBSOIL.exit,'SAÍDA DO SUBSOLO');door(g,SUBSOIL.finish,'SUPERFÍCIE');
  const dais=cyl(g,2.4,2.6,.12,0x3e303b,SUBSOIL.nest.x,.01,SUBSOIL.nest.z,24);dais.name='MagmaNestDais';
@@ -32,9 +32,9 @@ export function createSubsoilWorld({root,entrance,content,helpers}){
  const floor=box(g,TRACK_WIDTH,.6,SUBSOIL.length,0x554752,0,-.3,SUBSOIL.start-SUBSOIL.length/2);floor.name='SubsoilGround';
  for(const h of SUBSOIL_LAVA){
   const rim=cyl(g,1,1,.12,0x2c2530,h.x,.015,h.z,40);rim.scale.set(h.rx+.3,1,h.rz+.3);rim.name='SubsoilLavaRim';
-  const pool=cyl(g,1,1,.08,0xff7829,h.x,.075,h.z,40);pool.scale.set(h.rx,1,h.rz);pool.name=h.lake?'SubsoilLavaLake':'SubsoilLavaPuddle';pool.userData.hazard={...h};pool.material=pool.material.clone();pool.material.emissive.setHex(0xff5118);pool.material.emissiveIntensity=.65;lava.push(pool);
-  const center=cyl(g,1,1,.015,0xffbe4c,h.x,.121,h.z,32);center.scale.set(h.rx*.65,1,h.rz*.63);
-  for(let j=0;j<(h.lake?4:2);j++){const a=j*2.4,b=ball(g,.15,0xffdf75,h.x+Math.cos(a)*h.rx*.5,.18,h.z+Math.sin(a)*h.rz*.5,1,.45,1);embers.push({mesh:b,x:b.position.x,y:.18,z:b.position.z,phase:j+h.z,small:true});}
+  const pool=cyl(g,1,1,.08,0xff7829,h.x,.075,h.z,40);pool.scale.set(h.rx,1,h.rz);pool.name=h.lake?'SubsoilLavaLake':'SubsoilLavaPuddle';pool.userData.hazard={...h};pool.material=pool.material.clone();pool.material.emissive.setHex(0xff5118);pool.material.emissiveIntensity=.65;
+  const center=cyl(g,1,1,.015,0xffbe4c,h.x,.121,h.z,32);center.scale.set(h.rx*.65,1,h.rz*.63);const bubbles=[];lava.push({pool,rim,center,h,bubbles});
+  for(let j=0;j<(h.lake?4:2);j++){const a=j*2.4,b=ball(g,.15,0xffdf75,h.x+Math.cos(a)*h.rx*.5,.18,h.z+Math.sin(a)*h.rz*.5,1,.45,1);bubbles.push({mesh:b,angle:a});embers.push({mesh:b,x:b.position.x,y:.18,z:b.position.z,phase:j+h.z,small:true});}
  }
  for(const side of [-1,1]){
   box(g,.5,1.1,SUBSOIL.length,0x302936,side*(TRACK_HALF_WIDTH+.3),.4,SUBSOIL.start-SUBSOIL.length/2);
@@ -52,7 +52,8 @@ export function createSubsoilWorld({root,entrance,content,helpers}){
  const ring=torus(eruption,1.2,.12,0xbca08b,0,.06,0);ring.rotation.x=Math.PI/2;
  const stones=Array.from({length:8},(_,i)=>{const a=i*Math.PI/4,s=ball(eruption,.18,0x8c746c,Math.sin(a),.1,Math.cos(a),1,.8,1);s.userData.angle=a;return s;});
  return{group:g,update(game,reduced){
-  g.visible=game.inSubsoil();if(g.visible&&!reduced){for(const p of lava)p.material.emissiveIntensity=.6+Math.sin(game.time*1.5+p.position.z)*.12;for(const e of embers){const t=(game.time*(e.smoke?.35:e.small?.6:1)+e.phase)%1,phase=t<0?t+1:t;e.mesh.position.y=e.y+(e.small?Math.sin(game.time*2+e.phase)*.06:phase*(e.smoke?2.5:3));e.mesh.position.x=e.x+(e.small?0:Math.sin(phase*3+e.phase)*.4);}}
+  g.visible=game.inSubsoil();if(g.visible){for(const {pool,rim,center,h,bubbles} of lava){const shape=subsoilLavaShape(h,game.time);pool.scale.set(shape.rx,1,shape.rz);rim.scale.set(shape.rx+.3,1,shape.rz+.3);center.scale.set(shape.rx*.65,1,shape.rz*.63);pool.userData.hazard=shape;for(const b of bubbles){b.mesh.position.x=h.x+Math.cos(b.angle)*shape.rx*.5;b.mesh.position.z=h.z+Math.sin(b.angle)*shape.rz*.5;}pool.material.emissiveIntensity=reduced?.65:.6+Math.sin(game.time*1.5+h.z)*.12;}}
+  if(g.visible&&!reduced){for(const e of embers){const t=(game.time*(e.smoke?.35:e.small?.6:1)+e.phase)%1,phase=t<0?t+1:t;e.mesh.position.y=e.y+(e.small?Math.sin(game.time*2+e.phase)*.06:phase*(e.smoke?2.5:3));if(!e.small)e.mesh.position.x=e.x+Math.sin(phase*3+e.phase)*.4;}}
   eruption.visible=!!game.emerging;eruption.position.set(SUBSOIL.surface.x,0,SUBSOIL.surface.z);if(eruption.visible){const t=1-game.emerging/SUBSOIL.emergeSeconds;opening.scale.setScalar(1-t*.7);ring.scale.setScalar(1+t*.5);for(const s of stones){const r=1+t*.9;s.position.set(Math.sin(s.userData.angle)*r,reduced?.1:.1+Math.sin(t*Math.PI)*.7,Math.cos(s.userData.angle)*r);}}
  }};
 }

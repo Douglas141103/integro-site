@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {EggAdventure,WORLDS,NESTS,constrainToCorridor} from '../integro-box/egg-src/egg-rules.js';
-import {SUBSOIL,SUBSOIL_LAVA,inSubsoil,touchesSubsoilLava,emergenceOffset} from '../integro-box/egg-src/egg-subsoil.js';
+import {SUBSOIL,SUBSOIL_LAVA,inSubsoil,touchesSubsoilLava,emergenceOffset,subsoilLavaShape,SUBSOIL_PULSE_SECONDS} from '../integro-box/egg-src/egg-subsoil.js';
 import {HEAVEN,inHeaven,heavenPosition} from '../integro-box/egg-src/egg-heaven.js';
 const at=(g,p)=>Object.assign(g.player,{x:0,y:0,vy:0,...p});
 const walk=(g,target,done=()=>Math.hypot(g.player.x-target.x,g.player.z-target.z)<.05)=>{
@@ -30,4 +30,21 @@ test('the alternating safe route is traversable on foot from entrance to final e
  for(const h of SUBSOIL_LAVA.filter(h=>h.lake)){const x=-Math.sign(h.x)*7;walk(g,{x,z:h.z+9});walk(g,{x,z:h.z-9});}
  walk(g,SUBSOIL.finish,()=>!g.inSubsoil());assert(g.emerging);assert.equal(JSON.stringify([g.save.eggs,g.save.creatures]),inventory);assert.equal(g.save.coins,123);assert.match(g.drainEvents().at(-1).text,/Travessia concluída/);
  while(g.emerging)g.update(.05);at(g,SUBSOIL.gate);g.interact();walk(g,SUBSOIL.exit);assert.equal(g.interact(),'subsoilExit');assert(g.emerging);
+});
+
+test('pulsing lava reaches both edges, opens again and leaves an interior slalom at every phase',()=>{
+ for(const h of SUBSOIL_LAVA){
+  const trough=((2*Math.PI-h.phase%(2*Math.PI))%(2*Math.PI))*SUBSOIL_PULSE_SECONDS/(2*Math.PI),peak=trough+SUBSOIL_PULSE_SECONDS/2;
+  const small=subsoilLavaShape(h,trough),large=subsoilLavaShape(h,peak),edge={x:Math.sign(h.x)*13.85,z:h.z,y:0};
+  assert(large.rx>small.rx);assert(large.rz>small.rz);assert(Math.abs(h.x)+large.rx>14.25,'visible lava covers the track boundary');
+  assert(!touchesSubsoilLava(edge,.4,trough),'the edge has a timed opening');assert(touchesSubsoilLava(edge,.4,peak),'hugging the edge is unsafe during expansion');
+  assert(Math.abs(subsoilLavaShape(h,peak+SUBSOIL_PULSE_SECONDS).rx-large.rx)<1e-10);
+ }
+ for(let time=0;time<SUBSOIL_PULSE_SECONDS;time+=.1)for(const h of SUBSOIL_LAVA.filter(h=>h.lake))for(let z=h.z-8;z<=h.z+8;z+=.25)assert(!touchesSubsoilLava({x:-Math.sign(h.x)*7,z,y:0},.4,time),'the alternating interior route stays traversable');
+ assert(!touchesSubsoilLava(SUBSOIL.entry));assert(!touchesSubsoilLava(SUBSOIL.nest));assert(!touchesSubsoilLava(SUBSOIL.finish));
+});
+test('a growing pool catches a stationary player at the edge using current game time',()=>{
+ const g=new EggAdventure();at(g,{x:-13.85,z:SUBSOIL_LAVA[0].z});assert(!g.checkSubsoilLava());
+ for(let i=0;i<100&&!g.emerging;i++)g.update(.05);
+ assert(g.emerging);assert(!g.inSubsoil());assert.equal(g.player.z,SUBSOIL.surface.z);
 });
