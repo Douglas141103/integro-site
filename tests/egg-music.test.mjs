@@ -78,3 +78,24 @@ test('uploaded soundtrack loops at its original speed and resumes after pausing'
  raw.currentTime=30;engine.play();assert.equal(sources[1].offset,12);engine.setVolume(.2);assert.equal(levels.at(-1),.2);
  engine.dispose();engine.play();assert.equal(sources.length,2);assert(sources[1].stopped);
 });
+
+test('subsoil overrides possession and restores the normal mode on exit',async()=>{
+ const f=fixture();f.music.sync({active:true,subsoil:true,carrying:0});await f.music.unlock();
+ assert.equal(f.music.getState().mode,'subsoil');
+ f.music.sync({subsoil:false});assert.equal(f.music.getState().mode,'chase');
+ f.music.sync({carrying:null});assert.equal(f.music.getState().mode,'calm');f.music.dispose();
+});
+
+test('subsoil swaps recordings, loops, preserves offsets and cannot start after leaving or pausing',async()=>{
+ const {createMusicEngine,MUSIC_URL,SUBSOIL_MUSIC_URL}=await import('../integro-box/egg-src/egg-music-engine.js');
+ const sources=[],urls=[];let finish;
+ const raw={currentTime:0,destination:{},decodeAudioData:async()=>({duration:180}),createGain:()=>({gain:{value:0,setTargetAtTime(){}},connect(){},disconnect(){}}),createBufferSource(){const s={connect(){},disconnect(){},start:(_,offset)=>s.offset=offset,stop:()=>s.stopped=true};sources.push(s);return s;}};
+ const engine=await createMusicEngine({rawContext:raw,fetchAudio:async url=>{urls.push(url);if(url===SUBSOIL_MUSIC_URL)await new Promise(r=>finish=r);return{ok:true,arrayBuffer:async()=>new ArrayBuffer(1)}}});
+ engine.play();raw.currentTime=10;engine.setMode('subsoil');assert(sources[0].stopped);
+ engine.setMode('calm');assert.equal(sources[1].offset,10);
+ finish();await new Promise(r=>setImmediate(r));assert.equal(sources.length,2);
+ engine.setMode('subsoil');assert(sources[1].stopped);assert.equal(sources[2].offset,0);assert(sources[2].loop);
+ raw.currentTime=15;engine.pause();engine.setMode('chase');assert.equal(sources.length,3);
+ engine.play();assert.equal(sources[3].offset,10);engine.setMode('subsoil');assert.equal(sources[4].offset,5);
+ assert.deepEqual(urls,[MUSIC_URL,SUBSOIL_MUSIC_URL]);engine.dispose();
+});
