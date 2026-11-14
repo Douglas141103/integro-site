@@ -1,5 +1,7 @@
 // Real DOM, gameplay, transforms and geometry; GPU drawing is stubbed.
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {createRequire} from 'node:module';import vm from 'node:vm';import {JSDOM} from 'jsdom';
+import {createSubsoilWorld} from '../integro-box/egg-src/egg-subsoil-world.js';
+import {subsoilLavaShape,SUBSOIL_LAVA} from '../integro-box/egg-src/egg-subsoil.js';
 import {buildSync} from '../integro-box/egg-src/node_modules/esbuild/lib/main.js';
 const require=createRequire(new URL('../integro-box/egg-src/entry.js',import.meta.url)),T=require('three');
 test('subsoil HUD, lava geometry, peer separation and emergence animate in the mounted mobile game',()=>{
@@ -22,6 +24,7 @@ test('subsoil HUD, lava geometry, peer separation and emergence animate in the m
   const guard=scene.getObjectByName('MagmaGuardian');assert(guard);assert(guard.parent.visible);assert.equal(state().visibleNestEggs[24],3);
   const pools=[],volcanoes=[];track.traverse(n=>{if(n.userData.hazard)pools.push(n);if(n.name==='SubsoilVolcano')volcanoes.push(n);});assert.equal(pools.length,20);assert.equal(volcanoes.length,16);
   for(const p of pools){assert.equal(p.scale.x,p.userData.hazard.rx);assert.equal(p.scale.z,p.userData.hazard.rz);assert.equal(p.position.x,p.userData.hazard.x);assert.equal(p.position.z,p.userData.hazard.z);assert(p.material.emissiveIntensity>0);}
+  const beforePulse=pools.map(p=>p.scale.x);tick(45);for(const [i,p] of pools.entries()){const shape=subsoilLavaShape(SUBSOIL_LAVA[i],game.time);assert(Math.abs(p.scale.x-shape.rx)<1e-10);assert(Math.abs(p.scale.z-shape.rz)<1e-10);assert.notEqual(p.scale.x,beforePulse[i]);}
   assert.match(w.document.getElementById('eggWorldName').textContent,/Porta do Subsolo/);assert.match(w.document.getElementById('eggTarget').textContent,/Ovos de Magma/);
   assert(renderCamera.position.y>0);const startX=state().player.x;key('d');tick(4);key('d',true);assert(state().player.x>startX,'normal gravity keeps screen-right orientation');
   adapter.setPeers([{slot:2,state:{x:3,y:0,z:-1609,yaw:0,zone:'world'}}]);tick(2);const remote=scene.getObjectByName('PeerGravityFrame');assert.equal(remote.rotation.z,0);assert(remote.children[0].visible);
@@ -34,4 +37,15 @@ test('subsoil HUD, lava geometry, peer separation and emergence animate in the m
   w.BoxEggRuntime.raceStart();assert.equal(state().emerging,0);assert.equal(state().player.z,15);tick(5);assert.equal(actor.g.position.y,0);
   adapter.clearPeers();api.hide();
  }finally{dom.window.close();}
+});
+
+test('essential lava growth stays synchronized with collision when decorative motion is reduced',()=>{
+ const group=(p,x=0,y=0,z=0)=>{const g=new T.Group();g.position.set(x,y,z);p.add(g);return g;};
+ const mesh=(p,geo,c,x=0,y=0,z=0)=>{const m=new T.Mesh(geo,new T.MeshStandardMaterial({color:c}));m.position.set(x,y,z);p.add(m);return m;};
+ const helpers={group,label:(p,text,x,y,z)=>group(p,x,y,z),box:(p,w,h,d,c,x,y,z)=>mesh(p,new T.BoxGeometry(w,h,d),c,x,y,z),cyl:(p,a,b,h,c,x,y,z,n)=>mesh(p,new T.CylinderGeometry(a,b,h,n),c,x,y,z),ball:(p,r,c,x,y,z)=>mesh(p,new T.SphereGeometry(r,8,6),c,x,y,z),torus:(p,r,t,c,x,y,z)=>mesh(p,new T.TorusGeometry(r,t,6,8),c,x,y,z)};
+ const root=new T.Group(),world=createSubsoilWorld({root,entrance:group(root),content:group(root),helpers}),game={inSubsoil:()=>true,time:0,emerging:0};
+ const pool=root.getObjectByName('SubsoilLavaLake'),rim=root.getObjectByName('SubsoilLavaRim');
+ world.update(game,true);const small=pool.scale.x;game.time=3.6;world.update(game,true);assert(pool.scale.x>small);assert.equal(pool.scale.x,subsoilLavaShape(SUBSOIL_LAVA[0],game.time).rx);assert.equal(rim.scale.x,pool.scale.x+.3);
+ const reducedSize=pool.scale.clone();world.update(game,false);assert(pool.scale.equals(reducedSize),'motion preference cannot hide an active collision area');
+ root.traverse(n=>{n.geometry?.dispose();n.material?.dispose();});
 });
