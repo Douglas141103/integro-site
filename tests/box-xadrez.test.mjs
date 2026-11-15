@@ -9,13 +9,14 @@ test('chess catalog entry opens only on selection, returns safely and stops on l
  d.getElementById('brandHome').onclick=()=>d.getElementById('lobby').classList.remove('hidden');
  try{
   w.eval(await read('xadrez-loader.js'));w.eval(await read('catalog.js'));
+  const chat=d.createElement('aside');chat.id='boxChat';d.body.append(chat);const rooms=d.createElement('aside');rooms.id='boxOnline';d.body.append(rooms);
   const card=d.querySelector('[data-catalog-game="xadrez"]');assert(card);assert.match(card.querySelector('img').src,/xadrez.webp$/);assert(!d.querySelector('#xadrezApp iframe'));
   const search=d.querySelector('.catalog-search');search.value='xadrez';search.dispatchEvent(new w.Event('input'));assert(!card.hidden);
   card.querySelector('.catalog-play').click();await new Promise(r=>setImmediate(r));
-  const frame=d.querySelector('#xadrezApp iframe');assert(frame);assert.equal(disconnects,1);assert(!d.getElementById('xadrezApp').hidden);assert.match(frame.src,/\/xadrez\/index.html/);
+  const frame=d.querySelector('#xadrezApp iframe');assert(frame);assert.equal(disconnects,1);assert.equal(w.getComputedStyle(chat).display,'none');assert.equal(w.getComputedStyle(rooms).display,'none');assert(!d.getElementById('xadrezApp').hidden);assert.match(frame.src,/\/xadrez\/index.html/);
   w.dispatchEvent(new w.MessageEvent('message',{origin:'https://other.test',source:frame.contentWindow,data:{type:'integro-chess-exit'}}));assert(!d.getElementById('xadrezApp').hidden);
   w.dispatchEvent(new w.MessageEvent('message',{origin:w.location.origin,source:frame.contentWindow,data:{type:'integro-chess-exit'}}));
-  assert(d.getElementById('xadrezApp').hidden);assert(!d.querySelector('#xadrezApp iframe'));assert(!d.getElementById('lobby').classList.contains('hidden'));assert.equal(d.activeElement.id,'playXadrez');assert.equal(d.body.style.overflow,'');
+  assert(d.getElementById('xadrezApp').hidden);assert(!d.querySelector('#xadrezApp iframe'));assert(!d.getElementById('lobby').classList.contains('hidden'));assert.equal(d.activeElement.id,'playXadrez');assert.equal(d.body.style.overflow,'');assert.notEqual(w.getComputedStyle(chat).display,'none');assert.notEqual(w.getComputedStyle(rooms).display,'none');
   await w.BoxXadrez.open();assert(d.querySelector('#xadrezApp iframe'));w.BoxXadrez.stop();await w.BoxXadrez.open();assert(!d.querySelector('#xadrezApp iframe'));
  }finally{w.close();}
 });
