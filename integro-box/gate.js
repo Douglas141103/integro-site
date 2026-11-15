@@ -19,6 +19,7 @@ function lock(){
  window.BoxDino?.stop();
  window.BoxEngole?.stop();
  window.BoxTower?.stop();
+ window.BoxXadrez?.stop();
  window.BoxDescubra?.stop();
  window.BoxBounce?.stop();
  window.BoxInterDance?.stop();
@@ -68,8 +69,9 @@ try {
   if(!unloaded){const {installEngole}=await import('./engole/loader.mjs?v=20261112-update1');installEngole(supabase,user);}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261112-update1');installDescubra();}
+  if(!unloaded)await script('./xadrez-loader.js?v=20261115-xadrez1');
   phase('Organizando seu catálogo…');
-  if(!unloaded)await script('./catalog.js?v=20261105-engole1');
+  if(!unloaded)await script('./catalog.js?v=20261115-xadrez1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
