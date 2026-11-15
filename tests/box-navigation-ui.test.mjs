@@ -25,7 +25,7 @@ test('loading stages wait for auth and real script completion; failures keep the
  for(const fail of [false,true]){
   const dom=new JSDOM(html,{url:'https://example.test/integro-box/jogar.html',runScripts:'outside-only'}),w=dom.window,d=w.document,loaded=[];let releaseAuth;
   w.requireFamily=()=>new Promise(r=>releaseAuth=r);w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
-  w.loadModule=async()=>({mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},installDino(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}});
+  w.loadModule=async()=>({mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installInterDance(){},installRush(){},installShark(){},installDino(){},installEngole(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}});
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT'){loaded.push(n.src);queueMicrotask(()=>fail&&n.src.includes('egg.js')?n.onerror():n.onload());}};
   try{
    const done=w.eval('(async()=>{'+source+'})()');assert.equal(loaded.length,0);assert(d.body.classList.contains('box-locked'));releaseAuth({id:'user-a'});await done;
@@ -48,7 +48,7 @@ test('portal entry shows the catalog for old game links and saved recent games; 
   w.localStorage.setItem('box:user-a:catalog-recent-v1',JSON.stringify(['interdance']));
   w.requireFamily=async()=>({id:'user-a'});w.supabase={auth:{onAuthStateChange(){},signOut:async()=>{}}};
   d.getElementById('brandHome').onclick=()=>{d.getElementById('lobby').classList.remove('hidden');d.getElementById('footer').classList.remove('hidden');};
-  const idleModules={mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},installDino(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}};
+  const idleModules={mountEggHud(){return {};},mountPlayerProfile(){},startPresence(){},installGoSnake(){},installRush(){},installShark(){},installDino(){},installEngole(){},installTower(){},installDescubra(){},startUsage(){},startIntGem:async()=>{}};
   w.loadModule=async url=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached an installer');return url.includes('/interdance.js')?w.eval('(function(){'+dance+';return {installInterDance};})()'):idleModules;};
   const append=d.body.append.bind(d.body);d.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='SCRIPT')queueMicrotask(()=>{assert(!gameHashes.includes(w.location.hash),'game anchor reached a script');if(n.src.includes('catalog.js'))w.eval(catalog);n.onload();});};
   try{
@@ -66,7 +66,7 @@ test('portal entry shows the catalog for old game links and saved recent games; 
 
 test('public game cards link to the catalog without an automatic game selection',async()=>{
  const dom=new JSDOM(await read('integro-box/index.html'),{url:'https://example.test/integro-box/'});
- try{const links=[...dom.window.document.querySelectorAll('.box-game a')];assert(links.length>=4);for(const link of links){assert.equal(new URL(link.href).pathname,'/integro-box/jogar.html');assert.equal(new URL(link.href).hash,'');}}
+ try{const links=[...dom.window.document.querySelectorAll('.box-game a')].filter(a=>!new URL(a.href).pathname.endsWith('.webp'));assert(links.length>=4);for(const link of links){assert.equal(new URL(link.href).pathname,'/integro-box/jogar.html');assert.equal(new URL(link.href).hash,'');}}
  finally{dom.window.close();}
 });
 
