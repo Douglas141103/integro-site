@@ -1,4 +1,5 @@
-import {SUBSOIL,inSubsoil} from './egg-subsoil.js?v=20261113-magma1';
+import {inEgypt} from './egg-egypt.js?v=20261116-egypt1';
+import {SUBSOIL,inSubsoil} from './egg-subsoil.js?v=20261116-egypt1';
 import {HEAVEN,inHeaven} from './egg-heaven.js?v=20261113-magma1';
 // Shared lateral dimensions: widening does not change world length or movement speed.
 export const TRACK_SCALE=3;
@@ -13,6 +14,7 @@ export const trackSideX=x=>x+Math.sign(x)*TRACK_SIDE_OFFSET;
 export const BASE_HALF_WIDTH=9.4,PLAYER_RADIUS=.4;
 export function corridorHalfWidth(z){const t=Math.max(0,Math.min(1,(z-3)/5));return TRACK_HALF_WIDTH+(BASE_HALF_WIDTH-TRACK_HALF_WIDTH)*t;}
 export function constrainTrackPosition(p,radius=PLAYER_RADIUS,baseEnd=50){
+ if(inEgypt(p))return p;
  p.z=inSubsoil(p)?Math.max(SUBSOIL.end+.8,Math.min(SUBSOIL.start-.8,p.z)):inHeaven(p)?Math.max(HEAVEN.end+.8,Math.min(HEAVEN.start-.8,p.z)):Math.max(-48*HEAVEN.world+.8,Math.min(baseEnd,p.z));
  const limit=corridorHalfWidth(p.z)-radius;p.x=Math.max(-limit,Math.min(limit,p.x));return p;
 }

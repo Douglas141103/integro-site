@@ -64,6 +64,7 @@ export class EggExplorer {
 }
 
 const SPECIES={
+ mummy:{head:[1.4,-.04],hip:.45,leg:.39,foot:.07,r:.11,arms:true},
  chick:{head:[1,-.07],hip:.37,leg:.32,foot:.055,r:.055,wing:true},
  fox:{head:[.95,-.18],hip:.40,leg:.35,foot:.055,r:.075,quad:true},
  deer:{head:[1.06,-.23],hip:.55,leg:.50,foot:.045,r:.052,quad:true},

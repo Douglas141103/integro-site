@@ -1,7 +1,7 @@
 // The magma species is appended after all existing worlds; IDs remain stable.
 export const SUBSOIL={world:24,nest:{x:0,z:-1826},start:-1600,end:-1840,length:240,gate:{x:-9,z:-1098},entry:{x:0,z:-1607},exit:{x:0,z:-1602},finish:{x:0,z:-1835},surface:{x:-9,z:-1090},emergeSeconds:1.15};
 export const SUBSOIL_WORLD={name:'Porta do Subsolo',short:'Subsolo',creature:'Guardião de Magma',value:100000,color:0xff873b,ground:0x554752,path:0x554752,sky:0x342734,kind:'magmaGuardian',bonus:true};
-export const inSubsoil=p=>Number.isFinite(p?.z)&&p.z<=-1536;
+export const inSubsoil=p=>Number.isFinite(p?.z)&&p.z<=-1536&&p.z>-2100;
 // Shared animated ellipses keep visible lava and collision on the same game clock.
 export const SUBSOIL_LAVA=Array.from({length:10},(_,i)=>{
  const side=i%2?1:-1,z=SUBSOIL.start-25-i*21;
