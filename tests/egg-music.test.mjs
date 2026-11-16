@@ -86,6 +86,29 @@ test('subsoil overrides possession and restores the normal mode on exit',async()
  f.music.sync({carrying:null});assert.equal(f.music.getState().mode,'calm');f.music.dispose();
 });
 
+test('Egypt keeps its soundtrack during the egg chase and restores the outside theme on exit',async()=>{
+ const f=fixture();f.music.sync({active:true,egypt:true});await f.music.unlock();
+ assert.equal(f.music.getState().mode,'egypt');
+ f.music.sync({carrying:25});assert.equal(f.music.getState().mode,'egypt');
+ f.music.sync({paused:true});assert.equal(f.music.getState().playing,false);
+ f.music.sync({paused:false});await f.music.unlock();assert.equal(f.music.getState().playing,true);
+ f.music.sync({egypt:false});assert.equal(f.music.getState().mode,'chase');
+ f.music.sync({carrying:null});assert.equal(f.music.getState().mode,'calm');f.music.dispose();
+});
+
+test('pyramid recording loads only on entry, resumes its own offset and cannot play after a delayed exit',async()=>{
+ const {createMusicEngine,MUSIC_URL,EGYPT_MUSIC_URL}=await import('../integro-box/egg-src/egg-music-engine.js');
+ const sources=[],urls=[];let finish;
+ const raw={currentTime:0,destination:{},decodeAudioData:async()=>({duration:179}),createGain:()=>({gain:{value:0,setTargetAtTime(){}},connect(){},disconnect(){}}),createBufferSource(){const s={connect(){},disconnect(){},start:(_,offset)=>s.offset=offset,stop:()=>s.stopped=true};sources.push(s);return s;}};
+ const engine=await createMusicEngine({rawContext:raw,fetchAudio:async url=>{urls.push(url);if(url===EGYPT_MUSIC_URL)await new Promise(r=>finish=r);return{ok:true,arrayBuffer:async()=>new ArrayBuffer(1)}}});
+ engine.play();assert.deepEqual(urls,[MUSIC_URL]);raw.currentTime=8;engine.setMode('egypt');assert(sources[0].stopped);
+ engine.setMode('chase');assert.equal(sources[1].offset,8);finish();await new Promise(r=>setImmediate(r));assert.equal(sources.length,2);
+ engine.setMode('egypt');assert(sources[1].stopped);assert(sources[2].loop);assert.equal(sources[2].offset,0);
+ raw.currentTime=20;engine.pause();raw.currentTime=40;engine.play();assert.equal(sources[3].offset,12);
+ engine.setMode('calm');assert.equal(sources[4].offset,8);engine.setMode('egypt');assert.equal(sources[5].offset,12);
+ assert.deepEqual(urls,[MUSIC_URL,EGYPT_MUSIC_URL]);engine.dispose();assert(sources[5].stopped);
+});
+
 test('subsoil swaps recordings, loops, preserves offsets and cannot start after leaving or pausing',async()=>{
  const {createMusicEngine,MUSIC_URL,SUBSOIL_MUSIC_URL}=await import('../integro-box/egg-src/egg-music-engine.js');
  const sources=[],urls=[];let finish;
