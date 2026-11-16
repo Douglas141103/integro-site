@@ -1,0 +1,28 @@
+// One continuous, rising route. Physics, sand, art and guardian share this geometry.
+export const EGYPT={world:25,gate:{x:9,z:-63},surface:{x:9,z:-57},exit:{x:0,z:-2194},entry:{x:0,z:-2200},center:{x:0,z:-2280},height:54,halfWidth:3.5,turns:3};
+export const EGYPT_WORLD={name:'Pirâmide do Egito',short:'Egito',creature:'Múmia do Faraó',value:110000,color:0xe8c06a,ground:0xd9aa65,path:0xf2d49b,sky:0xf0cf99,kind:'mummy',bonus:true};
+export const inEgypt=p=>Number.isFinite(p?.z)&&p.z<-2100&&p.z>-2420;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const route=[{...EGYPT.exit,y:0,s:0}];
+for(let j=1;j<=23;j++)route.push({x:0,y:0,z:EGYPT.exit.z-j*40/23});
+for(let j=1;j<=540;j++){const t=j/540,a=t*Math.PI*2*EGYPT.turns,r=46-34*t;route.push({x:Math.sin(a)*r,y:t*EGYPT.height,z:EGYPT.center.z+Math.cos(a)*r});}
+for(let j=1;j<route.length;j++)route[j].s=route[j-1].s+Math.hypot(route[j].x-route[j-1].x,route[j].z-route[j-1].z);
+export const EGYPT_ROUTE=route;
+export const EGYPT_LENGTH=route.at(-1).s;
+EGYPT.nest={...route.at(-1)};
+export function egyptPoint(s){s=clamp(s,0,EGYPT_LENGTH);let lo=0,hi=route.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(route[m].s<s)lo=m;else hi=m;}const a=route[lo],b=route[hi],t=(s-a.s)/(b.s-a.s);return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,s,tx:(b.x-a.x)/(b.s-a.s),tz:(b.z-a.z)/(b.s-a.s)};}
+export function egyptProjection(p,nearS=null,reach=8){let best=null;for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1];if(nearS!==null&&(b.s<nearS-reach||a.s>nearS+reach))continue;const dx=b.x-a.x,dz=b.z-a.z,len=b.s-a.s,t=clamp(((p.x-a.x)*dx+(p.z-a.z)*dz)/(len*len),0,1),x=a.x+dx*t,z=a.z+dz*t,y=a.y+(b.y-a.y)*t,d=(p.x-x)**2+(p.z-z)**2+(nearS===null?((p.y||0)-y)**2:0);if(!best||d<best.d)best={x,y,z,s:a.s+len*t,d};}return best;}
+export const EGYPT_SAND=Array.from({length:9},(_,i)=>({s:77+i*(EGYPT_LENGTH-112)/9,phase:i*.71,side:i%2?1:-1}));
+export function egyptSandState(h,time){const phase=(time+h.phase)%7;return{active:phase>=1.4&&phase<5.7,warning:phase<1.4};}
+export const egyptMethods={
+ inEgypt(){return inEgypt(this.player)},
+ egyptProgress(){return this.inEgypt()?(this.egyptS??egyptProjection(this.player).s):0},
+ egyptAction(){if(this.raceMode||this.mode!=='run'||this.falling||this.jetFlight||!this.onFloor())return null;const near=q=>Math.hypot(this.player.x-q.x,this.player.z-q.z)<3;if(this.inEgypt())return this.egyptProgress()<8&&near(EGYPT.exit)?{type:'egyptExit',label:this.carrying!==null?'Sair com o ovo da múmia':'Voltar às Dunas'}:null;return near(EGYPT.gate)&&this.carrying===null?{type:'egyptEnter',label:'Entrar na Pirâmide do Egito'}:null;},
+ useEgyptDoor(){const a=this.egyptAction();if(!a)return false;this.endEggPower();this.clearPush();this.clearDroppedEgg();this.endSkates();this.iceVelocity={x:0,z:0};this.jumpBuffer=0;this.egyptSlowUntil=0;if(a.type==='egyptEnter'){this.egyptS=6;Object.assign(this.player,{...EGYPT.entry,y:0,vy:0});this.save.visited[EGYPT.world]=true;Object.assign(this.guardians[EGYPT.world],EGYPT.nest,{state:'idle',grace:0});this.emit('egyptEnter','EGITO · Entre na pirâmide, suba a espiral e desvie da areia. A múmia guarda os ovos no alto!');}else{Object.assign(this.player,{...EGYPT.surface,y:0,vy:0});this.egyptS=null;this.guardians[EGYPT.world].state='idle';this.emit('egyptExit',this.carrying!==null?'Você escapou da múmia! Leve o ovo ao curral.':'Você voltou às Dunas Douradas.');}this.energy=this.maxEnergy();return a.type;},
+ moveEgyptPlayer(dx,dz){let s=this.egyptProgress();const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.25));for(let j=0;j<steps;j++){const p=this.player,oldFloor=egyptPoint(s).y,grounded=p.y<=oldFloor+.035&&p.vy<=0,candidate={x:p.x+dx/steps,z:p.z+dz/steps,y:p.y},q=egyptProjection(candidate,s,2);const d=Math.hypot(candidate.x-q.x,candidate.z-q.z),limit=EGYPT.halfWidth-.4,k=d>limit?limit/d:1;p.x=q.x+(candidate.x-q.x)*k;p.z=q.z+(candidate.z-q.z)*k;s=q.s;if(grounded){p.y=q.y;p.vy=0;}}this.egyptS=s;},
+ egyptSpeedFactor(){return this.inEgypt()&&this.time<(this.egyptSlowUntil||0)?.45:1;},
+ updateEgyptSand(){if(!this.inEgypt())return;const s=this.egyptProgress(),p=this.player;for(const h of EGYPT_SAND){if(Math.abs(h.s-s)>2.8||!egyptSandState(h,this.time).active)continue;const q=egyptPoint(h.s),lateral=(p.x-q.x)*q.tz-(p.z-q.z)*q.tx;if(Math.abs(lateral-h.side*1.1)>2||p.y-q.y>4)continue;const was=this.egyptSpeedFactor()<1;this.egyptSlowUntil=this.time+.7;if(!was)this.emit('sand','Areia caindo! Velocidade reduzida em 55%. Desvie pela lateral livre.');}},
+ egyptGoal(){return egyptPoint(clamp(this.egyptProgress()+(this.carrying===null?10:-10),0,EGYPT_LENGTH));},
+ updateEgyptGuardian(dt){const g=this.guardians[EGYPT.world];if(!this.inEgypt()){Object.assign(g,EGYPT.nest,{state:'idle',s:EGYPT_LENGTH});return;}if(this.carrying!==EGYPT.world){if(g.state==='idle'){Object.assign(g,EGYPT.nest,{s:EGYPT_LENGTH});return;}g.s=Math.min(EGYPT_LENGTH,(g.s??EGYPT_LENGTH)+dt*14);if(g.s===EGYPT_LENGTH)g.state='idle';}else{g.state='chase';g.grace=Math.max(0,g.grace-dt);if(!g.grace){const delta=this.egyptProgress()-(g.s??EGYPT_LENGTH);g.s=(g.s??EGYPT_LENGTH)+Math.sign(delta)*Math.min(Math.abs(delta),18*(this.effect('frost')?.5:1)*dt);}}Object.assign(g,egyptPoint(g.s??EGYPT_LENGTH));if(this.carrying===EGYPT.world&&!g.grace&&Math.abs(g.s-this.egyptProgress())<1.2&&Math.hypot(g.x-this.player.x,g.z-this.player.z)<1.3&&Math.abs(g.y-this.player.y)<1.2)this.catchEgg(EGYPT.world);},
+};
+export function installEgypt(Game){const floor=Game.prototype.floorSupport;Object.assign(Game.prototype,egyptMethods);Game.prototype.floorSupport=function(p=this.player,ceiling=p.y+.025){return inEgypt(p)?egyptPoint(p===this.player?this.egyptProgress():egyptProjection(p,this.egyptS??null).s).y:floor.call(this,p,ceiling);};}
