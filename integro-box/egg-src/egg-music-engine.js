@@ -1,10 +1,12 @@
 export const MUSIC_URL='/integro-box/assets/audio/beyond-the-forest-gate.mp3';
 export const SUBSOIL_MUSIC_URL='/integro-box/assets/audio/before-the-magma-rises.mp3';
 
-// Share the unlocked context, volume and pause behavior across both recordings.
+export const EGYPT_MUSIC_URL='/integro-box/assets/audio/gate-of-the-sunken-rite.mp3';
+
+// Share the unlocked context, volume and pause behavior across the recordings.
 export async function createMusicEngine({rawContext,mode='calm',volume=.45,fetchAudio=globalThis.fetch}){
  const tracks=new Map(),loading=new Map();
- const trackFor=mode=>mode==='subsoil'?SUBSOIL_MUSIC_URL:MUSIC_URL;
+ const trackFor=mode=>mode==='egypt'?EGYPT_MUSIC_URL:mode==='subsoil'?SUBSOIL_MUSIC_URL:MUSIC_URL;
  let current=trackFor(mode),source=null,startedAt=0,playing=false,disposed=false;
  const master=rawContext.createGain();
  master.gain.value=volume;master.connect(rawContext.destination);
