@@ -1,11 +1,18 @@
 const storage=(()=>{try{return window.parent!==window&&window.parent.BoxStorage||localStorage;}catch{return localStorage;}})();
 import {Chess,names,icons,attacks,resultText} from './chess-core.js';
 import {BoardScene} from './scene.js';
+import {ThemeMusic} from './theme-music.js';
 const $=id=>document.getElementById(id),key='reinos-duelo-v1';
-let game=new Chess(),mode='ai',level='normal',animated=!matchMedia('(prefers-reduced-motion: reduce)').matches,sound=false,busy=false,thinking=false,selected=null,legal=[],pendingMode=null,pendingPromotion=null,worker=null,workerResolve=null,revision=0,toastTimer=null,scene=null;
-try{const data=JSON.parse(storage.getItem(key)||'null');if(data){if(data.pgn)game.loadPgn(data.pgn);mode=data.mode==='local'?'local':'ai';level=['easy','normal','hard'].includes(data.level)?data.level:'normal';animated=data.animated!==false;sound=data.sound===true;}}catch{game=new Chess();}
+let game=new Chess(),mode='ai',level='normal',animated=!matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,busy=false,thinking=false,selected=null,legal=[],pendingMode=null,pendingPromotion=null,worker=null,workerResolve=null,revision=0,toastTimer=null,scene=null;
+try{const data=JSON.parse(storage.getItem(key)||'null');if(data){if(data.pgn)game.loadPgn(data.pgn);mode=data.mode==='local'?'local':'ai';level=['easy','normal','hard'].includes(data.level)?data.level:'normal';animated=data.animated!==false;sound=data.sound!==false;}}catch{game=new Chess();}
 function persist(){try{storage.setItem(key,JSON.stringify({pgn:game.pgn(),mode,level,animated,sound}));}catch{toast('Não foi possível salvar neste navegador. A partida continua normalmente.');}}
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3800);}
+const themeTrack=document.createElement('audio');themeTrack.src='./audio/beneath-the-black-wood.mp3';themeTrack.id='themeMusic';document.body.append(themeTrack);
+const themeMusic=new ThemeMusic(themeTrack,{enabled:sound});
+for(const event of ['pointerdown','keydown'])document.addEventListener(event,e=>{if(!e.target.closest?.('#soundBtn'))themeMusic.activate();},{capture:true});
+document.addEventListener('visibilitychange',()=>themeMusic.visibilityChanged());
+window.addEventListener('pagehide',()=>themeMusic.dispose());
+window.addEventListener('pageshow',e=>{if(e.persisted){themeMusic.disposed=false;themeMusic.visibilityChanged();}});
 let audio;
 function tone(freq,duration=.1,kind='sine',delay=0){if(!sound)return;try{audio??=new AudioContext();void audio.resume();const o=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime+delay;o.type=kind;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*.6),t+duration);gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.06,t+.01);gain.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(gain);gain.connect(audio.destination);o.start(t);o.stop(t+duration+.02);}catch{}}
 function hitSound(type){tone(type==='b'?700:type==='r'?90:160,.24,type==='q'?'sine':'triangle');tone(450,.1,'sine',.1);}
@@ -32,7 +39,7 @@ function render(){
  for(const id of ['newBtn','aiMode','localMode','demoBtn','difficulty'])$(id).disabled=busy||!!pendingPromotion;
  $('demoBtn').disabled=busy||!!pendingPromotion||!scene;
  $('undoBtn').disabled=busy||!!pendingPromotion||!history.length;$('hintBtn').disabled=busy||thinking||!!pendingPromotion||!!ending||!isHumanTurn();
- $('soundBtn').setAttribute('aria-pressed',String(sound));$('soundBtn').setAttribute('aria-label',sound?'Desativar som':'Ativar som');$('soundBtn').querySelector('span').hidden=sound;
+ $('soundBtn').setAttribute('aria-pressed',String(sound));$('soundBtn').setAttribute('aria-label',sound?'Desativar música e efeitos':'Ativar música e efeitos');$('soundBtn').title=sound?'Desativar música e efeitos':'Ativar música e efeitos';$('soundBtn').querySelector('span').hidden=sound;
  $('quickUndo').disabled=$('undoBtn').disabled;$('quickHint').disabled=$('hintBtn').disabled;
  document.body.classList.toggle('is-busy',busy);renderAccessible();
 }
@@ -45,7 +52,7 @@ async function onSquare(sq){
 }
 async function move(input){
  if(busy)return;let m;try{m=game.move(input);}catch{toast('Esse movimento não é permitido.');return;}
- busy=true;selected=null;legal=[];render();tone(260,.08);if(m.captured&&animated){$('duelTitle').textContent=attacks[m.piece][0];$('duelCaption').hidden=false;}
+ busy=true;selected=null;legal=[];render();tone(260,.08);if(m.captured)themeMusic.restart();if(m.captured&&animated){$('duelTitle').textContent=attacks[m.piece][0];$('duelCaption').hidden=false;}
  try{await scene?.animateMove(m,{duel:animated});}finally{busy=false;$('duelCaption').hidden=true;scene?.setBoard(game);highlights();persist();render();}
  const result=resultText(game);if(result){$('resultTitle').textContent=result.title;$('resultDetail').textContent=result.detail;$('resultDialog').showModal();tone(500,.3);tone(750,.35,'sine',.2);return;}
  if(game.isCheck()){toast('Xeque! O rei precisa de proteção.');tone(180,.2);}
@@ -53,7 +60,7 @@ async function move(input){
 }
 async function computerTurn(){if(mode!=='ai'||game.turn()!=='b'||game.isGameOver()||busy)return;thinking=true;render();const fen=game.fen();const request=askComputer();thinking=true;render();const m=await request;if(fen!==game.fen()||mode!=='ai')return;thinking=false;if(m)await move(m);else{toast('O computador não pôde calcular. Tente desfazer e jogar novamente.');render();}}
 function requestNew(nextMode=mode){if(busy)return;pendingMode=nextMode;if(!game.history().length){resetGame();return;}$('newDialog').showModal();}
-function resetGame(){cancelWorker();revision++;game=new Chess();mode=pendingMode||mode;pendingMode=null;pendingPromotion=null;selected=null;legal=[];busy=false;scene?.setBoard(game);highlights();persist();render();for(const d of document.querySelectorAll('dialog[open]'))d.close();toast('Os reinos estão prontos. As brancas começam!');}
+function resetGame(){themeMusic.restart();cancelWorker();revision++;game=new Chess();mode=pendingMode||mode;pendingMode=null;pendingPromotion=null;selected=null;legal=[];busy=false;scene?.setBoard(game);highlights();persist();render();for(const d of document.querySelectorAll('dialog[open]'))d.close();toast('Os reinos estão prontos. As brancas começam!');}
 for(const b of document.querySelectorAll('.close-dialog,.close-action'))b.onclick=()=>b.closest('dialog').close();
 for(const d of document.querySelectorAll('dialog'))d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});
 $('helpBtn').onclick=()=>$('helpDialog').showModal();$('aiMode').onclick=()=>{if(mode!=='ai')requestNew('ai');};$('localMode').onclick=()=>{if(mode!=='local')requestNew('local');};$('newBtn').onclick=()=>requestNew();$('confirmNew').onclick=resetGame;$('playAgain').onclick=()=>{pendingMode=mode;resetGame();};
@@ -61,12 +68,12 @@ $('difficulty').onchange=e=>{level=e.target.value;persist();render();};$('animat
 $('undoBtn').onclick=()=>{if(busy)return;cancelWorker();revision++;game.undo();if(mode==='ai'&&game.turn()==='b')game.undo();clearSelection();scene?.setBoard(game);highlights();persist();render();toast('Lance desfeito. Pode escolher outro caminho.');};
 $('hintBtn').onclick=async()=>{if(busy||thinking||!isHumanTurn())return;const fen=game.fen();const request=askComputer();thinking=true;render();const m=await request;thinking=false;if(fen!==game.fen())return;if(m){selected=m.from;legal=game.moves({square:selected,verbose:true});highlights();toast(`Uma ideia: ${names[game.get(m.from).type]} de ${m.from} para ${m.to}.`);}else toast('Não foi possível calcular uma dica agora.');render();};
 $('quickUndo').onclick=()=>$('undoBtn').click();$('quickHint').onclick=()=>$('hintBtn').click();$('resetViewBtn').onclick=()=>scene?.resetView();
-$('rotateBtn').onclick=()=>scene?.flip();$('viewBtn').onclick=()=>scene?.overhead();$('soundBtn').onclick=()=>{sound=!sound;persist();render();tone(520,.13);};
+$('rotateBtn').onclick=()=>scene?.flip();$('viewBtn').onclick=()=>scene?.overhead();$('soundBtn').onclick=()=>{sound=!sound;themeMusic.setEnabled(sound);persist();render();tone(520,.13);};
 $('fullBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Tela cheia indisponível neste navegador. Gire o aparelho para ampliar.');}};
 $('accessibleBtn').onclick=()=>{$('accessibleBoard').hidden=!$('accessibleBoard').hidden;document.body.classList.toggle('accessible-mode',!$('accessibleBoard').hidden);$('accessibleBtn').textContent=$('accessibleBoard').hidden?'Tabuleiro acessível':'Ocultar tabuleiro acessível';renderAccessible();};
 for(const type of ['q','r','b','n']){const b=document.createElement('button');b.innerHTML=`<span>${icons[type]}</span>${names[type]}`;b.onclick=async()=>{const p=pendingPromotion;pendingPromotion=null;$('promotionDialog').close();if(p)await move({...p,promotion:type});};$('promotionOptions').append(b);}
 $('promotionDialog').addEventListener('close',()=>{pendingPromotion=null;render();});
-$('demoBtn').onclick=()=>$('demoDialog').showModal();for(const type of ['p','n','b','r','q','k']){const b=document.createElement('button');b.innerHTML=`<span>${icons[type]}</span>${names[type]}`;b.title=attacks[type][1];b.onclick=async()=>{if(busy)return;cancelWorker();$('demoDialog').close();busy=true;render();$('duelTitle').textContent=attacks[type][0];$('duelCaption').hidden=false;try{await scene?.demo(type);}finally{scene?.setBoard(game);busy=false;highlights();$('duelCaption').hidden=true;render();void computerTurn();}};$('demoOptions').append(b);}
+$('demoBtn').onclick=()=>$('demoDialog').showModal();for(const type of ['p','n','b','r','q','k']){const b=document.createElement('button');b.innerHTML=`<span>${icons[type]}</span>${names[type]}`;b.title=attacks[type][1];b.onclick=async()=>{if(busy)return;cancelWorker();themeMusic.restart();$('demoDialog').close();busy=true;render();$('duelTitle').textContent=attacks[type][0];$('duelCaption').hidden=false;try{await scene?.demo(type);}finally{scene?.setBoard(game);busy=false;highlights();$('duelCaption').hidden=true;render();void computerTurn();}};$('demoOptions').append(b);}
 const mobileLayout=matchMedia('(max-width: 900px)'),sidebar=document.querySelector('.sidebar');
 function placeSettings(){if(mobileLayout.matches)$('settingsContent').append(sidebar);else{$('settingsDialog').close();document.querySelector('.layout').append(sidebar);}}
 mobileLayout.addEventListener('change',placeSettings);placeSettings();
