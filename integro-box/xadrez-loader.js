@@ -17,7 +17,7 @@
    home.click();for(const id of ['lobby','play','posterView','footer'])document.getElementById(id)?.classList.add('hidden');
    previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';app.hidden=false;document.body.classList.add('xadrez-playing');
    frame=document.createElement('iframe');frame.title='Xadrez 3D · Reinos em Duelo';frame.allow='fullscreen';frame.allowFullscreen=true;
-   frame.style.cssText='width:100%;height:100%;border:0;display:block';frame.src='./xadrez/index.html?v=20261115-hud2';app.replaceChildren(frame);
+   frame.style.cssText='width:100%;height:100%;border:0;display:block';frame.src='./xadrez/index.html?v=20261115-chess-theme1';app.replaceChildren(frame);
   }catch{exit();}finally{opening=false;}
  }
  function receive(event){if(event.origin===location.origin&&frame&&event.source===frame.contentWindow&&event.data?.type==='integro-chess-exit')exit();}
