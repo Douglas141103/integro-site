@@ -37,8 +37,8 @@
     });
   }
 
-  function currentCycleRange(reference = new Date()) {
-    return cyclePolicy.getCurrentCycleRange(reference);
+  function currentCycleRange(reference = new Date(), schoolId = window.INTEGRO_FINANCE_CURRENT_CYCLE?.school_id) {
+    return cyclePolicy.getCurrentCycleRange(reference, schoolId);
   }
 
   function currentCycleDefaultDate(cycle) {
@@ -188,7 +188,7 @@
       throw new Error("Unidade não encontrada.");
     }
 
-    const range = currentCycleRange();
+    const range = currentCycleRange(new Date(), schoolResult.data.id);
     const findCycle = () => db
       .from("finance_cash_cycles")
       .select("*")

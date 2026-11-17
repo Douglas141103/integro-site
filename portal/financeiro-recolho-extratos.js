@@ -47,8 +47,8 @@
     return date.toLocaleDateString("pt-BR");
   }
 
-  function getCurrentCycleRange(referenceDate = new Date()) {
-    return cyclePolicy.getCurrentCycleRange(referenceDate);
+  function getCurrentCycleRange(referenceDate = new Date(), schoolId = null) {
+    return cyclePolicy.getCurrentCycleRange(referenceDate, schoolId);
   }
 
   function movementTypeLabel(type) {
@@ -109,7 +109,7 @@
 
     if (schoolError || !school) throw new Error("Unidade ativa não encontrada.");
 
-    const range = getCurrentCycleRange(new Date());
+    const range = getCurrentCycleRange(new Date(), school.id);
     const findCycle = () => client
       .from("finance_cash_cycles")
       .select("*")

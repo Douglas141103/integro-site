@@ -59,8 +59,26 @@
     return isoFromParts(parts.year, parts.month, parts.day);
   }
 
-  function getCurrentCycleRange(reference = new Date()) {
+  function getCurrentCycleRange(reference = new Date(), schoolId = null) {
     const refISO = referenceISO(reference);
+
+    if (schoolId === "da5d33a5-616a-4abc-8f88-78f5ecb85cd4") {
+      const periods = [
+        ["2026-11-11", "2026-11-16", "2026-11", "Encerramento de 2026"],
+        ["2026-11-17", "2027-01-14", "ferias-2026", "Ciclo de férias 2026"],
+        ["2027-01-15", "2027-02-10", "2027-01", "Retorno de 2027"],
+      ];
+      const period = periods.find(([start, end]) => refISO >= start && refISO <= end);
+      if (period) {
+        const [startISO, endISO, cycleKey, label] = period;
+        return Object.freeze({
+          startISO, endISO, cycleKey, start: startISO, end: endISO, key: cycleKey,
+          label, isVacationCycle: cycleKey === "ferias-2026",
+          isTransitionCycle: false, isClosingWindow: false,
+        });
+      }
+    }
+
 
     if (refISO >= TRANSITION_ACTIVE_START && refISO <= TRANSITION_LOOKUP_END) {
       return Object.freeze({

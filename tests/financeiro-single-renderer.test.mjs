@@ -308,7 +308,7 @@ test("finance page loader activates the single renderer before add-on scripts", 
   assert.ok(flagPosition >= 0);
   assert.ok(reconciliationPosition > flagPosition);
   assert.match(installer, /financeCyclePolicyScript/);
-  assert.match(installer, /20260903-cycle-11-v1/);
+  assert.match(installer, /20261116-vacation-1/);
 
   const inlineFlagPosition = page.indexOf(
     "window.__INTEGRO_FINANCE_SINGLE_RENDERER__ = true"

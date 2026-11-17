@@ -36,7 +36,7 @@ function todayISO() {
 function currentCycleDefaultDate() {
   const today = todayISO();
   const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
-  const policyCycle = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date());
+  const policyCycle = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date(), state.school?.id);
   const start = liveCycle?.start_date || policyCycle?.startISO;
   const end = liveCycle?.end_date || policyCycle?.endISO;
 
@@ -54,7 +54,7 @@ function ordinaryFinanceActivityBlockReason(reference = new Date()) {
     return 'Este ciclo já foi fechado. Nenhum lançamento comum pode ser registrado nele.';
   }
 
-  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(reference);
+  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(reference, state.school?.id);
   if (range?.isClosingWindow) {
     return 'Dias 9 e 10/09 são reservados ao fechamento do ciclo. Novas entradas e saídas comuns voltam em 11/09.';
   }

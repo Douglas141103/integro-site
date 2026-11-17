@@ -2,7 +2,7 @@
   if (document.getElementById("financeiroFrenteCaixaV3Loader")) return;
   const script = document.createElement("script");
   script.id = "financeiroFrenteCaixaV3Loader";
-  script.src = "./financeiro-frente-caixa-v3.js?v=20261112-reserva1";
+  script.src = "./financeiro-frente-caixa-v3.js?v=20261116-vacation-1";
   script.defer = true;
   document.body.appendChild(script);
 })();

@@ -595,7 +595,7 @@
 
   function currentOpenCycle(transactionMoment = new Date()) {
     if (!cyclePolicy?.getCurrentCycleRange) throw new Error("Política do ciclo financeiro indisponível. Atualize a página e tente novamente.");
-    const range = cyclePolicy.getCurrentCycleRange(transactionMoment);
+    const range = cyclePolicy.getCurrentCycleRange(transactionMoment, dataStore.school?.id);
     const liveCycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
     if (range.isClosingWindow) throw new Error("O caixa está em fechamento nos dias 9 e 10. O novo ciclo será aberto no dia 11.");
     if (!liveCycle?.id) throw new Error("O ciclo financeiro ainda está carregando. Aguarde e tente novamente.");

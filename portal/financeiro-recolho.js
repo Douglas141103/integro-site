@@ -133,7 +133,7 @@
   }
 
   function getCurrentCycleRange(referenceDate = new Date()) {
-    return cyclePolicy.getCurrentCycleRange(referenceDate);
+    return cyclePolicy.getCurrentCycleRange(referenceDate, state.school?.id);
   }
 
   function isCycleClosed() {
@@ -647,7 +647,7 @@
     }
 
     $("cashCyclePeriod").textContent =
-      `${formatDateBR(state.cycle.start_date)} a ${formatDateBR(state.cycle.end_date)}`;
+      `${getCurrentCycleRange().label ? getCurrentCycleRange().label + " · " : ""}${formatDateBR(state.cycle.start_date)} a ${formatDateBR(state.cycle.end_date)}`;
 
     if (!window.__INTEGRO_FINANCE_SINGLE_RENDERER__) {
       $("cashTotalEntries").textContent = money(state.totals.totalEntries);

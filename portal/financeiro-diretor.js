@@ -284,7 +284,7 @@ function canModifyFinanceRecord(recordType, record) {
   if (recordType === 'expense' && record?.asaas_order_id) return false;
   if (recordType === 'entry' && (record?.intgem_order_id || record?.infinitepay_order_id || record?.asaas_order_id)) return false;
   const cycle = window.INTEGRO_FINANCE_CURRENT_CYCLE;
-  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date());
+  const range = window.INTEGRO_FINANCE_CYCLE_POLICY?.getCurrentCycleRange?.(new Date(), state.school?.id);
   const recordDate = recordType === 'entry' ? record?.entry_date : record?.expense_date;
 
   return Boolean(

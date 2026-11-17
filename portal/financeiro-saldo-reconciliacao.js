@@ -59,7 +59,7 @@
   }
 
   function currentCycleRange(reference = new Date()) {
-    return cyclePolicy.getCurrentCycleRange(reference);
+    return cyclePolicy.getCurrentCycleRange(reference, state.school?.id);
   }
 
   function formatDateBR(value) {
