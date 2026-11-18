@@ -26,8 +26,6 @@
     .hidden { display:none !important; }
     .panel { position:relative; width:min(94%, 900px); max-height:92%; overflow:auto; padding:clamp(20px,4vw,42px); border:2px solid rgba(139,238,255,.72); clip-path:polygon(3% 0,97% 0,100% 7%,100% 93%,97% 100%,3% 100%,0 93%,0 7%); background:linear-gradient(145deg,rgba(16,48,64,.96),var(--panel) 42%,rgba(6,17,38,.97)); box-shadow:0 24px 55px rgba(0,0,0,.52),inset 0 0 42px rgba(103,232,249,.07); text-align:center; backdrop-filter:blur(12px); }
     .panel::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.25; background:linear-gradient(154deg,transparent 0 22%,rgba(103,232,249,.16) 22.2% 22.7%,transparent 23% 58%,rgba(255,209,102,.12) 58.2% 58.7%,transparent 59%),linear-gradient(28deg,transparent 0 74%,rgba(255,255,255,.1) 74.2% 74.7%,transparent 75%); }
-    .mapPanel { width:min(98%,1180px); padding:14px 18px 24px; }
-    .mapPanel h2 { margin:4px 0 6px; }
     .title { margin:0; font-size:clamp(34px,7vw,78px); line-height:.95; letter-spacing:-.045em; text-shadow:0 5px 0 #0b2638,0 12px 26px rgba(0,0,0,.5); }
     .title span { color:var(--gold); display:block; }
     .subtitle { margin:16px auto 22px; max-width:760px; font-size:clamp(15px,2.2vw,20px); line-height:1.45; opacity:.88; }
@@ -45,17 +43,6 @@
     .levelCard .world { display:block; font-size:12px; color:#ffe08c; text-transform:uppercase; letter-spacing:.06em; }
     .levelCard.locked { filter:grayscale(1); opacity:.48; cursor:not-allowed; }
     .levelCard .stars { position:absolute; right:14px; bottom:12px; color:#ffd166; letter-spacing:2px; font-size:14px; }
-    .worldMapFrame { position:relative; width:100%; max-width:1120px; margin:8px auto; border:4px solid #6be7f4; background:#07142f; box-shadow:7px 7px 0 #020718,inset 0 0 0 4px rgba(255,255,255,.08); }
-    .mapToolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:42px; padding:5px 8px; border-bottom:3px solid rgba(107,231,244,.5); background:#091a3d; font:900 12px ui-monospace,monospace; color:#c9f8ff; }
-    .mapTools { display:flex; gap:7px; }
-    .mapTool { width:38px; height:30px; padding:0; border:2px solid #6be7f4; border-radius:2px; background:#142c5b; color:#fff; box-shadow:3px 3px 0 #020718; font:900 18px ui-monospace,monospace; cursor:pointer; }
-    .mapTool:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #020718; }
-    .worldMapWrap { position:relative; width:100%; height:clamp(390px,58vh,560px); overflow:auto; cursor:grab; touch-action:none; overscroll-behavior:contain; scrollbar-color:#53cfe1 #06112a; scrollbar-width:thin; }
-    .worldMapWrap.dragging { cursor:grabbing; }
-    #worldMap { display:block; width:2304px; height:1152px; max-width:none; cursor:inherit; touch-action:none; }
-    .mapLegend { display:flex; flex-wrap:wrap; gap:12px 20px; justify-content:center; padding:8px 12px 10px; border-top:3px solid rgba(107,231,244,.45); background:#0a1737; font:800 12px ui-monospace,monospace; text-transform:uppercase; }
-    .mapLegend span::before { content:""; display:inline-block; width:10px; height:10px; margin-right:6px; vertical-align:-1px; background:var(--c); box-shadow:2px 2px 0 rgba(0,0,0,.5); }
-    .mapHint { margin:5px 0 3px; color:#c9f8ff; font:800 13px ui-monospace,monospace; }
     #topButtons { position:absolute; top:max(10px,env(safe-area-inset-top)); right:max(10px,env(safe-area-inset-right)); display:flex; gap:8px; z-index:14; }
     .roundBtn { width:46px; height:46px; border-radius:4px; border:3px solid rgba(139,238,255,.55); color:white; background:rgba(8,15,42,.84); box-shadow:4px 4px 0 rgba(0,0,0,.42); font-size:20px; font-weight:900; backdrop-filter:blur(8px); }
     #touchControls { position:absolute; inset:0; z-index:12; pointer-events:none; }
@@ -80,13 +67,9 @@
     #invisBtn { background:rgba(167,105,255,.48); }
     #toast { position:absolute; top:78px; left:50%; transform:translateX(-50%); max-width:75%; padding:10px 18px; border:3px solid rgba(139,238,255,.55); border-radius:4px; background:rgba(8,15,42,.9); box-shadow:5px 5px 0 rgba(0,0,0,.38); color:white; font-weight:800; opacity:0; transition:opacity .2s; z-index:16; text-align:center; pointer-events:none; }
     #toast.show { opacity:1; }
-    #rotateHint { display:none; position:fixed; inset:0; z-index:100; padding:32px; background:#0b1230; color:white; align-items:center; justify-content:center; text-align:center; font-size:20px; }
-    #rotateHint .phone { font-size:60px; margin-bottom:12px; animation:turn 1.8s ease-in-out infinite; }
-    @keyframes turn { 0%,35%{transform:rotate(0)} 65%,100%{transform:rotate(90deg)} }
     .helpGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; text-align:left; margin:18px 0; }
     .helpItem { padding:14px; border:3px solid rgba(255,255,255,.12); border-radius:4px; background:rgba(255,255,255,.07); }
     .helpItem b { color:var(--gold); }
-    @media (orientation:portrait) and (max-width:900px) { #rotateHint { display:flex; } }
     @media (max-width:860px) { #levelGrid{grid-template-columns:repeat(2,1fr)} }
     @media (max-width:560px) { #levelGrid{grid-template-columns:1fr} }
     @media (max-height:560px) { .panel{padding:18px 28px}.subtitle{margin:10px auto 14px}.btn{min-height:44px;padding:9px 16px}.title{font-size:44px} }
@@ -107,8 +90,6 @@
 .ticket-tools button { background:transparent; color:#c9e3db; border:0; text-decoration:underline; padding:6px 0; }
 .panel { border:1px solid #879c92; border-radius:15px; clip-path:none; background:#122f37; box-shadow:0 12px 34px #07121d77; }
 .panel::before { content:none; }
-.mapPanel { touch-action:pan-y; }
-.mapPanel .worldMapFrame { margin-inline:auto; }
 .next-stop { margin:10px; }
 #passportSummary { margin:8px auto 0; color:#d8e9df; }
 .levelCard.passport-page { display:flex; flex-direction:column; justify-content:end; align-items:start; text-align:left; min-height:165px; padding:14px; border:1px solid #bdab86; border-radius:8px; clip-path:none; background:#f0e5c8; color:#273b3a; box-shadow:none; }
@@ -127,7 +108,6 @@
   .travel-cover { grid-template-columns:1fr; width:min(94%,480px); max-height:90dvh; overflow:auto; touch-action:pan-y; }
   .travel-ticket { padding:18px; }
   .travel-cover>img { max-height:40dvh; object-fit:cover; }
-  .mapPanel { max-height:90dvh; }
   #touchControls .touchBtn { width:44px;height:44px; }
 }
 @media(max-height:460px) and (orientation:landscape){
@@ -135,4 +115,51 @@
   .travel-cover { max-height:96%; width:min(92%,720px); grid-template-columns:1fr 1.1fr; }
   .travel-ticket p { margin-block:7px; }
   #actionControls { flex-direction:row; align-items:end; }
+}
+
+/* Keep the entire illustration in view, including at short landscape heights. */
+#levelScreen { background:#0a242b; padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
+#atlasView { width:100%; height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(144px,22%,244px); align-items:center; gap:clamp(9px,2vw,26px); }
+#worldMapViewport { width:100%; height:100%; container-type:size; display:grid; place-items:center; }
+.atlas-sheet { position:relative; width:min(100cqw,200cqh); aspect-ratio:2; background:#124455; overflow:hidden; border-radius:8px; box-shadow:0 0 0 1px #71948a; }
+.atlas-sheet img, #worldMap { position:absolute; inset:0; width:100%; height:100%; }
+#worldMap { cursor:pointer; }
+.atlas-tools { display:grid; align-content:center; gap:clamp(4px,1.8vh,14px); justify-items:start; }
+.atlas-tools h2,.passport-heading h2 { margin:0; font:700 clamp(18px,3.2vw,38px)/1.08 Georgia,serif; color:#ffedbd; }
+#passportSummary { margin:0; font-size:clamp(12px,1.4vw,16px); }
+.atlas-tools .next-stop { margin:4px 0 0; min-width:0; width:100%; }
+.atlas-link { border:0; background:transparent; padding:8px 2px; color:#ccece5; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+#passportView { max-height:100%; width:100%; touch-action:pan-y; }
+.passport-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+#gameWrap:has(#levelScreen:not(.hidden)) { width:100%; height:100%; }
+#gameWrap:has(#levelScreen:not(.hidden)) #catalogExit { display:none; }
+
+#gameWrap { --rail:calc(58px + env(safe-area-inset-bottom,0px)); }
+#gameWrap:has(#touchControls:not(.hidden)), #gameWrap:has(#pauseScreen:not(.hidden)) { width:100%; height:100%; }
+#gameWrap:has(#touchControls:not(.hidden)) :is(#game,#polyWorld),
+#gameWrap:has(#pauseScreen:not(.hidden)) :is(#game,#polyWorld) {
+  position:absolute; inset:0; width:100% !important; height:calc(100% - var(--rail)) !important;
+  object-fit:contain;
+}
+#touchControls { inset:auto 0 0; height:var(--rail); display:flex; align-items:center; gap:clamp(4px,1vw,14px); padding:3px max(9px,env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left)); background:#0c232b; border-top:1px solid #426069; }
+#moveControls,#actionControls,#topButtons { position:static; display:flex; flex-direction:row; align-items:center; gap:clamp(2px,.65vw,9px); pointer-events:auto; }
+#actionControls { margin-left:auto; }
+#powerPad { display:flex; align-items:center; gap:clamp(1px,.45vw,6px); }
+#touchControls button { display:grid; place-items:center; min-width:44px; min-height:44px; height:44px; width:44px; border:1px solid #58727a; border-radius:50%; padding:0; color:#f4f9f6; font:700 19px/1 system-ui,sans-serif; background:#203c46; box-shadow:none; backdrop-filter:none; touch-action:none; }
+#touchControls .powerBtn { background:#243943; border-color:#526b75; }
+#touchControls .powerBtn::before { transform:translate(-50%,-50%) scale(.63); }
+#touchControls .powerBtn::after { display:none; }
+#touchControls #jumpBtn { width:55px; border-radius:19px; color:#163333; background:#95e3c1; border-color:#aaebd0; }
+#touchControls #pauseBtn { color:#bed8d5; border-color:transparent; background:transparent; }
+#touchControls button.active { background:#527c80; transform:scale(.94); }
+#orientationGate[hidden] { display:none; }
+#orientationGate { position:absolute; inset:0; z-index:100; display:grid; place-items:center; background:#0b2730; color:#e4f2ed; text-align:center; padding:24px; }
+#orientationGate h2 { margin:22px 0 6px; font:700 30px/1.1 Georgia,serif; color:#ffe8b2; }
+#orientationGate p { margin:8px 0 18px; }
+#orientationGate .atlas-link { display:block; margin:auto; }
+.phone-outline { display:block; margin:auto; width:62px; height:34px; border:3px solid #9de0c9; border-radius:8px; transform:rotate(-10deg); box-shadow:0 0 0 5px #183d45; }
+@media (orientation:portrait) { #gameWrap { width:100% !important; height:100% !important; } }
+@media (max-height:320px) {
+  #gameWrap { --rail:calc(48px + env(safe-area-inset-bottom,0px)); }
+  .atlas-tools { gap:2px; }
 }
