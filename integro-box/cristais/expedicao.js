@@ -491,6 +491,7 @@ const CITY_ART = {
 };
 
 const countryRecordings = {
+  'Estados Unidos': {recording: './audio/beyond_the_great_ridge.mp3', style: 'Beyond the Great Ridge'},
   Brasil: {recording: './audio/beyond-the-emerald-gate.mp3', style: 'Beyond the Emerald Gate'},
   México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'}
 };
