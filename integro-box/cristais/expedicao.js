@@ -490,13 +490,16 @@ const CITY_ART = {
   tokyo:{hero:'neonband',platform:'circuitos de neon',hazard:'neon',hazardName:'caixa holográfica de neon'}
 };
 
-const countryRecordings = {
+const routeRecordings = {
   Brasil: {recording: './audio/beyond-the-emerald-gate.mp3', style: 'Beyond the Emerald Gate'},
-  México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'}
+  México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'},
+  Egito: {recording: './audio/the-pharaoh-s-final-secret.mp3', style: "The Pharaoh's Final Secret"},
+  Rússia: {recording: './audio/beyond-the-mountain-pass.mp3', style: 'Beyond the Mountain Pass'},
+  Europa: {recording: './audio/beneath-the-ancient-spire.mp3', style: 'Beneath the Ancient Spire'}
 };
 WORLD_THEMES.forEach(route => route.scenes.forEach(scene => {
   const score = MUSIC_RESEARCH[scene.id];
-  const recording = countryRecordings[scene.country];
+  const recording = routeRecordings[route.name];
   const music = recording ? {...score, ...recording} : score;
   Object.assign(scene, LANDMARK_RESEARCH[scene.id], { music, art: CITY_ART[scene.id] });
 }));
