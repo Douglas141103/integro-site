@@ -7,6 +7,9 @@ const gameWrap = document.getElementById('gameWrap');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled=true;
 const W = 1280, H = 720;
+const lumiSheet = new Image();
+lumiSheet.decoding = 'async';
+lumiSheet.src = './lumi-exploradora.webp';
 let scenery;
 let sceneryCity;
 function selectScenery(city) {
@@ -705,7 +708,7 @@ function makeBoss(x,y,bossType,bossName,theme){
 function createPlayer(x,y){
   return {
     x,y,w:46,h:60,vx:0,vy:0,dir:1,onGround:false,coyote:0,jumpBuffer:0,
-    health:3,maxHealth:5,inv:0,dead:false,anim:0,
+    health:3,maxHealth:5,inv:0,dead:false,anim:0,landPose:0,
     powers:{ missile:false, fire:false, fly:false, invisible:false },
     cooldowns:{ missile:0, fire:0, invisible:0 },
     flyEnergy:100, invisibleTime:0
@@ -905,7 +908,9 @@ function update(dt){
   if(!controls.jump && p.vy< -180 && !(controls.fly && p.powers.fly && p.flyEnergy>0)) p.vy += 900*dt;
   p.vy += 1760*dt; p.vy=Math.min(1040,p.vy);
 
+  const wasFalling = !p.onGround && p.vy > 100;
   movePlayerX(p.vx*dt); movePlayerY(p.vy*dt);
+  p.landPose = wasFalling && p.onGround ? .09 : Math.max(0, p.landPose - dt);
   if(p.y>H+240) damagePlayer(true);
 
   updateCollectibles(dt);
@@ -1149,7 +1154,7 @@ function draw(){
 
 function drawAttract(){
   const t=performance.now()/1000, theme=LEVELS[Math.floor(t/4)%LEVELS.length].theme; drawBackground(theme,t*35); ctx.save(); ctx.translate(-((t*60)%64),0); for(let x=-64;x<W+64;x+=64) drawPlatform({x,y:H-100,w:64,h:100},theme); ctx.restore();
-  drawHero(210+Math.sin(t*1.4)*14,H-160,1,t*6,false,0,theme); for(let i=0;i<6;i++) drawCoin(520+i*82,H-180-Math.sin(t*2+i)*30,t+i); drawCrystal(1060,H-205,t);
+  drawLumi(210+Math.sin(t*1.4)*14,H-160,1,t*6,false,0,theme); for(let i=0;i<6;i++) drawCoin(520+i*82,H-180-Math.sin(t*2+i)*30,t+i); drawCrystal(1060,H-205,t);
 }
 
 
@@ -1207,7 +1212,7 @@ function drawWorld(){
   for(const s of l.enemyShots) drawShot(s.x,s.y,s.r,s.color||'#7fa7ff');
   for(const q of l.particles){ctx.globalAlpha=Math.max(0,q.life/q.max);ctx.fillStyle=q.color;const ps=Math.max(2,Math.round(q.size/2)*2);ctx.fillRect(Math.round(q.x/2)*2,Math.round(q.y/2)*2,ps,ps);if(ps>4){ctx.globalAlpha*=.45;ctx.fillRect(Math.round(q.x)-3,Math.round(q.y)-3,3,3);}}
   ctx.globalAlpha=1;
-  const p=state.player; if(!(p.inv>0&&Math.floor(p.inv*12)%2===0)) drawHero(p.x,p.y,p.dir,p.anim,p.powers,p.invisibleTime,theme);
+  const p=state.player; if(!(p.inv>0&&Math.floor(p.inv*12)%2===0)) drawLumi(p.x,p.y,p.dir,p.anim,p.powers,p.invisibleTime,theme,p);
   ctx.restore();
 }
 
@@ -1561,6 +1566,45 @@ function drawPlatform(s,th){
   ctx.fillStyle='rgba(255,255,255,.28)';ctx.fillRect(x,y,w,2);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(x,y+h-4,w,4);ctx.fillRect(x+w-4,y,4,h);
   for(let yy=y+8;yy<y+h-6;yy+=14)for(let xx=x+8+((yy/14)%2)*7;xx<x+w-7;xx+=22){const k=(Math.floor(xx/2)+Math.floor(yy/2)+th.id.length)%5;ctx.fillStyle=k<2?'rgba(255,255,255,.13)':'rgba(0,0,0,.14)';ctx.fillRect(xx,yy,k===0?5:3,k===3?4:2);}
   for(let xx=x+12;xx<x+w-10;xx+=48){ctx.fillStyle=th.accent;ctx.globalAlpha=.25;ctx.fillRect(xx,y+5,3,3);ctx.fillRect(xx+5,y+9,2,2);ctx.globalAlpha=1;}
+  ctx.restore();
+}
+
+// The 4×3 sheet is indexed in reading order. All frames share the same foot anchor.
+function lumiFrame(player, anim) {
+  if (player) {
+    if (!player.onGround) {
+      if (player.vy < -740) return 8;
+      return player.vy < 0 ? 9 : 10;
+    }
+    if (player.landPose > 0) return 11;
+    if (Math.abs(player.vx) < 12) return Math.floor(state.time * 1.6) % 2;
+  }
+  return 2 + Math.floor(anim) % 6;
+}
+function drawLumi(x, y, dir, anim, powers, invisibleTime, theme, player) {
+  if (!lumiSheet.complete || !lumiSheet.naturalWidth) {
+    drawHero(x,y,dir,anim,powers,invisibleTime,theme);
+    return;
+  }
+  const index = lumiFrame(player, anim);
+  const cell = 224, span = 86;
+  ctx.save();
+  ctx.translate(x + 23, y + 60);
+  ctx.scale(dir, 1);
+  ctx.globalAlpha = invisibleTime > 0 ? .55 : 1;
+  if (!player || player.onGround) {
+    ctx.beginPath(); ctx.ellipse(0, 0, 19, 3, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(10,28,36,.26)'; ctx.fill();
+  }
+  if (powers.fly) drawPixelPowerSymbol('fly', -12, -35, .85, state.time);
+  ctx.drawImage(lumiSheet, index%4*cell, Math.floor(index/4)*cell, cell, cell,
+    -span/2, -span*(cell-2)/cell, span, span);
+  if (powers.missile) drawPixelPowerSymbol('missile', -17, -30, .44, state.time);
+  if (powers.fire) drawPixelPowerSymbol('fire', 15, -28, .50, state.time);
+  if (invisibleTime > 0) {
+    ctx.strokeStyle = '#d6acff'; ctx.lineWidth = 2; ctx.setLineDash([5,6]);
+    ctx.beginPath(); ctx.ellipse(0,-34,29,39,0,0,Math.PI*2); ctx.stroke();
+  }
   ctx.restore();
 }
 
