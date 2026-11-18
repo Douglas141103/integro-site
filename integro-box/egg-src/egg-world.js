@@ -1,3 +1,7 @@
+import {createEggTrapVisuals} from './egg-trap-models.js';
+import {shellGeometry,shellSpots} from './egg-shell-model.js';
+import {buildCoinWearArt} from './egg-coin-wear-art.js';
+import {createGearModel,createGearEffects} from './egg-gear-art.js';
 import {EGYPT} from './egg-egypt.js';
 import {createEgyptWorld,mummyGuardian} from './egg-egypt-world.js';
 import {createSubsoilWorld,magmaGuardian} from './egg-subsoil-world.js';
@@ -20,10 +24,8 @@ import {icePhoenix,createWinterWorld} from './egg-winter-world.js';
 import {WINTER,nestSize,nestPosition} from './egg-winter-rules.js';
 import {premiumAccessory} from './egg-intgem-models.js';
 import {PREMIUM_BY_NATIVE} from '../egg-intgem-catalog.mjs';
-import {expansionCreature,expansionScenery,expansionAccessory,vehicleModel} from './egg-expansion-models.js';
-import {NEW_ACCESSORIES,VEHICLES} from './egg-expansion.js';
-import {extraAccessory,abilityModel} from './egg-extra-models.js';
-import {ABILITIES,ACCESSORY_EXPANSION} from './egg-content.js';
+import {expansionCreature,expansionScenery,vehicleModel} from './egg-expansion-models.js';
+import {VEHICLES} from './egg-expansion.js';
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {ArtResources} from '../rush-src/art.js';
@@ -44,7 +46,7 @@ export function createEggWorld(scene){
  const label=(p,text,x,y,z,w=3,color='#233d46',bg='#fff6d9')=>{const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c=cv.getContext('2d');c.fillStyle=bg;c.beginPath();c.roundRect(4,4,504,120,22);c.fill();c.fillStyle=color;c.font='bold 40px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(text,256,66,480);const texture=new THREE.CanvasTexture(cv);texture.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthWrite:false}));sprite.position.set(x,y,z);sprite.scale.set(w,w/4,1);p.add(sprite);return sprite};
  function trainingPlaque(p){const cv=document.createElement('canvas');cv.width=640;cv.height=288;const texture=new THREE.CanvasTexture(cv);texture.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthWrite:false}));sprite.position.set(0,2.4,0);sprite.scale.set(4.2,1.89,1);p.add(sprite);return{canvas:cv,texture,sprite}}
  function setTrainingPlaque(i,advice,eventActive=true){const plaque=nests[i].plaque,c=plaque.canvas.getContext('2d');c.clearRect(0,0,640,288);c.fillStyle=advice.ready?'#daf3cf':'#fff1c8';c.beginPath();c.roundRect(5,5,630,278,28);c.fill();c.strokeStyle=advice.ready?'#4b8c55':'#b48135';c.lineWidth=8;c.stroke();c.textAlign='center';c.textBaseline='middle';c.fillStyle='#345047';c.font='bold 30px Arial';c.fillText('TREINO RECOMENDADO',320,52);c.font='bold 54px Arial';c.fillText('NÍVEL '+advice.level,320,115);c.font='bold 34px Arial';c.fillText(advice.ready?'Você já tem esse treino!':'Faltam '+advice.remaining+' níveis',320,178);c.fillStyle='#876323';c.font='bold 24px Arial';c.fillText(i===WINTER.world&&eventActive?'5 OVOS · INVERNO 2026':'3 OVOS · RARIDADES E MUTAÇÕES',320,240);plaque.texture.needsUpdate=true;plaque.sprite.userData.advice={...advice}}
- function egg(p,color,scale=1,rarity="common"){const g=group(p);g.scale.setScalar(scale);mesh(g,geo('egg-shell',()=>{const profile=Array.from({length:21},(_,i)=>{const a=Math.PI*(1-i/20),r=i===0||i===20?0:.42*Math.sin(a)*(1-.16*Math.cos(a));return new THREE.Vector2(r,.567*Math.cos(a));});return new THREE.LatheGeometry(profile,28)}),RARITIES[rarity].color,0,.5,0);for(const[x,y,z]of[[.25,.63,.28],[-.19,.34,.32],[.05,.9,.18],[.30,.33,-.20]])ball(g,.075,color,x,y,z,1,1.2,.4);if(rarity!=='common'){torus(g,.44,.025,RARITIES[rarity].color,0,.06,0).rotation.x=Math.PI/2;for(let j=0;j<RARITIES[rarity].mult-1;j++){const a=j*2.4;cyl(g,0,.06,.15,0xfff0b0,Math.sin(a)*.47,.75+(j%2)*.2,Math.cos(a)*.47,4)}}return g}
+ function egg(p,color,scale=1,rarity="common"){const g=group(p);g.scale.setScalar(scale);mesh(g,geo('egg-shell',shellGeometry),RARITIES[rarity].color,0,.5,0);mesh(g,geo('egg-spots',shellSpots),rarity==='common'&&color===WORLDS[0].color?0x30bfbd:color,0,.5,0);if(rarity!=='common'){torus(g,.44,.025,RARITIES[rarity].color,0,.06,0).rotation.x=Math.PI/2;for(let j=0;j<RARITIES[rarity].mult-1;j++){const a=j*2.4;cyl(g,0,.06,.15,0xfff0b0,Math.sin(a)*.47,.75+(j%2)*.2,Math.cos(a)*.47,4)}}return g}
  function creature(p,kind,color,scale=1,rarity="common"){actorBuilding=true;const g=group(p);g.scale.setScalar(scale);const limbs=[];const dark=0x263a4b,cream=0xffe8ba;let faceZ=-.35,faceY=.92;
   if(kind==='mummy'){({faceY,faceZ}=mummyGuardian(g,limbs,{group,box,ball,cyl,torus}));}
   else if(kind==='chick'){ball(g,.43,color,0,.51,0,1,1.1,.9);ball(g,.31,color,0,1.0,-.07);cyl(g,0,.13,.24,0xef8644,0,.94,-.43,4).rotation.x=-Math.PI/2;for(const x of[-.16,.16])softBox(g,.18,.09,.30,0xef8644,x,.06,-.06);for(const x of[-.42,.42]){const wing=ball(g,.22,color,x,.61,0,.45,1.15,.9);limbs.push(wing)}for(let i=0;i<3;i++)ball(g,.095,0xe86b60,(i-1)*.09,1.28,-.05);faceY=1.06;faceZ=-.35;}
@@ -67,42 +69,20 @@ export function createEggWorld(scene){
   const expanded=expansionCreature(g,kind,color,limbs,{ball,cyl,torus,rod,softBox,group});if(expanded){faceY=expanded.faceY;faceZ=expanded.faceZ;}
   if(rarity!=='common')torus(g,.55,.035,RARITIES[rarity].color,0,.055,0).rotation.x=Math.PI/2;const ex=kind==='turtle'?.10:.12;for(const x of[-ex,ex]){ball(g,.065,0xffffff,x,faceY,faceZ);ball(g,.035,dark,x,faceY,faceZ-.055);ball(g,.012,0xffffff,x-.01,faceY+.015,faceZ-.084)}g.traverse(o=>{if(o.isMesh)o.castShadow=true});actorBuilding=false;return rigCreature(g,limbs,kind,color,actorArt);
  }
- function accessory(p,id){const g=group(p);premiumAccessory(g,PREMIUM_BY_NATIVE[id],{ball,cyl,torus,rod,softBox});if(NEW_ACCESSORIES[id])expansionAccessory(id,g,{ball,cyl,torus,rod,softBox});if(ACCESSORY_EXPANSION[id])extraAccessory(id,g,{ball,cyl,torus,rod,softBox});
- if(id==='crown'){cyl(g,.34,.34,.16,0xf2c653,0,.1,0,10);for(let j=0;j<7;j++){const a=j*Math.PI*2/7;cyl(g,0,.09,.28,0xffd968,Math.sin(a)*.29,.3,Math.cos(a)*.29,4);ball(g,.055,j%2?0x75dded:0xf0799c,Math.sin(a)*.33,.12,Math.cos(a)*.33)}}
- if(id==='halo'){torus(g,.4,.06,0xffdf79,0,.16,0).rotation.x=Math.PI/2;for(const x of[-.5,.5])cyl(g,0,.06,.17,0xfff4ba,x,.2,0,4)}
- if(id==='headphones'){torus(g,.33,.045,0x3655b4,0,0,0);for(const x of[-.32,.32]){softBox(g,.12,.3,.23,0x62e2e8,x,-.03,0);softBox(g,.13,.2,.15,0x8173ee,x*1.15,-.03,0)}}
- if(id==='goggles'){for(const x of[-.15,.15]){torus(g,.125,.035,0xffcc64,x,0,0);ball(g,.10,0x67dfe8,x,0,-.01,1,1,.25)}softBox(g,.08,.04,.07,0xffcc64,0,0,0)}
- if(id==='wings'){for(const side of[-1,1])for(let j=0;j<4;j++){const feather=ball(g,.19,j%2?0x9adfee:0xc9a4fb,side*(.26+j*.17),.25+j*.09,.08+j*.05,.7,2.3,.4);feather.rotation.z=-side*(.4+j*.08)}}
- if(id==='cape'){const m=cyl(g,.26,.60,1.0,0xdf5478,0,-.20,.10,4);m.scale.z=.19;softBox(g,.5,.08,.17,0xffd770,0,.35,0)}
- const gold=0xffd36b,cyan=0x8af3f0,purple=0xb49aff;
- if(id==='pilotCap'){ball(g,.36,0xe7864e,0,.08,0,1,.8,1);softBox(g,.14,.055,.64,0xffedce,0,.34,-.03);for(const x of[-.34,.34])ball(g,.13,0x3f536b,x,-.04,0,.6,1.3,1);softBox(g,.48,.1,.13,0x8ddfeb,0,.08,-.32);}
- if(id==='safariHat'){cyl(g,.55,.55,.065,0xd9bb76,0,0,0,24);cyl(g,.28,.37,.3,0xc8a25c,0,.18,0,20);cyl(g,.36,.36,.07,0x6a8556,0,.08,0,20);const f=ball(g,.12,0x82d483,.29,.37,0,.6,2,.4);f.rotation.z=-.4;}
- if(id==='iceTiara'){torus(g,.34,.045,0xd8e9ef,0,.06,0).rotation.x=Math.PI/2;for(let j=-2;j<=2;j++)cyl(g,0,.085,.3+(2-Math.abs(j))*.09,j%2?cyan:0xb9ceff,j*.13,.23,-.22,5);}
- if(id==='stormHelm'){ball(g,.36,0x66569e,0,.07,0,1,.8,1);softBox(g,.5,.1,.12,gold,0,.03,-.31);for(const side of[-1,1]){rod(g,[side*.25,.15,0],[side*.48,.39,0],.045,gold);rod(g,[side*.48,.39,0],[side*.32,.39,0],.045,gold);rod(g,[side*.32,.39,0],[side*.52,.66,0],.045,gold);}}
- if(id==='solarCrown'){cyl(g,.34,.34,.15,gold,0,.06,0,16);torus(g,.42,.055,gold,0,.46,.02);ball(g,.21,0xffb65b,0,.46,.02,1,1,.35);for(let j=0;j<10;j++){const a=j*Math.PI/5;rod(g,[Math.sin(a)*.43,.46+Math.cos(a)*.43,.02],[Math.sin(a)*.58,.46+Math.cos(a)*.58,.02],.035,gold);}}
- if(id==='starGlasses'){for(const x of[-.16,.16]){const star=cyl(g,0,.18,.055,gold,x,0,0,5);star.rotation.x=Math.PI/2;ball(g,.09,0xee92c6,x,0,-.04,1,1,.25);}softBox(g,.12,.035,.06,gold,0,0,0);}
- if(id==='cyberVisor'){softBox(g,.68,.25,.12,0x3b4168,0,0,0);softBox(g,.57,.15,.045,cyan,0,0,-.08);for(let j=-2;j<=2;j++)softBox(g,.035,.11,.02,0x72a4ec,j*.095,0,-.11);}
- if(id==='butterflyMask'){for(const side of[-1,1]){const a=ball(g,.19,side<0?cyan:purple,side*.22,.07,0,1.2,1,.25);a.rotation.z=-side*.35;ball(g,.13,0xec9edc,side*.2,-.12,0,1,.8,.25);ball(g,.075,0x324865,side*.14,0,-.06,1,1,.25);}softBox(g,.08,.12,.06,gold,0,0,-.02);}
- if(id==='royalMask'){softBox(g,.65,.24,.1,gold,0,0,0);for(const x of[-.16,.16])ball(g,.09,0x4e3455,x,0,-.07,1,.7,.3);for(let j=-2;j<=2;j++)cyl(g,0,.055,.17,j%2?0xe878a2:0xbba2ff,j*.13,.22,0,4);}
- if(id==='explorerPack'){softBox(g,.57,.62,.3,0x4d9c7c,0,.02,.12);softBox(g,.38,.26,.12,0x89c997,0,-.08,.3);cyl(g,.12,.12,.65,0xe3c18c,0,.4,.1).rotation.z=Math.PI/2;for(const x of[-.19,.19])softBox(g,.06,.65,.03,0xdec081,x,.02,-.05);}
- if(id==='beeWings'){for(const side of[-1,1])for(let j=0;j<2;j++){const a=ball(g,.25,0xd1f5f1,side*(.32+j*.16),.08+j*.3,.03,.7,1.6,.22);a.rotation.z=-side*.65;}ball(g,.17,gold,0,0,.12,.6,1.5,1);}
- if(id==='jetpack'){softBox(g,.44,.5,.2,0x657fa1,0,.02,.08);for(const x of[-.28,.28]){cyl(g,.13,.18,.61,0xc5d2df,x,0,.15,16);cyl(g,.18,.11,.12,gold,x,-.34,.15,16);cyl(g,0,.13,.34,cyan,x,-.55,.15,7).rotation.z=Math.PI;}}
- if(id==='phoenixWings'||id==='infinityWings'){const mythical=id==='infinityWings';for(const side of[-1,1])for(let j=0;j<5;j++){const f=ball(g,.16,mythical?(j%2?cyan:purple):(j%2?gold:0xf58366),side*(.25+j*.15),.12+j*.12,.05+j*.025,.65,2.5,.35);f.rotation.z=-side*(.3+j*.13);}if(mythical){torus(g,.48,.028,gold,0,.25,.13);torus(g,.64,.025,purple,0,.25,.13);for(const side of[-1,1])ball(g,.08,gold,side*.72,.7,.15);}}
- if(id==='auroraCape'){for(let j=-2;j<=2;j++){const m=cyl(g,.075,.145,.9,[cyan,purple,0x7fe0bb,0x86b9fa,0xe29eda][j+2],j*.14,-.16,.1,4);m.scale.z=.27;}softBox(g,.63,.09,.15,gold,0,.34,0);}
- if(id==='cometPack'){const gem=cyl(g,0,.27,.55,cyan,0,.25,.13,6);gem.rotation.z=-.5;torus(g,.32,.03,gold,0,.25,.13);for(let j=0;j<4;j++){const f=ball(g,.1,j%2?purple:0xb9efff,.1+j*.08,-.05-j*.13,.13,1,2,.4);f.rotation.z=-.45;}}
- return g}
+ function accessory(parent,id){
+  const model=group(parent);
+  const premium=PREMIUM_BY_NATIVE[id];
+  if(premium)premiumAccessory(model,premium,{ball,cyl,torus,rod,softBox,mesh,geo});
+  else buildCoinWearArt(actorArt,model,id);
+  return model;
+ }
  function equipAccessories(hero,equipped){hero.equip(equipped,accessory)}
- function shopItem(p,id){if(VEHICLES[id]){const g=vehicleModel(actorArt,id,VEHICLES[id]);p.add(g);g.position.y=.15;return g}if(ABILITIES[id]){const g=group(p);abilityModel(id,g,{ball,cyl,torus,rod,softBox});return g}if(ACCESSORIES[id]){const g=group(p),a=accessory(g,id);a.position.y=['cape','auroraCape','jetpack'].includes(id)?.82:.55;return g}const g=group(p),blue=0x559dc7,gold=0xf1bf61,white=0xfff0d2;
- if(id==='boots'||id==='springs'){for(const x of[-.28,.28]){softBox(g,.36,.22,.7,id==='boots'?blue:0x9679ce,x,.35,-.1);softBox(g,.33,.3,.36,id==='boots'?0x78c6cf:0xc3a4f1,x,.55,.1);softBox(g,.38,.08,.74,white,x,.21,-.1);for(let j=0;j<3;j++)softBox(g,.25,.025,.04,white,x,.48,-.32+j*.09);if(id==='springs')for(let j=0;j<3;j++)torus(g,.13,.025,gold,x,.06+j*.055,0).rotation.x=Math.PI/2}}
- if(id==='energy'||id==='hydration'||id==='juice'){cyl(g,.25,.28,.8,id==='juice'?0xf5a95b:blue,0,.5,0);cyl(g,.14,.14,.2,white,0,.99,0);cyl(g,.19,.19,.12,0x51648e,0,1.13,0);softBox(g,.36,.26,.055,white,0,.6,-.25);if(id==='juice')ball(g,.1,0xf29844,0,.6,-.3);else softBox(g,.08,.19,.05,blue,0,.6,-.29)}
- if(id==='pen'){softBox(g,1.2,.09,1,0x98c773,0,.06,0);for(const x of[-.52,.52])for(const z of[-.4,0,.4]){softBox(g,.08,.55,.08,white,x,.33,z);softBox(g,.06,.06,.8,white,x,.42,0)}egg(g,gold,.6)}
- if(id==='incubator'){cyl(g,.53,.6,.15,0xb08a57,0,.1,0);torus(g,.43,.08,gold,0,.23,0).rotation.x=Math.PI/2;egg(g,0xec976b,.75);for(const x of[-.55,.55])rod(g,[x,.1,0],[x,1.05,0],.04,blue);softBox(g,1.2,.14,.5,0xe98273,0,1.1,0)}
- if(id==='gloves'){for(const x of[-.26,.26]){ball(g,.23,0xf2b66f,x,.5,0,.9,1.2,.55);softBox(g,.32,.2,.24,blue,x,.24,0);ball(g,.12,0xf2b66f,x+Math.sign(x)*.2,.48,0,.75,1.3,.9)}}
- if(id==='coach'){softBox(g,1,.17,1.4,blue,0,.12,0);softBox(g,.75,.04,1.1,0x34475e,0,.23,0);for(let j=0;j<5;j++)softBox(g,.7,.01,.03,0xaac7cf,0,.26,-.4+j*.2);for(const x of[-.44,.44])rod(g,[x,.2,-.4],[x,1,-.5],.04,white);softBox(g,1,.23,.14,0x64b6b1,0,1.0,-.5)}
- if(id==='charm'){torus(g,.31,.05,blue,0,.95,0);const medal=cyl(g,.3,.3,.12,gold,0,.42,0);medal.rotation.x=Math.PI/2;const star=cyl(g,0,.17,.08,white,0,.43,-.08,5);star.rotation.x=-Math.PI/2}
- if(id==='turbo'){cyl(g,.18,.23,.8,0xf0be61,0,.7,0);cyl(g,0,.18,.32,0xde7879,0,1.26,0);for(const x of[-.25,.25])softBox(g,.18,.35,.2,blue,x,.43,0);cyl(g,.15,0,.35,0xed9164,0,.14,0);ball(g,.1,blue,0,.86,-.18)}
- if(id==='shield'){const shield=ball(g,.48,blue,0,.67,0,1,1.25,.22);torus(g,.42,.045,white,0,.67,-.04).scale.y=1.2;softBox(g,.08,.43,.07,gold,0,.67,-.13);softBox(g,.3,.08,.07,gold,0,.67,-.13)}
- return g}
+ function shopItem(parent,id){
+  if(ACCESSORIES[id])return accessory(parent,id);
+  const model=VEHICLES[id]?vehicleModel(actorArt,id,VEHICLES[id]):createGearModel(actorArt,id);
+  if(model)parent.add(model);
+  return model;
+ }
  function hero(p,color){return new EggExplorer(actorArt,p,color)}
  let seasonOn=true;const seasonalTrees=[],seasonalSurfaces=[];
  function seasonalSurface(mesh,normal){mesh.material=mesh.material.clone();seasonalSurfaces.push({mesh,normal,winter:mesh.material.color.getHex()});return mesh;}
@@ -155,7 +135,7 @@ export function createEggWorld(scene){
  for(const o of OBSTACLES){const g=zoneGroups[o.world];if(o.edge){flame.pebble(g,o);}else if(o.world===0||o.world===2){const log=cyl(g,.40,.40,1.55,0x9c7452,o.x,.37,o.z,8);log.rotation.z=Math.PI/2}else if(o.world===1)box(g,1.35,o.h,1.1,0xbb905e,o.x,o.h/2,o.z);else if(o.world===3)crystal(g,o.x,o.z,0xb2e4eb,o.h);else if(o.world===4)cyl(g,.35,.8,o.h,0x925961,o.x,o.h/2,o.z,6);else if(o.world===8){cyl(g,.55,.66,o.h,0xf7a7b6,o.x,o.h/2,o.z);torus(g,.5,.09,0xfff0d4,o.x,o.h,o.z).rotation.x=Math.PI/2}else if(o.world===9){const log=cyl(g,.32,.32,1.4,0x73bc71,o.x,.32,o.z,7);log.rotation.z=Math.PI/2}else if(o.world===10)box(g,1.2,o.h,1.2,0xdeb668,o.x,o.h/2,o.z);else crystal(g,o.x,o.z,WORLDS[o.world].color,o.h)}
  const egypt=createEgyptWorld({root,entrance:zoneGroups[1],content:zoneGroups[EGYPT.world],helpers:{group,box,ball,cyl,torus,label}});
  heaven.door(zoneGroups[HEAVEN.world-1],HEAVEN.gate.z);const subsoil=createSubsoilWorld({root,entrance:zoneGroups[HEAVEN.world-1],content:zoneGroups[SUBSOIL.world],helpers:{group,box,ball,cyl,torus,label}});const end=group(zoneGroups[HEAVEN.world-1],0,0,-LENGTH*HEAVEN.world+1);box(end,TRACK_WIDTH+8.5,.45,1,0x696a9a,0,.2,0);
- const playerFrame=group(root);playerFrame.name="ExplorerGravityFrame";const player=hero(playerFrame);const shieldBubble=new THREE.Mesh(new THREE.SphereGeometry(1.15,28,18),new THREE.MeshBasicMaterial({color:0x86eeff,transparent:true,opacity:.25,depthWrite:false}));shieldBubble.position.y=1;shieldBubble.visible=false;player.g.add(shieldBubble);const abilityAura=group(player.g,0,.2,0);for(let j=0;j<2;j++)torus(abilityAura,.7+j*.12,.028,0x91e4ce,0,j*.5,0).rotation.x=Math.PI/2;abilityAura.visible=false;const fx=group(root),particles=Array.from({length:24},()=>{const p=ball(fx,.09,0xffe1a3);p.visible=false;return{mesh:p,life:0,v:new THREE.Vector3()}});let particleCursor=0;
+ const playerFrame=group(root);playerFrame.name="ExplorerGravityFrame";const player=hero(playerFrame);const shieldBubble=new THREE.Mesh(new THREE.SphereGeometry(1.15,28,18),new THREE.MeshBasicMaterial({color:0x86eeff,transparent:true,opacity:.25,depthWrite:false}));shieldBubble.position.y=1;shieldBubble.visible=false;player.g.add(shieldBubble);const gearEffects=createGearEffects(actorArt,player.g);const abilityAura=torus(player.g,.74,.024,0x91e4ce,0,.12,0);abilityAura.rotation.x=Math.PI/2;abilityAura.visible=false;const fx=group(root),particles=Array.from({length:24},()=>{const p=ball(fx,.09,0xffe1a3);p.visible=false;return{mesh:p,life:0,v:new THREE.Vector3()}});let particleCursor=0;
  function burst(pos,color){for(let i=0;i<16;i++){const p=particles[particleCursor++%particles.length];p.mesh.material=mat(color);p.mesh.position.copy(pos);p.mesh.visible=true;p.life=.6+Math.random()*.4;p.v.set((Math.random()-.5)*3,2+Math.random()*2,(Math.random()-.5)*3)}}
  function animate(dt,time){for(const a of animated){if(a.spin)a.mesh.rotation.z=time*.7+a.phase;else a.mesh.position.y=a.y+Math.sin(time*1.5+a.phase)*.3;}for(const p of particles)if(p.life>0){p.life-=dt;p.mesh.visible=p.life>0;p.v.y-=7*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.scale.setScalar(Math.max(.1,p.life))}}
  function animateCreature(c,time,moving=0,dt=1/60,speed=9,reducedMotion=false){c.animator.update(dt,moving,speed,reducedMotion)}
@@ -167,5 +147,5 @@ export function createEggWorld(scene){
  function updateHazards(game){hazards.forEach((v,i)=>{const h=game.hazard(i);v.node.position.set(h.x,0,h.z);v.ring.material=mat(h.active?0xff705a:h.warning?0xffdb62:0xcbdccd);v.body.visible=h.active||h.warning;v.body.scale.y=h.active?1:.3;v.body.rotation.y=game.time*(i+1)*.3;});}
  const winter=createWinterWorld({root,base,pen,zoneGroups,player,helpers:{box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}});
  const house=createHouseWorld({base,helpers:{group,box,cyl,rod,ball,label}});
- return{egypt,subsoil,heaven,playerFrame,house,progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
+ return{createTrapVisuals:()=>createEggTrapVisuals(root,actorArt),egypt,subsoil,heaven,playerFrame,house,progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,gearEffects,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
 }

@@ -49,6 +49,19 @@ export class RunnerCharacter {
   }
   for(const [name,parent]of[['cap',head],['fringe',head],['hood',ch],['back',ch]])this.bones[name]=bone(name,parent);
   this.rig.updateMatrixWorld(true);this.skeleton=new T.Skeleton(Object.values(this.bones));this.index=Object.fromEntries(this.skeleton.bones.map((b,i)=>[b.name,i]));
+  this.buildAppearance(art,progress,options);
+  this.batchAttachments();
+  this.addContours();
+  this.root.traverse(o=>{if(o.isMesh){o.castShadow=!o.userData.contour;o.receiveShadow=false;}});
+  this.mixer=new T.AnimationMixer(this.rig);this.clips=this.createClips();this.actions={};this.poseWeights={};for(const clip of this.clips){const a=this.mixer.clipAction(clip);a.play();a.paused=true;a.setEffectiveWeight(clip.name==='idle'?1:0);this.actions[clip.name]=a;this.poseWeights[clip.name]=clip.name==='idle'?1:0;}
+  this.current='idle';this.hit=0;this.landAge=10;this.wasAirborne=false;this.slideBlend=0;this.footPoint=new T.Vector3();this.elapsed=0;this.gaitPhase=0;this.hasFrame=false;this.previousVisualY=0;this.previousX=0;this.previousVx=0;this.previousSpine=0;
+  this.legs={};for(const side of['L','R'])this.legs[side]=new LegIK(this.bones['thigh'+side],this.bones['knee'+side],this.bones['foot'+side]);
+  this.lean=new MotionSpring(20,.8);this.secondary={};for(const name of['cap','hood','back','fringe'])this.secondary[name]={pitch:new MotionSpring(name==='cap'?27:19,.62),roll:new MotionSpring(20,.7)};
+  this.ikTarget=new T.Vector3();this.footOrientation=new T.Quaternion();this.heading=new T.Quaternion();this.euler=new T.Euler();this.parentInverse=new T.Matrix4();this.parentOrientation=new T.Quaternion();
+
+ }
+ buildAppearance(art,progress,options){
+  const {head,neck,chest:ch}=this.bones;
   const suit=options.suitColor||SHOP.find(x=>x.id===progress.equipped.suit)?.color||0x18bcae,ink=0x17384d,skin=0xeeb087,hairColor=0x382b31,cream=0xffeac7;
   const torso=this.skinPart('jacket',[[.85,.24,.17],[.91,.29,.2],[1.05,.32,.215],[1.26,.365,.22],[1.39,.35,.205],[1.48,.23,.16],[1.53,.13,.11]],suit,'cloth',v=>{if(v.y<1.13){const t=smooth(.94,1.13,v.y);return [['hips',1-t],['spine',t]];}const t=smooth(1.13,1.36,v.y);return [['spine',1-t],['chest',t]];});
   // Baked colour blocking gives the jacket a deliberate front/back design,
@@ -108,15 +121,6 @@ export class RunnerCharacter {
   const accessory=makeAccessory(art,hat);accessory.position.set(0,hat.model==='cap'||hat.model==='hat'?.25:.38,.015);
   if(hat.model==='cap')accessory.rotation.set(.06,Math.PI+.12,-.075);this.bones.cap.add(accessory);
   const back=options.back||SHOP.find(x=>x.id===progress.equipped.back);if(back){const accessory=makeAccessory(art,back);accessory.position.set(0,-.03,.32);this.bones.back.add(accessory);}
-  this.batchAttachments();
-  this.addContours();
-  this.root.traverse(o=>{if(o.isMesh){o.castShadow=!o.userData.contour;o.receiveShadow=false;}});
-  this.mixer=new T.AnimationMixer(this.rig);this.clips=this.createClips();this.actions={};this.poseWeights={};for(const clip of this.clips){const a=this.mixer.clipAction(clip);a.play();a.paused=true;a.setEffectiveWeight(clip.name==='idle'?1:0);this.actions[clip.name]=a;this.poseWeights[clip.name]=clip.name==='idle'?1:0;}
-  this.current='idle';this.hit=0;this.landAge=10;this.wasAirborne=false;this.slideBlend=0;this.footPoint=new T.Vector3();this.elapsed=0;this.gaitPhase=0;this.hasFrame=false;this.previousVisualY=0;this.previousX=0;this.previousVx=0;this.previousSpine=0;
-  this.legs={};for(const side of['L','R'])this.legs[side]=new LegIK(this.bones['thigh'+side],this.bones['knee'+side],this.bones['foot'+side]);
-  this.lean=new MotionSpring(20,.8);this.secondary={};for(const name of['cap','hood','back','fringe'])this.secondary[name]={pitch:new MotionSpring(name==='cap'?27:19,.62),roll:new MotionSpring(20,.7)};
-  this.ikTarget=new T.Vector3();this.footOrientation=new T.Quaternion();this.heading=new T.Quaternion();this.euler=new T.Euler();this.parentInverse=new T.Matrix4();this.parentOrientation=new T.Quaternion();
-
  }
  part(parent,kind,c,x,y,z,sx,sy=sx,sz=sx,tile='cloth'){return this.art.mesh(parent,kind,c,x,y,z,sx,sy,sz,tile);}
  profile(rings,segments=24){return sculptGeometry(rings,segments,2);}

@@ -3,7 +3,7 @@ import {VEHICLES} from './egg-expansion.js';
 import {vehicleModel} from './egg-expansion-models.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {RunnerCharacter} from '../rush-src/character.js';
+import {EggExplorerCharacter} from './egg-explorer-character.js';
 import {sculptGeometry} from '../rush-src/art.js';
 import {LegIK,MotionSpring,gaitFoot,smooth} from '../rush-src/motion.js';
 import {ACCESSORIES} from './egg-rules.js';
@@ -19,9 +19,9 @@ function addOutline(surface,art,skeleton){const m=surface.isSkinnedMesh?new T.Sk
 export class EggExplorer {
  constructor(art,parent,color=0x25afaa){
   this.art=art;this.g=new T.Group();this.g.name='EggExplorer';parent.add(this.g);
-  this.model=new RunnerCharacter(art,{equipped:{}},{suitColor:color,hat:{model:'cap',color:0x7864ce},back:{model:'pack',color:0xf2af58}});
+  this.model=new EggExplorerCharacter(art,{equipped:{}},{suitColor:color});
   this.space=new T.Group();this.space.scale.setScalar(.82);this.g.add(this.space);this.space.add(this.model.root);
-  const b=this.model.bones;this.carry=new T.Group();this.carry.position.set(0,-.10,-.53);b.chest.add(this.carry);
+  const b=this.model.bones;this.carry=new T.Group();this.carry.position.set(0,-.27,-.53);b.chest.add(this.carry);
   this.wear=new T.Group();this.model.rig.add(this.wear);this.hat=new T.Group();this.hat.name='DefaultEggCap';for(const child of [...b.cap.children])this.hat.add(child);b.cap.add(this.hat);
   this.pack=new T.Group();for(const child of [...b.back.children])this.pack.add(child);b.back.add(this.pack);
   this.elapsed=0;this.previous=null;this.takeoff=8;this.carryBlend=0;this.g.userData.actor=this;

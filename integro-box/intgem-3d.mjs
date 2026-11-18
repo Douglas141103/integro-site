@@ -1,3 +1,4 @@
+import {eggAura,eggCompanion} from './egg-gem-figures.mjs';
 // Shared toon cosmetics. Rebuild only changed slots, never on every frame.
 function release(group){const gs=new Set(),ms=new Set();group.traverse(o=>{if(o.isMesh){gs.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])ms.add(m);}});gs.forEach(g=>g.dispose());ms.forEach(m=>m.dispose());group.clear();}
 export function createIntGem3D(T,parent){
@@ -6,6 +7,7 @@ export function createIntGem3D(T,parent){
  let petKey='',auraKey='',wings=[];root.visible=false;
  function petModel(item){
   release(companion);wings=[];if(!item)return;
+  if(item.game==='egg'){eggCompanion(T,companion,item,wings);return;}
   const main=new T.MeshToonMaterial({color:item.color}),trim=new T.MeshToonMaterial({color:item.secondary}),dark=new T.MeshBasicMaterial({color:0x173b50});
   const mesh=(geo,mat,x=0,y=0,z=0,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);companion.add(m);return m;};
   const ball=(r,x,y,z,mat=main,sx=1,sy=1,sz=1)=>mesh(new T.SphereGeometry(r,8,6),mat,x,y,z,sx,sy,sz);
@@ -26,6 +28,7 @@ export function createIntGem3D(T,parent){
  }
  function auraModel(item){
   release(aura);if(!item)return;
+  if(item.game==='egg'){eggAura(T,aura,item);return;}
   const main=new T.MeshBasicMaterial({color:item.color,transparent:true,opacity:.72,depthWrite:false}),accent=new T.MeshBasicMaterial({color:item.secondary,transparent:true,opacity:.85,depthWrite:false});
   const mesh=(geo,mat,x=0,y=.075,z=0)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);aura.add(m);return m;};
   const ring=(r,mat=main)=>{const m=mesh(new T.TorusGeometry(r,.024,4,32),mat);m.rotation.x=Math.PI/2;return m;};
@@ -46,7 +49,7 @@ export function createIntGem3D(T,parent){
   if((item?.id||'')!==auraKey){auraKey=item?.id||'';auraModel(item);}
   root.visible=!!(item||pet);companion.visible=!!pet;aura.visible=!!item;
   const t=reducedMotion?0:time;companion.position.set(.86,1.25+Math.sin(t*2.4)*.075,.12);companion.rotation.y=Math.sin(t*.8)*.3;
-  for(const w of wings)w.rotation.z=w.userData.side*(.15+Math.sin(t*5)*.25);
+  for(const w of wings)w.rotation.z=(w.userData.tilt??w.userData.side*.15)+w.userData.side*Math.sin(t*5)*.25;
   aura.rotation.y=item?.model==='tracks'?0:t*.45;
  },dispose(){release(companion);release(aura);root.removeFromParent();}};
 }

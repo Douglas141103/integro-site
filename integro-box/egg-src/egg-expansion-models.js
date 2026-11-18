@@ -1,5 +1,6 @@
 import {trackSideX} from './egg-track.js';
 import * as T from 'three';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 export function expansionCreature(g,kind,color,limbs,{ball,cyl,torus,rod,softBox,group}){
  const cream=0xffe8c6,dark=0x294455;
  if(kind==='hedgehog'){
@@ -62,27 +63,192 @@ export function expansionAccessory(id,g,{ball,cyl,torus,rod,softBox}){
  if(id==='starBeacon'){ball(g,.24,violet,0,.1,.2);for(let j=0;j<3;j++){const orbit=torus(g,.36+j*.07,.025,gold,0,.1,.2);orbit.rotation.set(j*.7,j*.6,0);}for(const x of[-.55,.55])ball(g,.075,cyan,x,.35,.2);}
 }
 
-export function vehicleModel(art,id,definition){
- const g=new T.Group();g.name='vehicle-'+id;const {color,trim,type}=definition;
- const add=(kind,c,x,y,z,sx,sy,sz)=>art.mesh(g,kind,c,x,y,z,sx,sy,sz,'trim');
- if(type==='car'||type==='jet'){
-  g.userData.wheels=[];
-  if(type==='car'){
-   add('round',color,0,.32,0,1.22,.36,2.12);add('round',color,0,.61,.12,.94,.38,1.02);add('round',0x8bd9e4,0,.62,-.34,.83,.28,.10);add('round',0x304957,0,.82,.12,.76,.035,.64);
-   for(const x of [-.62,.62])for(const z of [-.68,.70]){const wheel=add('cyl',0x263945,x,.22,z,.22,.15,.22);wheel.rotation.z=Math.PI/2;g.userData.wheels.push(wheel);const hub=add('cyl',trim,x*1.06,.22,z,.11,.16,.11);hub.rotation.z=Math.PI/2;}
-   for(const x of [-.40,.40]){add('round',0xf8efbd,x,.39,-1.08,.25,.12,.05);add('round',0xe37b69,x,.38,1.08,.25,.10,.05);}add('round',trim,0,.22,-1.1,.9,.10,.08);add('round',trim,0,.22,1.1,.9,.10,.08);
-   add('round',trim,0,.51,-.77,.10,.035,.55);add('round',trim,0,.84,.12,.08,.02,.63);
-  }else{
-   add('ball',color,0,.24,0,.32,.25,1.375);add('ball',0x7edee7,0,.40,-.60,.245,.125,.325);add('round',trim,0,.48,.10,.40,.06,.60);
-   const left=add('round',color,-.78,.16,.1,1.52,.09,.64),right=add('round',color,.78,.16,.1,1.52,.09,.64);left.rotation.y=-.25;right.rotation.y=.25;
-   add('round',trim,0,.22,1.10,1.13,.075,.39);add('round',color,0,.49,1.06,.10,.65,.46);
-   for(const x of [-.42,.42]){const engine=add('cyl',trim,x,.16,.65,.18,.60,.18);engine.rotation.x=Math.PI/2;const exhaust=add('cone',0x79e8f2,x,.16,1.08,.12,.4,.12);exhaust.rotation.x=Math.PI/2;}
+// Body sections run nose to tail along +Z. Their rounded rectangular cross
+// section leaves level standing surfaces and a readable side silhouette.
+function hullGeometry(stations, power=.7) {
+ const points=[], indices=[], segments=16;
+ for(const [z,y,width,height] of stations){
+  for(let i=0;i<segments;i++){
+   const angle=i*Math.PI*2/segments, c=Math.cos(angle), s=Math.sin(angle);
+   points.push(Math.sign(c)*Math.pow(Math.abs(c),power)*width,y+Math.sign(s)*Math.pow(Math.abs(s),power)*height,z);
   }
-  g.traverse(m=>{if(m.isMesh)m.castShadow=true;});return g;
  }
- add('round',color,0,.11,0,.76,.16,1.55);add('round',0x294b58,0,.205,.01,.56,.035,1.23);
- for(const z of[-.62,.62]){add('round',trim,0,.14,z,.78,.10,.15);for(const x of[-.26,.26]){const engine=add('ring',trim,x,0,z,.13,.13,.13);engine.rotation.x=Math.PI/2;add('cone',0x91e9ed,x,-.10,z,.06,.18,.06).rotation.z=Math.PI;}}
- if(type==='scooter'){add('cyl',0xdce9dc,0,.63,-.46,.045,.84,.045);add('round',color,0,1.05,-.46,.85,.095,.10);for(const x of[-.35,.35])add('round',trim,x,1.05,-.46,.18,.12,.13);add('round',trim,0,.79,-.46,.12,.28,.12);}
- if(id.endsWith('Integro')){add('round',trim,0,.229,.35,.32,.016,.28);add('round',0xf9f8df,0,.241,.35,.045,.015,.17);}
- g.traverse(m=>{if(m.isMesh)m.castShadow=true;});return g;
+ for(let row=0;row<stations.length-1;row++)for(let i=0;i<segments;i++){
+  const a=row*segments+i,b=row*segments+(i+1)%segments;
+  indices.push(a,b,a+segments,b,b+segments,a+segments);
+ }
+ const last=(stations.length-1)*segments;
+ for(let i=1;i<segments-1;i++)indices.push(0,i+1,i,last,last+i,last+i+1);
+ const geometry=new T.BufferGeometry();
+ geometry.setAttribute('position',new T.Float32BufferAttribute(points,3));
+ geometry.setIndex(indices);geometry.computeVertexNormals();
+ return geometry;
+}
+
+// A vehicle is drawn once for its static body and once per independently
+// rotating wheel. Re-equipping and remote riders reuse these packed meshes.
+function packedVehiclePart(art,key,group){
+ group.updateMatrixWorld(true);
+ const parts=[];
+ for(const part of group.children){
+  const geometry=part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone();
+  geometry.applyMatrix4(part.matrix);
+  for(const attr of Object.keys(geometry.attributes))if(attr!=='position'&&attr!=='normal')geometry.deleteAttribute(attr);
+  const colors=new Uint8Array(geometry.attributes.position.count*3);
+  const {r,g,b}=part.material.color;
+  for(let i=0;i<colors.length;i+=3){colors[i]=Math.round(r*255);colors[i+1]=Math.round(g*255);colors[i+2]=Math.round(b*255);}
+  geometry.setAttribute('color',new T.Uint8BufferAttribute(colors,3,true));parts.push(geometry);
+  if(part.userData.vehicleOwned)part.geometry.dispose();
+ }
+ const merged=mergeGeometries(parts,false);
+ for(const g of parts)g.dispose();
+ merged.computeBoundingSphere();art.geometries.set(key,merged);
+ return merged;
+}
+
+function vehicleSculpt(art,group){
+ const mesh=(geometry,color)=>{
+  const m=new T.Mesh(geometry,art.material(color,'trim'));
+  m.userData.vehicleOwned=true;group.add(m);return m;
+ };
+ const add=(kind,color,x,y,z,sx,sy,sz)=>art.mesh(group,kind,color,x,y,z,sx,sy,sz,'trim');
+ const hull=(color,sections,power)=>mesh(hullGeometry(sections,power),color);
+ const tube=(color,points,radius)=>{
+  const path=new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v)));
+  return mesh(new T.TubeGeometry(path,Math.max(4,points.length*2),radius,5,false),color);
+ };
+ return {add,hull,tube};
+}
+
+function deckMark(id,trim,draw){
+ const {add,tube}=draw;
+ if(id.endsWith('Integro')){
+  add('round',trim,0,.23,.36,.26,.011,.22);
+  add('round',0xffffdc,0,.238,.36,.035,.01,.13);
+ }else if(id==='skateNeon'){
+  for(const side of [-1,1])tube(trim,[[side*.22,.229,-.43],[side*.28,.229,-.26],[side*.28,.229,.29]],.015);
+ }else if(id==='scooterGalaxy'){
+  for(const [x,z] of [[-.12,-.15],[.16,.13],[-.14,.36],[.1,.49]]) {
+   add('round',trim,x,.229,z,.095,.008,.019);add('round',trim,x,.23,z,.019,.008,.095);
+  }
+ }else{
+  const accents=id==='skateAurora'?[0xae89e7,0x78f1e1,0xd9aee7]:[trim,trim];
+  for(let i=0;i<accents.length;i++){
+   const x=-.08+i*.065;
+   tube(accents[i],[[x-.09,.23,-.35],[x+.07,.23,-.18],[x+.075,.23,.02],[x-.09,.23,.23],[x-.04,.23,.4]],.013);
+  }
+  if(id==='scooterComet')add('ball',trim,-.13,.23,.27,.09,.012,.1);
+ }
+}
+
+function hoverVehicle(id,{color,trim,type},draw){
+ const {add,hull}=draw, scooter=type==='scooter';
+ const toe=scooter?.15:.19, tail=scooter?.25:.28;
+ hull(color,[[-.86,toe,.08,.035],[-.79,toe,.29,.056],[-.65,.14,.37,.066],[-.41,.137,.38,.065],[.43,.137,.37,.065],[.62,.154,.36,.067],[.78,tail,.28,.061],[.85,tail+.015,.12,.03]],.49);
+ hull(trim,[[-.83,toe-.018,.15,.015],[-.74,toe-.031,.31,.015],[-.52,.117,.375,.015],[.46,.117,.375,.015],[.65,.153,.355,.015],[.79,tail-.018,.26,.016]],.48);
+ const pad=scooter?color:0x263747;
+ hull(pad,[[-.69,.177,.13,.023],[-.52,.194,.272,.026],[-.38,.198,.311,.024],[.43,.198,.31,.024],[.58,.207,.26,.02],[.66,.22,.15,.015]],.48);
+ deckMark(id,trim,draw);
+ for(const x of [-.25,.25])for(const z of [-.55,.55]){
+  add('cyl',0x3c5360,x,.032,z,.126,.104,.126);
+  add('cyl',trim,x,-.019,z,.147,.065,.147);
+  add('cyl',0x71e5ed,x,-.064,z,.122,.045,.122);
+  add('ball',0xc4ffff,x,-.088,z,.086,.037,.086);
+ }
+ if(scooter){
+  add('cyl',0xc1d6db,0,.63,-.46,.044,.83,.044);
+  add('cyl',trim,0,.30,-.46,.074,.14,.074);
+  add('round',color,0,1.055,-.46,.85,.10,.10);
+  add('round',trim,0,.991,-.46,.18,.18,.11);
+  for(const x of [-.33,.33])add('round',trim,x,1.055,-.46,.18,.114,.122);
+ }
+}
+
+function vehicleCar(id,{color,trim},draw){
+ const {add,hull}=draw, royal=id==='carRoyal';
+ const glass=royal?0x345585:0x458db7;
+ hull(color,[[-1.07,.34,.26,.075],[-1.00,.35,.48,.14],[-.74,.375,.56,.185],[-.43,.36,.59,.19],[.36,.35,.60,.19],[.78,.35,.56,.17],[1.01,.34,.43,.135],[1.08,.34,.25,.06]],royal?.55:.68);
+ hull(color,[[royal?-.63:-.5,.5,.36,.054],[-.35,.565,.47,.122],[-.13,.622,.458,.182],[.12,.635,.448,.189],[.47,.605,.44,.153],[royal?.81:.65,.52,.37,.088],[royal?.87:.72,.47,.27,.04]],.64);
+ add('round',0x2b3c4b,0,.822,.11,.75,.031,.67);
+ const front=add('round',glass,0,.680,-.36,.75,.26,.062);front.rotation.x=.81;
+ const rear=add('round',glass,0,.66,royal?.675:.57,.72,.21,.055);rear.rotation.x=-.81;
+ for(const sign of [-1,1]){
+  const side=sign*.456;
+  if(royal){
+   for(const z of [-.095,.20,.47])add('round',glass,side,.644,z,.042,.147,.221);
+   add('round',trim,sign*.571,.424,.14,.041,.026,1.37);
+  }else{
+   const pane=add('round',glass,side,.641,.04,.048,.16,.455);
+   pane.rotation.z=-sign*.13;
+  }
+  for(const z of [-.66,.67])add('ball',color,sign*.458,.359,z,.199,.181,.294);
+  add('ball',0xffefae,sign*.425,.397,-.993,.1,.085,.043);
+  add('round',0xe98770,sign*.363,.39,1.003,.15,.065,.045);
+ }
+ const grilleWidth=royal?.44:.59;
+ add('round',trim,0,.331,-1.05,grilleWidth,.178,.065);
+ add('round',0x293741,0,.336,-1.088,grilleWidth-.05,.13,.018);
+ if(royal){
+  for(const x of [-.144,-.072,0,.072,.144])add('round',trim,x,.336,-1.099,.022,.133,.014);
+ }else{
+  for(const y of [.30,.357])add('round',trim,0,y,-1.099,.47,.012,.014);
+  const stripe=add('round',trim,0,.551,-.698,.102,.02,.5);stripe.rotation.x=-.09;
+ }
+ add('round',trim,0,.257,1.007,.87,.065,.077);
+}
+
+function vehicleJet({color,trim},draw){
+ const {add,hull,tube}=draw;
+ hull(color,[[-1.38,.23,.011,.012],[-1.23,.26,.13,.092],[-.95,.29,.225,.16],[-.55,.30,.288,.214],[0,.28,.3,.22],[.45,.275,.251,.178],[.9,.282,.143,.104],[1.25,.30,.045,.04]],.94);
+ const canopy=add('ball',0x74d1ed,0,.399,-.69,.211,.109,.38);canopy.rotation.x=-.16;
+ add('round',trim,0,.48,.07,.40,.06,.6);
+ for(const side of [-1,1]){
+  const wing=hull(color,[[-.33,0,.014,.009],[-.24,0,.155,.018],[-.03,0,.407,.043],[.15,0,.674,.05],[.30,0,.75,.04],[.37,0,.69,.022]],.66);
+  wing.position.set(side*.707,.219,.15);wing.rotation.y=-side*.31;
+  const tail=add('round',trim,side*.36,.354,.945,.84,.055,.26);tail.rotation.y=-side*.39;
+  const engine=add('cyl',trim,side*.385,.288,.704,.141,.52,.141);engine.rotation.x=Math.PI/2;
+  const intake=add('cyl',0x263949,side*.385,.288,.443,.102,.015,.102);intake.rotation.x=Math.PI/2;
+  const jet=add('cone',0x83ebfd,side*.385,.288,1.073,.088,.218,.088);jet.rotation.x=Math.PI/2;
+  for(const z of [-.19,.019,.218])add('ball',0x447ea3,side*(.294-Math.abs(z)*.038),.327,z,.015,.048,.044);
+  tube(trim,[[side*.077,.245,-1.264],[side*.235,.255,-.9],[side*.286,.244,-.54],[side*.297,.247,0],[side*.204,.259,.61],[side*.10,.28,1.0]],.014);
+ }
+ const fin=add('round',color,0,.481,.957,.085,.467,.32);
+ fin.rotation.x=.38;
+ add('round',trim,0,.707,1.03,.093,.039,.264);
+}
+
+export function vehicleModel(art,id,definition){
+ const group=new T.Group();group.name='vehicle-'+id;
+ const key='egg-ride-v2-'+id;
+ if(!art.geometries.has(key)){
+  const parts=new T.Group(), draw=vehicleSculpt(art,parts);
+  if(definition.type==='car')vehicleCar(id,definition,draw);
+  else if(definition.type==='jet')vehicleJet(definition,draw);
+  else hoverVehicle(id,definition,draw);
+  packedVehiclePart(art,key,parts);
+ }
+ const materialKey='egg-vehicle-paint';
+ if(!art.materials.has(materialKey))art.materials.set(materialKey,new T.MeshToonMaterial({vertexColors:true,gradientMap:art.toonRamp}));
+ const surface=geometry=>{const mesh=new T.Mesh(geometry,art.materials.get(materialKey));mesh.castShadow=true;group.add(mesh);return mesh;};
+ surface(art.geometries.get(key));
+ if(definition.type==='car'){
+  group.userData.wheels=[];
+  const wheelKey=key+'-wheel';
+  if(!art.geometries.has(wheelKey)){
+   const parts=new T.Group(), {add}=vehicleSculpt(art,parts);
+   add('cyl',0x303a44,0,0,0,.213,.14,.213).rotation.z=Math.PI/2;
+   add('cyl',definition.trim,.072,0,0,.127,.017,.127).rotation.z=Math.PI/2;
+   add('cyl',0x83622d,.082,0,0,.044,.014,.044).rotation.z=Math.PI/2;
+   for(let spoke=0;spoke<5;spoke++){
+    const angle=spoke*2*Math.PI/5;
+    add('cyl',0x705630,.082,Math.cos(angle)*.076,Math.sin(angle)*.076,.016,.008,.016).rotation.z=Math.PI/2;
+   }
+   packedVehiclePart(art,wheelKey,parts);
+  }
+  for(const x of [-.563,.563])for(const z of [-.665,.669]){
+   const wheel=surface(art.geometries.get(wheelKey));
+   wheel.position.set(x,.218,z);wheel.scale.x=Math.sign(x);group.userData.wheels.push(wheel);
+  }
+ }
+ return group;
 }

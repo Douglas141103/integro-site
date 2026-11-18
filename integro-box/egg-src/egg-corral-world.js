@@ -1,8 +1,10 @@
 import {CORRAL_DESIGNS,CORRAL_ELEVATOR,FLOOR_HEIGHT,corralFloors} from './egg-corral.js';
+import {addThemeCrown} from './egg-corral-finials.js';
+import {addOrnaments,releaseOrnaments} from './egg-base-ornaments.js';
 export function createCorralWorld({pen,roof,penContent,penDecor,helpers}){
- const {group,box,cyl,rod,torus,ball,label}=helpers,upper=group(pen),levels=[];let cabin=null;
+ const {group,box,cyl,rod,torus,ball,label}=helpers,upper=group(pen),levels=[];let cabin=null,crown=null;
  upper.name='CorralWalkableFloors';let signature='';
- function clear(){upper.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});upper.clear();levels.length=0;cabin=null;}
+ function clear(){releaseOrnaments(upper);crown=null;upper.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});upper.clear();levels.length=0;cabin=null;}
  function theme(g,id,d,y){
   const deco=group(g,0,y,0);deco.name='CorralDesign-'+id;
   for(const x of[-3.25,3.25]){
@@ -37,6 +39,17 @@ export function createCorralWorld({pen,roof,penContent,penDecor,helpers}){
    if(floor>1)for(const z of[-e.depth/2,e.depth/2]){box(g,width,.08,.08,d.rail,center,y+.85,z);for(const x of[3.6,edge])box(g,.08,.9,.08,d.trim,x,y+.45,z);}
    label(g,floor+'º',e.x,y+2.15,-e.depth/2,1);
    theme(g,id,d,y);
+   if(floor===n)crown=addThemeCrown(g,id,y);
+   if(floor>1){
+    const trim=addOrnaments(g,'CorralDeckTrim',piece=>{
+     for(const edge of [-1,1]){
+      piece('block',0xeebd65,0,.01,edge*3.86,7.03,.11,.12);
+      for(const x of [-3.38,0,3.38])
+       piece('drum',0xe9c875,x,.97,edge*3.75,.21,.14,.21);
+     }
+    });
+    trim.position.y=y;
+   }
   }
   const e=CORRAL_ELEVATOR,tower=group(upper,e.x,0,e.z),height=(n-1)*FLOOR_HEIGHT+2.55;tower.name='CorralElevator';
   for(const x of[-e.width/2,e.width/2])for(const z of[-e.depth/2,e.depth/2]){box(tower,.13,height,.13,d.trim,x,height/2,z);ball(tower,.13,d.rail,x,height,z);}
@@ -60,6 +73,7 @@ export function createCorralWorld({pen,roof,penContent,penDecor,helpers}){
   if(cabin)cabin.position.y=game.elevatorRide?p.y:Math.max(0,Math.min(corralFloors(game.corralSave())-1,Math.round(p.y/FLOOR_HEIGHT)))*FLOOR_HEIGHT;
   for(const container of [penContent,penDecor])for(const child of container.children)child.visible=!inside||child.position.y<active*FLOOR_HEIGHT;
   roof.visible=!inside||active>=corralFloors(game.corralSave());
+  if(crown)crown.visible=roof.visible;
  }
  return{sync,animate,upper,levels,get cabin(){return cabin;}};
 }

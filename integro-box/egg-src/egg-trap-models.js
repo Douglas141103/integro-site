@@ -1,121 +1,99 @@
 import {inHeaven,heavenPosition} from './egg-heaven.js';
 import * as THREE from 'three';
+import {ArtResources} from '../rush-src/art.js';
+import {bakedToyModel} from './egg-gear-art.js';
 
-// Toy-like, readable ground hazards. Resources belong to the manager, not to
-// individual traps, so room updates only reconcile inexpensive scene groups.
-export function createEggTrapVisuals(parent) {
+const teal=0x1eb5a7, gold=0xffbd39, orange=0xec9143, purple=0x8040bc,
+  cream=0xffe7b4, pink=0xf375a2, brown=0x774231, red=0xf25b65;
+
+function trapParts(art,kind){
+  const g=new THREE.Group();
+  const part=(type,color,x,y,z,w,h,d)=>art.mesh(g,type,color,x,y,z,w,h,d,'trim');
+  const ball=(c,x,y,z,w,h,d)=>part('ball',c,x,y,z,w,h,d);
+  const disk=(c,x,y,z,r,h)=>part('cyl',c,x,y,z,r,h,r);
+  if(kind==='bear'){
+    // Tilt the bear face over a dark mouth, opening toward the player (+Z).
+    disk(teal,0,.12,0,.56,.21);
+    disk(gold,0,.23,0,.545,.075);
+    disk(brown,0,.27,0,.47,.065);
+    const jaw=new THREE.Group();jaw.position.set(0,.55,-.20);jaw.rotation.x=-.77;g.add(jaw);
+    function headShape(type,c,x,y,z,w,h,d){
+      const mesh=art.mesh(jaw,type,c,x,y,z,w,h,d,'trim');return mesh;
+    }
+    headShape('ball',teal,0,.05,0,.54,.31,.47);
+    headShape('cyl',gold,0,-.105,0,.529,.08,.455);
+    headShape('cyl',brown,0,-.153,0,.47,.045,.406);
+    for(const sign of [-1,1]){
+      headShape('ball',gold,sign*.35,.22,-.25,.145,.14,.09);
+      headShape('ball',pink,sign*.35,.23,-.176,.09,.085,.045);
+      headShape('ball',brown,sign*.18,.257,.13,.047,.035,.035);
+      ball(gold,sign*.53,.29,-.24,.075,.075,.08);
+    }
+    headShape('ball',cream,0,.225,.255,.139,.082,.09);
+    headShape('ball',brown,0,.272,.266,.079,.048,.062);
+    const teeth=[pink,gold,0x82d6ce,0xaa87db];
+    for(let i=0;i<4;i++){
+      const x=(i-1.5)*.19,z=Math.sqrt(.43*.43-x*x);
+      part('round',teeth[3-i],x,.335,z,.106,.095,.10);
+      headShape('round',teeth[i],x,-.225,z*.83,.108,.14,.09);
+    }
+    ball(brown,0,.171,.543,.067,.048,.02);
+    for(const x of [-.074,0,.074])ball(brown,x,.222,.536,.022,.029,.018);
+  }else if(kind==='mine'){
+    disk(purple,0,.13,0,.56,.19);
+    ball(purple,0,.20,0,.548,.185,.548);
+    disk(0x64329a,0,.33,0,.34,.063);
+    disk(red,0,.38,0,.286,.077);ball(red,0,.416,0,.284,.056,.284);
+    for(let i=0;i<6;i++){
+      const angle=i*Math.PI/3;
+      const tab=part('round',orange,Math.sin(angle)*.506,.20,Math.cos(angle)*.506,.12,.10,.057);
+      tab.rotation.y=angle;
+    }
+    const cacheKey='egg-trap:star';
+    let geometry=art.geometries.get(cacheKey);
+    if(!geometry){
+      const points=Array.from({length:10},(_,i)=>{
+        const a=Math.PI/2+i*Math.PI/5,r=i%2?.075:.14;
+        return new THREE.Vector2(Math.cos(a)*r,Math.sin(a)*r);
+      });
+      geometry=art.own(cacheKey,new THREE.ExtrudeGeometry(new THREE.Shape(points),{depth:.03,bevelSize:.009,bevelThickness:.008,bevelSegments:2}),'trim');
+    }
+    const star=new THREE.Mesh(geometry,art.material(gold,'trim'));star.position.set(0,.227,.528);g.add(star);
+  }else return null;
+  return g;
+}
+
+export function createTrapPreview(art,kind){
+  return bakedToyModel(art,'trap:'+kind,()=>trapParts(art,kind));
+}
+
+export function createEggTrapVisuals(parent,sharedArt) {
   const root = new THREE.Group();
   root.name = 'Egg trap visuals';
   root.userData.eggTrapVisuals = true;
   parent.add(root);
-  const entries = new Map(), geometries = new Set(), materials = new Set();
-  let disposed = false, elapsed = 0;
-  const geometry = value => (geometries.add(value), value);
-  const material = options => {
-    const value = new THREE.MeshStandardMaterial({ roughness: .78, metalness: .05, ...options });
-    materials.add(value);
-    return value;
-  };
-  const ringMaterial = (color, opacity) => {
-    const value = new THREE.MeshBasicMaterial({ color, transparent: true, opacity,
-      side: THREE.DoubleSide, depthWrite: false, polygonOffset: true,
-      polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
-    materials.add(value);
-    return value;
-  };
-  const palette = {
-    navy: material({ color: 0x263e57 }),
-    rubber: material({ color: 0x46607b }),
-    gold: material({ color: 0xffc65b }),
-    cream: material({ color: 0xfff1c9 }),
-    eyes: material({ color: 0x142c40 }),
-    own: material({ color: 0x83e8bd, emissive: 0x123d2b, emissiveIntensity: .15 }),
-    other: material({ color: 0xff947f, emissive: 0x482017, emissiveIntensity: .15 }),
-    ownRing: ringMaterial(0x8af1c7, .72),
-    otherRing: ringMaterial(0xffa18b, .72),
-    ownWaiting: ringMaterial(0x8af1c7, .25),
-    otherWaiting: ringMaterial(0xffa18b, .25)
-  };
-  const shapes = {
-    ring: geometry(new THREE.RingGeometry(.86, 1.02, 40)),
-    bearBase: geometry(new THREE.CylinderGeometry(.64, .69, .09, 16)),
-    jaw: geometry(new THREE.TorusGeometry(.52, .065, 6, 16, Math.PI)),
-    stud: geometry(new THREE.CylinderGeometry(.045, .075, .115, 6)),
-    hinge: geometry(new THREE.CylinderGeometry(.085, .085, .15, 10)),
-    plate: geometry(new THREE.CylinderGeometry(.235, .26, .055, 14)),
-    ear: geometry(new THREE.CylinderGeometry(.075, .08, .045, 10)),
-    eye: geometry(new THREE.SphereGeometry(.025, 6, 4)),
-    mineBase: geometry(new THREE.CylinderGeometry(.48, .56, .11, 16)),
-    mineBand: geometry(new THREE.TorusGeometry(.43, .035, 6, 20)),
-    dome: geometry(new THREE.SphereGeometry(.42, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)),
-    button: geometry(new THREE.CylinderGeometry(.115, .135, .065, 12)),
-    stripe: geometry(new THREE.BoxGeometry(.12, .045, .12)),
-    bolt: geometry(new THREE.CylinderGeometry(.033, .033, .035, 6))
-  };
-
-  function mesh(entry, shape, mat, x = 0, y = 0, z = 0) {
-    const object = new THREE.Mesh(shape, mat);
-    object.position.set(x, y, z);
-    object.userData.kind = entry.kind;
-    object.userData.id = entry.id;
-    // The ring does not cast a large ground shadow over its own marker.
-    object.castShadow = false;
-    object.receiveShadow = false;
-    entry.group.add(object);
-    return object;
+  const entries = new Map(), materials = new Set();
+  let art=sharedArt, disposed = false, elapsed = 0;
+  const ringGeometry=new THREE.RingGeometry(.86,1.02,40);
+  function ringMaterial(color,opacity){
+    const value=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side:THREE.DoubleSide,
+      depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+    materials.add(value);return value;
   }
+  const palette={
+    ownRing:ringMaterial(0x8af1c7,.72), otherRing:ringMaterial(0xffa18b,.72),
+    ownWaiting:ringMaterial(0x8af1c7,.25), otherWaiting:ringMaterial(0xffa18b,.25)
+  };
 
   function create(row) {
-    const group = new THREE.Group();
-    group.name = `Egg trap ${row.kind}`;
-    group.userData.kind = row.kind;
-    group.userData.id = row.id;
-    const entry = { id: row.id, kind: row.kind, group, accents: [], ring: null, indicator: null,
-      owned: null, armed: null, indicatorY: 0 };
-    entry.ring = mesh(entry, shapes.ring, palette.ownWaiting, 0, .022, 0);
-    entry.ring.rotation.x = -Math.PI / 2;
-    entry.ring.renderOrder = 2;
-    if (row.kind === 'bear') {
-      mesh(entry, shapes.bearBase, palette.navy, 0, .075);
-      // Open semicircular jaws with blunt toy studs, rather than sharp teeth.
-      for (let half = 0; half < 2; half++) {
-        const jaw = mesh(entry, shapes.jaw, palette.gold, 0, .16);
-        jaw.rotation.set(-Math.PI / 2, 0, half * Math.PI);
-        for (let i = 0; i < 4; i++) {
-          const angle = half * Math.PI + (i + .5) * Math.PI / 4;
-          mesh(entry, shapes.stud, palette.cream, Math.cos(angle) * .52, .225, Math.sin(angle) * .52);
-        }
-      }
-      for (const x of [-.56, .56]) {
-        const hinge = mesh(entry, shapes.hinge, palette.rubber, x, .17);
-        hinge.rotation.x = Math.PI / 2;
-      }
-      entry.indicator = mesh(entry, shapes.plate, palette.own, 0, .145);
-      entry.indicatorY = .145;
-      entry.accents.push(entry.indicator);
-      for (const x of [-.15, .15]) entry.accents.push(mesh(entry, shapes.ear, palette.own, x, .165, -.16));
-      for (const x of [-.075, .075]) mesh(entry, shapes.eye, palette.eyes, x, .184, -.015);
-    } else {
-      mesh(entry, shapes.mineBase, palette.navy, 0, .085);
-      const dome = mesh(entry, shapes.dome, palette.own, 0, .14);
-      dome.scale.y = .55;
-      entry.accents.push(dome);
-      const band = mesh(entry, shapes.mineBand, palette.gold, 0, .15);
-      band.rotation.x = -Math.PI / 2;
-      entry.indicator = mesh(entry, shapes.button, palette.cream, 0, .395);
-      entry.indicatorY = .395;
-      // Candy-yellow safety tabs make the little puck readable from above.
-      for (let i = 0; i < 4; i++) {
-        const angle = i * Math.PI / 2;
-        const stripe = mesh(entry, shapes.stripe, palette.gold,
-          Math.cos(angle) * .35, .255, Math.sin(angle) * .35);
-        stripe.rotation.y = -angle;
-        mesh(entry, shapes.bolt, palette.cream,
-          Math.cos(angle + Math.PI / 4) * .48, .15, Math.sin(angle + Math.PI / 4) * .48);
-      }
-    }
-    root.add(group);
-    return entry;
+    art ||= new ArtResources();
+    const group=createTrapPreview(art,row.kind);
+    group.name='Egg trap '+row.kind;
+    group.userData.kind=row.kind;group.userData.id=row.id;
+    const ring=new THREE.Mesh(ringGeometry,palette.ownWaiting);
+    ring.rotation.x=-Math.PI/2;ring.position.y=.022;ring.renderOrder=2;
+    group.add(ring);root.add(group);
+    return {id:row.id,kind:row.kind,group,ring,owned:null,armed:null};
   }
 
   function sync(traps = []) {
@@ -140,8 +118,6 @@ export function createEggTrapVisuals(parent) {
       const pos=heavenPosition({...row,y:0});entry.group.position.set(pos.x,pos.y,pos.z);entry.group.rotation.z=inHeaven(row)?Math.PI:0;
       const owned = row.mine === true, armed = row.armed === true;
       if (entry.owned !== owned || entry.armed !== armed) {
-        const tint = owned ? palette.own : palette.other;
-        for (const part of entry.accents) part.material = tint;
         entry.ring.material = owned
           ? (armed ? palette.ownRing : palette.ownWaiting)
           : (armed ? palette.otherRing : palette.otherWaiting);
@@ -150,7 +126,6 @@ export function createEggTrapVisuals(parent) {
         entry.owned = owned;
         entry.armed = armed;
         entry.ring.scale.setScalar(1);
-        entry.indicator.position.y = entry.indicatorY;
       }
     }
     for (const [id, entry] of entries) if (!seen.has(id)) {
@@ -165,7 +140,6 @@ export function createEggTrapVisuals(parent) {
     const pulse = Math.sin(elapsed * 2.6);
     for (const entry of entries.values()) {
       entry.ring.scale.setScalar(entry.armed ? 1 + pulse * .025 : 1);
-      entry.indicator.position.y = entry.indicatorY + (entry.armed ? (pulse + 1) * .003 : 0);
     }
   }
 
@@ -178,9 +152,9 @@ export function createEggTrapVisuals(parent) {
     if (disposed) return;
     clear();
     root.removeFromParent();
-    for (const value of geometries) value.dispose();
+    ringGeometry.dispose();
+    if(!sharedArt)art?.dispose();
     for (const value of materials) value.dispose();
-    geometries.clear();
     materials.clear();
     disposed = true;
   }

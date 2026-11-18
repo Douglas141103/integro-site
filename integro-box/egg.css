@@ -501,3 +501,14 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 #eggApp .egg-jet-shop-icon { width: min(210px, 100%); height: auto; padding: 0; background: none; }
 #eggApp .egg-jet-shop-icon .egg-shop-art { height: 145px; }
 #eggApp .egg-gem-art .egg-shop-art { height: 100%; margin: 0; }
+#eggApp .egg-preview-button { position: relative; display: block; width: 100%; padding: 0; border: 0; background: transparent; color: #164944; cursor: pointer; }
+#eggApp .egg-preview-button span { position: absolute; bottom: 5px; right: 6px; background: #fff9ee; border: 1px solid #d7cbb6; border-radius: 12px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+#eggApp .egg-item-viewer { width: min(85vw, 330px); max-height: 90dvh; overflow: auto; border: 1px solid #c7bba6; border-radius: 16px; padding: 15px; color: #19353e; background: #fff4df; }
+#eggApp .egg-item-viewer::backdrop { background: #142627ab; }
+#eggApp .egg-item-viewer h3 { margin: 0 0 6px; }
+#eggApp .egg-item-viewer canvas { display: block; width: min(100%, 52dvh); height: auto; margin: auto; transform: scaleY(-1); touch-action: none; cursor: grab; }
+#eggApp .egg-item-viewer div { display: flex; gap: 8px; justify-content: center; }
+#eggApp .egg-item-viewer button { color: #fff; background: #23594f; border: 0; border-radius: 8px; padding: 8px 15px; min-height: 38px; cursor: pointer; }
+
+#eggApp .egg-gem-art .egg-preview-button { height: 100%; }
+#eggApp .egg-gem-art > span, #eggApp .egg-gem-art > b { pointer-events: none; }

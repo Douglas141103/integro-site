@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // Chest-local accessory for EggExplorer: the character faces -Z, so +Z is its
 // back. Its .82 actor scale is inherited; do not apply a second model scale.
@@ -24,18 +25,20 @@ export function createEggJetpackModel(parent) {
     return value;
   };
   const palette = {
-    mint: material(0x8aebc4), navy: material(0x24435a), gold: material(0xffcd64),
+    mint: material(0x64d886), navy: material(0x333554), gold: material(0xf4bd56),
+    metal: material(0xb4bac6),
     cyan: material(0x78eaff, { emissive: 0x147e9b, emissiveIntensity: .5 }),
     flame: flameMaterial(0x57dbff, .72), core: flameMaterial(0xffbf67, .95)
   };
   const shapes = {
-    tank: geometry(new THREE.CapsuleGeometry(.12, .33, 4, 10)),
-    panel: geometry(new THREE.BoxGeometry(.43, .48, .075)),
-    band: geometry(new THREE.CylinderGeometry(.125, .125, .055, 10)),
-    nozzle: geometry(new THREE.CylinderGeometry(.085, .115, .13, 10)),
+    tank: geometry(new THREE.CapsuleGeometry(.127, .32, 5, 14)),
+    panel: geometry(new RoundedBoxGeometry(.43, .53, .10, 1, .044)),
+    spine: geometry(new RoundedBoxGeometry(.135, .49, .12, 1, .04)),
+    band: geometry(new THREE.CylinderGeometry(.134, .134, .066, 14)),
+    nozzle: geometry(new THREE.CylinderGeometry(.092, .106, .127, 14)),
     rim: geometry(new THREE.TorusGeometry(.10, .025, 4, 10)),
-    bar: geometry(new THREE.CapsuleGeometry(.035, .30, 3, 8)),
-    buckle: geometry(new THREE.BoxGeometry(.075, .065, .025)),
+
+    buckle: geometry(new RoundedBoxGeometry(.075, .065, .025, 1, .009)),
     light: geometry(new THREE.SphereGeometry(.047, 8, 6))
   };
   // Plume bases sit at y=0 and their tips point down, keeping animated length
@@ -59,15 +62,23 @@ export function createEggJetpackModel(parent) {
   }
 
   mesh(root, shapes.panel, palette.navy, 'jetpack-backplate', 0, -.015, -.075);
-  const handle = mesh(root, shapes.bar, palette.gold, 'jetpack-handle', 0, .235, -.035);
-  handle.rotation.z = Math.PI / 2;
-  mesh(root, shapes.light, palette.cyan, 'jetpack-status-light', 0, .055, .125);
+  mesh(root, shapes.spine, palette.navy, 'jetpack-center-panel', 0, -.012, .075);
+  const grip = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-.138, .22, -.055), new THREE.Vector3(-.135, .331, -.055),
+    new THREE.Vector3(-.088, .369, -.055), new THREE.Vector3(.088, .369, -.055),
+    new THREE.Vector3(.135, .331, -.055), new THREE.Vector3(.138, .22, -.055)
+  ]);
+  mesh(root, geometry(new THREE.TubeGeometry(grip, 16, .032, 6, false)), palette.gold, 'jetpack-handle');
+  const bezel = mesh(root, shapes.light, palette.gold, 'jetpack-lamp-bezel', 0, .055, .14);
+  bezel.scale.set(1.1, 1.1, .5);
+  const lamp = mesh(root, shapes.light, palette.cyan, 'jetpack-status-light', 0, .055, .153);
+  lamp.scale.set(.69, .69, .5);
 
   for (const [index, side] of [-1, 1].entries()) {
     const x = side * .155;
     mesh(root, shapes.tank, palette.mint, 'jetpack-tank', x, 0, .035);
-    for (const y of [-.165, .165]) mesh(root, shapes.band, palette.navy, 'jetpack-tank-band', x, y, .035);
-    mesh(root, shapes.nozzle, palette.navy, 'jetpack-nozzle', x, -.345, .035);
+    for (const y of [-.165, .165]) mesh(root, shapes.band, palette.gold, 'jetpack-tank-band', x, y, .035);
+    mesh(root, shapes.nozzle, palette.metal, 'jetpack-nozzle', x, -.345, .035);
     const rim = mesh(root, shapes.rim, palette.gold, 'jetpack-nozzle-rim', x, -.405, .035);
     rim.rotation.x = Math.PI / 2;
 
@@ -78,7 +89,17 @@ export function createEggJetpackModel(parent) {
       new THREE.Vector3(side * .23, -.23, -.64),
       new THREE.Vector3(side * .22, -.27, -.08)
     ]);
-    mesh(root, geometry(new THREE.TubeGeometry(path, 18, .023, 5, false)), palette.navy, 'jetpack-strap');
+    const strap = new THREE.TubeGeometry(path, 18, .025, 6, false);
+    const vertices = strap.attributes.position;
+    for (let step = 0; step <= 18; step++) {
+      const center = path.getPointAt(step / 18);
+      for (let i = 0; i <= 6; i++) {
+        const v = step * 7 + i;
+        vertices.setX(v, center.x + (vertices.getX(v) - center.x) * 1.8);
+      }
+    }
+    strap.computeVertexNormals();
+    mesh(root, geometry(strap), palette.navy, 'jetpack-strap');
     mesh(root, shapes.buckle, palette.gold, 'jetpack-buckle', side * .23, -.145, -.66);
 
     const plume = new THREE.Group();
