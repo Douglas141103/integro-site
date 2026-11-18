@@ -812,9 +812,12 @@ const atlasStops = [
   [324,61], [308,53], [327,82], [262,80], [254,69], [281,90],
   [478,91], [395,122], [522,97]
 ];
+function availableStageCount(){
+  return tourStorage.canPreviewCrystalStages === true ? LEVELS.length : save.unlocked;
+}
 function currentMapDestination(){
-  const next = LEVELS.findIndex((_, i) => i < save.unlocked && !save.best[i]);
-  return next < 0 ? Math.min(save.unlocked, LEVELS.length - 1) : next;
+  const next = LEVELS.findIndex((_, i) => i < availableStageCount() && !save.best[i]);
+  return next < 0 ? Math.min(availableStageCount(), LEVELS.length - 1) : next;
 }
 function drawWorldMap(){
   const map = ui.worldMap;
@@ -830,7 +833,7 @@ function drawWorldMap(){
     ink.beginPath();
     ink.moveTo(...atlasStops[i-1]);
     ink.lineTo(x, y);
-    ink.strokeStyle = i < save.unlocked ? '#fff4b7' : 'rgba(10,43,52,.53)';
+    ink.strokeStyle = i < availableStageCount() ? '#fff4b7' : 'rgba(10,43,52,.53)';
     ink.stroke();
   });
   ink.setLineDash([]);
@@ -858,8 +861,8 @@ ui.worldMap.addEventListener('click', e => {
     .filter(stop=>stop.distance <= Math.max(6, 11*600/bounds.width))
     .sort((a,b)=>a.distance-b.distance);
   if (!nearby.length) return;
-  const target = nearby.find(stop=>stop.i<save.unlocked) || nearby[0];
-  if (target.i < save.unlocked) startLevel(target.i);
+  const target = nearby.find(stop=>stop.i<availableStageCount()) || nearby[0];
+  if (target.i < availableStageCount()) startLevel(target.i);
   else showToast(LEVELS[target.i].phaseName + ' · destino bloqueado');
 });
 $('openPassport').onclick=()=>{
@@ -879,7 +882,7 @@ function renderLevelGrid(){
   const next = currentMapDestination();
   $('nextStop').textContent = 'Jogar em ' + LEVELS[next].phaseName + ' →';
   for (const [i,l] of LEVELS.entries()) {
-    const unlocked=i<save.unlocked, completed=Boolean(save.best[i]);
+    const unlocked=i<availableStageCount(), completed=Boolean(save.best[i]);
     const mask=completed ? 7 : save.fragments[i] || 0;
     const found=[1,2,4].filter(bit=>mask & bit).length;
     const card=document.createElement('button');

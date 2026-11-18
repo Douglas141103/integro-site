@@ -38,6 +38,7 @@ try {
  if(window.BoxI18n)await window.BoxI18n.ready;
  if(user){
   window.BoxStorage={getItem:k=>localStorage.getItem('box:'+user.id+':'+k),setItem:(k,v)=>localStorage.setItem('box:'+user.id+':'+k,v),removeItem:k=>localStorage.removeItem('box:'+user.id+':'+k)};
+  window.BoxStorage.canPreviewCrystalStages = user.id === '17f975c7-065e-41ca-a959-47d916d77f78';
   supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session&&session.user.id!==user.id)||(!session&&event!=='INITIAL_SESSION'))lock();});
   phase('Preparando os seus mundos…');
   const {mountPlayerProfile}=await import('./player-profile.js?v=20261016-intgem1');
@@ -71,7 +72,7 @@ try {
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261112-update1');installDescubra();}
   if(!unloaded)await script('./xadrez-loader.js?v=20261115-chess-theme1');
-  if(!unloaded)await script('./cristais/loader.js?v=20261118-cristais-mexico1');
+  if(!unloaded)await script('./cristais/loader.js?v=20261118-cristais-revisao1');
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261117-world1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
