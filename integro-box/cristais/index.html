@@ -8,12 +8,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>A Aventura dos Cristais: O Mundo</title>
-  <link rel="stylesheet" href="./expedicao.css">
+  <link rel="stylesheet" href="./expedicao.css?v=20261118-cristais-atlas1">
 </head>
 <body>
 <div id="app">
   <div id="gameWrap">
 
+    <section id="orientationGate" role="dialog" aria-modal="true" aria-labelledby="rotateTitle" hidden>
+      <div><span class="phone-outline" aria-hidden="true"></span><h2 id="rotateTitle">Gire o aparelho</h2>
+      <p>Para jogar, deixe a tela na horizontal.</p>
+      <button id="rotateFull" class="btn next-stop">Usar tela cheia</button>
+      <button id="rotateExit" class="atlas-link hidden">Voltar ao catálogo</button></div>
+    </section>
     <canvas id="polyWorld" width="1280" height="720" aria-hidden="true"></canvas>
     <canvas id="game" width="1280" height="720" aria-label="Jogo Aventura dos Cristais"></canvas>
 
@@ -24,17 +30,12 @@
       <button id="introSkip" class="introSkip hidden">PULAR ABERTURA ▶</button>
     </section>
 
-    <div id="topButtons" class="hidden">
-      <button id="topFullBtn" class="roundBtn" aria-label="Tela cheia">⛶</button>
-      <button id="soundBtn" class="roundBtn" aria-label="Som">🔊</button>
-      <button id="pauseBtn" class="roundBtn" aria-label="Pausar">Ⅱ</button>
-    </div>
-
     <div id="touchControls" class="hidden" aria-label="Controles por toque">
       <div id="moveControls" class="controlGroup">
         <button class="touchBtn" id="leftBtn" aria-label="Andar para esquerda">◀</button>
         <button class="touchBtn" id="rightBtn" aria-label="Andar para direita">▶</button>
       </div>
+      <div id="topButtons" class="hidden"><button id="pauseBtn" class="roundBtn" aria-label="Pausar">Ⅱ</button></div>
       <div id="actionControls" class="controlGroup">
         <div id="powerPad">
           <button class="powerBtn hidden" id="missileBtn" aria-label="Míssil"></button>
@@ -61,24 +62,25 @@
     </section>
 
     <section id="levelScreen" class="screen hidden">
-      <div class="panel mapPanel">
-        <h2 style="font-size:clamp(28px,5vw,52px);margin:0">Mapa da Volta ao Mundo</h2>
-        <p class="mapHint">Arraste para explorar · use +/− para ampliar · toque numa cidade liberada.</p>
-        <div class="worldMapFrame">
-          <div class="mapToolbar"><span>ROTA DE LUMI</span><div class="mapTools"><button id="mapZoomOut" class="mapTool" aria-label="Diminuir mapa">−</button><button id="mapCenter" class="mapTool" aria-label="Centralizar próxima fase">◎</button><button id="mapZoomIn" class="mapTool" aria-label="Ampliar mapa">+</button></div></div>
-          <div id="worldMapViewport" class="worldMapWrap">
-            <canvas id="worldMap" width="2304" height="1152" aria-label="Mapa-múndi grande e arrastável com as 21 cidades da aventura"></canvas>
+      <div id="atlasView">
+        <div id="worldMapViewport">
+          <div class="atlas-sheet">
+            <img src="./mapa-mundi.webp" alt="Mapa ilustrado dos continentes e oceanos" width="1600" height="800">
+            <canvas id="worldMap" width="1200" height="600" aria-label="Rota das 21 cidades. As fases também podem ser escolhidas pelo passaporte."></canvas>
           </div>
+        </div>
+        <aside class="atlas-tools">
+          <h2>Mapa da volta ao mundo</h2>
+          <p id="passportSummary"></p>
           <button id="nextStop" class="btn next-stop"></button>
-          <div class="mapLegend"><span style="--c:#70f5ff">Liberada</span><span style="--c:#ffd75e">Concluída</span><span style="--c:#4b5872">Bloqueada</span><span style="--c:#ff638c">Próxima parada</span></div>
-        </div>
-        <h3 style="margin:22px 0 0;font:900 18px ui-monospace,monospace;color:#d8fbff">Passaporte de viagem</h3>
-        <p id="passportSummary"></p>
+          <button id="openPassport" class="atlas-link">Ver passaporte</button>
+          <button id="backTitleBtn" class="atlas-link">Voltar ao início</button>
+        </aside>
+      </div>
+      <div id="passportView" class="panel hidden">
+        <div class="passport-heading"><h2>Passaporte de viagem</h2><button id="closePassport" class="atlas-link">Voltar ao mapa</button></div>
         <div id="levelGrid"></div>
-        <div class="btnRow">
-          <button id="continueTour" class="btn tiny">Continuar viagem</button><button id="backTitleBtn" class="btn secondary tiny">Voltar</button>
-          <button id="resetBtn" class="btn danger tiny">Apagar progresso</button>
-        </div>
+        <button id="resetBtn" class="atlas-link">Apagar progresso</button>
       </div>
     </section>
 
@@ -106,6 +108,8 @@
         <h2 style="font-size:52px;margin:0 0 22px">Pausado</h2>
         <div class="btnRow">
           <button id="resumeBtn" class="btn">Continuar</button>
+          <button id="soundBtn" class="btn secondary">Som</button>
+          <button id="topFullBtn" class="btn secondary">Tela cheia</button>
           <button id="restartBtn" class="btn secondary">Reiniciar</button>
           <button id="exitBtn" class="btn danger">Sair da fase</button>
         </div>
@@ -132,6 +136,6 @@
 
 
 <script src="./vendor/Tone.js"></script>
-<script src="./expedicao.js?v=20261118-cristais-cidades1"></script>
+<script src="./expedicao.js?v=20261118-cristais-atlas1"></script>
 </body>
 </html>
