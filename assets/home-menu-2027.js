@@ -77,13 +77,6 @@
     if (location.hash !== link.hash) history.pushState(null, '', link.hash);
     renderRoute(true);
   });
-  const hint = document.getElementById('explore-hint');
-  tiles.forEach(tile => {
-    const preview = () => { hint.textContent = tile.querySelector('small').textContent + '. Toque para abrir.'; };
-    tile.addEventListener('mouseenter', preview);
-    tile.addEventListener('focus', preview);
-    tile.addEventListener('mouseleave', () => { hint.textContent = 'Escolha um caminho. Você pode voltar ao menu quando quiser.'; });
-  });
   window.addEventListener('popstate', () => renderRoute(true));
   renderRoute(Boolean(location.hash));
 

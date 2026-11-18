@@ -137,3 +137,57 @@ body.explore-modal-open { overflow:hidden; }
 .home-brand img.home-official-logo { width:166px; height:auto; display:block; object-fit:contain; }
 @media(max-width:900px) { .home-brand img.home-official-logo { width:142px; height:auto; } }
 @media(max-width:360px) { .home-brand img.home-official-logo { width:125px; } }
+
+/* Public introduction and campaign artwork */
+.campaign-poster-hero {
+  background: #103e32;
+  color: #fbfcf2;
+  padding: clamp(46px, 6vw, 86px) 0;
+}
+.institute-intro {
+  display: grid;
+  grid-template-columns: 1fr 1.04fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 76px);
+}
+.institute-location {
+  color: #cae5b6;
+  font-size: .85rem;
+  font-weight: 650;
+}
+.institute-copy h1 {
+  max-width: 13ch;
+  margin: 18px 0;
+  color: inherit;
+  font: 500 clamp(2.7rem, 4.7vw, 4.6rem)/1.03 Georgia, serif;
+  letter-spacing: -.045em;
+}
+.institute-copy h1 em { color: #d7eaa9; }
+.institute-copy > p:last-of-type { max-width: 46ch; color: #e0ebe1; font-size: 1.04rem; line-height: 1.6; }
+.institute-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 22px; margin-top: 24px; }
+.institute-actions .enroll-primary { color: #123d2f!important; background: #deeeaa; border-radius: 8px; }
+.institute-actions .enroll-primary:hover { background: #eff8ce; }
+.institute-services, .campaign-feature figcaption a { padding-block: 12px; text-decoration: underline!important; text-underline-offset: 4px; }
+.institute-services { font-size: .92rem; }
+.campaign-feature { min-width: 0; padding: 10px 10px 0; border: 1px solid #ffffff35; border-radius: 18px; background: #205040; }
+.campaign-feature .campaign-poster-link { border-radius: 10px; }
+.campaign-feature figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 10px; align-items: center; padding: 0 5px; font-size: .8rem; }
+.campaign-feature figcaption a { color: #e6f3cc; }
+.campaign-poster-hero :focus-visible { outline-color: #fff; }
+.explore-menu { background: #f7f8f1; padding-block: clamp(34px, 5vw, 68px); }
+.explore-heading h2 { color: #193d30; }
+.explore-grid .explore-tile { display: flex; align-items: center; gap: 16px; min-height: 120px; padding: 22px; border-radius: 14px; }
+.explore-grid .explore-icon { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 12px; }
+.explore-grid .explore-icon svg { width: 26px; height: 26px; }
+.explore-grid .explore-tile::before, .explore-grid .explore-tile>b { display: none; }
+.explore-tile small { min-height: 0; margin-top: 4px; line-height: 1.45; }
+@media (max-width: 820px) {
+  .institute-intro { grid-template-columns: minmax(0,1fr); gap: 28px; }
+  .campaign-poster-hero .container { width: min(640px, calc(100% - 40px)); }
+  .institute-copy h1 { max-width: 17ch; }
+  .campaign-feature { width: 100%; }
+}
+@media (max-width: 650px) {
+  .explore-grid .explore-tile { min-height: 92px; padding: 16px; }
+  .campaign-feature figcaption { line-height: 1.4; }
+}
