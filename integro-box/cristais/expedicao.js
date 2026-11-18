@@ -7,8 +7,15 @@ const gameWrap = document.getElementById('gameWrap');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled=true;
 const W = 1280, H = 720;
-const manausScenery = new Image();
-manausScenery.src = './manaus.webp';
+let scenery;
+let sceneryCity;
+function selectScenery(city) {
+  if (city === sceneryCity && scenery && (!scenery.complete || scenery.naturalWidth)) return;
+  sceneryCity = city;
+  scenery = new Image();
+  scenery.decoding = 'async';
+  scenery.src = city === 'manaus' ? './manaus.webp' : './cenarios/' + city + '.webp';
+}
 const $ = id => document.getElementById(id);
 const ui = {
   intro: $('introScreen'), introCanvas: $('introCanvas'), introStart: $('introStart'), introSkip: $('introSkip'),
@@ -709,6 +716,7 @@ function createPlayer(x,y){
 function startLevel(index){
   state.levelIndex = Math.max(0,Math.min(index,LEVELS.length-1));
   state.level = cloneLevel(LEVELS[state.levelIndex]);
+  selectScenery(state.level.theme.id);
   state.player = createPlayer(...state.level.spawn);
   state.cameraX = 0; state.time = 0; state.coins = 0; state.crystals = 0; state.score = 0; state.flash=0; state.shake=0; state.locationCard=0; state.nightTime=0;
   state.screen='playing';
@@ -721,7 +729,7 @@ function startLevel(index){
 
 function hideAllScreens(){ [ui.title,ui.levels,ui.how,ui.pause,ui.result].forEach(x=>x.classList.add('hidden')); }
 function showTitle(playMusic=true){state.screen='title';hideAllScreens();ui.title.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');if(playMusic)sound.startMenuMusic();}
-function showLevels(){state.screen='levels';hideAllScreens();ui.levels.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');sound.startMenuMusic();renderLevelGrid();requestAnimationFrame(()=>centerMapOnCurrent(false));}
+function showLevels(){selectScenery(LEVELS[currentMapDestination()].theme.id);state.screen='levels';hideAllScreens();ui.levels.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');sound.startMenuMusic();renderLevelGrid();requestAnimationFrame(()=>centerMapOnCurrent(false));}
 function pauseGame(){ if(state.screen!=='playing') return; sound.stopMusic(); state.screen='paused'; ui.pause.classList.remove('hidden'); ui.touch.classList.add('hidden'); }
 function resumeGame(){ if(state.screen!=='paused') return; state.screen='playing'; ui.pause.classList.add('hidden'); ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music); }
 
@@ -1280,12 +1288,13 @@ function drawWorld(){
 
 
 function drawBackground(th,camera){
-  if (th.id === 'manaus' && manausScenery.complete && manausScenery.naturalWidth) {
-    // Move slowly within the oversized panorama, keeping the dome in view.
-    const width = W + 250;
-    const height = width * manausScenery.naturalHeight / manausScenery.naturalWidth;
-    const distance = Math.max(1, (state.level?.width || 4700) - W);
-    ctx.drawImage(manausScenery, -250*Math.min(1,camera/distance), (H-height)*.53, width, height);
+  if (sceneryCity === th.id && scenery?.complete && scenery.naturalWidth) {
+    // Cover the playfield and move the panorama more slowly than the platforms.
+    const scale = Math.max((W + 250) / scenery.naturalWidth, H / scenery.naturalHeight);
+    const width = scenery.naturalWidth * scale, height = scenery.naturalHeight * scale;
+    const distance = Math.max(1, state.level.width - W);
+    const progress = Math.max(0, Math.min(1, camera / distance));
+    ctx.drawImage(scenery, -(width - W)*progress, (H-height)*.53, width, height);
     return;
   }
   if(polyWorld&&polyWorld.ok){polyWorld.render(th,camera,state.time);drawDetailedBackdropLandmark(th,camera);return;}
