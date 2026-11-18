@@ -202,6 +202,26 @@ class Sound {
     const beat=()=>{if(token!==this.musicToken||!state.audio||state.screen!=='playing')return;const i=this.musicStep++%notes.length;this.tone(noteFreq(notes[i]),.16,'triangle',0,.12);if(i%4===0)this.tone(noteFreq((cfg.bass||['C2'])[Math.floor(i/4)%(cfg.bass||['C2']).length]),.28,'sine',0,.09);};
     beat();this.musicTimer=setInterval(beat,Math.max(120,60000/cfg.tempo/2));
   }
+  playRecording(recording, token){
+    recording.play().catch(error => {
+      if (token !== this.musicToken || state.screen !== 'playing' || !state.audio) return;
+      if (error.name !== 'NotAllowedError') {
+        if (error.name !== 'AbortError') showToast('Não foi possível carregar a música desta fase.');
+        return;
+      }
+      const retry = () => {
+        this.cancelRecordingRetry();
+        if (token === this.musicToken) this.playRecording(recording, token);
+      };
+      this.cancelRecordingRetry = () => {
+        document.removeEventListener('pointerup', retry, true);
+        document.removeEventListener('keydown', retry, true);
+        this.cancelRecordingRetry = null;
+      };
+      document.addEventListener('pointerup', retry, true);
+      document.addEventListener('keydown', retry, true);
+    });
+  }
   startMusic(cfg, resume = false){
     this.stopMusic();const token=++this.musicToken;this.musicCfg=cfg;
     if(!cfg||!state.audio)return;
@@ -213,7 +233,7 @@ class Sound {
         this.recording.volume = 0.32;
       }
       if (!resume) this.recording.currentTime = 0;
-      this.recording.play().catch(() => this.startFallback(cfg, token));
+      this.playRecording(this.recording, token);
       return;
     }
     if(!window.Tone){this.startFallback(cfg,token);return;}
@@ -250,6 +270,7 @@ class Sound {
     const seq=kind===0?[261.63,392,523.25]:kind===1?[329.63,493.88,659.25,987.77]:[392,523.25,659.25,783.99,1046.5];seq.forEach((f,i)=>setTimeout(()=>this.tone(f,.2,i%2?'triangle':'square',kind===2?80:35,.22),i*85));
   }
   stopMusic(){
+    this.cancelRecordingRetry?.();
     if (this.recording && !this.recording.paused) this.recording.pause();
     this.musicToken++;if(this.musicTimer){clearInterval(this.musicTimer);this.musicTimer=null;}
     if(this.toneTransport){try{this.toneTransport.stop();this.toneTransport.cancel(0);}catch{}this.toneTransport=null;}
@@ -470,7 +491,7 @@ const CITY_ART = {
 };
 
 const countryRecordings = {
-  Brasil: {recording: './audio/beyond-the-emerald-gate.m4a', style: 'Beyond the Emerald Gate'},
+  Brasil: {recording: './audio/beyond-the-emerald-gate.mp3', style: 'Beyond the Emerald Gate'},
   México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'}
 };
 WORLD_THEMES.forEach(route => route.scenes.forEach(scene => {
@@ -2147,7 +2168,7 @@ $('pauseBtn').onclick=pauseGame; $('resumeBtn').onclick=resumeGame;
 $('restartBtn').onclick=()=>startLevel(state.levelIndex); $('retryBtn').onclick=()=>startLevel(state.levelIndex);
 $('exitBtn').onclick=showLevels; $('levelsBtn').onclick=showLevels;
 $('nextBtn').onclick=()=>startLevel(state.levelIndex+1);
-$('soundBtn').onclick=()=>{ state.audio=!state.audio; ui.soundBtn.textContent=state.audio?'Desligar som':'Ligar som'; persist(); if(!state.audio) sound.stopMusic(); };
+$('soundBtn').onclick=()=>{ state.audio=!state.audio; ui.soundBtn.textContent=state.audio?'Desligar som':'Ligar som'; persist(); if(!state.audio) sound.stopMusic(); else if(state.screen==='playing') sound.startMusic(state.level.theme.music, true); };
 $('resetBtn').onclick=()=>{ if(confirm('Apagar todo o progresso salvo?')){ save={unlocked:1,best:{},fragments:{},audio:state.audio}; persist(); renderLevelGrid(); } };
 $('fullBtn').onclick=toggleFullscreen; $('topFullBtn').onclick=toggleFullscreen;
 
