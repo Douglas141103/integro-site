@@ -134,7 +134,7 @@
 #gameWrap:has(#levelScreen:not(.hidden)) { width:100%; height:100%; }
 #gameWrap:has(#levelScreen:not(.hidden)) #catalogExit { display:none; }
 
-#gameWrap { --rail:calc(70px + env(safe-area-inset-bottom,0px)); }
+#gameWrap { --stick-diameter:clamp(70px,22vh,96px); --rail:calc(var(--stick-diameter) + 8px + env(safe-area-inset-bottom,0px)); }
 #gameWrap:has(#touchControls:not(.hidden)), #gameWrap:has(#pauseScreen:not(.hidden)) { width:100%; height:100%; }
 #gameWrap:has(#touchControls:not(.hidden)) :is(#game,#polyWorld),
 #gameWrap:has(#pauseScreen:not(.hidden)) :is(#game,#polyWorld) {
@@ -147,10 +147,17 @@
 #powerPad { display:flex; align-items:center; gap:clamp(1px,.45vw,6px); }
 #touchControls button { display:grid; place-items:center; min-width:44px; min-height:44px; height:44px; width:44px; border:1px solid #58727a; border-radius:50%; padding:0; color:#f4f9f6; font:700 19px/1 system-ui,sans-serif; background:#203c46; box-shadow:none; backdrop-filter:none; touch-action:none; }
 #touchControls .powerBtn { background:#243943; border-color:#526b75; }
-#touchControls .powerBtn::before { transform:translate(-50%,-50%) scale(.63); }
+#missileBtn { --power-position:0 0; }
+#fireBtn { --power-position:100% 0; }
+#flyBtn { --power-position:0 100%; }
+#invisBtn { --power-position:100% 100%; }
+#touchControls .powerBtn::before {
+  width:36px; height:36px; transform:translate(-50%,-50%); box-shadow:none;
+  background:transparent url('./poderes.webp') var(--power-position) / 200% 200% no-repeat;
+}
 #touchControls .powerBtn::after { display:none; }
 #joystick {
-  --diameter:clamp(48px,15vh,62px);
+  --diameter:var(--stick-diameter);
   width:calc(var(--diameter) + 24px); height:var(--diameter);
   display:grid; place-items:center; touch-action:none; user-select:none; cursor:grab;
 }
@@ -161,7 +168,7 @@
   box-shadow:inset 0 2px 5px #081c2399;
 }
 .stick-cap {
-  width:54%; height:54%; border-radius:50%; border:1px solid #a9cbbd;
+  width:57%; height:57%; border-radius:50%; border:1px solid #a9cbbd;
   background:radial-gradient(circle at 38% 28%,#9ebdb3,#6a8d89 67%,#38595c);
   box-shadow:0 3px 4px #071d24aa;
   transform:translate(var(--stick-x,0px),var(--stick-y,0px)); transition:transform .09s ease-out;
@@ -185,6 +192,5 @@
 .phone-outline { display:block; margin:auto; width:62px; height:34px; border:3px solid #9de0c9; border-radius:8px; transform:rotate(-10deg); box-shadow:0 0 0 5px #183d45; }
 @media (orientation:portrait) { #gameWrap { width:100% !important; height:100% !important; } }
 @media (max-height:320px) {
-  #gameWrap { --rail:calc(56px + env(safe-area-inset-bottom,0px)); }
   .atlas-tools { gap:2px; }
 }

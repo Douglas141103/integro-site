@@ -460,11 +460,25 @@ const CITY_ART = {
 WORLD_THEMES.forEach(route=>route.scenes.forEach(scene=>Object.assign(scene,LANDMARK_RESEARCH[scene.id],{music:MUSIC_RESEARCH[scene.id],art:CITY_ART[scene.id]})));
 
 const POWER_INFO = {
-  missile:{ icon:'🚀', label:'Míssil', color:'#6ec6ff' },
-  fire:{ icon:'🔥', label:'Fogo', color:'#ff9b59' },
-  fly:{ icon:'🪽', label:'Voar', color:'#dff7ff' },
-  invisible:{ icon:'👻', label:'Invisível', color:'#c69cff' }
+  missile:{ cell:0, icon:'🚀', label:'Míssil teleguiado', color:'#6ec6ff' },
+  fire:{ cell:1, icon:'🔥', label:'Fogo', color:'#ff9b59' },
+  fly:{ cell:2, icon:'🪽', label:'Voar', color:'#dff7ff' },
+  invisible:{ cell:3, icon:'👻', label:'Invisível', color:'#c69cff' }
 };
+
+const powerSheet = new Image();
+powerSheet.src = './poderes.webp';
+
+function paintPower(type, x, y, size, alpha = 1) {
+  if (!powerSheet.complete || !powerSheet.naturalWidth) return false;
+  const cell = POWER_INFO[type].cell;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.drawImage(powerSheet, (cell % 2) * 192, Math.floor(cell / 2) * 192, 192, 192,
+    x - size / 2, y - size / 2, size, size);
+  ctx.restore();
+  return true;
+}
 
 const ENEMY_DRAW = {};
 WORLD_THEMES.forEach((route,regionIndex)=>route.scenes.forEach(scene=>{
@@ -982,7 +996,7 @@ function updateCollectibles(dt){
   }
   for(const q of l.powers) if(q.active && circleRect(q.x,q.y,25,p)){
     q.active=false; state.score+=250; sound.power(); spawnBurst(q.x,q.y,POWER_INFO[q.type].color,16); p.powers[q.type]=true;l.powerEvents.push({type:q.type,x:q.x,y:q.y,time:0,duration:q.type==='invisible'?2.35:2.2});if(q.type==='invisible')state.nightTime=5;refreshPowerButtons();
-    if(q.type==='missile') showToast('Poder desbloqueado: Míssil');
+    if(q.type==='missile') showToast('Poder desbloqueado: Míssil teleguiado');
     if(q.type==='fire') showToast('Poder desbloqueado: Fogo');
     if(q.type==='fly') showToast('Poder desbloqueado: Voar');
     if(q.type==='invisible') showToast('Poder desbloqueado: Invisibilidade');
@@ -1107,21 +1121,60 @@ function hitEnemy(e,amount){
 
 function shootMissile(){
   const p=state.player; if(!p.powers.missile || p.cooldowns.missile>0 || state.screen!=='playing') return;
-  p.cooldowns.missile=.5; state.level.projectiles.push({x:p.x+p.w/2+p.dir*24,y:p.y+28,vx:p.dir*760,vy:0,r:11,life:1.5,damage:2,color:'#84d9ff',trail:'#c3eeff'}); sound.missile();
+  p.cooldowns.missile=.5; state.level.projectiles.push({kind:'missile',x:p.x+p.w/2+p.dir*24,y:p.y+28,vx:p.dir*760,vy:0,r:11,life:1.5,damage:2,color:'#84d9ff',trail:'#c3eeff'}); sound.missile();
 }
 function shootFire(){
   const p=state.player; if(!p.powers.fire || p.cooldowns.fire>0 || state.screen!=='playing') return;
-  p.cooldowns.fire=.34; state.level.projectiles.push({x:p.x+p.w/2+p.dir*24,y:p.y+24,vx:p.dir*610,vy:-40,r:13,life:1.5,damage:1,color:'#ff8b4d',trail:'#ffcb75',gravity:260}); sound.fire();
+  p.cooldowns.fire=.34; state.level.projectiles.push({kind:'fire',x:p.x+p.w/2+p.dir*24,y:p.y+24,vx:p.dir*610,vy:-40,r:13,life:1.5,damage:1,color:'#ff8b4d',trail:'#ffcb75',gravity:260}); sound.fire();
 }
 function activateInvisibility(){
   const p=state.player; if(!p.powers.invisible || p.cooldowns.invisible>0 || state.screen!=='playing') return;
   p.cooldowns.invisible = 9; p.invisibleTime = 4.5; sound.power(); showToast('Lumi ficou invisível por alguns segundos.'); spawnBurst(p.x+p.w/2,p.y+p.h/2,'#c69cff',24);
 }
 
+function drawPlayerShot(shot) {
+  ctx.save();
+  ctx.translate(shot.x, shot.y);
+  if (shot.kind === 'missile') ctx.rotate(Math.atan2(shot.vy, shot.vx));
+  if (!shot.kind || !paintPower(shot.kind, 0, 0, shot.r * 3.5)) {
+    drawShot(0, 0, shot.r, shot.color || '#ffe172');
+  }
+  ctx.restore();
+}
+
+function guideMissile(shot, enemies, dt) {
+  if (!shot.target?.alive) {
+    shot.target = null;
+    let nearest = 800;
+    for (const enemy of enemies) {
+      if (!enemy.alive) continue;
+      const x = enemy.x + enemy.w / 2;
+      const dx = x - shot.x, dy = enemy.y + enemy.h / 2 - shot.y;
+      if (x < state.cameraX || x > state.cameraX + W || dx * shot.vx + dy * shot.vy < 0) continue;
+      const distance = Math.hypot(dx, dy);
+      if (distance < nearest) {
+        nearest = distance;
+        shot.target = enemy;
+      }
+    }
+  }
+  if (!shot.target) return;
+  const target = shot.target;
+  const heading = Math.atan2(shot.vy, shot.vx);
+  const desired = Math.atan2(target.y + target.h / 2 - shot.y, target.x + target.w / 2 - shot.x);
+  const turn = Math.atan2(Math.sin(desired - heading), Math.cos(desired - heading));
+  const angle = heading + Math.max(-7 * dt, Math.min(7 * dt, turn));
+  const speed = Math.hypot(shot.vx, shot.vy);
+  shot.vx = Math.cos(angle) * speed;
+  shot.vy = Math.sin(angle) * speed;
+}
+
 function updateProjectiles(dt){
   const l=state.level,p=state.player;
   for(const s of l.projectiles){
-    if(s.life<=0) continue; s.life-=dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.gravity) s.vy += s.gravity*dt;
+    if(s.life<=0) continue;
+    if(s.kind==='missile') guideMissile(s,l.enemies,dt);
+    s.life-=dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.gravity) s.vy += s.gravity*dt;
     spawnTrail(s.x,s.y,s.trail||s.color,1);
     if([...l.platforms,...l.hazards].some(r=>circleRect(s.x,s.y,s.r,r))) s.life=0;
     for(const e of l.enemies){ if(e.alive && circleRect(s.x,s.y,s.r,e)){ s.life=0; hitEnemy(e,s.damage||1); break; } }
@@ -1220,7 +1273,7 @@ function drawWorld(){
   for(const e of l.powerEvents)drawPowerEvent(e,theme);
   for(const h of l.hazards) drawHazard(h,theme);
   for(const e of l.enemies) if(e.alive) drawEnemy(e);
-  for(const s of l.projectiles) drawShot(s.x,s.y,s.r,s.color||'#ffe172');
+  for(const s of l.projectiles) drawPlayerShot(s);
   for(const s of l.enemyShots) drawShot(s.x,s.y,s.r,s.color||'#7fa7ff');
   for(const q of l.particles){ctx.globalAlpha=Math.max(0,q.life/q.max);ctx.fillStyle=q.color;const ps=Math.max(2,Math.round(q.size/2)*2);ctx.fillRect(Math.round(q.x/2)*2,Math.round(q.y/2)*2,ps,ps);if(ps>4){ctx.globalAlpha*=.45;ctx.fillRect(Math.round(q.x)-3,Math.round(q.y)-3,3,3);}}
   ctx.globalAlpha=1;
@@ -1968,7 +2021,9 @@ function drawCoin(x,y,t){const spin=.35+.65*Math.abs(Math.sin(t*4));ctx.save();c
 function drawCrystal(x,y,t){const pulse=.5+.5*Math.sin(t*5);ctx.save();ctx.translate(x,y);ctx.shadowColor='#72efff';ctx.shadowBlur=12+8*pulse;const p=(q,c,a=1)=>polyShape(ctx,q,c,null,0,a);p([[0,-30],[-23,-15],[0,-8]],'#e8ffff');p([[0,-30],[0,-8],[23,-15]],'#83f2ff');p([[-23,-15],[-15,9],[0,-8]],'#58d9ec');p([[23,-15],[0,-8],[15,9]],'#278db4');p([[-15,9],[0,29],[0,-8]],'#3bb8d3');p([[15,9],[0,-8],[0,29]],'#186e99');ctx.shadowBlur=0;polyShape(ctx,[[0,-30],[23,-15],[15,9],[0,29],[-15,9],[-23,-15]],'rgba(0,0,0,0)','#d9ffff',2);ctx.restore();}
 function drawHeart(x,y,t){ctx.save();ctx.translate(x,y);ctx.scale(1+Math.sin(t*5)*.04,1+Math.sin(t*5)*.04);ctx.shadowColor='#ff6b83';ctx.shadowBlur=9;polyShape(ctx,[[-19,-8],[-14,-18],[-4,-20],[0,-13],[4,-20],[14,-18],[19,-8],[16,4],[0,22],[-16,4]],'#f35c78','#671f3a',3);polyShape(ctx,[[-14,-13],[-6,-16],[0,-10],[-3,-3]],'#ffb0bd',null,0,.7);polyShape(ctx,[[0,-10],[14,-13],[15,-4],[0,15]],'#ce365e',null,0,.62);ctx.restore();}
 
-function drawPixelPowerSymbol(type,x,y,s=1,frame=0,alpha=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.globalAlpha=alpha;if(type==='fly'){const f=Math.sin(frame*12)*4;polyShape(ctx,[[-2,-2],[-20,-14-f],[-15,7-f],[-3,13]],'#dff8ff','#54758e',1);polyShape(ctx,[[2,-2],[20,-14+f],[15,7+f],[3,13]],'#bfe8ff','#54758e',1);polyShape(ctx,[[-3,-14],[3,-14],[5,14],[-5,14]],'#f8ffff','#54758e',1);}else if(type==='invisible'){polyShape(ctx,[[-13,10],[-13,-4],[-8,-13],[0,-17],[8,-13],[13,-4],[13,12],[7,7],[2,13],[-3,7],[-9,13]],'#f2e8ff','#58457c',2);polyDisc(ctx,-5,-5,2.2,2.2,'#59467f',7,0,null,0);polyDisc(ctx,5,-5,2.2,2.2,'#59467f',7,0,null,0);}else if(type==='fire'){polyShape(ctx,[[0,-18],[7,-7],[12,0],[9,13],[0,18],[-10,12],[-13,2],[-6,-8]],'#ef5a3f','#7f2f35',2);polyShape(ctx,[[0,-10],[5,0],[3,11],[-4,8],[-5,1]],'#ffe16d',null);}else{polyShape(ctx,[[0,-18],[7,-9],[7,9],[0,17],[-7,9],[-7,-9]],'#d8eff8','#476a80',2);polyShape(ctx,[[-7,4],[-14,10],[-7,10]],'#78bdd4','#476a80',1);polyShape(ctx,[[7,4],[14,10],[7,10]],'#78bdd4','#476a80',1);polyShape(ctx,[[-5,11],[0,22],[5,11]],frame%1>.5?'#ffe45e':'#ff814b',null);}ctx.restore();}
+function drawPixelPowerSymbol(type,x,y,s=1,frame=0,alpha=1){
+  if (paintPower(type,x,y,48*s,alpha)) return;
+  ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.globalAlpha=alpha;if(type==='fly'){const f=Math.sin(frame*12)*4;polyShape(ctx,[[-2,-2],[-20,-14-f],[-15,7-f],[-3,13]],'#dff8ff','#54758e',1);polyShape(ctx,[[2,-2],[20,-14+f],[15,7+f],[3,13]],'#bfe8ff','#54758e',1);polyShape(ctx,[[-3,-14],[3,-14],[5,14],[-5,14]],'#f8ffff','#54758e',1);}else if(type==='invisible'){polyShape(ctx,[[-13,10],[-13,-4],[-8,-13],[0,-17],[8,-13],[13,-4],[13,12],[7,7],[2,13],[-3,7],[-9,13]],'#f2e8ff','#58457c',2);polyDisc(ctx,-5,-5,2.2,2.2,'#59467f',7,0,null,0);polyDisc(ctx,5,-5,2.2,2.2,'#59467f',7,0,null,0);}else if(type==='fire'){polyShape(ctx,[[0,-18],[7,-7],[12,0],[9,13],[0,18],[-10,12],[-13,2],[-6,-8]],'#ef5a3f','#7f2f35',2);polyShape(ctx,[[0,-10],[5,0],[3,11],[-4,8],[-5,1]],'#ffe16d',null);}else{polyShape(ctx,[[0,-18],[7,-9],[7,9],[0,17],[-7,9],[-7,-9]],'#d8eff8','#476a80',2);polyShape(ctx,[[-7,4],[-14,10],[-7,10]],'#78bdd4','#476a80',1);polyShape(ctx,[[7,4],[14,10],[7,10]],'#78bdd4','#476a80',1);polyShape(ctx,[[-5,11],[0,22],[5,11]],frame%1>.5?'#ffe45e':'#ff814b',null);}ctx.restore();}
 function drawPower(x,y,type,t){const info=POWER_INFO[type],pulse=.5+.5*Math.sin(t*5);ctx.save();ctx.translate(x,y);ctx.shadowColor=info.color;ctx.shadowBlur=13+8*pulse;polyDisc(ctx,0,0,30,30,shadeHex(info.color,-.32),12,0,'#dffeff',2);ctx.shadowBlur=0;ctx.globalAlpha=.28;polyShape(ctx,[[-18,-20],[0,-28],[0,0],[-26,3]],'#fff',null);polyShape(ctx,[[0,0],[27,3],[16,22],[-4,28]],info.color,null);ctx.globalAlpha=1;drawPixelPowerSymbol(type,0,0,1.05,t);ctx.restore();}
 function drawPowerEvent(e,th){const open=Math.min(1,e.time/.42),p=Math.max(0,Math.min(1,(e.time-.3)/(e.duration-.3))),color=POWER_INFO[e.type].color;ctx.save();if(e.time<.48){const gap=open*21;polyShape(ctx,[[e.x-25-gap,e.y-18],[e.x-4-gap,e.y-22],[e.x-4-gap,e.y+22],[e.x-25-gap,e.y+17]],'#bcebf3','#416e82',2,1-open*.45);polyShape(ctx,[[e.x+4+gap,e.y-22],[e.x+25+gap,e.y-18],[e.x+25+gap,e.y+17],[e.x+4+gap,e.y+22]],'#8ecbd8','#416e82',2,1-open*.45);drawPixelPowerSymbol(e.type,e.x,e.y,1.25,state.time);ctx.restore();return;}const yy=e.type==='missile'?e.y-p*270:e.y-p*(e.type==='fly'?190:e.type==='fire'?105:48),s=e.type==='invisible'?1.3+p*3.4:1.5;drawPixelPowerSymbol(e.type,e.x,yy,s,state.time,1-p*(e.type==='invisible'?.9:.35));for(let i=0;i<4;i++)polyShape(ctx,[[e.x-3,yy+25+i*10],[e.x+3,yy+25+i*10],[e.x,yy+34+i*12]],i%2?color:'#fff3a0',null,0,(1-p)*(.7-i*.12));ctx.restore();}
 function drawShot(x,y,r,color){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=12;polyDisc(ctx,x,y,r,r,color,8,0,'#fff',1);ctx.restore();}
