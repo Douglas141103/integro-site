@@ -4,6 +4,8 @@ import {vehicleModel} from './egg-expansion-models.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {EggExplorerCharacter} from './egg-explorer-character.js';
+import {EggExplorerSprite} from './egg-explorer-sprite.js';
+import {explorerArtVariant,alignExplorerArtEquipment,setExplorerArtEquipmentVisible,setExplorerEggTint,disposeExplorerEggTint} from './egg-explorer-equipment-art.js';
 import {sculptGeometry} from '../rush-src/art.js';
 import {LegIK,MotionSpring,gaitFoot,smooth} from '../rush-src/motion.js';
 import {ACCESSORIES} from './egg-rules.js';
@@ -24,6 +26,10 @@ export class EggExplorer {
   const b=this.model.bones;this.carry=new T.Group();this.carry.position.set(0,-.27,-.53);b.chest.add(this.carry);
   this.wear=new T.Group();this.model.rig.add(this.wear);this.hat=new T.Group();this.hat.name='DefaultEggCap';for(const child of [...b.cap.children])this.hat.add(child);b.cap.add(this.hat);
   this.pack=new T.Group();for(const child of [...b.back.children])this.pack.add(child);b.back.add(this.pack);
+  this.artwork=new EggExplorerSprite(this.space);
+  // Begin fetching during world construction, ahead of the first frame.
+  this.artwork.preload();
+  this.artworkState={stepping:false,carrying:false,flying:false,gaitPhase:0,reducedMotion:false};
   this.elapsed=0;this.previous=null;this.takeoff=8;this.carryBlend=0;this.g.userData.actor=this;
  }
  update(dt,{player,moving=0,training=false,carrying=false,speed=9,push=false,reducedMotion=false,vehicle=null,flying=false}={}){
@@ -45,8 +51,28 @@ export class EggExplorer {
   if(flying){b.spine.rotation.x=.12;b.chest.rotation.z=Math.sin(this.elapsed*2)*.025;for(const side of ['L','R']){if(b['thigh'+side])b['thigh'+side].rotation.x=-.12;b['knee'+side].rotation.x=.35;b['shoulder'+side].rotation.z=side==='L'?.25:-.25;}}
   for(const [side,sign]of[['L',1],['R',-1]]){const arm=b['shoulder'+side],elbow=b['elbow'+side];arm.rotation.x=T.MathUtils.lerp(arm.rotation.x,.87,w);arm.rotation.z=T.MathUtils.lerp(arm.rotation.z,sign*.35,w);elbow.rotation.x=T.MathUtils.lerp(elbow.rotation.x,1.18,w);if(push){arm.rotation.x=1.35;elbow.rotation.x=.20;}}
   b.chest.rotation.y*=1-w*.7;this.model.root.updateMatrixWorld(true);this.previous={y:p.y,vy:p.vy};
+  const state=this.artworkState;
+  state.stepping=(training||moving>.02)&&!airborne&&!this.ride&&!flying;
+  state.carrying=!!carrying;state.flying=!!flying;state.reducedMotion=!!reducedMotion;state.gaitPhase=this.model.gaitPhase;
+ }
+ presentArtwork(camera,options={}){
+  const sprite=this.artwork,state=this.artworkState;
+  const flying=options.flying??state.flying,carrying=options.carrying??state.carrying;
+  const presentation=(flying===state.flying&&carrying===state.carrying)?state:{...state,flying,carrying};
+  const active=sprite.present(camera,explorerArtVariant(this,flying),presentation,options);
+  // Updating the animation can set the rig visible again. Equipment and jet
+  // presentation follow the chosen atlas every frame, including pauses.
+  setExplorerArtEquipmentVisible(this,active);
+  this.artworkActive=active;
+  if(active){
+   if(!sprite.showingPrevious)alignExplorerArtEquipment(this,sprite.billboard,sprite.frame);
+   setExplorerEggTint(this,carrying?options.egg:null);
+  }
+  return active;
  }
  equip(equipped,makeAccessory){
+  if(this.artworkActive)setExplorerArtEquipmentVisible(this,false);
+  this.artworkEquipped={...equipped};
   this.clearWear();this.backEquipped=!!equipped.back;this.hat.visible=!equipped.head||equipped.head==='headphones';this.pack.visible=!equipped.back;
   const m=this.model;
   for(const id of Object.values(equipped)){const def=ACCESSORIES[id];if(!def)continue;const holder=new T.Group(),asset=makeAccessory(holder,id),slot=def.slot;
@@ -60,7 +86,7 @@ export class EggExplorer {
   }
  }
  clearWear(){for(const mesh of this.wear.children)if(!mesh.userData.contour)mesh.geometry.dispose();this.wear.clear();}
- dispose(){this.jetVisual?.dispose();this.clearWear();this.model.dispose();this.g.removeFromParent();}
+ dispose(){if(this.artworkActive)setExplorerArtEquipmentVisible(this,false);disposeExplorerEggTint(this);this.artwork?.dispose();this.jetVisual?.dispose();this.clearWear();this.model.dispose();this.g.removeFromParent();}
 }
 
 const SPECIES={
