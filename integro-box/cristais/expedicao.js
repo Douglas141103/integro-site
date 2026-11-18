@@ -32,6 +32,7 @@ const state = {
   coins:0, crystals:0, score:0, audio:true, locationCard:0, nightTime:0
 };
 
+let stickAxis = 0;
 const controls = {
   left:false,right:false,jump:false,jumpPressed:false,
   missile:false,missilePressed:false,fire:false,firePressed:false,
@@ -715,6 +716,7 @@ function createPlayer(x,y){
 
 function startLevel(index){
   if (portrait.matches) return;
+  clearPad();
   state.levelIndex = Math.max(0,Math.min(index,LEVELS.length-1));
   state.level = cloneLevel(LEVELS[state.levelIndex]);
   selectScenery(state.level.theme.id);
@@ -731,7 +733,7 @@ function startLevel(index){
 function hideAllScreens(){ [ui.title,ui.levels,ui.how,ui.pause,ui.result].forEach(x=>x.classList.add('hidden')); }
 function showTitle(playMusic=true){state.screen='title';hideAllScreens();ui.title.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');if(playMusic)sound.startMenuMusic();}
 function showLevels(){selectScenery(LEVELS[currentMapDestination()].theme.id);state.screen='levels';hideAllScreens();ui.levels.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');sound.startMenuMusic();$('atlasView').classList.remove('hidden');$('passportView').classList.add('hidden');renderLevelGrid();}
-function pauseGame(){ if(state.screen!=='playing') return; sound.stopMusic(); for(const key in controls) controls[key]=false; document.querySelectorAll('#touchControls .active').forEach(el=>el.classList.remove('active')); state.screen='paused'; ui.pause.classList.remove('hidden'); ui.touch.classList.add('hidden'); }
+function pauseGame(){ if(state.screen!=='playing') return; sound.stopMusic(); clearPad(); state.screen='paused'; ui.pause.classList.remove('hidden'); ui.touch.classList.add('hidden'); }
 function resumeGame(){ if(state.screen!=='paused' || portrait.matches) return; state.screen='playing'; ui.pause.classList.add('hidden'); ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music); }
 
 // Coordinates in the painted 600 × 300 atlas, in the same order as the stages.
@@ -842,6 +844,7 @@ function refreshPowerButtons(){
 
 function finishLevel(){
   if(state.level.complete) return;
+  clearPad();
   state.level.complete = true; state.screen='result'; sound.stopMusic();
   ui.touch.classList.add('hidden'); ui.top.classList.add('hidden');
   const stars = state.player.health>=4 ? 3 : state.player.health>=2 ? 2 : 1;
@@ -856,6 +859,7 @@ function finishLevel(){
 }
 
 function gameOver(){
+  clearPad();
   sound.stopMusic(); state.screen='result'; ui.touch.classList.add('hidden'); ui.top.classList.add('hidden');
   ui.resultTitle.textContent='Lumi precisa tentar outra vez';
   ui.resultText.textContent='Observe o caminho, use os poderes e tente novamente.';
@@ -884,10 +888,13 @@ function update(dt){
   if(controls.firePressed){ shootFire(); controls.firePressed=false; }
   if(controls.invisiblePressed){ activateInvisibility(); controls.invisiblePressed=false; }
 
-  const accel=p.onGround?2400:1500, target=(controls.right?1:0)-(controls.left?1:0);
-  if(target){ p.vx += target*accel*dt; p.dir=target; }
-  else { const drag=p.onGround?2500:680; p.vx -= Math.sign(p.vx)*Math.min(Math.abs(p.vx),drag*dt); }
-  p.vx=Math.max(-410,Math.min(410,p.vx));
+  const keyboardAxis = Number(controls.right) - Number(controls.left);
+  const direction = keyboardAxis || stickAxis;
+  const wantedSpeed = direction * 410;
+  const accel = direction ? (p.onGround ? 2400 : 1500) : (p.onGround ? 2500 : 680);
+  const change = wantedSpeed - p.vx;
+  p.vx += Math.sign(change) * Math.min(Math.abs(change), accel * dt);
+  if (direction) p.dir = Math.sign(direction);
 
   if(p.jumpBuffer>0 && p.coyote>0){
     p.vy=-815; p.onGround=false; p.coyote=0; p.jumpBuffer=0; spawnBurst(p.x+p.w/2,p.y+p.h,'#eafcff',7); sound.jump();
@@ -1888,12 +1895,65 @@ function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(
 function frame(now){const dt=Math.min(.033,(now-state.last)/1000||0);state.last=now;update(dt);draw();requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 
-function bindTouch(id,key,pressedKey){
-  const el=$(id); const on=(ev)=>{ ev.preventDefault(); if(portrait.matches || state.screen!=='playing') return; sound.ensure(); controls[key]=true; if(pressedKey) controls[pressedKey]=true; el.classList.add('active'); try{ el.setPointerCapture(ev.pointerId); }catch{} };
-  const off=(ev)=>{ ev.preventDefault(); controls[key]=false; el.classList.remove('active'); };
-  el.addEventListener('pointerdown',on); el.addEventListener('pointerup',off); el.addEventListener('pointercancel',off); el.addEventListener('lostpointercapture',off);
+// Each control owns its pointer so one thumb can steer while the other jumps.
+const heldPointers = new Map();
+function bindPad(el, press, move, release) {
+  el.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || portrait.matches || state.screen !== 'playing' || heldPointers.has(el)) return;
+    event.preventDefault();
+    try { el.setPointerCapture(event.pointerId); } catch {}
+    heldPointers.set(el, {id:event.pointerId, release});
+    el.classList.add('active');
+    sound.ensure();
+    press(event);
+  });
+  if (move) el.addEventListener('pointermove', event => {
+    if (heldPointers.get(el)?.id === event.pointerId) move(event);
+  });
+  function end(event) {
+    if (heldPointers.get(el)?.id !== event.pointerId) return;
+    heldPointers.delete(el);
+    el.classList.remove('active');
+    release();
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('lostpointercapture', end);
 }
-bindTouch('leftBtn','left'); bindTouch('rightBtn','right'); bindTouch('jumpBtn','jump','jumpPressed'); bindTouch('missileBtn','missile','missilePressed'); bindTouch('fireBtn','fire','firePressed'); bindTouch('flyBtn','fly'); bindTouch('invisBtn','invisible','invisiblePressed');
+function clearPad() {
+  for (const [el, pointer] of heldPointers) {
+    heldPointers.delete(el);
+    if (el.hasPointerCapture?.(pointer.id)) el.releasePointerCapture(pointer.id);
+    el.classList.remove('active');
+    pointer.release();
+  }
+  for (const key in controls) controls[key] = false;
+}
+const stick = $('joystick');
+const base = stick.querySelector('.stick-base');
+function steer(event) {
+  const bounds = base.getBoundingClientRect();
+  const radius = Math.max(1, bounds.width / 2);
+  const x = (event.clientX - bounds.left) / radius - 1;
+  const y = (event.clientY - bounds.top) / radius - 1;
+  const length = Math.max(1, Math.hypot(x,y));
+  stick.style.setProperty('--stick-x', (x / length * radius * .56) + 'px');
+  stick.style.setProperty('--stick-y', (y / length * radius * .56) + 'px');
+  // A small neutral zone keeps a resting thumb from moving Lumi.
+  stickAxis = Math.sign(x) * Math.min(1, Math.max(0, (Math.abs(x) - .14) / .62));
+}
+bindPad(stick, steer, steer, () => {
+  stickAxis = 0;
+  stick.style.removeProperty('--stick-x');
+  stick.style.removeProperty('--stick-y');
+});
+function bindTouch(id,key,pressedKey) {
+  bindPad($(id), () => {
+    controls[key] = true;
+    if (pressedKey) controls[pressedKey] = true;
+  }, null, () => { controls[key] = false; });
+}
+bindTouch('jumpBtn','jump','jumpPressed'); bindTouch('missileBtn','missile','missilePressed'); bindTouch('fireBtn','fire','firePressed'); bindTouch('flyBtn','fly'); bindTouch('invisBtn','invisible','invisiblePressed');
 
 window.addEventListener('keydown',(e)=>{
   if(portrait.matches || (state.screen !== 'playing' && e.target.closest?.('button') && ['Space','Enter'].includes(e.code))) return;
