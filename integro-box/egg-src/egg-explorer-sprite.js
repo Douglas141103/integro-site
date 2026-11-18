@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
-const COLUMNS = 5, ROWS = 5;
-const FRAME_WIDTH = 280, FRAME_HEIGHT = 320, FOOT_Y = 307;
+const COLUMNS = 5;
 const RETRY_MS = 15000;
 const FILENAMES = {
   full: 'explorer.webp',
@@ -54,15 +53,19 @@ function loadedAtlas(entry) {
 }
 
 export class EggExplorerSprite {
-  constructor(space) {
+  constructor(space, {rows = 5, widthRatio = 280 / 320, footRatio = 307 / 320,
+    height = 2.53, name = 'EggExplorer', url = null} = {}) {
+    this.rows = rows;
+    this.footRatio = footRatio;
+    this.url = url;
     this.billboard = new THREE.Group();
-    this.billboard.name = 'EggExplorerIllustration';
+    this.billboard.name = name + 'Illustration';
     this.billboard.visible = false;
     space.add(this.billboard);
-    this.height = 2.53;
-    this.width = this.height * FRAME_WIDTH / FRAME_HEIGHT;
+    this.height = height;
+    this.width = height * widthRatio;
     this.geometry = new THREE.PlaneGeometry(this.width, this.height);
-    this.geometry.translate(0, this.height * (FOOT_Y / FRAME_HEIGHT - .5), 0);
+    this.geometry.translate(0, this.height * (this.footRatio - .5), 0);
     this.material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       toneMapped: false,
@@ -72,7 +75,7 @@ export class EggExplorerSprite {
       depthWrite: true
     });
     this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.name = 'EggExplorerAtlas';
+    this.mesh.name = name + 'Atlas';
     this.billboard.add(this.mesh);
 
     this.atlas = null;
@@ -93,7 +96,7 @@ export class EggExplorerSprite {
       this.atlas = this.displayedAtlas = null;
       return options.texture;
     }
-    const url = options.url || ASSET_DIRECTORY + FILENAMES[variant];
+    const url = options.url || this.url || ASSET_DIRECTORY + FILENAMES[variant];
     if (this.atlas?.url !== url) {
       releaseAtlas(this.atlas);
       this.atlas = acquireAtlas(url);
@@ -148,7 +151,7 @@ export class EggExplorerSprite {
     }
     // Orient in the actor's gravity frame; a camera-facing Three.Sprite would
     // stay upright on screen even when the runner is upside down in Heaven.
-    if (!camera.isOrthographicCamera) view.y -= this.height * (FOOT_Y / FRAME_HEIGHT - .5);
+    if (!camera.isOrthographicCamera) view.y -= this.height * (this.footRatio - .5);
     if (view.lengthSq() < 1e-10) view.set(0, 0, 1);
     view.normalize();
     if (Math.hypot(view.x, view.z) > 1e-5) this.right.crossVectors(localUp, view).normalize();
@@ -169,7 +172,7 @@ export class EggExplorerSprite {
     // UVs are per actor. All players using the same variant share one GPU
     // texture while facing different directions and using different poses.
     const x0 = column / COLUMNS, x1 = (column + 1) / COLUMNS;
-    const y0 = 1 - (row + 1) / ROWS, y1 = 1 - row / ROWS;
+    const y0 = 1 - (row + 1) / this.rows, y1 = 1 - row / this.rows;
     const left = mirror ? x1 : x0, right = mirror ? x0 : x1;
     const uv = this.geometry.attributes.uv;
     uv.setXY(0, left, y1); uv.setXY(1, right, y1);

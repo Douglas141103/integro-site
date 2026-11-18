@@ -1,3 +1,4 @@
+import {installGuardianArtwork,currentDoorGuardian} from './egg-guardian-art.js';
 import {createEggTrapVisuals} from './egg-trap-models.js';
 import {shellGeometry,shellSpots} from './egg-shell-model.js';
 import {buildCoinWearArt} from './egg-coin-wear-art.js';
@@ -130,7 +131,7 @@ export function createEggWorld(scene){
   if(i===13){for(const side of[-1,1])for(let j=0;j<5;j++){const x=trackSideX(side*(7+j%2*2)),zz=z-19+j*9;const monument=group(g,x,0,zz);if(j%2===0){cyl(monument,.7,.9,2.9,0x527e81,0,1.45,0,12);torus(monument,1.05,.12,0xf2ce81,0,3.4,0);ball(monument,.94,0xffedc8,0,3.4,0,1,1,.13);for(let k=0;k<12;k++){const a=k*Math.PI/6;softBox(monument,.07,.16,.04,0x527e81,Math.sin(a)*.81,3.4+Math.cos(a)*.81,-.15);}const hands=group(monument,0,3.4,-.2);rod(hands,[0,0,0],[0,.7,0],.045,0x527e81);rod(hands,[0,0,0],[.5,0,0],.035,0xdca655);animated.push({mesh:hands,y:3.4,phase:j,spin:true});}else{for(const y of[.3,3.5])cyl(monument,.9,.9,.18,0xe5bf75,0,y,0);for(const xx of[-.75,.75])rod(monument,[xx,.3,0],[xx,3.5,0],.09,0x527e81);cyl(monument,.7,.08,1.4,0xa5e4dd,0,2.65,0,16);cyl(monument,.08,.7,1.4,0xa5e4dd,0,1.15,0,16);cyl(monument,0,.5,.6,0xe5bf75,0,.7,-.15,12);}for(let k=0;k<3;k++)ball(g,.45,0x78baa6,x+side*(1+k*.3),.4,zz+1,1,.45,1);}const arch=torus(g,5.8,.18,0xe5bf75,0,3,z);arch.scale.set(TRACK_SCALE,1.2,1);}
   harbor.add(g,i,z);station.add(g,i,z);galaxy.add(g,i);popcorn.add(g,i);aurora.add(g,i);neon.add(g,i);
   if(i>=14&&i<18)expansionScenery(g,i,z,{ball,cyl,torus,rod,softBox,box,group,label,animated});
-  }const n=NESTS[i],nest=group(g,n.x,n.y||0,n.z);cyl(nest,1.55,1.7,.2,0x9a7752,0,.1,0);for(let j=0;j<3;j++)torus(nest,1.45-j*.12,.065,0xe3c27b,0,.22+j*.035,0).rotation.x=Math.PI/2;const eggs=Array.from({length:nestSize(i)},(_,slot)=>{const e=egg(nest,w.color,.8,nestRarity(i,slot)),pos=nestPosition(i,slot);e.position.set(pos.x,.2,pos.z);return e});const plaque=trainingPlaque(nest);nests.push({g:nest,eggs,plaque});const guard=creature(g,w.kind,w.color,w.kind==='stoneGiant'?3.2:1.65);guard.g.position.set(n.x,0,n.z-2.5);label(guard.g,i===EGYPT.world?'MÚMIA DO FARAÓ':i===SUBSOIL.world?'GUARDIÃO DE MAGMA':i===HEAVEN.world?'GUARDIÃO CELESTIAL':i===22?'GRANDE PEDREGULHO':i===WINTER.world?'FÊNIX GELADA':'DONO DO OVO',0,2.9,0,2.6);guardians.push(guard);
+  }const n=NESTS[i],nest=group(g,n.x,n.y||0,n.z);cyl(nest,1.55,1.7,.2,0x9a7752,0,.1,0);for(let j=0;j<3;j++)torus(nest,1.45-j*.12,.065,0xe3c27b,0,.22+j*.035,0).rotation.x=Math.PI/2;const eggs=Array.from({length:nestSize(i)},(_,slot)=>{const e=egg(nest,w.color,.8,nestRarity(i,slot)),pos=nestPosition(i,slot);e.position.set(pos.x,.2,pos.z);return e});const plaque=trainingPlaque(nest);nests.push({g:nest,eggs,plaque});const guard=creature(g,w.kind,w.color,w.kind==='stoneGiant'?3.2:1.65);guard.g.position.set(n.x,0,n.z-2.5);label(guard.g,i===EGYPT.world?'MÚMIA DO FARAÓ':i===SUBSOIL.world?'GUARDIÃO DE MAGMA':i===HEAVEN.world?'GUARDIÃO CELESTIAL':i===22?'GRANDE PEDREGULHO':i===WINTER.world?'FÊNIX GELADA':'DONO DO OVO',0,2.9,0,2.6);installGuardianArtwork(guard,i);guardians.push(guard);
  }
  for(const o of OBSTACLES){const g=zoneGroups[o.world];if(o.edge){flame.pebble(g,o);}else if(o.world===0||o.world===2){const log=cyl(g,.40,.40,1.55,0x9c7452,o.x,.37,o.z,8);log.rotation.z=Math.PI/2}else if(o.world===1)box(g,1.35,o.h,1.1,0xbb905e,o.x,o.h/2,o.z);else if(o.world===3)crystal(g,o.x,o.z,0xb2e4eb,o.h);else if(o.world===4)cyl(g,.35,.8,o.h,0x925961,o.x,o.h/2,o.z,6);else if(o.world===8){cyl(g,.55,.66,o.h,0xf7a7b6,o.x,o.h/2,o.z);torus(g,.5,.09,0xfff0d4,o.x,o.h,o.z).rotation.x=Math.PI/2}else if(o.world===9){const log=cyl(g,.32,.32,1.4,0x73bc71,o.x,.32,o.z,7);log.rotation.z=Math.PI/2}else if(o.world===10)box(g,1.2,o.h,1.2,0xdeb668,o.x,o.h/2,o.z);else crystal(g,o.x,o.z,WORLDS[o.world].color,o.h)}
  const egypt=createEgyptWorld({root,entrance:zoneGroups[1],content:zoneGroups[EGYPT.world],helpers:{group,box,ball,cyl,torus,label}});
@@ -138,7 +139,18 @@ export function createEggWorld(scene){
  const playerFrame=group(root);playerFrame.name="ExplorerGravityFrame";const player=hero(playerFrame);const shieldBubble=new THREE.Mesh(new THREE.SphereGeometry(1.15,28,18),new THREE.MeshBasicMaterial({color:0x86eeff,transparent:true,opacity:.25,depthWrite:false}));shieldBubble.position.y=1;shieldBubble.visible=false;player.g.add(shieldBubble);const gearEffects=createGearEffects(actorArt,player.g);const abilityAura=torus(player.g,.74,.024,0x91e4ce,0,.12,0);abilityAura.rotation.x=Math.PI/2;abilityAura.visible=false;const fx=group(root),particles=Array.from({length:24},()=>{const p=ball(fx,.09,0xffe1a3);p.visible=false;return{mesh:p,life:0,v:new THREE.Vector3()}});let particleCursor=0;
  function burst(pos,color){for(let i=0;i<16;i++){const p=particles[particleCursor++%particles.length];p.mesh.material=mat(color);p.mesh.position.copy(pos);p.mesh.visible=true;p.life=.6+Math.random()*.4;p.v.set((Math.random()-.5)*3,2+Math.random()*2,(Math.random()-.5)*3)}}
  function animate(dt,time){for(const a of animated){if(a.spin)a.mesh.rotation.z=time*.7+a.phase;else a.mesh.position.y=a.y+Math.sin(time*1.5+a.phase)*.3;}for(const p of particles)if(p.life>0){p.life-=dt;p.mesh.visible=p.life>0;p.v.y-=7*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.scale.setScalar(Math.max(.1,p.life))}}
- function animateCreature(c,time,moving=0,dt=1/60,speed=9,reducedMotion=false){c.animator.update(dt,moving,speed,reducedMotion)}
+ let lastDoorGuardian=null;
+ function presentGuardianArtwork(camera,game,reducedMotion=false,options={}){
+  const index=currentDoorGuardian(game);
+  const guard=index===null?null:guardians[index];
+  if(guard!==lastDoorGuardian){lastDoorGuardian?.hideArtwork();lastDoorGuardian=guard;}
+  if(!guard)return false;
+  return guard.presentArtwork(camera,{state:game.guardians[index].state,reducedMotion},options);
+ }
+ function animateCreature(c,time,moving=0,dt=1/60,speed=9,reducedMotion=false){
+  if(c.presentArtwork&&dt>0)c.artworkMoving=moving>0&&speed>.05;
+  c.animator.update(dt,moving,speed,reducedMotion);
+ }
  function disposeActors(container){for(const child of [...container.children])child.userData.actor?.dispose()}
 
  function mutate(g,mutation){if(!mutation||mutation==='normal')return;const colors=mutation==='gold'?[0xffd35c]:mutation==='cosmic'?[0xae8bff,0x78ddff]:[0xff9aa2,0xffe085,0x8debc4,0x8fc9ff];for(let j=0;j<colors.length;j++){const ring=torus(g,.50+j*.06,.026,colors[j],0,.12+j*.065,0);ring.rotation.x=Math.PI/2}if(mutation==='cosmic')for(let j=0;j<4;j++){const a=j*Math.PI/2;ball(g,.05,0xffffff,Math.sin(a)*.6,.6,Math.cos(a)*.6)}g.userData.mutation=mutation;}
@@ -147,5 +159,5 @@ export function createEggWorld(scene){
  function updateHazards(game){hazards.forEach((v,i)=>{const h=game.hazard(i);v.node.position.set(h.x,0,h.z);v.ring.material=mat(h.active?0xff705a:h.warning?0xffdb62:0xcbdccd);v.body.visible=h.active||h.warning;v.body.scale.y=h.active?1:.3;v.body.rotation.y=game.time*(i+1)*.3;});}
  const winter=createWinterWorld({root,base,pen,zoneGroups,player,helpers:{box,softBox,ball,cyl,torus,rod,group,label,tree,crystal}});
  const house=createHouseWorld({base,helpers:{group,box,cyl,rod,ball,label}});
- return{createTrapVisuals:()=>createEggTrapVisuals(root,actorArt),egypt,subsoil,heaven,playerFrame,house,progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,gearEffects,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
+ return{presentGuardianArtwork,createTrapVisuals:()=>createEggTrapVisuals(root,actorArt),egypt,subsoil,heaven,playerFrame,house,progression,harbor,aurora,neon,galaxy,popcorn,station,rock,flame,updateSeason,winter,hero,disposeActors,mutate,decorate,updateHazards,equipAccessories,setTrainingPlaque,shieldBubble,abilityAura,gearEffects,root,base,zoneGroups,nests,guardians,player,penContent,egg,shopItem,creature,animateCreature,animate,burst,label,mat,group};
 }
