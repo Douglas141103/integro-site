@@ -12,7 +12,16 @@ lumiSheet.decoding = 'async';
 lumiSheet.src = './lumi-exploradora.webp';
 let scenery;
 let sceneryCity;
+let enemyAtlas, enemyAtlasCity;
+function selectEnemyAtlas(city) {
+  if (city === enemyAtlasCity && (!enemyAtlas.complete || enemyAtlas.naturalWidth)) return;
+  enemyAtlasCity = city;
+  enemyAtlas = new Image();
+  enemyAtlas.decoding = 'async';
+  enemyAtlas.src = './viloes/' + city + '.webp';
+}
 function selectScenery(city) {
+  selectEnemyAtlas(city);
   if (city === sceneryCity && scenery && (!scenery.complete || scenery.naturalWidth)) return;
   sceneryCity = city;
   scenery = new Image();
@@ -611,7 +620,8 @@ function generateLevel(worldIndex, phase){
   const enemyStart = safeZoneEnd + 230;
   const enemyEnd = width * (phase===3 ? .68 : .82);
   for(let i=0;i<enemyCount;i++){
-    const kind = pattern[i % pattern.length];
+    // Introduce the city's sentry after two walking/flying groups on each route's first stage.
+    const kind = phase === 1 && i === 6 ? 'turret' : pattern[i % pattern.length];
     const px = enemyStart + (i/Math.max(1,enemyCount-1))*(enemyEnd-enemyStart);
     const tier = Math.min(3, 1 + Math.floor((difficulty + i/3) / 7));
     if(kind==='fly' && flyType){
@@ -1008,6 +1018,7 @@ function updateEnemies(dt){
         e.cooldown -= dt;
         if(e.cooldown<=0 && Math.abs(p.x-e.x)<760){
           e.cooldown = 1.9;
+          e.lastAttack = e.phase;
           const dx=(p.x+p.w/2)-(e.x+e.w/2),dy=(p.y+p.h/2)-(e.y+20),m=Math.hypot(dx,dy)||1;
           l.enemyShots.push({x:e.x+e.w/2,y:e.y+18,vx:dx/m*320,vy:dy/m*320,r:10,life:4,type:'orb',color:info.color});
           sound.tone(220,.08,'square',-80,.35);
@@ -1047,6 +1058,7 @@ function updateBoss(e,dt){
     }
     if(e.cooldown <= 0){
       e.pattern = (e.pattern + 1) % 3;
+      e.lastAttack = e.phase;
       sound.boss();
       if(e.pattern === 0){
         e.vx = e.dir * (enraged ? 460 : 360);
@@ -1919,9 +1931,38 @@ function drawHero(x,y,dir,anim,powers,invisibleTime,th){powers=powers||{};const 
   polyShape(ctx,[[-7,-17],[-17,-8],[-31,-3+flutter],[-39,-9+flutter],[-24,-12]],'#36d2bb','#175b60',2);
   capsulePoly(ctx,-9,14,-11+leg,29,10,'#275489');capsulePoly(ctx,9,14,11-leg,29,10,'#183d6a');facetPanel(ctx,-18,-12,36,31,coat,accent,7);polyShape(ctx,[[-17,-9],[0,4],[0,18],[-17,14]],shadeHex(coat,.17),null,0,.68);polyShape(ctx,[[17,-9],[0,4],[0,18],[17,14]],shadeHex(coat,-.18),null,0,.62);polyShape(ctx,[[-5,-12],[5,-12],[3,18],[-3,18]],accent,'#061120',1);capsulePoly(ctx,-17,-5,-24+arm,14,9,accent);capsulePoly(ctx,17,-5,24-arm,14,9,accent);polyDisc(ctx,-25+arm,16,6,6,'#e7a77f',8,0,'#061120',2);polyDisc(ctx,25-arm,16,6,6,'#ffd0a4',8,0,'#061120',2);polyDisc(ctx,0,-24,17,15,'#ffd0a4',10,-Math.PI/2,'#061120',3);polyShape(ctx,[[-16,-29],[-10,-39],[10,-39],[17,-29],[7,-31],[-3,-28]],'#85523d','#061120',2);polyShape(ctx,[[-1,-27],[13,-27],[11,-21],[1,-22]],'#fff9e9',null);polyDisc(ctx,8,-24,2.5,2.5,'#17405f',7,0,null,0);polyShape(ctx,[[4,-15],[13,-16],[8,-12]],'#9c5260',null);const hatColor=['charro','sunhat','headwrap','ushanka'].includes(look)?shadeHex(th.accent,-.22):'#544033';if(['explorer','charro','sunhat','headwrap','ushanka','beret','detective'].includes(look)){polyShape(ctx,[[-23,-38],[-12,-46],[12,-46],[23,-38],[13,-34],[-15,-34]],hatColor,'#061120',2);polyShape(ctx,[[-13,-43],[12,-43],[5,-37],[-16,-37]],shadeHex(hatColor,.22),null);}else{polyShape(ctx,[[-16,-35],[-8,-40],[14,-38],[18,-33],[2,-30]],shadeHex(accent,-.22),'#061120',2);}if(['visor','urban','sunglasses','skigoggles','neonband'].includes(look))polyShape(ctx,[[-2,-27],[17,-27],[14,-20],[0,-21]],look==='neonband'?'#57eff5':'#66cce5','#061120',2,.9);if(powers.fly){polyShape(ctx,[[-19,-11],[-39,-24],[-32,6],[-19,12]],'#dff8ff','#54758e',2,.9);polyShape(ctx,[[19,-11],[39,-24],[32,6],[19,12]],'#bfe8ff','#54758e',2,.9);}if(powers.missile)polyShape(ctx,[[22,-2],[39,1],[43,5],[38,9],[22,8]],'#9de1ff','#061120',2);if(powers.fire)polyDisc(ctx,31,3,9,9,'#ff8b4f',7,0,'#6b2430',2);ctx.restore();}
 
-function drawEnemy(e){if(e.type==='boss'){drawBoss(e);return;}const info=ENEMY_DRAW[e.type],flap=Math.sin(e.phase*8)*5;ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);ctx.fillStyle='rgba(2,8,18,.24)';ctx.beginPath();ctx.ellipse(0,24,24,5,0,0,Math.PI*2);ctx.fill();if(info.kind==='fly'){polyShape(ctx,[[-10,-4],[-33,-20-flap],[-27,5-flap],[-9,11]],info.color,'#061120',2);polyShape(ctx,[[10,-4],[33,-20+flap],[27,5+flap],[9,11]],info.color,'#061120',2);polyDisc(ctx,0,0,18,18,info.accent,9,0,'#061120',3);}else if(info.kind==='turret'){facetPanel(ctx,-25,-9,50,31,info.color,info.accent,8);polyDisc(ctx,0,-12,14,14,info.accent,8,0,'#061120',3);polyShape(ctx,[[7,-18],[29,-15],[31,-9],[8,-8]],info.color,'#061120',2);}else{polyDisc(ctx,0,0,22,20,info.color,9,0,'#061120',3);capsulePoly(ctx,-11,13,-13,23,8,info.accent);capsulePoly(ctx,11,13,13,23,8,info.accent);if(e.theme.motif==='leaf'||e.theme.motif==='flower'){polyShape(ctx,[[-13,-17],[-20,-31],[-4,-22]],e.theme.ground,'#061120',2);polyShape(ctx,[[13,-17],[20,-31],[4,-22]],e.theme.ground,'#061120',2);}}polyShape(ctx,[[-13,-7],[-3,-9],[-4,0],[-13,1]],'#f4fbff','#061120',1);polyShape(ctx,[[3,-9],[13,-7],[13,1],[4,0]],'#f4fbff','#061120',1);polyDisc(ctx,-8,-4,2.8,2.8,info.eye,7,0,null,0);polyDisc(ctx,8,-4,2.8,2.8,info.eye,7,0,null,0);ctx.save();ctx.translate(0,9);ctx.scale(.72,.72);drawEnemyMark(info.motif,0,0);ctx.restore();polyShape(ctx,[[-3,-21],[0,-29],[3,-21]],e.theme.accent,'#061120',1);if(e.elite){for(const q of[-10,0,10])polyShape(ctx,[[q-4,-24-Math.abs(q)/4],[q,-34-Math.abs(q)/4],[q+4,-24-Math.abs(q)/4]],'#fff1a0','#8d5e1f',1);}ctx.restore();}
+// Each city atlas has three columns. Its rows are walker, flyer, sentry and (at route ends) boss.
+const enemySpriteRows = {ground:0, fly:1, turret:2, boss:3};
+function drawIllustratedEnemy(e) {
+  if (e.theme.id !== enemyAtlasCity || !enemyAtlas?.complete || !enemyAtlas.naturalWidth) return false;
+  const kind = e.type === 'boss' ? 'boss' : ENEMY_DRAW[e.type].kind;
+  const isBoss = kind === 'boss';
+  const aimed = isBoss || kind === 'turret';
+  const frame = aimed
+    ? (e.phase - e.lastAttack < .2 ? 2 : e.cooldown <= .36 ? 1 : 0)
+    : [0,1,2,1][Math.floor(e.phase * (kind === 'fly' ? 8 : 6)) % 4];
+  const cell = 192;
+  const span = Math.max(e.w, e.h) * (kind === 'fly' ? 1.4 : 1.32);
+  const facing = kind === 'turret' ? (state.player.x < e.x ? -1 : 1) : e.dir;
+  ctx.save();
+  ctx.translate(e.x + e.w/2, kind === 'fly' ? e.y + e.h/2 : e.y + e.h);
+  ctx.scale(facing, 1);
+  const top = kind === 'fly' ? -span/2 : -span * (cell-2)/cell;
+  ctx.drawImage(enemyAtlas, frame*cell, enemySpriteRows[kind]*cell, cell, cell,
+    -span/2, top, span, span);
+  if (e.elite) {
+    const y = kind === 'fly' ? -e.h/2-6 : -e.h-6;
+    polyShape(ctx, [[0,y-4],[4,y],[0,y+4],[-4,y]], '#ffe48a','#74502c',1);
+  }
+  ctx.restore();
+  if (isBoss) drawBossStatus(e);
+  return true;
+}
 
-function drawBoss(e){ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2+Math.sin(state.time*2.5)*2);ctx.scale(e.dir,1);ctx.fillStyle='rgba(2,8,18,.3)';ctx.beginPath();ctx.ellipse(0,63,61,10,0,0,Math.PI*2);ctx.fill();capsulePoly(ctx,-38,-6,-54,30,18,shadeHex(e.theme.routeColor,-.18));capsulePoly(ctx,38,-6,54,30,18,shadeHex(e.theme.routeColor,-.24));capsulePoly(ctx,-20,38,-25,58,22,'#23344c');capsulePoly(ctx,20,38,25,58,22,'#16293e');polyDisc(ctx,0,2,48,49,e.theme.routeColor,10,0,'#061120',5);polyShape(ctx,[[-39,-27],[0,-47],[39,-27],[25,-7],[0,-16],[-25,-7]],shadeHex(e.theme.routeColor,.2),null,0,.74);polyDisc(ctx,0,-28,31,25,shadeHex(e.theme.routeColor,.12),9,0,'#061120',4);polyShape(ctx,[[-22,-36],[-5,-39],[-7,-26],[-23,-25]],'#f5fbff','#061120',2);polyShape(ctx,[[5,-39],[22,-36],[23,-25],[7,-26]],'#f5fbff','#061120',2);polyDisc(ctx,-14,-32,4,4,e.theme.accent,7,0,null,0);polyDisc(ctx,14,-32,4,4,e.theme.accent,7,0,null,0);polyShape(ctx,[[-13,-13],[0,-6],[13,-13],[8,-3],[0,2],[-8,-3]],'#071225',null);const type=e.bossType;if(type==='mexico'){polyShape(ctx,[[-28,-46],[-39,-74],[-12,-53]],'#f0bf4f','#061120',2);polyShape(ctx,[[28,-46],[39,-74],[12,-53]],'#f05d8c','#061120',2);}else if(type==='egypt'){polyShape(ctx,[[-36,-48],[0,-78],[36,-48],[0,-35]],'#e4ba50','#061120',3);polyDisc(ctx,0,-77,12,12,'#ffe063',9,0,'#7c562b',2);}else if(type==='russia'){for(let i=-2;i<=2;i++)polyShape(ctx,[[i*15-5,-49],[i*15,-70-Math.abs(i)*4],[i*15+5,-49]],'#e9fbff','#6198b3',2);}else if(type==='europe'){polyShape(ctx,[[-34,-48],[0,-75],[34,-48],[19,-43],[0,-57],[-19,-43]],'#d2b75f','#061120',3);}else if(type==='asia'){polyShape(ctx,[[-31,-46],[-43,-70],[-14,-55]],'#ff568f','#061120',2);polyShape(ctx,[[31,-46],[43,-70],[14,-55]],'#5cecf3','#061120',2);}else{polyShape(ctx,[[-35,-48],[-18,-67],[0,-52],[18,-67],[35,-48]],e.theme.accent,'#061120',3);}ctx.scale(e.dir,1);facetPanel(ctx,-96,-116,192,28,'rgba(3,12,27,.9)',e.theme.accent,7);ctx.fillStyle='#fff';ctx.font='900 15px Trebuchet MS,system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.bossName.toUpperCase(),0,-102);ctx.restore();const bw=214,bx=e.x+e.w/2-bw/2,by=e.y-39,ratio=Math.max(0,e.hp/e.maxHp);facetPanel(ctx,bx-5,by-5,bw+10,22,'rgba(3,10,23,.92)',e.theme.accent,6);ctx.fillStyle=e.theme.accent;ctx.fillRect(bx,by,bw*ratio,12);ctx.fillStyle='rgba(255,255,255,.38)';ctx.fillRect(bx,by,bw*ratio,3);}
+function drawEnemy(e){if(drawIllustratedEnemy(e))return;if(e.type==='boss'){drawBoss(e);return;}const info=ENEMY_DRAW[e.type],flap=Math.sin(e.phase*8)*5;ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);ctx.fillStyle='rgba(2,8,18,.24)';ctx.beginPath();ctx.ellipse(0,24,24,5,0,0,Math.PI*2);ctx.fill();if(info.kind==='fly'){polyShape(ctx,[[-10,-4],[-33,-20-flap],[-27,5-flap],[-9,11]],info.color,'#061120',2);polyShape(ctx,[[10,-4],[33,-20+flap],[27,5+flap],[9,11]],info.color,'#061120',2);polyDisc(ctx,0,0,18,18,info.accent,9,0,'#061120',3);}else if(info.kind==='turret'){facetPanel(ctx,-25,-9,50,31,info.color,info.accent,8);polyDisc(ctx,0,-12,14,14,info.accent,8,0,'#061120',3);polyShape(ctx,[[7,-18],[29,-15],[31,-9],[8,-8]],info.color,'#061120',2);}else{polyDisc(ctx,0,0,22,20,info.color,9,0,'#061120',3);capsulePoly(ctx,-11,13,-13,23,8,info.accent);capsulePoly(ctx,11,13,13,23,8,info.accent);if(e.theme.motif==='leaf'||e.theme.motif==='flower'){polyShape(ctx,[[-13,-17],[-20,-31],[-4,-22]],e.theme.ground,'#061120',2);polyShape(ctx,[[13,-17],[20,-31],[4,-22]],e.theme.ground,'#061120',2);}}polyShape(ctx,[[-13,-7],[-3,-9],[-4,0],[-13,1]],'#f4fbff','#061120',1);polyShape(ctx,[[3,-9],[13,-7],[13,1],[4,0]],'#f4fbff','#061120',1);polyDisc(ctx,-8,-4,2.8,2.8,info.eye,7,0,null,0);polyDisc(ctx,8,-4,2.8,2.8,info.eye,7,0,null,0);ctx.save();ctx.translate(0,9);ctx.scale(.72,.72);drawEnemyMark(info.motif,0,0);ctx.restore();polyShape(ctx,[[-3,-21],[0,-29],[3,-21]],e.theme.accent,'#061120',1);if(e.elite){for(const q of[-10,0,10])polyShape(ctx,[[q-4,-24-Math.abs(q)/4],[q,-34-Math.abs(q)/4],[q+4,-24-Math.abs(q)/4]],'#fff1a0','#8d5e1f',1);}ctx.restore();}
+
+function drawBoss(e){ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2+Math.sin(state.time*2.5)*2);ctx.scale(e.dir,1);ctx.fillStyle='rgba(2,8,18,.3)';ctx.beginPath();ctx.ellipse(0,63,61,10,0,0,Math.PI*2);ctx.fill();capsulePoly(ctx,-38,-6,-54,30,18,shadeHex(e.theme.routeColor,-.18));capsulePoly(ctx,38,-6,54,30,18,shadeHex(e.theme.routeColor,-.24));capsulePoly(ctx,-20,38,-25,58,22,'#23344c');capsulePoly(ctx,20,38,25,58,22,'#16293e');polyDisc(ctx,0,2,48,49,e.theme.routeColor,10,0,'#061120',5);polyShape(ctx,[[-39,-27],[0,-47],[39,-27],[25,-7],[0,-16],[-25,-7]],shadeHex(e.theme.routeColor,.2),null,0,.74);polyDisc(ctx,0,-28,31,25,shadeHex(e.theme.routeColor,.12),9,0,'#061120',4);polyShape(ctx,[[-22,-36],[-5,-39],[-7,-26],[-23,-25]],'#f5fbff','#061120',2);polyShape(ctx,[[5,-39],[22,-36],[23,-25],[7,-26]],'#f5fbff','#061120',2);polyDisc(ctx,-14,-32,4,4,e.theme.accent,7,0,null,0);polyDisc(ctx,14,-32,4,4,e.theme.accent,7,0,null,0);polyShape(ctx,[[-13,-13],[0,-6],[13,-13],[8,-3],[0,2],[-8,-3]],'#071225',null);const type=e.bossType;if(type==='mexico'){polyShape(ctx,[[-28,-46],[-39,-74],[-12,-53]],'#f0bf4f','#061120',2);polyShape(ctx,[[28,-46],[39,-74],[12,-53]],'#f05d8c','#061120',2);}else if(type==='egypt'){polyShape(ctx,[[-36,-48],[0,-78],[36,-48],[0,-35]],'#e4ba50','#061120',3);polyDisc(ctx,0,-77,12,12,'#ffe063',9,0,'#7c562b',2);}else if(type==='russia'){for(let i=-2;i<=2;i++)polyShape(ctx,[[i*15-5,-49],[i*15,-70-Math.abs(i)*4],[i*15+5,-49]],'#e9fbff','#6198b3',2);}else if(type==='europe'){polyShape(ctx,[[-34,-48],[0,-75],[34,-48],[19,-43],[0,-57],[-19,-43]],'#d2b75f','#061120',3);}else if(type==='asia'){polyShape(ctx,[[-31,-46],[-43,-70],[-14,-55]],'#ff568f','#061120',2);polyShape(ctx,[[31,-46],[43,-70],[14,-55]],'#5cecf3','#061120',2);}else{polyShape(ctx,[[-35,-48],[-18,-67],[0,-52],[18,-67],[35,-48]],e.theme.accent,'#061120',3);}ctx.restore();drawBossStatus(e);}
+function drawBossStatus(e){ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);facetPanel(ctx,-96,-116,192,28,'rgba(3,12,27,.9)',e.theme.accent,7);ctx.fillStyle='#fff';ctx.font='900 15px Trebuchet MS,system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.bossName.toUpperCase(),0,-102);ctx.restore();const bw=214,bx=e.x+e.w/2-bw/2,by=e.y-39,ratio=Math.max(0,e.hp/e.maxHp);facetPanel(ctx,bx-5,by-5,bw+10,22,'rgba(3,10,23,.92)',e.theme.accent,6);ctx.fillStyle=e.theme.accent;ctx.fillRect(bx,by,bw*ratio,12);ctx.fillStyle='rgba(255,255,255,.38)';ctx.fillRect(bx,by,bw*ratio,3);}
 
 function drawCoin(x,y,t){const spin=.35+.65*Math.abs(Math.sin(t*4));ctx.save();ctx.translate(x,y);ctx.scale(spin,1);ctx.shadowColor='#ffd65b';ctx.shadowBlur=9;polyDisc(ctx,0,0,15,18,'#e5a329',12,0,'#5a3712',3);ctx.shadowBlur=0;polyShape(ctx,[[-3,-10],[4,-8],[5,9],[-4,11]],'#fff0a0',null,0,.82);ctx.restore();}
 function drawCrystal(x,y,t){const pulse=.5+.5*Math.sin(t*5);ctx.save();ctx.translate(x,y);ctx.shadowColor='#72efff';ctx.shadowBlur=12+8*pulse;const p=(q,c,a=1)=>polyShape(ctx,q,c,null,0,a);p([[0,-30],[-23,-15],[0,-8]],'#e8ffff');p([[0,-30],[0,-8],[23,-15]],'#83f2ff');p([[-23,-15],[-15,9],[0,-8]],'#58d9ec');p([[23,-15],[0,-8],[15,9]],'#278db4');p([[-15,9],[0,29],[0,-8]],'#3bb8d3');p([[15,9],[0,-8],[0,29]],'#186e99');ctx.shadowBlur=0;polyShape(ctx,[[0,-30],[23,-15],[15,9],[0,29],[-15,9],[-23,-15]],'rgba(0,0,0,0)','#d9ffff',2);ctx.restore();}
