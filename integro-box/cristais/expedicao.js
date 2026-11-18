@@ -202,9 +202,20 @@ class Sound {
     const beat=()=>{if(token!==this.musicToken||!state.audio||state.screen!=='playing')return;const i=this.musicStep++%notes.length;this.tone(noteFreq(notes[i]),.16,'triangle',0,.12);if(i%4===0)this.tone(noteFreq((cfg.bass||['C2'])[Math.floor(i/4)%(cfg.bass||['C2']).length]),.28,'sine',0,.09);};
     beat();this.musicTimer=setInterval(beat,Math.max(120,60000/cfg.tempo/2));
   }
-  startMusic(cfg){
+  startMusic(cfg, resume = false){
     this.stopMusic();const token=++this.musicToken;this.musicCfg=cfg;
     if(!cfg||!state.audio)return;
+    if (cfg.recording) {
+      if (this.recordingPath !== cfg.recording) {
+        this.recordingPath = cfg.recording;
+        this.recording = new Audio(cfg.recording);
+        this.recording.loop = true;
+        this.recording.volume = 0.32;
+      }
+      if (!resume) this.recording.currentTime = 0;
+      this.recording.play().catch(() => this.startFallback(cfg, token));
+      return;
+    }
     if(!window.Tone){this.startFallback(cfg,token);return;}
     this.startToneMusic(cfg,token).catch(()=>{if(token===this.musicToken){this.stopMusic();const fallbackToken=++this.musicToken;this.startFallback(cfg,fallbackToken);}});
   }
@@ -239,6 +250,7 @@ class Sound {
     const seq=kind===0?[261.63,392,523.25]:kind===1?[329.63,493.88,659.25,987.77]:[392,523.25,659.25,783.99,1046.5];seq.forEach((f,i)=>setTimeout(()=>this.tone(f,.2,i%2?'triangle':'square',kind===2?80:35,.22),i*85));
   }
   stopMusic(){
+    if (this.recording && !this.recording.paused) this.recording.pause();
     this.musicToken++;if(this.musicTimer){clearInterval(this.musicTimer);this.musicTimer=null;}
     if(this.toneTransport){try{this.toneTransport.stop();this.toneTransport.cancel(0);}catch{}this.toneTransport=null;}
     for(const event of this.toneEvents.splice(0)){try{event.stop(0);event.dispose();}catch{}}
@@ -457,7 +469,16 @@ const CITY_ART = {
   tokyo:{hero:'neonband',platform:'circuitos de neon',hazard:'neon',hazardName:'caixa holográfica de neon'}
 };
 
-WORLD_THEMES.forEach(route=>route.scenes.forEach(scene=>Object.assign(scene,LANDMARK_RESEARCH[scene.id],{music:MUSIC_RESEARCH[scene.id],art:CITY_ART[scene.id]})));
+const countryRecordings = {
+  Brasil: {recording: './audio/beyond-the-emerald-gate.m4a', style: 'Beyond the Emerald Gate'},
+  México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'}
+};
+WORLD_THEMES.forEach(route => route.scenes.forEach(scene => {
+  const score = MUSIC_RESEARCH[scene.id];
+  const recording = countryRecordings[scene.country];
+  const music = recording ? {...score, ...recording} : score;
+  Object.assign(scene, LANDMARK_RESEARCH[scene.id], { music, art: CITY_ART[scene.id] });
+}));
 
 const POWER_INFO = {
   missile:{ cell:0, icon:'🚀', label:'Míssil teleguiado', color:'#6ec6ff' },
@@ -761,7 +782,7 @@ function hideAllScreens(){ [ui.title,ui.levels,ui.how,ui.pause,ui.result].forEac
 function showTitle(playMusic=true){state.screen='title';hideAllScreens();ui.title.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');if(playMusic)sound.startMenuMusic();}
 function showLevels(){selectScenery(LEVELS[currentMapDestination()].theme.id);state.screen='levels';hideAllScreens();ui.levels.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');sound.startMenuMusic();$('atlasView').classList.remove('hidden');$('passportView').classList.add('hidden');renderLevelGrid();}
 function pauseGame(){ if(state.screen!=='playing') return; sound.stopMusic(); clearPad(); state.screen='paused'; ui.pause.classList.remove('hidden'); ui.touch.classList.add('hidden'); }
-function resumeGame(){ if(state.screen!=='paused' || portrait.matches) return; state.screen='playing'; ui.pause.classList.add('hidden'); ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music); }
+function resumeGame(){ if(state.screen!=='paused' || portrait.matches) return; state.screen='playing'; ui.pause.classList.add('hidden'); ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music, true); }
 
 // Coordinates in the painted 600 × 300 atlas, in the same order as the stages.
 const atlasStops = [
@@ -2146,6 +2167,7 @@ function syncOrientation(){
 }
 portrait.addEventListener?.('change', syncOrientation);
 window.addEventListener('resize', syncOrientation);
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 $('rotateFull').onclick=enterFullscreen;
 const embedded=window.parent!==window && document.referrer.startsWith(location.origin+'/');
 if(embedded) {
