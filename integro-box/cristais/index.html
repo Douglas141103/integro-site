@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#182752" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>A Aventura dos Cristais: O Mundo</title>
+  <link rel="stylesheet" href="./expedicao.css">
+</head>
+<body>
+<div id="app">
+  <div id="gameWrap">
+
+    <canvas id="polyWorld" width="1280" height="720" aria-hidden="true"></canvas>
+    <canvas id="game" width="1280" height="720" aria-label="Jogo Aventura dos Cristais"></canvas>
+
+    <button id="catalogExit" class="hidden" type="button">‹ Catálogo</button>
+    <section id="introScreen" aria-label="Abertura do jogo">
+      <canvas id="introCanvas" width="1280" height="720" aria-hidden="true"></canvas>
+      <button id="introStart" class="introStart">Iniciar abertura</button>
+      <button id="introSkip" class="introSkip hidden">PULAR ABERTURA ▶</button>
+    </section>
+
+    <div id="topButtons" class="hidden">
+      <button id="topFullBtn" class="roundBtn" aria-label="Tela cheia">⛶</button>
+      <button id="soundBtn" class="roundBtn" aria-label="Som">🔊</button>
+      <button id="pauseBtn" class="roundBtn" aria-label="Pausar">Ⅱ</button>
+    </div>
+
+    <div id="touchControls" class="hidden" aria-label="Controles por toque">
+      <div id="moveControls" class="controlGroup">
+        <button class="touchBtn" id="leftBtn" aria-label="Andar para esquerda">◀</button>
+        <button class="touchBtn" id="rightBtn" aria-label="Andar para direita">▶</button>
+      </div>
+      <div id="actionControls" class="controlGroup">
+        <div id="powerPad">
+          <button class="powerBtn hidden" id="missileBtn" aria-label="Míssil"></button>
+          <button class="powerBtn hidden" id="fireBtn" aria-label="Fogo"></button>
+          <button class="powerBtn hidden" id="flyBtn" aria-label="Voar"></button>
+          <button class="powerBtn hidden" id="invisBtn" aria-label="Invisibilidade"></button>
+        </div>
+        <button class="touchBtn" id="jumpBtn" aria-label="Pular">▲</button>
+      </div>
+    </div>
+
+    <div id="toast" role="status"></div>
+
+    <section id="titleScreen" class="screen hidden">
+      <div class="travel-cover">
+        <img src="../assets/catalog-v1/cristais-mundo.webp" alt="A Aventura dos Cristais — O Mundo" width="900" height="600">
+        <div class="travel-ticket">
+          <h1>Volta ao mundo com Lumi</h1>
+          <p>Siga as pistas, encontre três fragmentos em cada cidade e carimbe seu passaporte. A primeira parada é Manaus.</p>
+          <div class="btnRow"><button id="playBtn" class="btn">Abrir mapa</button><button id="howBtn" class="btn secondary">Como jogar</button></div>
+          <div class="ticket-tools"><button id="watchIntro">Ver abertura</button><button id="fullBtn">Tela cheia</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="levelScreen" class="screen hidden">
+      <div class="panel mapPanel">
+        <h2 style="font-size:clamp(28px,5vw,52px);margin:0">Mapa da Volta ao Mundo</h2>
+        <p class="mapHint">Arraste para explorar · use +/− para ampliar · toque numa cidade liberada.</p>
+        <div class="worldMapFrame">
+          <div class="mapToolbar"><span>ROTA DE LUMI</span><div class="mapTools"><button id="mapZoomOut" class="mapTool" aria-label="Diminuir mapa">−</button><button id="mapCenter" class="mapTool" aria-label="Centralizar próxima fase">◎</button><button id="mapZoomIn" class="mapTool" aria-label="Ampliar mapa">+</button></div></div>
+          <div id="worldMapViewport" class="worldMapWrap">
+            <canvas id="worldMap" width="2304" height="1152" aria-label="Mapa-múndi grande e arrastável com as 21 cidades da aventura"></canvas>
+          </div>
+          <button id="nextStop" class="btn next-stop"></button>
+          <div class="mapLegend"><span style="--c:#70f5ff">Liberada</span><span style="--c:#ffd75e">Concluída</span><span style="--c:#4b5872">Bloqueada</span><span style="--c:#ff638c">Próxima parada</span></div>
+        </div>
+        <h3 style="margin:22px 0 0;font:900 18px ui-monospace,monospace;color:#d8fbff">Passaporte de viagem</h3>
+        <p id="passportSummary"></p>
+        <div id="levelGrid"></div>
+        <div class="btnRow">
+          <button id="continueTour" class="btn tiny">Continuar viagem</button><button id="backTitleBtn" class="btn secondary tiny">Voltar</button>
+          <button id="resetBtn" class="btn danger tiny">Apagar progresso</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="howScreen" class="screen hidden">
+      <div class="panel">
+        <h2 style="font-size:clamp(28px,5vw,52px);margin:0">Como jogar</h2>
+        <div class="helpGrid">
+          <div class="helpItem"><b>◀ ▶ Movimento</b><br>Use os botões do lado esquerdo para andar.</div>
+          <div class="helpItem"><b>▲ Pulo</b><br>Toque para pular. O salto está mais alto para facilitar no tablet.</div>
+          <div class="helpItem"><b>🚀 Míssil</b><br>Projétil forte e rápido, ótimo contra chefões.</div>
+          <div class="helpItem"><b>🔥 Fogo</b><br>Lança bolas de fogo contra inimigos da fase.</div>
+          <div class="helpItem"><b>🪽 Voar</b><br>Segure o botão para subir por um tempo. A energia de voo recarrega sozinha.</div>
+          <div class="helpItem"><b>👻 Invisível</b><br>Ative para atravessar momentos perigosos sem levar dano por alguns segundos.</div>
+          <div class="helpItem"><b>🏳️ Início tranquilo</b><br>Toda fase começa em uma área segura, sem inimigos ou obstáculos perigosos na primeira tela.</div>
+          <div class="helpItem"><b>◆ Pista de luz</b><br>Procure o reflexo brilhante no chão. Ao se aproximar, o fragmento de observação se revela na plataforma acima.</div>
+          <div class="helpItem"><b>◆ Caixas temáticas</b><br>As caixas não tiram vida. Elas bloqueiam o caminho e servem como pequenos degraus: pule por cima ou suba nelas.</div>
+        </div>
+        <p class="subtitle">Colete 3 fragmentos em cada cidade, enfrente criaturas mecânicas inspiradas no cenário e derrote o chefão da terceira fase de cada rota.</p>
+        <button id="closeHowBtn" class="btn">Entendi</button>
+      </div>
+    </section>
+
+    <section id="pauseScreen" class="screen hidden">
+      <div class="panel" style="max-width:520px">
+        <h2 style="font-size:52px;margin:0 0 22px">Pausado</h2>
+        <div class="btnRow">
+          <button id="resumeBtn" class="btn">Continuar</button>
+          <button id="restartBtn" class="btn secondary">Reiniciar</button>
+          <button id="exitBtn" class="btn danger">Sair da fase</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen hidden">
+      <div class="panel" style="max-width:600px">
+        <h2 id="resultTitle" style="font-size:clamp(38px,7vw,72px);margin:0"></h2>
+        <p id="resultText" class="subtitle"></p>
+        <div class="btnRow">
+          <button id="nextBtn" class="btn">Próxima fase</button>
+          <button id="retryBtn" class="btn secondary">Tentar novamente</button>
+          <button id="levelsBtn" class="btn secondary">Fases</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+
+
+
+
+<script src="./vendor/Tone.js"></script>
+<script src="./expedicao.js"></script>
+</body>
+</html>
