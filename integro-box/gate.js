@@ -51,7 +51,7 @@ try {
   await script('./craft.js?v=20261105-craft-villages1');
   if(unloaded)throw new Error('Sessão encerrada. Entre novamente.');
   phase('Montando as aventuras 3D…');
-  await script('./egg.js?v=20261116-egypt-music1');
+  await script('./egg.js?v=20261118-ovo-loja-artes1');
   await script('./fruit.js?v=20261016-fruit-compact1');
   await script('./worlds.js?v=20261031-catalogbots1');
   phase('Conectando amigos e salas…');
@@ -75,7 +75,7 @@ try {
   if(!unloaded)await script('./cristais/loader.js?v=20261118-cristais-trilhas2');
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261117-world1');
-  if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261028-pix1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
+  if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261118-ovo-loja-artes1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
   document.getElementById('boxLogout').onclick=async()=>{await window.BoxEggCloud?.flush();await window.BoxUsage?.stop();
  window.BoxMultiplayer?.disconnect();await supabase.auth.signOut();lock();};
  }

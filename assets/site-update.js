@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   if (window.IntegroUpdates) return;
-  const VERSION = '20261118-cristais-trilhas2';
+  const VERSION = '20261118-ovo-loja-artes1';
   const isGame = location.pathname === '/integro-box/jogar.html';
   let pending = false, dirty = false, dismissed = false, reloading = false;
   let checking = false, overlay, title, message, finish, savePromise;

@@ -1,3 +1,4 @@
+import {shopArt} from './egg-shop-art.mjs';
 // Visual metadata only. The server owns prices, inventory and equipped slots.
 export const EGG_COLLECTIONS=[
  {id:'station',name:'Estação Integro',color:'#32cfc3',secondary:'#ffce64',items:[
@@ -66,6 +67,7 @@ export function eggPremiumEquipment(legacy={},wallet={}){
 
 // Code-native illustrations also work when WebGL thumbnails are unavailable.
 export function eggItemArt(item){
+ if(item.game==='egg'){const image=shopArt(item.id);if(image)return image;}
  const c=/^#[0-9a-f]{6}$/i.test(item.color)?item.color:'#76dfd0',s=/^#[0-9a-f]{6}$/i.test(item.secondary)?item.secondary:'#ffd578';
  const shapes={
  head:'<path d="m20 63-4-31 19 14 15-24 15 24 19-14-4 31Z"/><path d="M20 66h60v10H20Z"/>',

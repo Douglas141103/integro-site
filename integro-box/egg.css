@@ -484,3 +484,20 @@ body:has(#eggApp:not([hidden]) #eggSheet:not([hidden]) #eggRankingContent) :is(#
 .egg-subsoil-cue strong{font-size:clamp(16px,3vw,25px);line-height:1.15}.egg-subsoil-cue small{font-size:12px;max-width:260px}.egg-subsoil-cue.countdown{background:transparent}.egg-subsoil-cue.countdown strong{font-size:72px;color:#ffdf8a}.egg-subsoil-cue[hidden]{display:none!important}
 .egg-stage:has(.egg-sheet:not([hidden])) .egg-subsoil-cue{visibility:hidden}
 @media(max-height:450px){.egg-subsoil-cue{top:24%;padding:7px 12px}.egg-subsoil-cue.countdown strong{font-size:48px}}
+
+/* Artwork is loaded only when the relevant shop or purchase panel is shown. */
+#eggApp .egg-shop-art {
+  display: block;
+  width: 100%;
+  height: clamp(78px, 17vw, 132px);
+  margin: 0 0 8px;
+  object-fit: contain;
+  float: none;
+  border-radius: 10px;
+  background: #fff6e8;
+}
+#eggApp .egg-house-catalog .egg-shop-art,
+#eggApp .egg-floor-purchase .egg-shop-art { height: 75px; }
+#eggApp .egg-jet-shop-icon { width: min(210px, 100%); height: auto; padding: 0; background: none; }
+#eggApp .egg-jet-shop-icon .egg-shop-art { height: 145px; }
+#eggApp .egg-gem-art .egg-shop-art { height: 100%; margin: 0; }

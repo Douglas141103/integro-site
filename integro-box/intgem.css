@@ -35,3 +35,5 @@
  .ig-promo-banner i{display:none}
  body.egg-mobile-layout .ig-promo-launcher{display:none!important}
 }
+
+.ig-art .egg-shop-art { width: 100%; height: 100%; object-fit: contain; background: #fff6e8; }

@@ -1,6 +1,6 @@
+import {shopArt} from '../egg-shop-art.mjs';
 // The database owns price, stock, placement and hit/return transitions.
 const names={bear:'Boca de urso',mine:'Mina terrestre'};
-const icons={bear:'◉',mine:'✹'};
 const errors={insufficient_intgem:'Você precisa de 1 IntGem para comprar.',invalid_trap:'Escolha uma armadilha válida.',request_changed:'Esta solicitação já foi usada. Atualize e tente novamente.',not_member:'Entre em uma sala do Pegue o Ovo.',ground_required:'Pare no chão para colocar a armadilha.',position_pending:'Aguarde a posição sincronizar e tente novamente.',trap_empty:'Você não tem essa armadilha na mochila.',trap_limit:'Você pode deixar até 12 armadilhas na sala. Aguarde uma disparar.'};
 export function createEggTraps({rpc,getRoom,getRuntime,storage,onPlaced=()=>{},onChange=()=>{}}){
  let data={stock:{},traps:[],balance:0},loaded=false,busy=false,polling=false,host=null,status='',roomId=null,epoch=0,signature='',refreshPending=false;
@@ -29,7 +29,7 @@ export function createEggTraps({rpc,getRoom,getRuntime,storage,onPlaced=()=>{},o
  function render(element){host=element;host.replaceChildren();host.classList.add('egg-trap-shop');
   host.append(node('p','Cada armadilha custa 1 IntGem. Um adversário que pisar nela deixa cair o ovo que está carregando. O dono é imune.'),node('p','As armadilhas usadas são consumidas. Ao sair, as que não dispararam voltam à mochila. Se a conexão cair, a devolução acontece após a sala detectar a saída.'),node('strong',loaded?'◆ '+data.balance+' IntGem':'Conectando sua mochila…','egg-trap-balance'));
   const grid=node('div','','egg-sheet-grid');host.append(grid);
-  for(const kind of ['bear','mine']){const count=data.stock?.[kind]||0,card=node('article','','egg-upgrade');card.append(node('div',icons[kind],'egg-trap-icon'),node('h3',names[kind]),node('p','Na mochila: '+count),button('Comprar · 1 IntGem',()=>void act('trap_buy',kind),!loaded||data.balance<1),button('Colocar aqui',()=>void act('trap_place',kind),!count||!roomId||!getRuntime()?.canPlaceTrap()));grid.append(card);}
+  for(const kind of ['bear','mine']){const count=data.stock?.[kind]||0,card=node('article','','egg-upgrade');card.innerHTML=shopArt(kind);card.append(node('h3',names[kind]),node('p','Na mochila: '+count),button('Comprar · 1 IntGem',()=>void act('trap_buy',kind),!loaded||data.balance<1),button('Colocar aqui',()=>void act('trap_place',kind),!count||!roomId||!getRuntime()?.canPlaceTrap()));grid.append(card);}
   host.append(node('p','Pare no chão, abra Armadilhas e toque em Colocar aqui. Você pode deixar até 12 na sala. A armadilha arma em 1 segundo; pule para evitá-la.','egg-muted'));
   if(!roomId)host.append(node('p','Entre em uma sala para colocar suas armadilhas.'));
   const feedback=node('p',status);feedback.setAttribute('role','status');host.append(feedback);

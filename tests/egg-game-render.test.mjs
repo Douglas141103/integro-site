@@ -20,6 +20,31 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
  const key=(k,up=false)=>w.document.getElementById('eggCanvas').dispatchEvent(new w.KeyboardEvent(up?'keyup':'keydown',{key:k,bubbles:true,cancelable:true})),tick=(n=1)=>{for(let i=0;i<n;i++){clock+=1000/60;frame(clock);}},state=()=>w.IntegroOvo.getState();
  try{
   api.show();tick();assert.deepEqual(errors,[]);assert(state().thumbnailCount>80);assert.equal(w.document.getElementById('eggWebglError').hidden,true);
+  const shopImages=new Set();
+  const collectShopArt=()=>{
+   for(const image of w.document.querySelectorAll('#eggSheetBody img.egg-shop-art')){
+    const path=image.getAttribute('src');assert.match(path,/^\/integro-box\/assets\/egg-shop-v1\/[a-zA-Z0-9_]+\.webp$/);
+    assert.equal(image.getAttribute('loading'),'lazy');shopImages.add(path);
+   }
+  };
+  const openMenuSheet=kind=>{
+   w.document.getElementById('eggSettings').click();
+   w.document.querySelector(`[data-egg-action="${kind}"]`).click();
+  };
+  openMenuSheet('shop');
+  for(const tab of ['gear','supplies','vehicles','accessories','abilities','decor','intgem','traps','jetpack']){
+   w.document.querySelector(`[data-shop-tab="${tab}"]`).click();collectShopArt();
+  }
+  w.document.querySelector('[data-shop-tab="gear"]').click();
+  w.document.getElementById('eggCloseSheet').click();
+  for(const sheet of ['house','corral','training']){
+   openMenuSheet(sheet);collectShopArt();w.document.getElementById('eggCloseSheet').click();
+  }
+  assert.equal(shopImages.size,149);
+  for(const path of shopImages){
+   const bytes=readFileSync(new URL('..'+path,import.meta.url));
+   assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  }
   const harborBoats=[];adapter.scene().traverse(n=>{if(n.name==='WindHarborSailboat')harborBoats.push(n);});assert.equal(harborBoats.length,4);
   const stationTrains=[];adapter.scene().traverse(n=>{if(n.name==='IntegroArrivingTrain')stationTrains.push(n);});assert.equal(stationTrains.length,2);
   for(const name of ['GalaxyBirthScenery','PopcornCookerScenery','NeonSphinxCycle']){let count=0;adapter.scene().traverse(n=>{if(n.name===name)count++;});assert.equal(count,4);}
@@ -60,7 +85,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   pointer(joy,'pointerdown',1,50,10);pointer(sprint,'pointerdown',2);tick(3);const beforeJump=state().player.z;pointer(jump,'pointerdown',3);tick(5);assert(state().player.y>.3);assert(state().player.z<beforeJump-.8);assert.equal(actor.vehicleId,'skateBreeze');
   pointer(jump,'pointercancel',3);pointer(sprint,'pointerup',2);const stillRunning=state().player.z;tick(5);assert(state().player.z<stillRunning,'releasing action fingers preserves joystick');pointer(joy,'pointerup',1);tick(60);const stoppedZ=state().player.z;tick(5);assert.equal(state().player.z,stoppedZ);
   pointer(jump,'pointerdown',4);key('Escape');const pausedY=state().player.y;tick(10);pointer(jump,'pointerdown',5);assert.equal(state().player.y,pausedY);key('Escape');tick(70);
-  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:1000000});w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();assert.equal(w.document.querySelector('[data-shop-tab="winter"]'),null);assert.equal(w.document.getElementById('eggWinterContent'),null);assert(w.document.querySelector('[data-shop-tab="gear"]').classList.contains('selected'));w.document.querySelector('[data-shop-tab="intgem"]').click();assert.equal(w.document.querySelectorAll('.egg-gem-card').length,41);assert(w.document.querySelector('[data-gem-item="egg_station_head"]').disabled);w.document.querySelector('[data-shop-tab="vehicles"]').click();assert.equal(w.document.querySelectorAll('[data-vehicle]').length,2);assert.match(w.document.getElementById('eggSheetTag').textContent,/140 ITENS/);w.document.querySelector('[data-vehicle="scooterPort"]').click();w.document.getElementById('eggCloseSheet').click();tick(2);assert.equal(actor.vehicleId,'scooterPort');
+  w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),coins:1000000});w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="shop"]').click();assert.equal(w.document.querySelector('[data-shop-tab="winter"]'),null);assert.equal(w.document.getElementById('eggWinterContent'),null);assert(w.document.querySelector('[data-shop-tab="gear"]').classList.contains('selected'));w.document.querySelector('[data-shop-tab="intgem"]').click();assert.equal(w.document.querySelectorAll('.egg-gem-card').length,41);assert(w.document.querySelector('[data-gem-item="egg_station_head"]').disabled);w.document.querySelector('[data-shop-tab="vehicles"]').click();assert.equal(w.document.querySelectorAll('[data-vehicle]').length,2);assert.match(w.document.getElementById('eggSheetTag').textContent,/149 ITENS NO JOGO/);w.document.querySelector('[data-vehicle="scooterPort"]').click();w.document.getElementById('eggCloseSheet').click();tick(2);assert.equal(actor.vehicleId,'scooterPort');
   const premium=NEW_EGG_ITEMS.find(i=>i.id==='egg_station_head');let gemEquipment={head:premium};
   w.BoxIntGem={balance:0,getCatalog:()=>[],getEquipped:()=>gemEquipment,refresh:async()=>{},toggleEquipment:async()=>{gemEquipment={};}};
   w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),accessories:['crown'],equipped:{head:'crown'}});tick(2);
@@ -124,7 +149,7 @@ test('mounted Egg runs, jumps, carries eggs, pauses, trains and reloads equipped
   w.BoxEggRuntime.apply({...w.BoxEggRuntime.save(),corralFloors:5,secondFloor:true,coins:9000000,upgrades:{pen:10},decoration:'castle',decorations:['meadow','castle'],creatures:Array.from({length:119},(_,i)=>({uid:'five-'+i,world:0,rarity:'common',mutation:'normal'}))});tick(2);
   assert.equal(loft.children.filter(n=>n.name.startsWith('CorralFloor-')).length,5);assert.equal(loft.children.filter(n=>n.name.startsWith('CorralStairs-')).length,0);assert(loft.getObjectByName('CorralElevatorCabin'));
   const landings=[];loft.traverse(n=>{if(n.name==='CorralLanding')landings.push(n);});assert.equal(landings.length,5);for(const landing of landings){const b=new T.Box3().setFromObject(landing);assert(Math.abs(b.max.y-landing.userData.surfaceY)<1e-5);}
-  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="corral"]').click();assert.match(w.document.getElementById('eggSheetBody').textContent,/5\/5 ANDARES/);w.document.querySelector('[data-egg-action="corralDesigns"]').click();assert.equal(w.document.querySelectorAll('.egg-corral-preview').length,7);w.document.querySelector('[data-buy="neon"]').click();tick(2);assert.equal(w.BoxEggRuntime.save().decoration,'neon');assert.equal(w.BoxEggRuntime.save().coins,8950000);assert(loft.getObjectByName('CorralDesign-neon'));assert.equal(w.BoxEggRuntime.save().creatures.length,119);w.document.getElementById('eggCloseSheet').click();
+  w.document.getElementById('eggSettings').click();w.document.querySelector('[data-egg-action="corral"]').click();assert.match(w.document.getElementById('eggSheetBody').textContent,/5\/5 ANDARES/);w.document.querySelector('[data-egg-action="corralDesigns"]').click();assert.equal(w.document.querySelectorAll('.egg-corral-preview').length,1);assert.equal(w.document.querySelectorAll('.egg-upgrade .egg-shop-art').length,6);w.document.querySelector('[data-buy="neon"]').click();tick(2);assert.equal(w.BoxEggRuntime.save().decoration,'neon');assert.equal(w.BoxEggRuntime.save().coins,8950000);assert(loft.getObjectByName('CorralDesign-neon'));assert.equal(w.BoxEggRuntime.save().creatures.length,119);w.document.getElementById('eggCloseSheet').click();
   adapter.setPeers([{slot:2,state:{x:2,y:0,z:10,yaw:0,zone:'world'}}]);tick(3);adapter.clearPeers();api.hide();assert.equal(state().active,false);assert.equal(state().music.playing,false);assert(w.localStorage.getItem('integro-box-eggs-v1'));assert.deepEqual(errors,[]);
  }finally{dom.window.close();}
 });
