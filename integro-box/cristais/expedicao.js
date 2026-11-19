@@ -496,7 +496,8 @@ const routeRecordings = {
   'Estados Unidos': {recording: './audio/beyond-the-great-ridge.mp3', style: 'Beyond the Great Ridge'},
   Egito: {recording: './audio/the-pharaoh-s-final-secret.mp3', style: "The Pharaoh's Final Secret"},
   Rússia: {recording: './audio/beyond-the-mountain-pass.mp3', style: 'Beyond the Mountain Pass'},
-  Europa: {recording: './audio/beneath-the-ancient-spire.mp3', style: 'Beneath the Ancient Spire'}
+  Europa: {recording: './audio/beneath-the-ancient-spire.mp3', style: 'Beneath the Ancient Spire'},
+  Ásia: {recording: './audio/ceremony-of-the-three-horizons.mp3', style: 'Ceremony of the Three Horizons'}
 };
 WORLD_THEMES.forEach(route => route.scenes.forEach(scene => {
   const score = MUSIC_RESEARCH[scene.id];
