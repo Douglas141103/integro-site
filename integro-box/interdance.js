@@ -263,6 +263,16 @@ Object.assign(stages[1], {
     duration: 59.585
   }
 });
+Object.assign(stages[2], {
+  bpm: 148,
+  bars: 38,
+  recording: {
+    title: "Passo de Areia",
+    url: "./assets/interdance/music/passo-de-areia.mp3",
+    gridOffset: 0.038,
+    duration: 66.612
+  }
+});
 function generateSong(E, A = "normal") {
   let g = 60 / E.bpm, B = [], I = [], C = [], Q = 0, M = (w, G, D, i, s = 0.12, k = 0) => B.push({ at: w * g, duration: G * g, midi: D, voice: i, amp: s, pan: k });
   for (let w = 0; w < 4; w++) M(w, 0.08, w === 3 ? 84 : 72, "count", 0.13);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DanceAudio, generateSong, stages} from '../integro-box/interdance-src/engine.mjs';
 
-for (const [index, title] of ['Pirouette on the Grid', 'Asphalt Glider'].entries()) {
+for (const [index, title] of ['Pirouette on the Grid', 'Asphalt Glider', 'Passo de Areia'].entries()) {
   test(title + ' follows its recording grid and natural ending', () => {
     assert.equal(stages[index].recording.title, title);
     for (const mode of ['easy', 'normal']) {
