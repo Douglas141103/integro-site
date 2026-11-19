@@ -2,13 +2,14 @@ import {stages,generateSong,sanitizeProgress,RhythmRun,DanceAudio,setCharacterPa
 import {createVersusRuns,versusWinner,keyLane} from './versus.mjs';
 import {drawConcert,concertLayout} from './concert.mjs';
 
-async function loadAnimeRenderer(options){
-  if(!globalThis.WebGL2RenderingContext)return null;
-  const {createAnimePainter}=await import('./interdance-anime.js?v=20261017-dance-moves1');
-  return createAnimePainter(options);
+import {createSpritePainter,dancerSlug} from './dancer-sprites.mjs';
+
+function loadSpriteRenderer(options) {
+  const ImageClass = globalThis.Image || globalThis.window?.Image;
+  return ImageClass ? createSpritePainter({...options, createImage: () => new ImageClass()}) : null;
 }
 
-export function createInterDance({onExit,storage=window.BoxStorage,audio=new DanceAudio(),loadRenderer=loadAnimeRenderer}={}) {
+export function createInterDance({onExit,storage=window.BoxStorage,audio=new DanceAudio(),loadRenderer=loadSpriteRenderer}={}) {
   if(!storage) throw new Error('Entre com a conta da família para jogar.');
   const $=id=>document.getElementById(id), app=$('danceApp'), canvas=$('danceCanvas'), ctx=canvas.getContext('2d'), sheet=$('danceSheet');
   const pads=[...$('dancePads').querySelectorAll('[data-dance-lane]')];
@@ -28,11 +29,11 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
   async function prepareGraphics(){
     const token=++visualGeneration;app.dataset.graphics='loading';
     try{
-      const painter=await loadRenderer({onUnavailable:()=>{if(active&&token===visualGeneration)graphicsUnavailable();}});
+      const painter=await loadRenderer({onReady:()=>{if(active&&token===visualGeneration)artwork();},onUnavailable:()=>{if(active&&token===visualGeneration)graphicsUnavailable();}});
       if(!active||token!==visualGeneration){painter?.dispose();return;}
       if(!painter){app.dataset.graphics='compatibility';return;}
       graphics=painter;graphics.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});
-      setCharacterPainter(graphics);app.dataset.graphics='anime';artwork();
+      setCharacterPainter(graphics);app.dataset.graphics=painter.name||'anime';artwork();
     }catch{if(active&&token===visualGeneration)graphicsUnavailable();}
   }
   const keyboard=new Map(),pointers=new Map(),pressed=new Array(8).fill(0);
@@ -46,14 +47,28 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
     const layout=concertLayout(width,height,match==='versus');
     [...$('dancePads').children].forEach((group,i)=>{const track=layout.tracks[i];if(!track)return;Object.assign(group.style,{left:track.padLeft+'px',top:track.padY+'px',width:track.padWidth+'px',height:track.padHeight+'px'});});
   }
-  function artwork(){graphics?.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});const hero=$('danceHero');if(hero){hero.width=640;hero.height=260;drawConcert(hero.getContext('2d'),640,260,stage,[],0,[avatars[avatar]],{preview:true,reduced:true});}}
-  function overlay(next,html){view=next;app.dataset.view=next;document.body.classList.remove('dance-in-song');$('dancePause').hidden=next==='home';$('danceOverlay').hidden=false;sheet.innerHTML=html;sheet.scrollTop=0;sheet.focus();bind();artwork();}
+  let previewStart=0,previewFrame=-1;
+  function drawPreview(position=0){
+    const hero=$('danceHero');
+    if(!hero)return;
+    const duel=view==='detail'&&preferredMatch==='versus';
+    drawConcert(hero.getContext('2d'),hero.width,hero.height,stage,[],position,
+      duel?avatars:[avatars[avatar]],{preview:true,versus:duel,reduced:progress.reducedEffects,previewSong:song});
+  }
+  function artwork(){
+    graphics?.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});
+    const hero=$('danceHero');
+    if(!hero)return;
+    if(hero.width!==640||hero.height!==260){hero.width=640;hero.height=260;}
+    drawPreview(view==='listen'?audio.position():0);
+  }
+  function overlay(next,html){previewStart=performance.now();previewFrame=-1;view=next;app.dataset.view=next;document.body.classList.remove('dance-in-song');$('dancePause').hidden=next==='home';$('danceOverlay').hidden=false;sheet.innerHTML=html;sheet.scrollTop=0;sheet.focus();bind();artwork();}
   const button=(action,label,primary=false)=>`<button data-action="${action}"${primary?' class="primary"':''}>${label}</button>`;
   function home(){
     generation++;audio.stop();clearInputs();hud();
     $('danceTrack').innerHTML='<b>INTER<span class="dance-word-accent">DANCE</span></b><small>Festival de ritmo</small>';
     const complete=stages.filter(s=>progress.best[`${s.id}-${progress.mode}-remix`]?.stars).length;
-    overlay('home',`<div class="dance-library"><div class="dance-cover-art"><div><span class="dance-eyebrow">VOLUME 01 · INTEGRO BOX</span><h1>Sinta o som.<br><em>Entre no ritmo.</em></h1><span class="dance-cover-caption">16 músicas. Seu próximo palco.</span></div></div><div class="dance-stage-heading"><div><span class="dance-eyebrow">PLAYLIST</span><h2>Escolha sua música</h2></div><span>${complete}<small> / 16</small></span></div><div class="dance-stages">${stages.map(s=>{const best=progress.best[`${s.id}-${progress.mode}-remix`];return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><span>${String(s.week).padStart(2,'0')}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>·</i> ${s.bpm} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars||0} de 3 estrelas">${'★'.repeat(best?.stars||0)+'☆'.repeat(3-(best?.stars||0))}</span><span class="dance-play-mark" aria-hidden="true">›</span></span></button>`;}).join('')}</div><div class="dance-library-footer">${button('shop','◇ Loja IntGem')}${button('settings','Som e ajuda')}<span>${saved?'Recordes salvos nesta conta e navegador.':'Salvamento indisponível nesta sessão.'}</span></div></div>`);
+    overlay('home',`<div class="dance-library"><div class="dance-cover-art"><div><span class="dance-eyebrow">VOLUME 01 · INTEGRO BOX</span><h1>Sinta o som.<br><em>Entre no ritmo.</em></h1><span class="dance-cover-caption">16 músicas. Seu próximo palco.</span></div></div><div class="dance-stage-heading"><div><span class="dance-eyebrow">PLAYLIST</span><h2>Escolha sua música</h2></div><span>${complete}<small> / 16</small></span></div><div class="dance-stages">${stages.map(s=>{const best=progress.best[`${s.id}-${progress.mode}-remix`];return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="./assets/interdance/dancers-v1/portraits/${dancerSlug(s.artist)}.webp"><span>${String(s.week).padStart(2,'0')}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>·</i> ${s.bpm} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars||0} de 3 estrelas">${'★'.repeat(best?.stars||0)+'☆'.repeat(3-(best?.stars||0))}</span><span class="dance-play-mark" aria-hidden="true">›</span></span></button>`;}).join('')}</div><div class="dance-library-footer">${button('shop','◇ Loja IntGem')}${button('settings','Som e ajuda')}<span>${saved?'Recordes salvos nesta conta e navegador.':'Salvamento indisponível nesta sessão.'}</span></div></div>`);
   }
   function detail(id=stage.id){
     generation++;audio.stop();clearInputs();hud();stage=stages[id]||stages[0];song=generateSong(stage,progress.mode);
@@ -136,6 +151,11 @@ export function createInterDance({onExit,storage=window.BoxStorage,audio=new Dan
       if(runs.every(run=>run.status!=='playing'))finish();
     }
     graphics?.setOptions({bpm:stage.bpm,reduced:progress.reducedEffects});
+    if((view==='detail'||view==='listen')&&!progress.reducedEffects){
+      const t=view==='listen'?position:Math.max(0,(now-previewStart)/1000);
+      const tick=Math.floor(t*30);
+      if(tick!==previewFrame){drawPreview(t);previewFrame=tick;}
+    }
     const playing=['playing','paused'].includes(view);
     if(playing)drawConcert(ctx,width,height,stage,runs,position,match==='versus'?avatars:[avatars[avatar]],{versus:match==='versus',reduced:progress.reducedEffects});
     if(now>toastUntil)$('danceToast').classList.remove('visible');

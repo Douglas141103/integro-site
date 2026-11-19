@@ -60,7 +60,7 @@ try {
   if(!unloaded)await import('./egg-cloud.js?v=20261116-egypt-music1');
   if(!unloaded){const {mountEggHud}=await import('./egg-hud.mjs?v=20261114-hud1');window.BoxEggHud=mountEggHud();}
   if(!unloaded){const {installGoSnake}=await import('./gosnake.js?v=20261013-snake1');installGoSnake();}
-  if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261017-dance-moves1');installInterDance();}
+  if(!unloaded){const {installInterDance}=await import('./interdance.js?v=20261119-interdance-sprites1');installInterDance();}
   if(!unloaded)await script('./bounce-core.js?v=20261014-bounce3');
   if(!unloaded)await script('./bounce-render.js?v=20261016-intgem1');
   if(!unloaded)await script('./bounce.js?v=20261016-intgem1');

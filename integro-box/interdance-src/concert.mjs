@@ -65,19 +65,19 @@ function highway(c,track,run,time,player,versus,reduced){
  c.restore();
  if(time-run.last.at<.58&&run.last.lane>=0){label(c,run.last.text,track.center,top+48,versus?12:16,run.last.text==='PERFEITO!'?'#bdf58b':white);if(run.combo>2)label(c,run.combo+'×',track.center,top+79,versus?20:26,'#fff');}
 }
-export function drawConcert(c,w,h,stage,runs,time,avatars,{versus=false,reduced=false,preview=false}={}){
+export function drawConcert(c,w,h,stage,runs,time,avatars,{versus=false,reduced=false,preview=false,previewSong=null}={}){
  const l=concertLayout(w,h,versus);drawConcertStage(c,w,preview?h:l.landscape?h:l.stageBottom+14,stage,time,reduced);
  if(!l.landscape&&!preview){c.fillStyle=ink;c.fillRect(0,l.stageBottom+4,w,h-l.stageBottom-4);}
- const beat=time/(60/stage.bpm),opponent=runs[0]?.song.opponent.findLast(n=>n.time<=time&&time<n.time+Math.max(.32,n.hold)+.28);
+ const beat=time/(60/stage.bpm),opponent=(runs[0]?.song||previewSong)?.opponent.findLast(n=>n.time<=time&&time<n.time+Math.max(.32,n.hold)+.28);
  for(let i=0;i<2;i++){
   const p=versus?avatars[i]:i===0?stage:avatars[0],run=runs[versus?i:0];
   const player=versus||i===1;
   const hold=player?run?.notes.find(n=>n.state==='holding'):null;
-  const cue=player?(hold?{lane:hold.lane,at:hold.time,duration:hold.hold}:run&&run.last.text!=='Continue!'?{lane:run.last.lane,at:run.last.at}:{}):{lane:opponent?.lane,at:opponent?.time,duration:opponent?.hold};
+  const cue=player?(hold?{lane:hold.lane,at:hold.time,duration:hold.hold}:run&&['PERFEITO!','MUITO BEM!','BOA!'].includes(run.last.text)?{lane:run.last.lane,at:run.last.at}:{}):{lane:opponent?.lane,at:opponent?.time,duration:opponent?.hold};
   const lane=Number.isInteger(cue.lane)&&time>=cue.at&&time<cue.at+Math.max(.32,cue.duration||0)+.28?cue.lane:-1;
   const size=preview?Math.min(h*.73,w*.32):l.charSize,feet=preview?h*.88:l.feetY,x=preview?w*(i?.72:.28):l.characterX(i);
   c.fillStyle='#01051a70';c.beginPath();c.ellipse(x,feet+2,size*.30,Math.max(3,size*.035),0,0,Math.PI*2);c.fill();
-  drawCharacter(c,x,feet-size,size,{...p,bpm:stage.bpm},reduced?0:beat,lane,i===1,{...cue,reduced});
+  drawCharacter(c,x,feet-size,size,{...p,bpm:stage.bpm},reduced?0:beat,lane,i===1,{...cue,reduced,groove:stage.groove,stageId:stage.id});
   if(!preview)label(c,versus?'J'+(i+1)+' · '+p.artist:i===0?p.artist:'VOCÊ',x,feet+17,9,i===0?'#b6b0eb':'#8be4dd');
  }
  if(preview)return;

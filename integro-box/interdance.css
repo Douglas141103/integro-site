@@ -29,9 +29,8 @@ body.dance-playing{overflow:hidden}body.dance-playing>header{display:none!import
 #danceApp .dance-sheet button.dance-stage{display:flex;align-items:center;gap:12px;min-height:76px;padding:8px;text-align:left;border-radius:12px;border:1px solid #283650;background:#111a30;overflow:hidden}
 #danceApp .dance-stage:hover{background:#1c2b45;border-color:#83c8cf;transform:translateY(-1px)}
 #danceApp .dance-track-art{position:relative;flex:0 0 56px;height:56px;display:grid;place-items:center;overflow:hidden;border-radius:8px;background:linear-gradient(135deg,var(--track-tint),#141b37);color:#fff}
-#danceApp .dance-track-art:before,#danceApp .dance-track-art:after{content:"";position:absolute;border:1px solid var(--track-color);width:54px;height:54px;transform:rotate(35deg);opacity:.5;border-radius:50%}
-#danceApp .dance-track-art:after{width:34px;height:34px;border-width:5px;transform:translate(16px,15px);opacity:.3}
-#danceApp .dance-track-art>span{z-index:1;font-size:25px;font-style:italic;font-weight:900;text-shadow:0 2px 8px #080d20}
+#danceApp .dance-track-art>img{width:100%;height:100%;object-fit:cover}
+#danceApp .dance-track-art>span{position:absolute;bottom:1px;left:2px;padding:1px 3px;border-radius:3px;background:#101831d9;color:#fff;font:700 9px/1.15 system-ui}
 #danceApp .dance-track-title{min-width:0;flex:1}#danceApp .dance-track-title b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.15px}
 #danceApp .dance-track-title small{display:block;font-size:10px;color:#a5b0c9;margin-top:5px;font-weight:500}#danceApp .dance-track-title i{font-style:normal;padding:0 4px;color:#6b7b99}
 #danceApp .dance-track-rating{display:flex;align-items:center;gap:9px}.stars{color:#f9da88;font-size:10px;letter-spacing:1px}#danceApp .dance-play-mark{font-size:28px;font-weight:400;color:#a6e7dd;padding-right:3px}

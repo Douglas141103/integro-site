@@ -1,7 +1,7 @@
-// integro-box/interdance-src/dance-proportions.mjs
+// dance-proportions.mjs
 var HIP_HEIGHT = 1.05;
 
-// integro-box/interdance-src/anime-motion.mjs
+// anime-motion.mjs
 var clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var smooth = (v) => {
   const t = clamp(v);
@@ -230,7 +230,7 @@ function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
   };
 }
 
-// integro-box/interdance-src/engine.mjs
+// engine.mjs
 var characterPainter = null;
 function setCharacterPainter(painter) {
   characterPainter = painter;
@@ -546,7 +546,7 @@ var avatars = [{ artist: "Duda", skin: "#d7a57e", hair: "#3a334d", color: "#27c6
 var escapeHTML = (E) => String(E).replace(/[&<>"']/g, (A) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[A]);
 var formatTime = (E) => Math.floor(Math.max(0, E) / 60) + ":" + String(Math.floor(Math.max(0, E) % 60)).padStart(2, "0");
 
-// integro-box/interdance-src/versus.mjs
+// versus.mjs
 function createVersusRuns(song) {
   return [new RhythmRun(song, true), new RhythmRun(song, true)];
 }
@@ -561,7 +561,7 @@ function keyLane(key, versus) {
   return key in lanes ? lanes[key] + (versus && key.startsWith("arrow") ? 4 : 0) : null;
 }
 
-// integro-box/interdance-src/concert.mjs
+// concert.mjs
 var NOTE_COLORS = ["#b99aff", "#66e4ed", "#bef58c", "#ff9bb9"];
 var ink = "#080d20";
 var white = "#edf2ff";
@@ -738,26 +738,26 @@ function highway(c, track, run, time, player, versus, reduced) {
     if (run.combo > 2) label(c, run.combo + "\xD7", track.center, top + 79, versus ? 20 : 26, "#fff");
   }
 }
-function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, reduced = false, preview = false } = {}) {
+function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, reduced = false, preview = false, previewSong = null } = {}) {
   const l = concertLayout(w, h, versus);
   drawConcertStage(c, w, preview ? h : l.landscape ? h : l.stageBottom + 14, stage, time, reduced);
   if (!l.landscape && !preview) {
     c.fillStyle = ink;
     c.fillRect(0, l.stageBottom + 4, w, h - l.stageBottom - 4);
   }
-  const beat = time / (60 / stage.bpm), opponent = runs[0]?.song.opponent.findLast((n) => n.time <= time && time < n.time + Math.max(0.32, n.hold) + 0.28);
+  const beat = time / (60 / stage.bpm), opponent = (runs[0]?.song || previewSong)?.opponent.findLast((n) => n.time <= time && time < n.time + Math.max(0.32, n.hold) + 0.28);
   for (let i = 0; i < 2; i++) {
     const p = versus ? avatars2[i] : i === 0 ? stage : avatars2[0], run = runs[versus ? i : 0];
     const player = versus || i === 1;
     const hold = player ? run?.notes.find((n) => n.state === "holding") : null;
-    const cue = player ? hold ? { lane: hold.lane, at: hold.time, duration: hold.hold } : run && run.last.text !== "Continue!" ? { lane: run.last.lane, at: run.last.at } : {} : { lane: opponent?.lane, at: opponent?.time, duration: opponent?.hold };
+    const cue = player ? hold ? { lane: hold.lane, at: hold.time, duration: hold.hold } : run && ["PERFEITO!", "MUITO BEM!", "BOA!"].includes(run.last.text) ? { lane: run.last.lane, at: run.last.at } : {} : { lane: opponent?.lane, at: opponent?.time, duration: opponent?.hold };
     const lane = Number.isInteger(cue.lane) && time >= cue.at && time < cue.at + Math.max(0.32, cue.duration || 0) + 0.28 ? cue.lane : -1;
     const size = preview ? Math.min(h * 0.73, w * 0.32) : l.charSize, feet = preview ? h * 0.88 : l.feetY, x = preview ? w * (i ? 0.72 : 0.28) : l.characterX(i);
     c.fillStyle = "#01051a70";
     c.beginPath();
     c.ellipse(x, feet + 2, size * 0.3, Math.max(3, size * 0.035), 0, 0, Math.PI * 2);
     c.fill();
-    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1, { ...cue, reduced });
+    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1, { ...cue, reduced, groove: stage.groove, stageId: stage.id });
     if (!preview) label(c, versus ? "J" + (i + 1) + " \xB7 " + p.artist : i === 0 ? p.artist : "VOC\xCA", x, feet + 17, 9, i === 0 ? "#b6b0eb" : "#8be4dd");
   }
   if (preview) return;
@@ -771,13 +771,129 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
   }
 }
 
-// integro-box/interdance-src/app.mjs
-async function loadAnimeRenderer(options) {
-  if (!globalThis.WebGL2RenderingContext) return null;
-  const { createAnimePainter } = await import("./interdance-anime.js?v=20261017-dance-moves1");
-  return createAnimePainter(options);
+// dancer-sprites.mjs
+var STEP = [0, 2, 14, 12, 14, 2, 12, 0];
+var SHUFFLE = [14, 9, 12, 11, 14, 12, 9, 0];
+var LOCK = [1, 13, 2, 13, 1, 14, 13, 0];
+var REACH = [2, 3, 5, 12, 3, 5, 2, 14];
+var DIP = [14, 2, 4, 4, 14, 15, 4, 14];
+var WAVE = [8, 12, 10, 10, 2, 13, 1, 14];
+var TURN = [2, 6, 7, 7, 8, 8, 12, 14];
+var LUNGE = [12, 14, 15, 1, 11, 9, 12, 14];
+var SCORES = {
+  pop: [STEP, REACH, SHUFFLE, TURN, LOCK, DIP, WAVE, LUNGE],
+  electro: [LOCK, STEP, WAVE, SHUFFLE, DIP, TURN, REACH, LUNGE],
+  tropical: [SHUFFLE, WAVE, STEP, TURN, LUNGE, REACH, DIP, LOCK],
+  forest: [WAVE, STEP, TURN, REACH, DIP, LUNGE, SHUFFLE, LOCK],
+  funk: [DIP, LOCK, SHUFFLE, STEP, REACH, LUNGE, TURN, WAVE],
+  rock: [LUNGE, REACH, DIP, LOCK, TURN, WAVE, STEP, SHUFFLE],
+  crystal: [TURN, WAVE, REACH, STEP, SHUFFLE, LUNGE, DIP, LOCK],
+  chip: [LOCK, SHUFFLE, DIP, STEP, LUNGE, REACH, WAVE, TURN],
+  finale: [REACH, TURN, LUNGE, SHUFFLE, WAVE, LOCK, DIP, STEP]
+};
+function dancerSlug(artist) {
+  return artist.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-");
 }
-function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadAnimeRenderer } = {}) {
+function dancerFrame(beat, person, lane, mirrored, cue) {
+  if (cue.reduced) return 0;
+  const musicBeat = Math.max(0, beat - 4);
+  const score = SCORES[cue.groove] || SCORES[person.groove] || SCORES.pop;
+  const stageOffset = Math.floor((cue.stageId ?? person.id ?? 0) / 3);
+  const phrase = score[(Math.floor(musicBeat / 4) + stageOffset + (mirrored ? 1 : 0)) % score.length];
+  const slot = Math.floor(musicBeat * 2) % phrase.length;
+  const seconds = beat * 60 / (person.bpm || 140);
+  const age = seconds - cue.at;
+  if (lane >= 0 && lane < 4 && age >= 0 && age < Math.max(0.115, cue.duration || 0) && (cue.duration > 0 || phrase !== TURN)) {
+    return [mirrored ? 1 : 15, 4, 5, mirrored ? 15 : 1][lane];
+  }
+  return beat < 4 ? STEP[Math.floor(beat * 2) % STEP.length] : phrase[slot];
+}
+function createSpritePainter({ onReady = () => {
+}, createImage = () => new Image() } = {}) {
+  const sheets = /* @__PURE__ */ new Map();
+  let disposed = false;
+  let reduced = false;
+  function release(entry) {
+    entry.image.onload = null;
+    entry.image.onerror = null;
+  }
+  function sheetFor(artist) {
+    let entry = sheets.get(artist);
+    if (entry) {
+      sheets.delete(artist);
+      sheets.set(artist, entry);
+      return entry;
+    }
+    if (sheets.size === 4) {
+      const [oldest, oldEntry] = sheets.entries().next().value;
+      release(oldEntry);
+      sheets.delete(oldest);
+    }
+    const image = createImage();
+    entry = { image, ready: false };
+    sheets.set(artist, entry);
+    image.decoding = "async";
+    image.onload = () => {
+      if (disposed) return;
+      entry.ready = image.naturalWidth > 0 && image.naturalHeight > 0 && image.naturalWidth % 4 === 0 && image.naturalHeight % 4 === 0;
+      onReady();
+    };
+    image.src = "./assets/interdance/dancers-v1/" + dancerSlug(artist) + ".webp";
+    return entry;
+  }
+  return {
+    name: "sprites",
+    setOptions(options) {
+      reduced = !!options.reduced;
+    },
+    draw(ctx, x, y, size, person, beat = 0, lane = -1, mirrored = false, cue = {}) {
+      if (disposed) return false;
+      const entry = sheetFor(person.artist);
+      if (!entry.ready) return false;
+      const still = reduced || cue.reduced;
+      const index = dancerFrame(beat, person, lane, mirrored, { ...cue, reduced: still });
+      const { image } = entry;
+      const width = image.naturalWidth / 4;
+      const height = image.naturalHeight / 4;
+      const sway = still ? 0 : Math.sin(beat * Math.PI / 2) * size * 0.021;
+      const pulse = still ? 0 : (1 - Math.cos(beat * Math.PI * 2)) * 9e-3;
+      const stretch = size * 1.06;
+      ctx.save();
+      try {
+        ctx.translate(x + sway, y + size);
+        ctx.scale((mirrored ? -1 : 1) * (1 + pulse * 0.45), 1 - pulse);
+        if (person.monochrome) ctx.filter = "grayscale(" + person.monochrome + ")";
+        const drawWidth = stretch * width / height;
+        ctx.drawImage(
+          image,
+          index % 4 * width,
+          Math.floor(index / 4) * height,
+          width,
+          height,
+          -drawWidth / 2,
+          -stretch,
+          drawWidth,
+          stretch
+        );
+      } finally {
+        ctx.restore();
+      }
+      return true;
+    },
+    dispose() {
+      disposed = true;
+      for (const entry of sheets.values()) release(entry);
+      sheets.clear();
+    }
+  };
+}
+
+// app.mjs
+function loadSpriteRenderer(options) {
+  const ImageClass = globalThis.Image || globalThis.window?.Image;
+  return ImageClass ? createSpritePainter({ ...options, createImage: () => new ImageClass() }) : null;
+}
+function createInterDance({ onExit, storage = window.BoxStorage, audio = new DanceAudio(), loadRenderer = loadSpriteRenderer } = {}) {
   if (!storage) throw new Error("Entre com a conta da fam\xEDlia para jogar.");
   const $ = (id) => document.getElementById(id), app = $("danceApp"), canvas = $("danceCanvas"), ctx = canvas.getContext("2d"), sheet = $("danceSheet");
   const pads = [...$("dancePads").querySelectorAll("[data-dance-lane]")];
@@ -813,7 +929,9 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     const token = ++visualGeneration;
     app.dataset.graphics = "loading";
     try {
-      const painter = await loadRenderer({ onUnavailable: () => {
+      const painter = await loadRenderer({ onReady: () => {
+        if (active && token === visualGeneration) artwork();
+      }, onUnavailable: () => {
         if (active && token === visualGeneration) graphicsUnavailable();
       } });
       if (!active || token !== visualGeneration) {
@@ -827,7 +945,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
       graphics = painter;
       graphics.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
       setCharacterPainter(graphics);
-      app.dataset.graphics = "anime";
+      app.dataset.graphics = painter.name || "anime";
       artwork();
     } catch {
       if (active && token === visualGeneration) graphicsUnavailable();
@@ -881,16 +999,35 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
       Object.assign(group.style, { left: track.padLeft + "px", top: track.padY + "px", width: track.padWidth + "px", height: track.padHeight + "px" });
     });
   }
+  let previewStart = 0, previewFrame = -1;
+  function drawPreview(position = 0) {
+    const hero = $("danceHero");
+    if (!hero) return;
+    const duel = view === "detail" && preferredMatch === "versus";
+    drawConcert(
+      hero.getContext("2d"),
+      hero.width,
+      hero.height,
+      stage,
+      [],
+      position,
+      duel ? avatars : [avatars[avatar]],
+      { preview: true, versus: duel, reduced: progress.reducedEffects, previewSong: song }
+    );
+  }
   function artwork() {
     graphics?.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
     const hero = $("danceHero");
-    if (hero) {
+    if (!hero) return;
+    if (hero.width !== 640 || hero.height !== 260) {
       hero.width = 640;
       hero.height = 260;
-      drawConcert(hero.getContext("2d"), 640, 260, stage, [], 0, [avatars[avatar]], { preview: true, reduced: true });
     }
+    drawPreview(view === "listen" ? audio.position() : 0);
   }
   function overlay(next, html) {
+    previewStart = performance.now();
+    previewFrame = -1;
     view = next;
     app.dataset.view = next;
     document.body.classList.remove("dance-in-song");
@@ -912,7 +1049,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     const complete = stages.filter((s) => progress.best[`${s.id}-${progress.mode}-remix`]?.stars).length;
     overlay("home", `<div class="dance-library"><div class="dance-cover-art"><div><span class="dance-eyebrow">VOLUME 01 \xB7 INTEGRO BOX</span><h1>Sinta o som.<br><em>Entre no ritmo.</em></h1><span class="dance-cover-caption">16 m\xFAsicas. Seu pr\xF3ximo palco.</span></div></div><div class="dance-stage-heading"><div><span class="dance-eyebrow">PLAYLIST</span><h2>Escolha sua m\xFAsica</h2></div><span>${complete}<small> / 16</small></span></div><div class="dance-stages">${stages.map((s) => {
       const best = progress.best[`${s.id}-${progress.mode}-remix`];
-      return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><span>${String(s.week).padStart(2, "0")}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>\xB7</i> ${s.bpm} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars || 0} de 3 estrelas">${"\u2605".repeat(best?.stars || 0) + "\u2606".repeat(3 - (best?.stars || 0))}</span><span class="dance-play-mark" aria-hidden="true">\u203A</span></span></button>`;
+      return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="./assets/interdance/dancers-v1/portraits/${dancerSlug(s.artist)}.webp"><span>${String(s.week).padStart(2, "0")}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>\xB7</i> ${s.bpm} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars || 0} de 3 estrelas">${"\u2605".repeat(best?.stars || 0) + "\u2606".repeat(3 - (best?.stars || 0))}</span><span class="dance-play-mark" aria-hidden="true">\u203A</span></span></button>`;
     }).join("")}</div><div class="dance-library-footer">${button("shop", "\u25C7 Loja IntGem")}${button("settings", "Som e ajuda")}<span>${saved ? "Recordes salvos nesta conta e navegador." : "Salvamento indispon\xEDvel nesta sess\xE3o."}</span></div></div>`);
   }
   function detail(id = stage.id) {
@@ -1193,6 +1330,14 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
       if (runs.every((run) => run.status !== "playing")) finish();
     }
     graphics?.setOptions({ bpm: stage.bpm, reduced: progress.reducedEffects });
+    if ((view === "detail" || view === "listen") && !progress.reducedEffects) {
+      const t = view === "listen" ? position : Math.max(0, (now - previewStart) / 1e3);
+      const tick = Math.floor(t * 30);
+      if (tick !== previewFrame) {
+        drawPreview(t);
+        previewFrame = tick;
+      }
+    }
     const playing = ["playing", "paused"].includes(view);
     if (playing) drawConcert(ctx, width, height, stage, runs, position, match === "versus" ? avatars : [avatars[avatar]], { versus: match === "versus", reduced: progress.reducedEffects });
     if (now > toastUntil) $("danceToast").classList.remove("visible");
