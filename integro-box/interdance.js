@@ -1,7 +1,7 @@
-// dance-proportions.mjs
+// integro-box/interdance-src/dance-proportions.mjs
 var HIP_HEIGHT = 1.05;
 
-// anime-motion.mjs
+// integro-box/interdance-src/anime-motion.mjs
 var clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var smooth = (v) => {
   const t = clamp(v);
@@ -230,7 +230,7 @@ function animePose(seconds, bpm = 140, lane = -1, reduced = false, cue = {}) {
   };
 }
 
-// engine.mjs
+// integro-box/interdance-src/engine.mjs
 var characterPainter = null;
 function setCharacterPainter(painter) {
   characterPainter = painter;
@@ -243,6 +243,16 @@ var lI = (E, A, g = 0) => {
   let B = _k[E.scale], I = (A % B.length + B.length) % B.length;
   return E.key + B[I] + Math.floor(A / B.length) * 12 + g * 12;
 };
+Object.assign(stages[0], {
+  bpm: 135.77,
+  bars: 29,
+  recording: {
+    title: "Pirouette on the Grid",
+    url: "./assets/interdance/music/pirouette-on-the-grid.mp3",
+    gridOffset: 0.079,
+    duration: 56.607
+  }
+});
 function generateSong(E, A = "normal") {
   let g = 60 / E.bpm, B = [], I = [], C = [], Q = 0, M = (w, G, D, i, s = 0.12, k = 0) => B.push({ at: w * g, duration: G * g, midi: D, voice: i, amp: s, pan: k });
   for (let w = 0; w < 4; w++) M(w, 0.08, w === 3 ? 84 : 72, "count", 0.13);
@@ -262,7 +272,7 @@ function generateSong(E, A = "normal") {
     let e = E.id < 3 ? [0, 2, 4, 6] : E.id < 7 ? [0, 2, 3, 4, 6] : E.id < 11 ? [0, 1, 2, 4, 5, 6] : [0, 1, 2, 3, 4, 5, 6, 7];
     E.id >= 11 && w % 8 === 3 && (e = e.filter((h) => h !== 7));
     for (let h of e) {
-      let J = E.motif[(h + w % 2 * 2 + D) % 8], c = (J + w % 2) % 4, m = E.id >= 5 && h === 6 && w % 4 === 3 && e.at(-1) === 6 ? 0.7 : 0, S = (G + h * 0.5) * g;
+      let J = E.motif[(h + w % 2 * 2 + D) % 8], c = (J + w % 2) % 4, m = E.id >= 5 && h === 6 && w % 4 === 3 && e.at(-1) === 6 ? 0.7 : 0, S = (E.recording?.gridOffset || 0) + (G + h * 0.5) * g;
       M(G + h * 0.5, m || 0.32, lI(E, J, 0), s ? "answer" : E.groove === "crystal" ? "bell" : "lead", 0.14, s ? 0.18 : -0.18);
       let a = { id: Q++, lane: c, time: S, hold: m * g };
       s ? (A !== "easy" || h % 2 === 0) && I.push(a) : C.push(a);
@@ -270,7 +280,7 @@ function generateSong(E, A = "normal") {
   }
   let Y = 4 + E.bars * 4;
   for (let w of [0, 2, 4]) M(Y, 2, lI(E, w, 0), "bell", 0.08);
-  return B.sort((w, G) => w.at - G.at), { events: B, notes: I, opponent: C, duration: (Y + 3) * g, beat: g, stage: E, mode: A };
+  return B.sort((w, G) => w.at - G.at), { events: B, notes: I, opponent: C, duration: E.recording?.duration ?? (Y + 3) * g, beat: g, stage: E, mode: A };
 }
 function sanitizeProgress(E) {
   let A = { reducedEffects: E?.reducedEffects === true, mode: E?.mode === "easy" ? "easy" : "normal", volume: Math.max(0, Math.min(1, Number.isFinite(E?.volume) ? E.volume : 0.6)), offset: Math.max(-250, Math.min(250, Number.isFinite(E?.offset) ? E.offset : 0)), best: {} };
@@ -306,7 +316,7 @@ var RhythmRun = class {
     if (this.status === "playing") {
       this.time = Math.max(this.time, A);
       for (let g of this.notes) g.state === "waiting" && A > g.time + this.window ? (g.state = "miss", this.misses++, this.combo = 0, this.energy = Math.max(0, this.energy - 4), this.feedback("Continue!", g.lane, A)) : g.state === "holding" && A >= g.time + g.hold && (this.held.has(g.lane) ? this.finishHold(g) : (g.state = "broken", this.combo = 0, this.energy = Math.max(0, this.energy - 3)));
-      this.energy <= 0 && !this.practice ? this.status = "failed" : A >= this.song.duration - 0.15 && (this.status = "finished");
+      this.energy <= 0 && !this.practice ? this.status = "failed" : A >= this.song.duration - (this.song.stage.recording ? 0 : 0.15) && (this.status = "finished");
     }
   }
   get liveAccuracy() {
@@ -373,8 +383,37 @@ var DanceAudio = class {
     if (await this.context.resume(), this.context.state !== "running") throw new Error("Toque novamente em Jogar para ativar o som.");
   }
   async render(A, g) {
-    let B = ++this.generation, I = await synthesize(A, { progress: g, cancelled: () => B !== this.generation });
+    const B = ++this.generation;
+    this.request?.abort();
+    const recording = A.stage.recording;
+    if (recording) {
+      if (this.buffer && this.loadedRecording === recording.url) {
+        g?.(1);
+        return true;
+      }
+      const request = new AbortController();
+      this.request = request;
+      try {
+        const response = await fetch(recording.url, { signal: request.signal });
+        if (!response.ok) throw new Error("N\xE3o foi poss\xEDvel carregar a m\xFAsica. Tente novamente.");
+        const bytes = await response.arrayBuffer();
+        if (B !== this.generation) return false;
+        const buffer = await this.context.decodeAudioData(bytes);
+        if (B !== this.generation) return false;
+        this.buffer = buffer;
+        this.loadedRecording = recording.url;
+        g?.(1);
+        return true;
+      } catch (error) {
+        if (B !== this.generation) return false;
+        throw error;
+      } finally {
+        if (this.request === request) this.request = null;
+      }
+    }
+    const I = await synthesize(A, { progress: g, cancelled: () => B !== this.generation });
     if (!I || B !== this.generation) return false;
+    this.loadedRecording = null;
     let C = this.context.createBuffer(2, I.length, I.sampleRate);
     return C.getChannelData(0).set(I.left), C.getChannelData(1).set(I.right), this.buffer = C, true;
   }
@@ -403,7 +442,10 @@ var DanceAudio = class {
     this.running = false;
   }
   stop() {
-    this.generation++, this.stopSource(), this.offset = 0;
+    this.generation++;
+    this.request?.abort();
+    this.stopSource();
+    this.offset = 0;
   }
   dispose() {
     this.stop(), this.buffer = null;
@@ -546,7 +588,7 @@ var avatars = [{ artist: "Duda", skin: "#d7a57e", hair: "#3a334d", color: "#27c6
 var escapeHTML = (E) => String(E).replace(/[&<>"']/g, (A) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[A]);
 var formatTime = (E) => Math.floor(Math.max(0, E) / 60) + ":" + String(Math.floor(Math.max(0, E) % 60)).padStart(2, "0");
 
-// versus.mjs
+// integro-box/interdance-src/versus.mjs
 function createVersusRuns(song) {
   return [new RhythmRun(song, true), new RhythmRun(song, true)];
 }
@@ -561,7 +603,7 @@ function keyLane(key, versus) {
   return key in lanes ? lanes[key] + (versus && key.startsWith("arrow") ? 4 : 0) : null;
 }
 
-// concert.mjs
+// integro-box/interdance-src/concert.mjs
 var NOTE_COLORS = ["#b99aff", "#66e4ed", "#bef58c", "#ff9bb9"];
 var ink = "#080d20";
 var white = "#edf2ff";
@@ -745,7 +787,8 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
     c.fillStyle = ink;
     c.fillRect(0, l.stageBottom + 4, w, h - l.stageBottom - 4);
   }
-  const beat = time / (60 / stage.bpm), opponent = (runs[0]?.song || previewSong)?.opponent.findLast((n) => n.time <= time && time < n.time + Math.max(0.32, n.hold) + 0.28);
+  const gridOffset = stage.recording?.gridOffset || 0;
+  const beat = Math.max(0, time - gridOffset) / (60 / stage.bpm), opponent = (runs[0]?.song || previewSong)?.opponent.findLast((n) => n.time <= time && time < n.time + Math.max(0.32, n.hold) + 0.28);
   for (let i = 0; i < 2; i++) {
     const p = versus ? avatars2[i] : i === 0 ? stage : avatars2[0], run = runs[versus ? i : 0];
     const player = versus || i === 1;
@@ -757,21 +800,21 @@ function drawConcert(c, w, h, stage, runs, time, avatars2, { versus = false, red
     c.beginPath();
     c.ellipse(x, feet + 2, size * 0.3, Math.max(3, size * 0.035), 0, 0, Math.PI * 2);
     c.fill();
-    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1, { ...cue, reduced, groove: stage.groove, stageId: stage.id });
+    drawCharacter(c, x, feet - size, size, { ...p, bpm: stage.bpm }, reduced ? 0 : beat, lane, i === 1, { ...cue, at: cue.at - gridOffset, reduced, groove: stage.groove, stageId: stage.id });
     if (!preview) label(c, versus ? "J" + (i + 1) + " \xB7 " + p.artist : i === 0 ? p.artist : "VOC\xCA", x, feet + 17, 9, i === 0 ? "#b6b0eb" : "#8be4dd");
   }
   if (preview) return;
   l.tracks.forEach((track, i) => highway(c, track, runs[i], time, i, versus, reduced));
-  const song = runs[0].song, count = time < 4 * song.beat, response = Math.floor((time / song.beat - 4) / 4) % 4 >= 2;
+  const song = runs[0].song, count = beat < 4, response = Math.floor((beat - 4) / 4) % 4 >= 2;
   const status = count ? "PREPARE-SE" : response ? versus ? "OS DOIS JOGAM" : "SUA VEZ" : "ESCUTE A BATIDA";
   label(c, status, w / 2, l.statusY, 10, response ? "#91e3d8" : "#b9bfde");
   if (count) {
     const size = Math.min(46, w * 0.11);
-    label(c, String(Math.max(1, 4 - Math.floor(time / song.beat))), w / 2, l.noteTop + 70, size, "#fff");
+    label(c, String(Math.max(1, 4 - Math.floor(beat))), w / 2, l.noteTop + 70, size, "#fff");
   }
 }
 
-// dancer-sprites.mjs
+// integro-box/interdance-src/dancer-sprites.mjs
 var STEP = [0, 2, 14, 12, 14, 2, 12, 0];
 var SHUFFLE = [14, 9, 12, 11, 14, 12, 9, 0];
 var LOCK = [1, 13, 2, 13, 1, 14, 13, 0];
@@ -888,7 +931,7 @@ function createSpritePainter({ onReady = () => {
   };
 }
 
-// app.mjs
+// integro-box/interdance-src/app.mjs
 function loadSpriteRenderer(options) {
   const ImageClass = globalThis.Image || globalThis.window?.Image;
   return ImageClass ? createSpritePainter({ ...options, createImage: () => new ImageClass() }) : null;
@@ -1049,7 +1092,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     const complete = stages.filter((s) => progress.best[`${s.id}-${progress.mode}-remix`]?.stars).length;
     overlay("home", `<div class="dance-library"><div class="dance-cover-art"><div><span class="dance-eyebrow">VOLUME 01 \xB7 INTEGRO BOX</span><h1>Sinta o som.<br><em>Entre no ritmo.</em></h1><span class="dance-cover-caption">16 m\xFAsicas. Seu pr\xF3ximo palco.</span></div></div><div class="dance-stage-heading"><div><span class="dance-eyebrow">PLAYLIST</span><h2>Escolha sua m\xFAsica</h2></div><span>${complete}<small> / 16</small></span></div><div class="dance-stages">${stages.map((s) => {
       const best = progress.best[`${s.id}-${progress.mode}-remix`];
-      return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="./assets/interdance/dancers-v1/portraits/${dancerSlug(s.artist)}.webp"><span>${String(s.week).padStart(2, "0")}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>\xB7</i> ${s.bpm} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars || 0} de 3 estrelas">${"\u2605".repeat(best?.stars || 0) + "\u2606".repeat(3 - (best?.stars || 0))}</span><span class="dance-play-mark" aria-hidden="true">\u203A</span></span></button>`;
+      return `<button class="dance-stage" data-stage="${s.id}" style="--track-color:${s.accent};--track-tint:${s.color}"><span class="dance-track-art" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="./assets/interdance/dancers-v1/portraits/${dancerSlug(s.artist)}.webp"><span>${String(s.week).padStart(2, "0")}</span></span><span class="dance-track-title"><b>${s.title}</b><small>${s.artist} <i>\xB7</i> ${Math.round(s.bpm)} BPM</small></span><span class="dance-track-rating"><span class="stars" aria-label="${best?.stars || 0} de 3 estrelas">${"\u2605".repeat(best?.stars || 0) + "\u2606".repeat(3 - (best?.stars || 0))}</span><span class="dance-play-mark" aria-hidden="true">\u203A</span></span></button>`;
     }).join("")}</div><div class="dance-library-footer">${button("shop", "\u25C7 Loja IntGem")}${button("settings", "Som e ajuda")}<span>${saved ? "Recordes salvos nesta conta e navegador." : "Salvamento indispon\xEDvel nesta sess\xE3o."}</span></div></div>`);
   }
   function detail(id = stage.id) {
@@ -1060,7 +1103,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     stage = stages[id] || stages[0];
     song = generateSong(stage, progress.mode);
     $("danceTrack").innerHTML = `<b>Preparar o palco</b><small>M\xFAsica ${String(stage.week).padStart(2, "0")} de 16</small>`;
-    overlay("detail", `<div class="dance-detail"><div class="dance-detail-visual"><canvas id="danceHero" class="dance-detail-art" aria-label="Artistas no palco"></canvas><span class="dance-eyebrow">${stage.artist} \xB7 ${stage.place}</span><h1>${stage.title}</h1><div class="dance-facts"><span>${stage.bpm} BPM</span><span>${formatTime(song.duration)}</span><span>${song.notes.length} notas</span></div></div><div class="dance-preparation"><div class="dance-option"><span>Modo de jogo</span><div class="dance-mode">${["solo", "versus"].map((mode) => `<button data-match="${mode}" aria-pressed="${preferredMatch === mode}" class="${preferredMatch === mode ? "selected" : ""}">${mode === "solo" ? "Solo" : "Versus local"}</button>`).join("")}</div></div><div class="dance-option"><span>Dificuldade</span><div class="dance-mode">${["easy", "normal"].map((mode) => `<button data-mode="${mode}" aria-pressed="${progress.mode === mode}" class="${progress.mode === mode ? "selected" : ""}">${mode === "easy" ? "Aprender" : "Desafio"}</button>`).join("")}</div></div><label class="dance-avatar">Seu artista <select id="danceAvatar"><option value="0" ${avatar === 0 ? "selected" : ""}>Duda</option><option value="1" ${avatar === 1 ? "selected" : ""}>Ravi</option></select></label><p class="dance-instruction">${preferredMatch === "versus" ? "Dois jogadores no mesmo aparelho. WASD \xD7 setas, ou dois conjuntos de bot\xF5es." : "Toque quando a nota chegar ao alvo. Segure as notas com cauda."}</p><div class="dance-launch">${button(preferredMatch, preferredMatch === "solo" ? "\u25B6 Jogar agora" : "\u25B6 Come\xE7ar duelo", true)}${button(preferredMatch === "solo" ? "versus" : "solo", preferredMatch === "solo" ? "Jogar a dois" : "Jogar solo")}</div><div class="dance-buttons dance-secondary-actions">${button("practice", "Treinar")}${button("listen", "Ouvir")}${button("home", "Todas as m\xFAsicas")}</div><details class="dance-help"><summary>Como jogar</summary><p>As notas descem at\xE9 os alvos junto dos bot\xF5es. As colunas ficam no mesmo lugar. No solo, use WASD ou as setas; no versus, cada pessoa usa um conjunto. A maior pontua\xE7\xE3o vence. Para jogar a dois no celular, prefira a tela deitada.</p></details></div></div>`);
+    overlay("detail", `<div class="dance-detail"><div class="dance-detail-visual"><canvas id="danceHero" class="dance-detail-art" aria-label="Artistas no palco"></canvas><span class="dance-eyebrow">${stage.artist} \xB7 ${stage.place}</span><h1>${stage.title}</h1>${stage.recording ? "<p>\u266B " + stage.recording.title + "</p>" : ""}<div class="dance-facts"><span>${Math.round(stage.bpm)} BPM</span><span>${formatTime(song.duration)}</span><span>${song.notes.length} notas</span></div></div><div class="dance-preparation"><div class="dance-option"><span>Modo de jogo</span><div class="dance-mode">${["solo", "versus"].map((mode) => `<button data-match="${mode}" aria-pressed="${preferredMatch === mode}" class="${preferredMatch === mode ? "selected" : ""}">${mode === "solo" ? "Solo" : "Versus local"}</button>`).join("")}</div></div><div class="dance-option"><span>Dificuldade</span><div class="dance-mode">${["easy", "normal"].map((mode) => `<button data-mode="${mode}" aria-pressed="${progress.mode === mode}" class="${progress.mode === mode ? "selected" : ""}">${mode === "easy" ? "Aprender" : "Desafio"}</button>`).join("")}</div></div><label class="dance-avatar">Seu artista <select id="danceAvatar"><option value="0" ${avatar === 0 ? "selected" : ""}>Duda</option><option value="1" ${avatar === 1 ? "selected" : ""}>Ravi</option></select></label><p class="dance-instruction">${preferredMatch === "versus" ? "Dois jogadores no mesmo aparelho. WASD \xD7 setas, ou dois conjuntos de bot\xF5es." : "Toque quando a nota chegar ao alvo. Segure as notas com cauda."}</p><div class="dance-launch">${button(preferredMatch, preferredMatch === "solo" ? "\u25B6 Jogar agora" : "\u25B6 Come\xE7ar duelo", true)}${button(preferredMatch === "solo" ? "versus" : "solo", preferredMatch === "solo" ? "Jogar a dois" : "Jogar solo")}</div><div class="dance-buttons dance-secondary-actions">${button("practice", "Treinar")}${button("listen", "Ouvir")}${button("home", "Todas as m\xFAsicas")}</div><details class="dance-help"><summary>Como jogar</summary><p>As notas descem at\xE9 os alvos junto dos bot\xF5es. As colunas ficam no mesmo lugar. No solo, use WASD ou as setas; no versus, cada pessoa usa um conjunto. A maior pontua\xE7\xE3o vence. Para jogar a dois no celular, prefira a tela deitada.</p></details></div></div>`);
   }
   async function start(mode) {
     const token = ++generation;
@@ -1069,7 +1112,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
     finished = false;
     match = mode;
     hud();
-    overlay("loading", `<div class="dance-result"><span class="dance-eyebrow">PREPARANDO ${mode === "versus" ? "O DUELO" : "SEU PALCO"}</span><h1>${stage.title}</h1><p>Sintetizando a m\xFAsica original\u2026 <b id="danceAudioProgress">0%</b></p><p>A primeira prepara\xE7\xE3o pode levar alguns segundos.</p>${button("home", "Voltar \xE0s semanas")}</div>`);
+    overlay("loading", `<div class="dance-result"><span class="dance-eyebrow">PREPARANDO ${mode === "versus" ? "O DUELO" : "SEU PALCO"}</span><h1>${stage.title}</h1><p>${stage.recording ? "Carregando " + stage.recording.title + "\u2026" : "Sintetizando a m\xFAsica original\u2026"} <b id="danceAudioProgress">0%</b></p><p>A primeira prepara\xE7\xE3o pode levar alguns segundos.</p>${button("home", "Voltar \xE0s semanas")}</div>`);
     try {
       await audio.unlock();
       if (!active || token !== generation) return;
@@ -1085,7 +1128,7 @@ function createInterDance({ onExit, storage = window.BoxStorage, audio = new Dan
           return;
         }
         audio.play();
-        overlay("listen", `<div class="dance-result"><span class="dance-eyebrow">TRILHA ORIGINAL</span><h1>${stage.title}</h1><canvas id="danceHero" class="dance-detail-art"></canvas><div class="dance-buttons">${button("download", "\u2193 Baixar m\xFAsica WAV")}${button("detail", "Voltar ao palco")}</div></div>`);
+        overlay("listen", `<div class="dance-result"><span class="dance-eyebrow">TRILHA DA FASE</span><h1>${stage.recording?.title || stage.title}</h1><canvas id="danceHero" class="dance-detail-art"></canvas><div class="dance-buttons">${button("download", "\u2193 Baixar m\xFAsica WAV")}${button("detail", "Voltar ao palco")}</div></div>`);
         return;
       }
       runs = mode === "versus" ? createVersusRuns(song) : [new RhythmRun(song, mode === "practice")];

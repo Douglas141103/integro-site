@@ -8,6 +8,17 @@ export function setCharacterPainter(painter){characterPainter=painter;}
     let B = _k[E.scale], I = (A % B.length + B.length) % B.length;
     return E.key + B[I] + Math.floor(A / B.length) * 12 + g * 12;
   };
+  // Beat grid measured from Lia's recording, including the MP3's opening pickup.
+  Object.assign(stages[0], {
+    bpm: 135.77,
+    bars: 29,
+    recording: {
+      title: "Pirouette on the Grid",
+      url: "./assets/interdance/music/pirouette-on-the-grid.mp3",
+      gridOffset: 0.079,
+      duration: 56.607
+    }
+  });
   function generateSong(E, A = "normal") {
     let g = 60 / E.bpm, B = [], I = [], C = [], Q = 0, M = (w, G, D, i, s = 0.12, k = 0) => B.push({ at: w * g, duration: G * g, midi: D, voice: i, amp: s, pan: k });
     for (let w = 0; w < 4; w++) M(w, 0.08, w === 3 ? 84 : 72, "count", 0.13);
@@ -27,7 +38,7 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       let e = E.id < 3 ? [0, 2, 4, 6] : E.id < 7 ? [0, 2, 3, 4, 6] : E.id < 11 ? [0, 1, 2, 4, 5, 6] : [0, 1, 2, 3, 4, 5, 6, 7];
       E.id >= 11 && w % 8 === 3 && (e = e.filter((h) => h !== 7));
       for (let h of e) {
-        let J = E.motif[(h + w % 2 * 2 + D) % 8], c = (J + w % 2) % 4, m = E.id >= 5 && h === 6 && w % 4 === 3 && e.at(-1) === 6 ? 0.7 : 0, S = (G + h * 0.5) * g;
+        let J = E.motif[(h + w % 2 * 2 + D) % 8], c = (J + w % 2) % 4, m = E.id >= 5 && h === 6 && w % 4 === 3 && e.at(-1) === 6 ? 0.7 : 0, S = (E.recording?.gridOffset || 0) + (G + h * 0.5) * g;
         M(G + h * 0.5, m || 0.32, lI(E, J, 0), s ? "answer" : E.groove === "crystal" ? "bell" : "lead", 0.14, s ? 0.18 : -0.18);
         let a = { id: Q++, lane: c, time: S, hold: m * g };
         s ? (A !== "easy" || h % 2 === 0) && I.push(a) : C.push(a);
@@ -35,7 +46,7 @@ export function setCharacterPainter(painter){characterPainter=painter;}
     }
     let Y = 4 + E.bars * 4;
     for (let w of [0, 2, 4]) M(Y, 2, lI(E, w, 0), "bell", 0.08);
-    return B.sort((w, G) => w.at - G.at), { events: B, notes: I, opponent: C, duration: (Y + 3) * g, beat: g, stage: E, mode: A };
+    return B.sort((w, G) => w.at - G.at), { events: B, notes: I, opponent: C, duration: E.recording?.duration ?? (Y + 3) * g, beat: g, stage: E, mode: A };
   }
   function sanitizeProgress(E) {
     let A = { reducedEffects: E?.reducedEffects === true, mode: E?.mode === "easy" ? "easy" : "normal", volume: Math.max(0, Math.min(1, Number.isFinite(E?.volume) ? E.volume : 0.6)), offset: Math.max(-250, Math.min(250, Number.isFinite(E?.offset) ? E.offset : 0)), best: {} };
@@ -71,7 +82,7 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       if (this.status === "playing") {
         this.time = Math.max(this.time, A);
         for (let g of this.notes) g.state === "waiting" && A > g.time + this.window ? (g.state = "miss", this.misses++, this.combo = 0, this.energy = Math.max(0, this.energy - 4), this.feedback("Continue!", g.lane, A)) : g.state === "holding" && A >= g.time + g.hold && (this.held.has(g.lane) ? this.finishHold(g) : (g.state = "broken", this.combo = 0, this.energy = Math.max(0, this.energy - 3)));
-        this.energy <= 0 && !this.practice ? this.status = "failed" : A >= this.song.duration - 0.15 && (this.status = "finished");
+        this.energy <= 0 && !this.practice ? this.status = "failed" : A >= this.song.duration - (this.song.stage.recording ? 0 : 0.15) && (this.status = "finished");
       }
     }
     get liveAccuracy() {
@@ -138,8 +149,37 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       if (await this.context.resume(), this.context.state !== "running") throw new Error("Toque novamente em Jogar para ativar o som.");
     }
     async render(A, g) {
-      let B = ++this.generation, I = await synthesize(A, { progress: g, cancelled: () => B !== this.generation });
+      const B = ++this.generation;
+      this.request?.abort();
+      const recording = A.stage.recording;
+      if (recording) {
+        if (this.buffer && this.loadedRecording === recording.url) {
+          g?.(1);
+          return true;
+        }
+        const request = new AbortController();
+        this.request = request;
+        try {
+          const response = await fetch(recording.url, {signal: request.signal});
+          if (!response.ok) throw new Error("Não foi possível carregar a música. Tente novamente.");
+          const bytes = await response.arrayBuffer();
+          if (B !== this.generation) return false;
+          const buffer = await this.context.decodeAudioData(bytes);
+          if (B !== this.generation) return false;
+          this.buffer = buffer;
+          this.loadedRecording = recording.url;
+          g?.(1);
+          return true;
+        } catch (error) {
+          if (B !== this.generation) return false;
+          throw error;
+        } finally {
+          if (this.request === request) this.request = null;
+        }
+      }
+      const I = await synthesize(A, { progress: g, cancelled: () => B !== this.generation });
       if (!I || B !== this.generation) return false;
+      this.loadedRecording = null;
       let C = this.context.createBuffer(2, I.length, I.sampleRate);
       return C.getChannelData(0).set(I.left), C.getChannelData(1).set(I.right), this.buffer = C, true;
     }
@@ -168,7 +208,10 @@ export function setCharacterPainter(painter){characterPainter=painter;}
       this.running = false;
     }
     stop() {
-      this.generation++, this.stopSource(), this.offset = 0;
+      this.generation++;
+      this.request?.abort();
+      this.stopSource();
+      this.offset = 0;
     }
     dispose() {
       this.stop(), this.buffer = null;
