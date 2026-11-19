@@ -493,6 +493,7 @@ const CITY_ART = {
 const routeRecordings = {
   Brasil: {recording: './audio/beyond-the-emerald-gate.mp3', style: 'Beyond the Emerald Gate'},
   México: {recording: './audio/sunrise-above-the-painted-mesa.mp3', style: 'Sunrise Above the Painted Mesa'},
+  'Estados Unidos': {recording: './audio/beyond-the-great-ridge.mp3', style: 'Beyond the Great Ridge'},
   Egito: {recording: './audio/the-pharaoh-s-final-secret.mp3', style: "The Pharaoh's Final Secret"},
   Rússia: {recording: './audio/beyond-the-mountain-pass.mp3', style: 'Beyond the Mountain Pass'},
   Europa: {recording: './audio/beneath-the-ancient-spire.mp3', style: 'Beneath the Ancient Spire'}
