@@ -12,8 +12,10 @@ import {EGYPT,EGYPT_LENGTH} from '../integro-box/egg-src/egg-egypt.js';
 import {HEAVEN} from '../integro-box/egg-src/egg-heaven.js';
 import {SUBSOIL} from '../integro-box/egg-src/egg-subsoil.js';
 
-const directions = [[0,-1,0,false],[1,-1,1,false],[1,0,2,false],[1,1,3,false],
- [0,1,4,false],[-1,1,3,true],[-1,0,2,true],[-1,-1,1,true]];
+const directions = Array.from({length:16},(_,i)=>{
+ const angle=i*Math.PI/8;
+ return [Math.sin(angle),-Math.cos(angle),i>8?16-i:i,i>8];
+});
 const near = (a,b) => assert.ok(Math.abs(a-b)<1e-5, `${a} != ${b}`);
 
 test('portal guardians use their own directional frames, gravity and gait, then release the art',t=>{
@@ -25,7 +27,7 @@ test('portal guardians use their own directional frames, gravity and gait, then 
  t.after(()=>{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;});
 
  const scene = new THREE.Scene(), world = createEggWorld(scene), camera = new THREE.PerspectiveCamera();
- const texture = new THREE.DataTexture(new Uint8Array(5*3*4).fill(255),5,3);
+ const texture = new THREE.DataTexture(new Uint8Array(9*3*4).fill(255),9,3);
  texture.needsUpdate = true;
  t.after(()=>texture.dispose());
  assert.equal(world.presentGuardianArtwork(camera,new EggAdventure(),false,{texture}),false);
@@ -49,7 +51,7 @@ test('portal guardians use their own directional frames, gravity and gait, then 
    assert.equal(mesh.material.map,texture);
    assert.equal(guardian.animator.rig.visible,false);
    assert.equal(billboard.parent,guardian.g);
-   near(mesh.geometry.attributes.uv.getX(0),(column+(mirror?1:0))/5);
+   near(mesh.geometry.attributes.uv.getX(0),(column+(mirror?1:0))/9);
   }
 
   const {billboard,mesh} = guardian.artwork;
@@ -115,7 +117,7 @@ test('the mounted game lazily binds the shipped atlas for each entered door',t=>
  const require=createRequire(new URL('integro-box/egg-src/entry.js',repo)), native=require('three');
  class Loader {
   load(url,ready){
-   if(!url.includes('/egg-guardians-v1/'))return new native.Texture();
+   if(!url.includes('/egg-guardians-v2/'))return new native.Texture();
    const texture=new native.Texture();
    loads.set(url,texture);ready(texture);return texture;
   }
@@ -143,12 +145,12 @@ test('the mounted game lazily binds the shipped atlas for each entered door',t=>
   Object.assign(game.player,level.gate,{y:0,vy:0});tick(10);
   assert.equal(game.interaction().type,id==='sky'?'heavenEnter':id==='magma'?'subsoilEnter':'egyptEnter');
   w.document.querySelector('#eggInteract').click();tick(10);
-  const url='/integro-box/assets/egg-guardians-v1/'+id+'.webp';
+  const url='/integro-box/assets/egg-guardians-v2/'+id+'.webp';
   const texture=loads.get(url),file=readFileSync(new URL(url.slice(1),repo));
   assert.equal(file.toString('ascii',0,4),'RIFF');
   assert.equal(file.toString('ascii',8,16),'WEBPVP8X');
   assert(file[20]&0x10,'the directional atlas needs transparency');
-  assert.deepEqual([file.readUIntLE(24,3)+1,file.readUIntLE(27,3)+1],[1600,960]);
+  assert.deepEqual([file.readUIntLE(24,3)+1,file.readUIntLE(27,3)+1],[2016,672]);
   assert.equal(game.zone(),level.world);
   const mesh=adapter.scene().getObjectByName(node).getObjectByName('EggDoorGuardianAtlas');
   assert(texture && mesh?.parent.visible,id+' artwork appears on portal entry');

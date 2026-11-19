@@ -17,10 +17,10 @@ export function installGuardianArtwork(guard, index) {
 
   guard.artwork = null;
   const state = {stepping:false, carrying:false, gaitPhase:0, reducedMotion:false};
-  // The visible silhouette spans about 284 px of each 320 px atlas cell.
+  // The visible silhouette retains the 284/320 height of the original drawings.
   const layout = {
-    rows:3, widthRatio:1, footRatio:308/320, height:art.height*320/284,
-    name:'EggDoorGuardian', url:'/integro-box/assets/egg-guardians-v1/'+art.file+'.webp'
+    columns:9, rows:3, widthRatio:1, footRatio:308/320, height:art.height*320/284,
+    name:'EggDoorGuardian', url:'/integro-box/assets/egg-guardians-v2/'+art.file+'.webp'
   };
 
   guard.presentArtwork = (camera, {state:activity, reducedMotion=false}, options={}) => {
