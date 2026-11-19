@@ -2061,17 +2061,34 @@ function pixelPanel(c,x,y,w,h,fill='rgba(5,12,35,.82)',border='rgba(111,232,249,
   c.save();shape(x+5,y+6,w,h,step);c.fillStyle='rgba(0,0,0,.34)';c.fill();shape(x,y,w,h,step);c.fillStyle=border;c.fill();shape(x+3,y+3,w-6,h-6,Math.max(4,step-3));c.fillStyle=fill;c.fill();c.restore();
 }
 
+const hudAtlas = new Image();
+hudAtlas.src = './art/hud-ilustrado.webp';
+const hudFrames = {"Brasil": [2, 2, 104, 79], "México": [110, 2, 104, 79], "Estados Unidos": [218, 2, 104, 80], "Egito": [326, 2, 104, 79], "Rússia": [2, 88, 104, 81], "França": [110, 88, 104, 78], "Reino Unido": [218, 88, 104, 78], "Itália": [326, 88, 104, 78], "China": [2, 174, 103, 82], "Índia": [110, 174, 104, 81], "Japão": [218, 174, 104, 82], "heart": [326, 174, 101, 82], "gem": [2, 260, 49, 82], "coin": [110, 260, 78, 82]};
+
+function drawHudIcon(key, x, y, width, height) {
+  const frame = hudFrames[key];
+  if (!frame || !hudAtlas.naturalWidth) return;
+  const [sx, sy, sw, sh] = frame;
+  const scale = Math.min(width / sw, height / sh);
+  const w = sw * scale, h = sh * scale;
+  ctx.drawImage(hudAtlas, sx, sy, sw, sh, x + (width - w) / 2, y + (height - h) / 2, w, h);
+}
+
 function drawHUD(){
   const p=state.player, l=state.level;
   ctx.save();
   roundRect(ctx,22,18,350,72,15);
   ctx.fillStyle='rgba(13,38,44,.92)'; ctx.fill();
+  drawHudIcon(l.country,38,24,32,26);
   ctx.fillStyle='#fcf0ce'; ctx.font='700 21px system-ui';
-  ctx.fillText(l.phaseName,38,47,308);
+  ctx.fillText(l.phaseName,79,46,277);
   ctx.font='700 18px system-ui';
-  ctx.fillStyle='#ffada8'; ctx.fillText('♥ '+p.health,38,77);
-  ctx.fillStyle='#92f7ef'; ctx.fillText('◆ '+state.crystals+'/3',109,77);
-  ctx.fillStyle='#ffdf90'; ctx.fillText('● '+state.coins,212,77);
+  drawHudIcon('heart',38,56,24,24);
+  ctx.fillStyle='#ffada8'; ctx.fillText(String(p.health),67,76);
+  drawHudIcon('gem',112,54,22,28);
+  ctx.fillStyle='#92f7ef'; ctx.fillText(state.crystals+'/3',140,76);
+  drawHudIcon('coin',215,55,24,26);
+  ctx.fillStyle='#ffdf90'; ctx.fillText(String(state.coins),245,76);
   if (p.powers.fly) {
     ctx.fillStyle='#17343c'; ctx.fillRect(38,94,178,6);
     ctx.fillStyle='#82ebda'; ctx.fillRect(38,94,178*p.flyEnergy/100,6);
