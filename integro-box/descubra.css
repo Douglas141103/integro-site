@@ -10,3 +10,27 @@ body.descubra-playing #boxOnline,body.descubra-playing #boxChat{display:none!imp
 @media(max-height:500px) and (orientation:landscape){.dc-in-game .dc-top{height:36px}.dc-in-game .dc-top small{display:none}.dc-in-game .dc-hud{height:31px;padding:2px 20px}.dc-in-game .dc-role{font-size:9px;padding:4px 7px}.dc-in-game .dc-timer{font-size:16px}.dc-world-top{top:6px}.dc-world-top .dc-pill{min-height:30px;padding:4px 9px}.dc-control-hint{top:45px;font-size:9px}.dc-stick{width:96px;height:96px;bottom:24px;left:28px}.dc-stick-knob{width:45px;height:45px}.dc-in-game .dc-actions{bottom:25px;right:25px;gap:6px;width:180px}.dc-in-game .dc-actions .dc-btn{min-height:39px;padding:8px 12px;font-size:11px}.dc-near-hint{bottom:3px}}
 /* Distinct terminal puzzles and explicit nominations */
 .dc-puzzle{display:grid;gap:14px;margin:18px 0}.dc-puzzle-button{min-height:52px;padding:12px;border:2px solid #87aabc;border-radius:13px;background:#eef8fa;color:#163348;font:800 17px system-ui;cursor:pointer}.dc-puzzle-button:focus-visible,.dc-vote:focus-visible{outline:3px solid #ffe27b;outline-offset:3px}.dc-puzzle-button[aria-pressed=true],.dc-vote[aria-pressed=true]{background:#ffe8a0;border-color:#9d7225;color:#253c4a}.dc-puzzle-button.done,.dc-puzzle-button:disabled{background:#b8e4d0;color:#37554a}.dc-route-grid{grid-template-columns:repeat(3,1fr)}.dc-pairs{grid-template-columns:1fr 1fr;gap:20px}.dc-pairs>div{display:grid;gap:12px}.dc-energy-row{display:grid;grid-template-columns:1fr auto;gap:10px;font-weight:700}.dc-energy-row input{grid-column:1;width:100%;accent-color:#53c6bd;min-height:36px}.dc-energy-row output{grid-column:2;grid-row:2}.dc-pipes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dc-pipes button{font-size:42px}.dc-water-path{text-align:center;font-size:24px}.dc-scan-meter{height:50px;position:relative;background:#203b53;border-radius:12px;overflow:hidden}.dc-scan-zone{position:absolute;left:35%;width:30%;height:100%;background:#6bd9a1}.dc-scan-cursor{position:absolute;top:3px;bottom:3px;width:7px;background:#fff;border:2px solid #152c3e;border-radius:6px;transform:translateX(-50%)}.dc-cargo-grid{grid-template-columns:repeat(2,1fr)}.dc-vote-count{display:block;font-size:12px}.dc-vote-choice{padding:12px;background:#fff0bc;color:#3a463e;border-radius:12px}.dc-vote-results>div{display:flex;justify-content:space-between;gap:20px;padding:12px;border-bottom:1px solid #ffffff30}.dc-task-feedback{min-height:28px;font-weight:700}@media(max-width:420px){.dc-puzzle-button{font-size:14px;padding:10px 6px}.dc-pairs{gap:10px}.dc-vote-list{grid-template-columns:1fr 1fr}}
+
+/* Brass-framed bridge instruments and illustrated terminal panels. */
+#descubraApp {
+  background: radial-gradient(ellipse at 18% 48%, #23495b, transparent 53%), #101d30;
+}
+.dc-top {
+  background: linear-gradient(110deg,#162a3c,#243b4b 55%,#102234);
+  border-bottom: 2px solid #b29361;
+}
+.dc-sheet,.dc-cover img,.dc-crew-card {
+  border-color: #ad9065;
+  box-shadow: inset 0 0 0 2px #172c3d, 0 10px 36px #07101c70;
+}
+.dc-sheet {background:linear-gradient(155deg,#274556,#172d42 65%);}
+.dc-sheet[data-station]::before {
+  content:""; display:block; width:144px; aspect-ratio:16/9; margin:0 auto;
+  background: url("./assets/descubra-ship-v1/equipment.webp") 0 0 / 300% 400% no-repeat;
+}
+.dc-sheet[data-station="1"]::before {background-position:50% 0;}
+.dc-sheet[data-station="2"]::before {background-position:100% 0;}
+.dc-sheet[data-station="3"]::before {background-position:0 33.333%;}
+.dc-sheet[data-station="4"]::before {background-position:50% 33.333%;}
+.dc-sheet[data-station="5"]::before {background-position:100% 33.333%;}
+@media(max-height:550px){.dc-sheet[data-station]::before{width:78px;}}

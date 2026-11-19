@@ -1,6 +1,7 @@
-import {mountTask} from './tasks.mjs?v=20261112-update1';
+import {mountTask} from './tasks.mjs?v=20261119-descubra-arte1';
 import {SoloGame,ROOMS,NAMES,neighbors} from './rules.mjs?v=20261112-update1';
-import {drawShip,drawOverview,portrait} from './render.mjs?v=20261112-update1';
+import {drawShip,drawOverview,portrait,prepareArt} from './render.mjs?v=20261119-descubra-arte1';
+export {prepareArt};
 import {movePlayer,nearTerminal,distance} from './world.mjs?v=20261112-update1';
 export function createDescubra(root,exit,rpc){
  let active=false,solo=null,state=null,online=null,raf=0,last=0,poll=null,busy=false,epoch=0,modalKind='',chosenRole='crew',muted=false,taskToken=0,stopAt=0,boardSignature='',taskCleanup=null,voteChoice=null,voteSending=false,resultRound=0;

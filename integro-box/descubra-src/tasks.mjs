@@ -1,7 +1,7 @@
 // Six touch/keyboard-friendly terminal puzzles, with cleanup owned by the dialog.
 export function mountTask(host,room,{complete,tone=()=>{},random=Math.random}={}){
  const doc=host.ownerDocument,make=(tag,cls,text)=>{const e=doc.createElement(tag);e.className=cls||'';if(text!==undefined)e.textContent=text;return e;},btn=(text,fn)=>{const b=make('button','dc-puzzle-button',text);b.type='button';b.onclick=fn;return b;};
- const intro=make('p','dc-task-instruction'),board=make('div','dc-puzzle'),feedback=make('p','dc-task-feedback');feedback.setAttribute('role','status');host.append(intro,board,feedback);let disposed=false,finished=false,timer=0;
+ const intro=make('p','dc-task-instruction'),board=make('div','dc-puzzle'),feedback=make('p','dc-task-feedback');host.dataset.station=String(room);feedback.setAttribute('role','status');host.append(intro,board,feedback);let disposed=false,finished=false,timer=0;
  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const done=()=>{if(disposed||finished)return;finished=true;clearInterval(timer);board.querySelectorAll('button,input').forEach(b=>b.disabled=true);feedback.textContent='Sistema pronto! Sincronizando…';tone(700);complete();};
  const update=t=>{feedback.textContent=t;tone(420);};
