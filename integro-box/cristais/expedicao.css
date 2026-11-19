@@ -141,7 +141,7 @@
   position:absolute; inset:0; width:100% !important; height:calc(100% - var(--rail)) !important;
   object-fit:contain;
 }
-#touchControls { inset:auto 0 0; height:var(--rail); display:flex; align-items:center; gap:clamp(4px,1vw,14px); padding:3px max(9px,env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left)); background:#0c232b; border-top:1px solid #426069; }
+#touchControls { inset:auto 0 0; height:var(--rail); display:flex; align-items:center; gap:clamp(4px,1vw,14px); padding:3px env(safe-area-inset-right,0px) calc(3px + env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left)); background:#0c232b; border-top:1px solid #426069; }
 #moveControls,#actionControls,#topButtons { position:static; display:flex; flex-direction:row; align-items:center; gap:clamp(2px,.65vw,9px); pointer-events:auto; }
 #actionControls { margin-left:auto; }
 #powerPad { display:flex; align-items:center; gap:clamp(1px,.45vw,6px); }
@@ -176,12 +176,25 @@
 #joystick.active { cursor:grabbing; }
 #joystick.active .stick-cap { transition:none; border-color:#d3ffdf; }
 #touchControls #jumpBtn {
-  width:clamp(78px,11vw,116px); height:clamp(46px,13vh,56px); border-radius:28px;
-  color:#0d3432; background:linear-gradient(#b2f4cd,#80d7b0); border:1px solid #bdf4d4;
-  box-shadow:inset 0 -3px 0 #599e87; font-size:clamp(14px,2vw,18px);
+  position:relative; isolation:isolate; flex:none;
+  width:clamp(112px,18vw,182px); height:var(--stick-diameter);
+  padding:0; border:0; border-radius:0; background:transparent; box-shadow:none;
+  color:#0d3432; font-size:clamp(17px,2.4vw,23px);
   text-transform:uppercase; letter-spacing:.035em;
 }
-#touchControls #jumpBtn.active { background:#71cfaa; box-shadow:inset 0 2px 3px #478d78; }
+/* Keep the entire rectangle touchable, including the space around the rounded face. */
+#touchControls #jumpBtn::before {
+  content:""; position:absolute; inset:3px 4px; z-index:-1; pointer-events:none;
+  border:1px solid #bdf4d4; border-radius:12px;
+  background:linear-gradient(#b2f4cd,#80d7b0); box-shadow:inset 0 -3px 0 #599e87;
+}
+#touchControls #jumpBtn.active { background:transparent; transform:none; }
+#touchControls #jumpBtn.active::before { background:#71cfaa; box-shadow:inset 0 2px 3px #478d78; }
+@media (max-width:480px) and (orientation:landscape) {
+  #gameWrap { --rail:calc(98px + env(safe-area-inset-bottom,0px)); }
+  #powerPad { display:grid; grid-template-columns:repeat(2,auto); gap:2px; }
+  #touchControls #jumpBtn { width:clamp(80px,23vw,110px); }
+}
 #touchControls #pauseBtn { color:#bed8d5; border-color:transparent; background:transparent; }
 #touchControls button.active { background:#527c80; transform:scale(.94); }
 #orientationGate[hidden] { display:none; }
