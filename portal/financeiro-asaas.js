@@ -32,7 +32,7 @@
   const $=id=>document.getElementById(id),message=t=>{$('asaasMessage').textContent=t;};
   let settings={enabled:false,connected:false},orders=[],busy=false,refreshing=false,checking=false,initialized=false,request=null,lastPayload=null,selected=null,qr=null;
   const seenPaid=new Set();
-  const status=o=>o.status==='paid'?(o.posted_at?'Pago · lançado no caixa':'Pago · baixa pendente de conciliação'):o.status==='rejected'?'Cobrança não gerada · confira o motivo':o.status==='pending'?'Aguardando pagamento':o.status==='expired'?'Pix expirado · gere um novo código':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
+  const status=o=>o.status==='paid'?(o.posted_at?'Pagamento confirmado':'Pago · baixa pendente de conciliação'):o.status==='rejected'?'Cobrança não gerada · confira o motivo':o.status==='pending'?'Aguardando pagamento':o.status==='expired'?'Pix expirado · gere um novo código':o.status==='canceled'?'Cancelada':o.status==='refunded'?'Estornada · confira a conciliação':o.status==='uncertain'?'Geração incerta · confira antes de repetir':'Gerando cobrança';
   function draw(){
    $('asaasCreate').disabled=!settings.enabled||busy||!!hooks.isLocked?.('asaas')||(hooks.canCreate&&!hooks.canCreate('asaas')); $('asaasConnect').disabled=busy;
    $('asaasToggle').hidden=!settings.can_configure||!settings.connected; $('asaasToggle').disabled=busy;
@@ -55,7 +55,7 @@
     await hooks.orders?.('asaas',orders);
     if(orders.some(o=>o.id===selected&&['expired','rejected'].includes(o.status))){request=null;lastPayload=null;}
     const newPaid=orders.filter(o=>o.posted_at&&!seenPaid.has(o.id));orders.filter(o=>o.posted_at).forEach(o=>seenPaid.add(o.id));
-    if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pix recebido e lançado no caixa. O recibo está em Entradas.');}
+    if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pix confirmado. Confira o destino da venda e o recibo.');}
     else if(!silent)message(settings.enabled?'Monte o carrinho e clique em “Gerar Pix do carrinho”.':settings.connected?'Confira o recebedor acima e ative o Pix nesta conta.':'Conecte a conta Asaas na área abaixo.');
     initialized=true;draw();
    }catch(e){settings.enabled=false;draw();if(!silent)message(e.message);}finally{refreshing=false;}

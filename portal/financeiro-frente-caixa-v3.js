@@ -137,7 +137,6 @@
     <section id="pdvStep1" class="pdv-step pdv-customer-step"><div class="pdv2-card"><p class="pdv-eyebrow">NOVA VENDA</p><h2>Quem está comprando?</h2><p class="pdv2-muted">Selecione um aluno ou informe o beneficiário e o pagador.</p>
       <div class="pdv2-grid"><label>Aluno da base<select id="pdv2Student"><option value="">Selecione um aluno</option></select></label><label>Ou digite o aluno / beneficiário<input id="pdv2ManualStudent" placeholder="Nome do aluno ou beneficiário"></label><label>Responsável / pagador *<input id="pdv2Payer" placeholder="Nome completo" autocomplete="name"></label><label>CPF/CNPJ do pagador *<input id="pdv2Doc" placeholder="CPF ou CNPJ" inputmode="numeric"></label></div>
       <div class="pdv2-actions pdv-spread"><button id="pdv2ReloadOptions" class="pdv2-btn ghost" type="button">Atualizar alunos e pacotes</button><button id="pdvNextCustomer" class="pdv2-btn primary" type="button">Avançar para itens →</button></div></div>
-      <button type="button" id="pdvAdvance" class="pdv2-btn primary">Receber mensalidade adiantada</button>
       <button type="button" id="pdvOpenHistory" class="pdv2-btn ghost">Consultar cobranças e recibos</button></section>
     <section id="pdvStep2" class="pdv-step" hidden><div class="pdv-sale-heading"><div><p class="pdv-eyebrow">ITENS DA VENDA</p><h2>Monte o carrinho</h2></div><button id="pdvBackCustomer" class="pdv2-btn ghost" type="button">← Cliente / pagador</button></div>
       <div id="pdv2CustomerBox" class="pdv2-customer" hidden></div><div id="pdv2Lock" hidden></div>
@@ -185,7 +184,7 @@
     window.INTEGRO_ASAAS?.mount(hooks); window.INTEGRO_INFINITEPAY?.mount(hooks); updateControls();
     $("pdvOpen").onclick=openCash; $("pdvClose").onclick=closeCash;
     document.querySelector('[data-tab="caixa"]')?.addEventListener('click',openCash);
-    document.addEventListener('keydown',event=>{if(!$('pdv2').hidden&&event.key==='Escape')closeCash();if(!$('pdv2').hidden&&event.key==='Tab'){const nodes=[...$('pdv2').querySelectorAll('button,input,select,textarea,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
+    document.addEventListener('keydown',event=>{if(document.querySelector('dialog[open]'))return;if(!$('pdv2').hidden&&event.key==='Escape')closeCash();if(!$('pdv2').hidden&&event.key==='Tab'){const nodes=[...$('pdv2').querySelectorAll('button,input,select,textarea,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
     window.addEventListener('beforeunload',event=>{if(directPix&&!receipt){event.preventDefault();event.returnValue='';}});
   }
 
@@ -328,18 +327,38 @@
     $('pdvPaymentTotal').textContent=money(totals().total);
     $('pdv2ClearSale').hidden=!!receipt||!!activeOrder||!!manualRequest; $('pdv2ClearSale').disabled=busy;
     $('pdvLeavePending').hidden=!activeOrder?.id||activeOrder.status==='paid'||!!receipt; $('pdvLeavePending').disabled=busy;
-    if(receipt)$('pdvPaidDescription').textContent=`${money(receipt.totals.total)} recebidos por ${receipt.payment}. O recibo já está disponível.`;
+    if(receipt)$('pdvPaidDescription').textContent=[`${money(receipt.totals.total)} recebidos por ${receipt.payment}. O recibo já está disponível.`,receipt.destination].filter(Boolean).join(' ');
     window.dispatchEvent(new Event('integro:checkout-lock'));
+  }
+
+  async function saleRows(provider,saleId) {
+    const column={manual:'pos_sale_id',asaas:'asaas_order_id',infinitepay:'infinitepay_order_id'}[provider];
+    const index={manual:'pos_item_index',asaas:'asaas_item_index',infinitepay:'infinitepay_item_index'}[provider];
+    const [ledger,destinations]=await Promise.all([
+      db.from('finance_entries').select('*').eq('school_id',dataStore.school.id).eq(column,saleId).order(index),
+      window.financeAdvances.saleRows(provider,saleId)
+    ]);
+    if(ledger.error)throw ledger.error;
+    const byId=new Map(destinations.map(row=>[row.id,row]));
+    for(const row of ledger.data||[])byId.set(row.id,{...byId.get(row.id),...row});
+    return [...byId.values()].sort((left,right)=>left[index]-right[index]);
+  }
+
+  async function destinationNote(rows) {
+    for(const row of rows.filter(r=>r.destination_id && !r.entry_id && !r.advance_id)) {
+      if(!$('pdv2').hidden)Object.assign(row,await window.financeAdvances.choosePaid(row));
+    }
+    return rows.filter(r=>r.destination_id).map(r=>r.student_name_snapshot+' · '+money(r.amount_paid)+' · '+
+      (r.advance_id?'Adiantamentos':r.entry_id?'Lançado no ciclo':'Destino pendente em Adiantamentos')).join(' • ');
   }
 
   async function providerReceipt(provider,order) {
     if(order.status!=='paid'||!order.posted_at||order.needs_reconciliation)throw Error('O recibo fica disponível somente após a baixa do pagamento.');
-    const column=provider==='asaas'?'asaas_order_id':'infinitepay_order_id';
-    const {data:rows,error}=await db.from('finance_entries').select('*').eq('school_id',dataStore.school.id).eq(column,order.id).order(provider==='asaas'?'asaas_item_index':'infinitepay_item_index');
-    if(error)throw error;
+    const rows=await saleRows(provider,order.id);
     if(!rows?.length||Math.round(rows.reduce((sum,r)=>sum+Number(r.amount_paid),0)*100)!==Number(order.amount))throw Error('A baixa ainda está sendo conciliada. Atualize a cobrança para liberar o recibo.');
     const first=rows[0],items=rows.map(row=>({desc:row.description,typeLabel:typeLabel(row.entry_type),qty:1,grossUnit:Number(row.gross_amount),discountTotal:Number(row.discount_amount),total:Number(row.amount_paid)}));
-    return {saleCode:'VENDA-'+order.id.slice(0,8).toUpperCase(),rows,items,customer:{studentName:first.student_name_snapshot,payerName:first.payer_name,payerDocument:first.payer_document},totals:{gross:rows.reduce((s,r)=>s+Number(r.gross_amount),0),discount:rows.reduce((s,r)=>s+Number(r.discount_amount),0),total:Number(order.amount)/100},received:Number(order.amount)/100,change:0,payment:provider==='asaas'?'Pix · Asaas':first.payment_method+' · InfinitePay',note:'',date:first.created_at};
+    const destination=await destinationNote(rows);
+    return {saleCode:'VENDA-'+order.id.slice(0,8).toUpperCase(),rows,items,customer:{studentName:first.student_name_snapshot,payerName:first.payer_name,payerDocument:first.payer_document},totals:{gross:rows.reduce((s,r)=>s+Number(r.gross_amount),0),discount:rows.reduce((s,r)=>s+Number(r.discount_amount),0),total:Number(order.amount)/100},received:Number(order.amount)/100,change:0,payment:provider==='asaas'?'Pix · Asaas':first.payment_method+' · InfinitePay',destination,note:destination,date:first.created_at};
   }
 
   function bind() {
@@ -354,21 +373,6 @@
       }catch(e){showMsg(e.message,'error');}finally{busy=false;updateControls();}
     };
     $("pdv2Student").onchange = fillCustomer;
-    $('pdvAdvance').onclick=async()=>{
-      if(busy || sale.items.length || activeOrder || directPix || manualRequest || receipt) return showMsg('Conclua a venda em andamento antes de registrar um adiantamento.');
-      try {
-        const customer=getCustomer(true);
-        if (!customer.studentId) throw Error('Selecione um aluno da base para vincular a mensalidade.');
-        busy=true; updateControls();
-        if(await window.financeAdvances.receive(customer,dataStore.school.id)) {
-          sale.customer=null;
-          ['pdv2Student','pdv2Payer','pdv2Doc','pdv2ManualStudent'].forEach(id=>$(id).value='');
-          busy=false; closeCash();
-          document.querySelector('[data-tab="adiantamentos"]').click();
-        }
-      } catch(e){showMsg(e.message,'error');}
-      finally {busy=false;updateControls();}
-    };
     $("pdv2Package").onchange = applyPackage;
     $("pdv2Discount").onchange = applyDiscount;
     $("pdv2Type").onchange = calcFinal;
@@ -387,16 +391,6 @@
         busy=true; updateControls();
         if(sale.customer.studentId){
           studentAdvances=await window.financeAdvances.forStudent(sale.customer.studentId);
-          const pending=studentAdvances.filter(a=>!a.released && a.end>=today());
-          if(!sale.items.length && pending.length){
-            const route=await window.financeAdvances.chooseRoute(pending);
-            if(route!=='normal'){
-              sale.customer=null; busy=false; updateControls();
-              if(route==='advance') await $('pdvAdvance').onclick();
-              if(route==='list'){closeCash();document.querySelector('[data-tab="adiantamentos"]').click();}
-              return;
-            }
-          }
           const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId});
           if(r.error)throw Error(r.error.message||'Não foi possível conferir a reserva.');
           reservationCredit=r.data; $('pdvReservationRecovery').hidden=!r.data?.manual_hold_id;
@@ -458,8 +452,8 @@
     $("pdv2Doc").value = student.guardian_1_cpf || "";
   }
 
-  function getCustomer(readFields = false) {
-    if (sale.customer && !readFields) return sale.customer;
+  function getCustomer() {
+    if (sale.customer) return sale.customer;
     const student = selectedStudent();
     const studentName = student?.full_name || $("pdv2ManualStudent").value.trim();
     const payerName = $("pdv2Payer").value.trim() || student?.guardian_1_name || "";
@@ -685,16 +679,16 @@
         description: `${saleCode} • Item ${index + 1}/${sale.items.length}: ${item.desc}${note ? ` • Obs.: ${note}` : ""}${change ? ` • Valor recebido: ${money(received)} • Troco: ${money(change)}` : ""}`,
         created_by: dataStore.user.id
       }));
-      let result=await db.from('finance_entries').select('*').eq('school_id',dataStore.school.id).eq('pos_sale_id',manualRequest).order('pos_item_index');
-      if(result.error)throw result.error;
-      if(!result.data?.length){
-        result=await db.from("finance_entries").insert(rows).select('*');
-        if(result.error?.code==='23505')result=await db.from('finance_entries').select('*').eq('school_id',dataStore.school.id).eq('pos_sale_id',manualRequest).order('pos_item_index');
+      let saved=await saleRows('manual',manualRequest);
+      if(!saved.length){
+        const result=await db.from('finance_entries').insert(rows).select('*');
+        if(result.error && result.error.code!=='23505')throw result.error;
+        saved=await saleRows('manual',manualRequest);
       }
-      if(result.error)throw result.error;
-      const saved=result.data||[];
       if(saved.length!==rows.length||Math.round(saved.reduce((sum,row)=>sum+Number(row.amount_paid),0)*100)!==Math.round(total.total*100))throw Error('A confirmação do lançamento está pendente. Confira antes de repetir.');
-      receipt={saleCode,rows:saved,customer:{...sale.customer},items:sale.items.slice(),totals:total,received,change,payment:$("pdv2Pay").value,note,date:saved[0].created_at};
+      const destination=await destinationNote(saved);
+      reservationRequest=null;
+      receipt={saleCode,destination,rows:saved,customer:{...sale.customer},items:sale.items.slice(),totals:total,received,change,payment:$("pdv2Pay").value,note:[note,destination].filter(Boolean).join(" • "),date:saved[0].created_at};
       showMsg('Pagamento registrado. O recibo está disponível para impressão.');
       if(typeof reloadAll==='function')await reloadAll();
     } catch(error) {

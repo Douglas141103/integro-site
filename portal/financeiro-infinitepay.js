@@ -21,7 +21,7 @@
    $('ipCreate').disabled=!enabled||busy||!!hooks.isLocked?.('infinitepay')||(hooks.canCreate&&!hooks.canCreate('infinitepay'));
    $('ipToggle').textContent=enabled?'Desativar integração e usar caixa manual':'Ativar integração InfinitePay';
    const renderOrder=o=>{
-    const url=checkout(o.checkout_url),status=o.status==='paid'?(o.posted_at?'Pago — lançado no caixa':'Pago — conciliação pendente'):o.status==='pending'?'Aguardando pagamento':o.status==='uncertain'?'Geração não confirmada — conferir na InfinitePay':'Gerando / aguardando confirmação';
+    const url=checkout(o.checkout_url),status=o.status==='paid'?(o.posted_at?'Pagamento confirmado':'Pago — conciliação pendente'):o.status==='pending'?'Aguardando pagamento':o.status==='uncertain'?'Geração não confirmada — conferir na InfinitePay':'Gerando / aguardando confirmação';
     return `<article class="pdv2-item" style="margin-top:12px"><div class="pdv2-head"><strong>${safe(o.student_name)} — ${money(o.amount)}</strong><span>${status}</span></div><p>${safe(o.payer_name)} · ${new Date(o.created_at).toLocaleString('pt-BR')}</p>${o.needs_reconciliation?'<p>Pagamento confirmado, mas a baixa precisa de conferência pela direção. Não lance novamente sem conferir os recibos.</p>':''}${hooks.receipt&&o.status==='paid'&&o.posted_at&&!o.needs_reconciliation?`<button type="button" class="pdv2-btn primary" data-ip-receipt="${safe(o.id)}">Imprimir recibo</button>`:''}${url&&o.status!=='paid'?`<div class="pdv2-actions"><a class="pdv2-btn primary" href="${safe(url)}" target="_blank" rel="noopener noreferrer">Abrir Pix / cartão</a><button type="button" class="pdv2-btn ghost" data-ip-copy="${o.id}">Copiar link</button><button type="button" class="pdv2-btn ghost" data-ip-print="${o.id}">Imprimir cobrança / PDF</button></div>`:''}</article>`;
    };
    $('ipCurrent').innerHTML=orders.filter(o=>o.id===currentId).map(renderOrder).join('');
@@ -38,7 +38,7 @@
    if(refreshing)return;refreshing=true;
    try{const r=await api({action:'list'});enabled=r.enabled;orders=r.orders||[];await hooks.orders?.('infinitepay',orders);$('ipToggle').hidden=!r.can_configure;
     const newPaid=orders.filter(o=>o.posted_at&&!paidSeen.has(o.id));orders.filter(o=>o.posted_at).forEach(o=>paidSeen.add(o.id));
-    if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pagamento confirmado e lançado no caixa. O recibo está em Entradas.');}
+    if(initialized&&newPaid.length){await hooks.refresh();document.getElementById('tuitionRefreshBtn')?.click();message('Pagamento confirmado. Confira o destino da venda e o recibo.');}
     else if(!silent)message(enabled?'Integração ativa. Gere a cobrança após montar o carrinho.':'Integração desativada. O caixa manual continua disponível. Cobranças já emitidas continuam sendo acompanhadas.');
     initialized=true;draw();
    }catch(e){if(!silent)message(e.message);$('ipCreate').disabled=true;}finally{refreshing=false;}

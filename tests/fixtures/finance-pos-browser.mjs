@@ -1,7 +1,7 @@
 // Isolated financial doubles: no external network and no real charges.
 export function installFixture(w, options={}) {
  const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
- w.financeAdvances={forStudent:async()=>[]};
+ w.financeAdvances={forStudent:async()=>[],saleRows:async()=>[]};
  const t=w.PDV_TEST={entries:[],insertCount:0,printCount:0,lostResponse:false,asaas:[],infinitepay:[],requests:[],failCreation:false};
  const fixed={profiles:[{id:id(1),school_id:id(10),role:'diretor'}],schools:[{id:id(10),name:'Instituto Integro',slug:'instituto-integro'}],students:[{id:id(3),full_name:'Aluno de teste',active:true,enrollment_status:'matriculado',guardian_1_name:'Pagador de teste',guardian_1_cpf:'24971563792'}],finance_packages:[{id:id(4),name:'Reforço escolar',default_amount:140,active:true}],finance_discounts:[]};
  if(options.preEnrollment)fixed.students[0].enrollment_status='pre_matricula';

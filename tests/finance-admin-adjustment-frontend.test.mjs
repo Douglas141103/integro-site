@@ -450,12 +450,13 @@ test("active point of sale uses Manaus date and blocks the transition gap", asyn
   const cycleGuard = sliceBetween(pointOfSale, "function currentOpenCycle(", "async function finish()");
   assert.match(cycleGuard, /if \(range\.isClosingWindow\) throw new Error/);
   const closingGuard = finishFunction.indexOf("currentOpenCycle(transactionMoment)");
-  const insert = finishFunction.indexOf('.from("finance_entries").insert');
+  const insert = finishFunction.search(/\.from\(["']finance_entries["']\)\.insert/);
   assert.ok(closingGuard >= 0);
   assert.ok(insert > closingGuard);
   assert.match(finishFunction, /entry_date:\s*today\(transactionMoment\)/);
-  assert.match(loader, /financeiro-frente-caixa-v3\.js\?v=20261116-vacation-1/);
-  assert.match(page, /financeiro-frente-caixa\.js\?v=20261116-vacation-1/);
+  const loaderVersion = loader.match(/financeiro-frente-caixa-v3\.js\?v=([\w-]+)/)?.[1];
+  assert.ok(loaderVersion);
+  assert.ok(page.includes(`financeiro-frente-caixa.js?v=${loaderVersion}"`));
 });
 
 test("historical entries and expenses are rendered as read-only", async () => {
