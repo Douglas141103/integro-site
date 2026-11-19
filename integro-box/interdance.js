@@ -253,6 +253,16 @@ Object.assign(stages[0], {
     duration: 56.607
   }
 });
+Object.assign(stages[1], {
+  bpm: 140,
+  bars: 31,
+  recording: {
+    title: "Asphalt Glider",
+    url: "./assets/interdance/music/asphalt-glider.mp3",
+    gridOffset: 0.046,
+    duration: 59.585
+  }
+});
 function generateSong(E, A = "normal") {
   let g = 60 / E.bpm, B = [], I = [], C = [], Q = 0, M = (w, G, D, i, s = 0.12, k = 0) => B.push({ at: w * g, duration: G * g, midi: D, voice: i, amp: s, pan: k });
   for (let w = 0; w < 4; w++) M(w, 0.08, w === 3 ? 84 : 72, "count", 0.13);
