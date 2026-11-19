@@ -80,6 +80,7 @@
     <section class="tabs" aria-label="Áreas financeiras">
       <button class="tab active" data-tab="caixa" type="button">Frente de caixa</button>
       <button class="tab" data-tab="mensalidades" type="button">Mensalidades</button>
+      <button class="tab" data-tab="adiantamentos" type="button">Adiantamentos</button>
       <button class="tab" data-tab="reservas" type="button">Reservas de matrícula</button>
       <button class="tab" data-tab="recolho" type="button">Recolho do caixa</button>
       <button class="tab" data-tab="entradas" type="button">Entradas</button>
@@ -233,6 +234,15 @@
       </div>
     </section>
 
+    <section id="adiantamentos" class="panel" aria-label="Adiantamentos de mensalidade">
+      <div class="card">
+        <h2>Adiantamentos de mensalidade</h2>
+        <p class="muted">Registre o recebimento na Frente de caixa. Quando o ciclo de destino abrir, libere o valor aqui para dar baixa na mensalidade.</p>
+        <button type="button" class="btn" id="advanceRefresh">Atualizar adiantamentos</button>
+        <p id="advanceStatus" role="status"></p>
+        <div id="advanceList"></div>
+      </div>
+    </section>
     <section id="reservas" class="panel" aria-label="Reservas de matrícula">
       <div id="reservasRoot"></div>
     </section>
@@ -500,7 +510,8 @@
   <script src="./financeiro-infinitepay.js?v=20261028-pdv1"></script>
   <script src="./vendor/qrcode-generator-1.4.4.js"></script>
   <script src="./pix-brcode.js?v=20261028-pix-direct1"></script>
-  <script src="./financeiro-frente-caixa.js?v=20261116-vacation-1"></script>
+  <script src="./financeiro-adiantamentos.js?v=20261119-1"></script>
+  <script src="./financeiro-frente-caixa.js?v=20261119-advance-1"></script>
   <script src="./financeiro-mensalidades.js?v=20260521-baixa-painel"></script>
   <script src="./financeiro-reservas.js?v=20261112-1"></script>
   <script src="./financeiro-recolho.js?v=20261116-vacation-1"></script>

@@ -11,6 +11,7 @@
   let step = 1, method = null, busy = false, activeOrder = null, receipt = null, manualRequest = null, receiptLoading = false;
   let directPix = null, directSettings = null;
   let reservationCredit = null, reservationRequest = null;
+  let studentAdvances = [];
   const dataStore = { user: null, profile: null, school: null, students: [], packages: [], discounts: [] };
   const $ = (id) => document.getElementById(id);
 
@@ -136,6 +137,7 @@
     <section id="pdvStep1" class="pdv-step pdv-customer-step"><div class="pdv2-card"><p class="pdv-eyebrow">NOVA VENDA</p><h2>Quem está comprando?</h2><p class="pdv2-muted">Selecione um aluno ou informe o beneficiário e o pagador.</p>
       <div class="pdv2-grid"><label>Aluno da base<select id="pdv2Student"><option value="">Selecione um aluno</option></select></label><label>Ou digite o aluno / beneficiário<input id="pdv2ManualStudent" placeholder="Nome do aluno ou beneficiário"></label><label>Responsável / pagador *<input id="pdv2Payer" placeholder="Nome completo" autocomplete="name"></label><label>CPF/CNPJ do pagador *<input id="pdv2Doc" placeholder="CPF ou CNPJ" inputmode="numeric"></label></div>
       <div class="pdv2-actions pdv-spread"><button id="pdv2ReloadOptions" class="pdv2-btn ghost" type="button">Atualizar alunos e pacotes</button><button id="pdvNextCustomer" class="pdv2-btn primary" type="button">Avançar para itens →</button></div></div>
+      <button type="button" id="pdvAdvance" class="pdv2-btn primary">Receber mensalidade adiantada</button>
       <button type="button" id="pdvOpenHistory" class="pdv2-btn ghost">Consultar cobranças e recibos</button></section>
     <section id="pdvStep2" class="pdv-step" hidden><div class="pdv-sale-heading"><div><p class="pdv-eyebrow">ITENS DA VENDA</p><h2>Monte o carrinho</h2></div><button id="pdvBackCustomer" class="pdv2-btn ghost" type="button">← Cliente / pagador</button></div>
       <div id="pdv2CustomerBox" class="pdv2-customer" hidden></div><div id="pdv2Lock" hidden></div>
@@ -352,6 +354,21 @@
       }catch(e){showMsg(e.message,'error');}finally{busy=false;updateControls();}
     };
     $("pdv2Student").onchange = fillCustomer;
+    $('pdvAdvance').onclick=async()=>{
+      if(busy || sale.items.length || activeOrder || directPix || manualRequest || receipt) return showMsg('Conclua a venda em andamento antes de registrar um adiantamento.');
+      try {
+        const customer=getCustomer(true);
+        if (!customer.studentId) throw Error('Selecione um aluno da base para vincular a mensalidade.');
+        busy=true; updateControls();
+        if(await window.financeAdvances.receive(customer,dataStore.school.id)) {
+          sale.customer=null;
+          ['pdv2Student','pdv2Payer','pdv2Doc','pdv2ManualStudent'].forEach(id=>$(id).value='');
+          busy=false; closeCash();
+          document.querySelector('[data-tab="adiantamentos"]').click();
+        }
+      } catch(e){showMsg(e.message,'error');}
+      finally {busy=false;updateControls();}
+    };
     $("pdv2Package").onchange = applyPackage;
     $("pdv2Discount").onchange = applyDiscount;
     $("pdv2Type").onchange = calcFinal;
@@ -369,6 +386,17 @@
         sale.customer=next; reservationCredit=null; $('pdvReservationRecovery').hidden=true;
         busy=true; updateControls();
         if(sale.customer.studentId){
+          studentAdvances=await window.financeAdvances.forStudent(sale.customer.studentId);
+          const pending=studentAdvances.filter(a=>!a.released && a.end>=today());
+          if(!sale.items.length && pending.length){
+            const route=await window.financeAdvances.chooseRoute(pending);
+            if(route!=='normal'){
+              sale.customer=null; busy=false; updateControls();
+              if(route==='advance') await $('pdvAdvance').onclick();
+              if(route==='list'){closeCash();document.querySelector('[data-tab="adiantamentos"]').click();}
+              return;
+            }
+          }
           const r=await db.rpc('finance_reservation_credit',{p_student_id:sale.customer.studentId});
           if(r.error)throw Error(r.error.message||'Não foi possível conferir a reserva.');
           reservationCredit=r.data; $('pdvReservationRecovery').hidden=!r.data?.manual_hold_id;
@@ -430,8 +458,8 @@
     $("pdv2Doc").value = student.guardian_1_cpf || "";
   }
 
-  function getCustomer() {
-    if (sale.customer) return sale.customer;
+  function getCustomer(readFields = false) {
+    if (sale.customer && !readFields) return sale.customer;
     const student = selectedStudent();
     const studentName = student?.full_name || $("pdv2ManualStudent").value.trim();
     const payerName = $("pdv2Payer").value.trim() || student?.guardian_1_name || "";
@@ -515,6 +543,8 @@
     try {
       if (busy || activeOrder || directPix || manualRequest || receipt) return;
       if (!sale.customer) sale.customer = getCustomer();
+      if ($('pdv2Type').value==='mensalidade' && studentAdvances.some(a=>a.student_id===sale.customer.studentId && a.received && !a.released && a.start<=today() && today()<=a.end))
+        throw Error('A mensalidade deste ciclo já foi recebida. Abra Adiantamentos para liberá-la.');
       const qty = n($("pdv2Qty").value);
       if(!Number.isInteger(qty)||qty<1||qty>1000)throw Error("Informe uma quantidade inteira entre 1 e 1.000.");
       if(n($("pdv2DiscValue").value)<0)throw Error("O desconto não pode ser negativo.");
