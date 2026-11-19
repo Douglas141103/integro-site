@@ -554,7 +554,9 @@ function generateLevel(worldIndex, phase){
   const theme = {...scene,world:route.world,routeName:route.name,routeColor:route.color,bossName:route.bossName,bossType:route.bossType};
   const boss = phase===3;
   const difficulty = worldIndex * 3 + phase;
-  const width = phase===1 ? 4700 + worldIndex*130 : phase===2 ? 5250 + worldIndex*150 : 6400 + worldIndex*190;
+  const lengthScale = 1.30;
+  const baseWidth = phase===1 ? 4700 + worldIndex*130 : phase===2 ? 5250 + worldIndex*150 : 6400 + worldIndex*190;
+  const width = Math.round(baseWidth * lengthScale);
   const spawn = [120,520];
   const groundY = 620;
   const citySeed = [...scene.id].reduce((sum,ch)=>sum+ch.charCodeAt(0),0);
@@ -648,10 +650,16 @@ function generateLevel(worldIndex, phase){
   if(bossArena)for(let i=coins.length-1;i>=0;i--)if(coins[i][0]>=bossArena.minX&&coins[i][0]<=bossArena.maxX)coins.splice(i,1);
 
   const crystalTargets = phase===1 ? [0.22,0.48,0.80] : phase===2 ? [0.18,0.50,0.84] : [0.14,0.36,0.60];
+  const crystalLedges = platforms.filter(([x,y,w,h]) => {
+    if (h !== 28) return false;
+    const center = x + w/2;
+    // Lumi needs 46 × 60 pixels of clearance to stand below the fragment.
+    return !platforms.some(([px,py,pw,ph]) =>
+      px < center+23 && px+pw > center-23 && py < y && py+ph > y-60);
+  });
   crystalTargets.forEach((t,i)=>{
-    const ledges = platforms.filter(p => p[3] === 28);
-    const choices = i === 2 ? ledges.filter(p => groundSegments.some(([gx,,gw]) => p[0]+p[2]/2 >= gx && p[0]+p[2]/2 <= gx+gw)) : ledges;
-    const plat = nearestPlatform(choices.length ? choices : platforms, width*t);
+    const choices = i === 2 ? crystalLedges.filter(p => groundSegments.some(([gx,,gw]) => p[0]+p[2]/2 >= gx && p[0]+p[2]/2 <= gx+gw)) : crystalLedges;
+    const plat = nearestPlatform(choices.length ? choices : crystalLedges, width*t);
     crystals.push([plat[0] + plat[2]/2, plat[1]-42-(i%2)*12]);
   });
 
@@ -677,7 +685,8 @@ function generateLevel(worldIndex, phase){
 
   const groundType = theme.groundEnemy, flyType = theme.flyEnemy, turretType = theme.turretEnemy;
   const pattern = phase===1 ? ['ground','ground','fly'] : phase===2 ? ['ground','fly','ground','turret'] : ['ground','fly','turret','ground','fly'];
-  const enemyCount = phase===1 ? 9 + worldIndex : phase===2 ? 12 + worldIndex : 13 + worldIndex;
+  const baseEnemyCount = (phase===1 ? 9 : phase===2 ? 12 : 13) + worldIndex;
+  const enemyCount = Math.round(baseEnemyCount * lengthScale);
   const enemyStart = safeZoneEnd + 230;
   const enemyEnd = width * (phase===3 ? .68 : .82);
   for(let i=0;i<enemyCount;i++){
@@ -699,7 +708,7 @@ function generateLevel(worldIndex, phase){
     }
   }
 
-  const hazardCount=phase===1?5:phase===2?7:9;
+  const hazardCount = Math.round((phase===1 ? 5 : phase===2 ? 7 : 9) * lengthScale);
   for(let i=1;i<groundSegments.length&&hazards.length<hazardCount;i++){
     const g=groundSegments[i];
     if(g[0]+g[2]<safeZoneEnd+280||g[0]>width-760||(bossArena&&g[0]>bossArena.minX-180))continue;
@@ -753,7 +762,7 @@ function cloneLevel(def){
     powers: def.powers.map(p=>({x:p[0],y:p[1],type:p[2],active:true,bob:Math.random()*6.28})),
     hazards: def.hazards.map(h=>({x:h[0],y:h[1],w:h[2],h:h[3],type:h[4],phase:Math.random()*6.28})),
     enemies: def.enemies.map(e=>makeEnemy(e[0],e[1],e[2],def.theme,e[3]||1)),
-    projectiles:[], enemyShots:[], particles:[], powerEvents:[], portalOpen:false, complete:false, bossDefeated:false,
+    projectiles:[], enemyShots:[], particles:[], powerEvents:[], portalOpen:false, portalRise:0, portalExitTime:null, portalHint:false, complete:false, bossDefeated:false,
     bossArena: def.bossArena ? {...def.bossArena} : null
   };
   if(def.boss) level.enemies.push(makeBoss(def.bossSpawn[0], def.bossSpawn[1], def.bossType, def.bossName, def.theme));
@@ -808,7 +817,7 @@ function hideAllScreens(){ [ui.title,ui.levels,ui.how,ui.pause,ui.result].forEac
 function showTitle(playMusic=true){state.screen='title';hideAllScreens();ui.title.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');if(playMusic)sound.startMenuMusic();}
 function showLevels(){selectScenery(LEVELS[currentMapDestination()].theme.id);state.screen='levels';hideAllScreens();ui.levels.classList.remove('hidden');ui.touch.classList.add('hidden');ui.top.classList.add('hidden');sound.startMenuMusic();$('atlasView').classList.remove('hidden');$('passportView').classList.add('hidden');renderLevelGrid();}
 function pauseGame(){ if(state.screen!=='playing') return; sound.stopMusic(); clearPad(); state.screen='paused'; ui.pause.classList.remove('hidden'); ui.touch.classList.add('hidden'); }
-function resumeGame(){ if(state.screen!=='paused' || portrait.matches) return; state.screen='playing'; ui.pause.classList.add('hidden'); ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music, true); }
+function resumeGame(){ if(state.screen!=='paused' || portrait.matches) return; state.screen='playing'; ui.pause.classList.add('hidden'); if(state.level.portalExitTime===null) ui.touch.classList.remove('hidden'); state.last=performance.now(); sound.startMusic(state.level.theme.music, true); }
 
 // Coordinates in the painted 600 × 300 atlas, in the same order as the stages.
 const atlasStops = [
@@ -932,7 +941,7 @@ function finishLevel(){
   ui.resultTitle.textContent = last ? 'Volta ao mundo concluída!' : (state.level.phase===3 ? 'Chefão derrotado!' : 'Destino concluído!');
   ui.resultText.innerHTML = `${state.level.country} · ${state.level.phaseName}<br>${state.level.storyOutro}<br>Fragmentos: <b>${state.crystals}/3</b> · Moedas: <b>${state.coins}</b> · Energia: <b>${state.player.health}/${state.player.maxHealth}</b><br>Pontuação: <b>${state.score}</b>`;
   ui.nextBtn.classList.toggle('hidden', last);
-  ui.result.classList.remove('hidden'); sound.portal();
+  ui.result.classList.remove('hidden');
 }
 
 function gameOver(){
@@ -946,11 +955,50 @@ function gameOver(){
 function aabb(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
 function circleRect(cx,cy,r,rect){ const qx=Math.max(rect.x,Math.min(cx,rect.x+rect.w)); const qy=Math.max(rect.y,Math.min(cy,rect.y+rect.h)); const dx=cx-qx,dy=cy-qy; return dx*dx+dy*dy<r*r; }
 
+const PORTAL_ENTRY_SECONDS = .72, PORTAL_LOWER_SECONDS = .88;
+function portalEase(t){return t*t*(3-2*t);}
+
+function updatePortal(level, player, dt){
+  const [x,y] = level.portal;
+  level.portalOpen = state.crystals >= 3 && (!level.boss || level.bossDefeated);
+  // Start within sight so the player can watch the arch break through the floor.
+  if(level.portalOpen && (level.portalRise > 0 || x-player.x < W*.4)){
+    if(level.portalRise === 0) spawnBurst(x+41,y+117,level.theme.accent,12);
+    level.portalRise = Math.min(1, level.portalRise + dt/1.05);
+  }
+  if(!aabb(player,{x,y,w:82,h:120})){
+    level.portalHint = false;
+    return;
+  }
+  if(!level.portalOpen){
+    if(!level.portalHint) showToast(state.crystals < 3 ? `Faltam ${3-state.crystals} fragmento(s).` : 'Derrote o chefão para abrir o portal.');
+    level.portalHint = true;
+    return;
+  }
+  if(level.portalRise < 1 || player.dead) return;
+  level.portalExitTime = 0;
+  player.vx = player.vy = 0;
+  clearPad();
+  ui.touch.classList.add('hidden');
+  spawnBurst(x+41,y+61,level.theme.accent,18);
+  sound.portal();
+}
+
 function update(dt){
-  state.time += dt;
   if(state.screen !== 'playing') return;
+  state.time += dt;
   state.locationCard=Math.max(0,state.locationCard-dt);
   const p = state.player, l = state.level;
+  if(l.portalExitTime !== null){
+    const previous = l.portalExitTime;
+    l.portalExitTime += dt;
+    if(previous < PORTAL_ENTRY_SECONDS && l.portalExitTime >= PORTAL_ENTRY_SECONDS){
+      spawnBurst(l.portal[0]+41,l.portal[1]+118,l.theme.soil,12);
+    }
+    updateParticles(dt);
+    if(l.portalExitTime >= PORTAL_ENTRY_SECONDS + PORTAL_LOWER_SECONDS + .14) finishLevel();
+    return;
+  }
   state.nightTime=Math.max(0,state.nightTime-dt);
   p.inv = Math.max(0,p.inv-dt);
   p.anim += dt*Math.abs(p.vx)*.03;
@@ -998,13 +1046,7 @@ function update(dt){
   state.cameraX += (desired-state.cameraX)*Math.min(1,dt*5.2);
   state.shake=Math.max(0,state.shake-dt*22); state.flash=Math.max(0,state.flash-dt*2.4);
 
-  const portal={x:l.portal[0],y:l.portal[1],w:82,h:120};
-  l.portalOpen = state.crystals>=3 && (!l.boss || l.bossDefeated);
-  if(aabb(p,portal)){
-    if(l.portalOpen) finishLevel();
-    else if(state.crystals<3) showToast(`Faltam ${3-state.crystals} fragmento(s).`);
-    else showToast('Derrote o chefão para abrir o portal.');
-  }
+  updatePortal(l,p,dt);
 }
 
 function movePlayerX(dx){
@@ -1306,12 +1348,46 @@ function drawReflectionClue(crystal,theme){
   ctx.restore();
 }
 
+function drawEmergingPortal(level){
+  const [x,y] = level.portal, floor = y+120;
+  if(x < state.cameraX-130 || x > state.cameraX+W+100) return;
+  const elapsed = level.portalExitTime ?? 0;
+  const lowered = portalEase(Math.min(1,Math.max(0,(elapsed-PORTAL_ENTRY_SECONDS)/PORTAL_LOWER_SECONDS)));
+  const visible = portalEase(level.portalRise)*(1-lowered);
+  if(lowered === 1) return;
+  ctx.save();
+  // A thin seal marks the destination while the arch is still underground.
+  ctx.globalAlpha = (level.portalOpen ? .85 : .48)*(1-lowered);
+  ctx.fillStyle = '#203044'; ctx.strokeStyle = level.theme.accent; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(x+41,floor-1,47,5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = 1;
+  if(visible > 0){
+    ctx.beginPath(); ctx.rect(x-90,floor-185,265,185); ctx.clip();
+    drawPortal(x,y+165*(1-visible),level.portalOpen,state.time,level.theme);
+  }
+  ctx.restore();
+}
+
+function drawPortalTraveler(level,player){
+  const progress = Math.min(1,level.portalExitTime/PORTAL_ENTRY_SECONDS);
+  if(progress >= 1) return;
+  const amount = portalEase(progress);
+  const cx = player.x+player.w/2, cy = player.y+player.h/2;
+  const targetX = level.portal[0]+41, targetY = level.portal[1]+63;
+  ctx.save();
+  ctx.translate(cx+(targetX-cx)*amount,cy+(targetY-cy)*amount-Math.sin(progress*Math.PI)*10);
+  ctx.scale(1-amount,1-amount);
+  ctx.translate(-cx,-cy);
+  drawLumi(player.x,player.y,player.dir,player.anim,player.powers,0,level.theme,player);
+  ctx.restore();
+}
+
 function drawWorld(){
   const l=state.level, theme=l.theme; drawBackground(theme,state.cameraX); drawCityLight(theme); ctx.save(); ctx.translate(-state.cameraX,0);
   if(state.nightTime>0)drawTemporaryNight(state.cameraX,state.nightTime);
   for(const s of l.platforms) drawPlatform(s,theme);
   drawWelcomeMarker(l);
-  drawPortal(l.portal[0],l.portal[1],l.portalOpen,state.time,theme);
+  drawEmergingPortal(l);
   for(const c of l.coins) if(c.active) drawCoin(c.x,c.y+Math.sin(state.time*4+c.bob)*6,state.time+c.bob);
   for (const c of l.crystals) {
     if (!c.active || c.x < state.cameraX-60 || c.x > state.cameraX+W+60) continue;
@@ -1327,7 +1403,9 @@ function drawWorld(){
   for(const s of l.enemyShots) drawShot(s.x,s.y,s.r,s.color||'#7fa7ff');
   for(const q of l.particles){ctx.globalAlpha=Math.max(0,q.life/q.max);ctx.fillStyle=q.color;const ps=Math.max(2,Math.round(q.size/2)*2);ctx.fillRect(Math.round(q.x/2)*2,Math.round(q.y/2)*2,ps,ps);if(ps>4){ctx.globalAlpha*=.45;ctx.fillRect(Math.round(q.x)-3,Math.round(q.y)-3,3,3);}}
   ctx.globalAlpha=1;
-  const p=state.player; if(!(p.inv>0&&Math.floor(p.inv*12)%2===0)) drawLumi(p.x,p.y,p.dir,p.anim,p.powers,p.invisibleTime,theme,p);
+  const p=state.player;
+  if(l.portalExitTime !== null) drawPortalTraveler(l,p);
+  else if(!(p.inv>0&&Math.floor(p.inv*12)%2===0)) drawLumi(p.x,p.y,p.dir,p.anim,p.powers,p.invisibleTime,theme,p);
   ctx.restore();
 }
 
@@ -2023,11 +2101,91 @@ function capsulePoly(c,x1,y1,x2,y2,width,color){const dx=x2-x1,dy=y2-y1,l=Math.h
 
 function pixelPanel(c,x,y,w,h,fill='rgba(5,12,35,.82)',border='rgba(111,232,249,.55)',step=8){const pts=[[x+step,y],[x+w-step,y],[x+w,y+step],[x+w,y+h-step],[x+w-step,y+h],[x+step,y+h],[x,y+h-step],[x,y+step]];c.save();c.shadowColor='rgba(0,0,0,.42)';c.shadowBlur=14;c.shadowOffsetY=7;polyShape(c,pts,fill,border,2);c.shadowColor='transparent';c.globalAlpha=.16;c.strokeStyle='#fff';c.beginPath();c.moveTo(x+step+5,y+5);c.lineTo(x+w-step-5,y+5);c.lineTo(x+w-5,y+step+3);c.stroke();c.restore();}
 
-function drawPlatform(s,th){const x=s.x,y=s.y,w=s.w,h=s.h,top=Math.min(23,h*.35),base=th.soil,face=th.routeColor||th.ground;ctx.save();polyShape(ctx,[[x+9,y],[x+w,y],[x+w-8,y+top],[x,y+top]],th.ground,'#061120',3);polyShape(ctx,[[x,y+top],[x+w-8,y+top],[x+w-8,y+h],[x,y+h]],base,'#061120',3);polyShape(ctx,[[x+w-8,y+top],[x+w,y],[x+w,y+h-8],[x+w-8,y+h]],shadeHex(base,-.28),'#061120',2);const cell=52;for(let xx=x;xx<x+w-8;xx+=cell){const ww=Math.min(cell,x+w-8-xx);polyShape(ctx,[[xx,y+top],[xx+ww,y+top],[xx+ww*.58,y+Math.min(h,top+36)]],shadeHex(base,(Math.floor(xx/cell)%2)?.12:-.1),null,0,.55);polyShape(ctx,[[xx,y+top],[xx+ww*.58,y+Math.min(h,top+36)],[xx,y+Math.min(h,top+36)]],shadeHex(base,-.16),null,0,.42);}ctx.strokeStyle=th.accent;ctx.globalAlpha=.38;ctx.lineWidth=3;ctx.setLineDash([14,12]);ctx.beginPath();ctx.moveTo(x+14,y+9);ctx.lineTo(x+w-18,y+9);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;for(let xx=x+32;xx<x+w-20;xx+=82){ctx.save();ctx.translate(xx,y+top+20);ctx.scale(.72,.72);drawEnemyMark(th.motif,0,0);ctx.restore();}ctx.restore();}
+const ROUTE_SPRITE_FRAMES = [{"platform":[4,100,332,82],"barrier":[400,76,220,129],"portal":[740,18,220,245]},{"platform":[4,373,332,99],"barrier":[400,355,220,136],"portal":[740,313,220,219]},{"platform":[4,652,332,105],"barrier":[400,628,220,153],"portal":[740,594,220,222]},{"platform":[4,938,332,98],"barrier":[400,903,220,168],"portal":[740,875,220,224]},{"platform":[4,1213,332,111],"barrier":[422,1181,176,176],"portal":[740,1144,220,249]},{"platform":[4,1486,332,130],"barrier":[421,1463,177,176],"portal":[740,1449,220,203]},{"platform":[4,1778,332,110],"barrier":[418,1745,183,176],"portal":[740,1734,220,198]}];
+const routeSpriteSheet = new Image();
+routeSpriteSheet.decoding = 'async';
+routeSpriteSheet.src = './art/route-sprites.webp';
+
+function routeSprite(theme, kind) {
+  if (!routeSpriteSheet.complete || !routeSpriteSheet.naturalWidth) return null;
+  return ROUTE_SPRITE_FRAMES[theme.regionIndex]?.[kind];
+}
+
+function drawPlatform(s, th) {
+  if (state.screen !== 'title' &&
+      (s.x + s.w < state.cameraX - 16 || s.x > state.cameraX + W + 16)) return;
+  const frame = routeSprite(th, 'platform');
+  if (!frame) return drawFacetedPlatform(s, th);
+  const [sx, sy, sw, sh] = frame;
+  const naturalWidth = sw * s.h / sh;
+  if (s.w <= naturalWidth * 1.65) {
+    ctx.drawImage(routeSpriteSheet, sx, sy, sw, sh, s.x, s.y, s.w, s.h);
+    return;
+  }
+  // Keep both illustrated ends intact. Repeat the central masonry on broad islands.
+  const cap = Math.max(1, Math.round(sw * .18));
+  const capWidth = cap * s.h / sh;
+  const middle = sw - 2 * cap;
+  const middleWidth = s.w - 2 * capWidth;
+  const tiles = Math.max(1, Math.round(middleWidth / (middle * s.h / sh)));
+  const at = i => Math.round(s.x + capWidth + i * middleWidth / tiles);
+  ctx.drawImage(routeSpriteSheet, sx, sy, cap, sh, s.x, s.y, at(0) - s.x, s.h);
+  for (let i = 0; i < tiles; i++) {
+    ctx.drawImage(routeSpriteSheet, sx + cap, sy, middle, sh,
+      at(i), s.y, at(i + 1) - at(i), s.h);
+  }
+  ctx.drawImage(routeSpriteSheet, sx + sw - cap, sy, cap, sh,
+    at(tiles), s.y, s.x + s.w - at(tiles), s.h);
+}
+
+function drawHazard(h, th) {
+  if (h.x + h.w < state.cameraX - 16 || h.x > state.cameraX + W + 16) return;
+  const frame = routeSprite(th, 'barrier');
+  if (!frame) return drawFacetedHazard(h, th);
+  ctx.drawImage(routeSpriteSheet, ...frame, h.x, h.y, h.w, h.h);
+}
+
+function drawPortal(x, y, open, t, th) {
+  const frame = routeSprite(th, 'portal');
+  if (!frame) return drawFacetedPortal(x, y, open, t, th);
+  const [sx, sy, sw, sh] = frame;
+  const scale = Math.min(150 / sh, 152 / sw);
+  const w = sw * scale, h = sh * scale;
+  const cx = x + 41, floor = y + 120;
+  ctx.save();
+  ctx.translate(cx, floor - h * .40);
+  ctx.scale(w * .23, h * .34);
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  glow.addColorStop(0, open ? '#e5ffff' : '#233041');
+  glow.addColorStop(.6, open ? th.accent : '#273445');
+  glow.addColorStop(1, 'rgba(23,43,76,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  ctx.drawImage(routeSpriteSheet, sx, sy, sw, sh, cx - w / 2, floor - h, w, h);
+  if (open) {
+    ctx.save();
+    ctx.fillStyle = '#ecffff';
+    const opacity = ctx.globalAlpha;
+    for (let i = 0; i < 6; i++) {
+      const phase = (t * .37 + i / 6) % 1;
+      ctx.globalAlpha = opacity * Math.sin(Math.PI * phase);
+      ctx.beginPath();
+      ctx.arc(cx + Math.sin(t * 2 + i * 2) * w * .12, floor - h * (.16 + .44 * phase),
+        1.3 + i % 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawFacetedPlatform(s,th){const x=s.x,y=s.y,w=s.w,h=s.h,top=Math.min(23,h*.35),base=th.soil,face=th.routeColor||th.ground;ctx.save();polyShape(ctx,[[x+9,y],[x+w,y],[x+w-8,y+top],[x,y+top]],th.ground,'#061120',3);polyShape(ctx,[[x,y+top],[x+w-8,y+top],[x+w-8,y+h],[x,y+h]],base,'#061120',3);polyShape(ctx,[[x+w-8,y+top],[x+w,y],[x+w,y+h-8],[x+w-8,y+h]],shadeHex(base,-.28),'#061120',2);const cell=52;for(let xx=x;xx<x+w-8;xx+=cell){const ww=Math.min(cell,x+w-8-xx);polyShape(ctx,[[xx,y+top],[xx+ww,y+top],[xx+ww*.58,y+Math.min(h,top+36)]],shadeHex(base,(Math.floor(xx/cell)%2)?.12:-.1),null,0,.55);polyShape(ctx,[[xx,y+top],[xx+ww*.58,y+Math.min(h,top+36)],[xx,y+Math.min(h,top+36)]],shadeHex(base,-.16),null,0,.42);}ctx.strokeStyle=th.accent;ctx.globalAlpha=.38;ctx.lineWidth=3;ctx.setLineDash([14,12]);ctx.beginPath();ctx.moveTo(x+14,y+9);ctx.lineTo(x+w-18,y+9);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;for(let xx=x+32;xx<x+w-20;xx+=82){ctx.save();ctx.translate(xx,y+top+20);ctx.scale(.72,.72);drawEnemyMark(th.motif,0,0);ctx.restore();}ctx.restore();}
 
 function drawWelcomeMarker(level){const th=level.theme,x=420,y=620;ctx.save();capsulePoly(ctx,x+5,y-78,x+5,y,9,'#6b4c35');facetPanel(ctx,x+8,y-88,176,54,shadeHex(th.routeColor,-.15),th.accent,10);ctx.fillStyle='#fff';ctx.font='900 14px Trebuchet MS,system-ui';ctx.textAlign='center';ctx.fillText('INÍCIO TRANQUILO',x+96,y-65);ctx.font='800 11px Trebuchet MS,system-ui';ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillText(level.phaseName.toUpperCase(),x+96,y-47);ctx.restore();}
 
-function drawHazard(h,th){const x=h.x,y=h.y,p=.5+.5*Math.sin(state.time*4+h.phase);ctx.save();ctx.shadowColor=th.accent;ctx.shadowBlur=6+6*p;facetPanel(ctx,x,y,48,48,shadeHex(th.soil,.02),th.accent,8);ctx.shadowBlur=0;polyShape(ctx,[[x+7,y+10],[x+24,y+5],[x+41,y+10],[x+37,y+17],[x+24,y+13],[x+11,y+17]],shadeHex(th.ground,.1),'rgba(255,255,255,.12)',1);polyShape(ctx,[[x+8,y+37],[x+24,y+30],[x+40,y+37],[x+35,y+43],[x+13,y+43]],shadeHex(th.soil,-.2),null);ctx.save();ctx.translate(x+24,y+25);ctx.scale(.82,.82);drawEnemyMark(th.motif,0,0);ctx.restore();for(const q of[[6,6],[42,6],[6,42],[42,42]])polyDisc(ctx,q[0]+x,q[1]+y,2.3,2.3,'#f3e5b7',6,0,null,0);ctx.restore();}
+function drawFacetedHazard(h,th){const x=h.x,y=h.y,p=.5+.5*Math.sin(state.time*4+h.phase);ctx.save();ctx.shadowColor=th.accent;ctx.shadowBlur=6+6*p;facetPanel(ctx,x,y,48,48,shadeHex(th.soil,.02),th.accent,8);ctx.shadowBlur=0;polyShape(ctx,[[x+7,y+10],[x+24,y+5],[x+41,y+10],[x+37,y+17],[x+24,y+13],[x+11,y+17]],shadeHex(th.ground,.1),'rgba(255,255,255,.12)',1);polyShape(ctx,[[x+8,y+37],[x+24,y+30],[x+40,y+37],[x+35,y+43],[x+13,y+43]],shadeHex(th.soil,-.2),null);ctx.save();ctx.translate(x+24,y+25);ctx.scale(.82,.82);drawEnemyMark(th.motif,0,0);ctx.restore();for(const q of[[6,6],[42,6],[6,42],[42,42]])polyDisc(ctx,q[0]+x,q[1]+y,2.3,2.3,'#f3e5b7',6,0,null,0);ctx.restore();}
 
 function drawHero(x,y,dir,anim,powers,invisibleTime,th){powers=powers||{};const walk=Math.sin(anim),leg=walk*5,arm=-walk*4,coat='#c9893d',accent=th?.accent||'#ffd45e',look=th?.art?.hero||'explorer';ctx.save();ctx.translate(x+23,y+31-Math.abs(walk)*1.5);ctx.scale(dir,1);ctx.globalAlpha=invisibleTime>0?.55:1;ctx.fillStyle='rgba(2,8,18,.28)';ctx.beginPath();ctx.ellipse(0,34,27,6,0,0,Math.PI*2);ctx.fill();if(invisibleTime>0){ctx.strokeStyle='#c89cff';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.beginPath();ctx.arc(0,-3,34+Math.sin(state.time*8)*3,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}const flutter = Math.sin(anim + state.time*5)*3;
   polyShape(ctx,[[-12,-12],[-28,-16],[-33,8],[-27,15],[-14,11]],'#775334','#372f33',2);
@@ -2077,7 +2235,7 @@ function drawPixelPowerSymbol(type,x,y,s=1,frame=0,alpha=1){
 function drawPower(x,y,type,t){const info=POWER_INFO[type],pulse=.5+.5*Math.sin(t*5);ctx.save();ctx.translate(x,y);ctx.shadowColor=info.color;ctx.shadowBlur=13+8*pulse;polyDisc(ctx,0,0,30,30,shadeHex(info.color,-.32),12,0,'#dffeff',2);ctx.shadowBlur=0;ctx.globalAlpha=.28;polyShape(ctx,[[-18,-20],[0,-28],[0,0],[-26,3]],'#fff',null);polyShape(ctx,[[0,0],[27,3],[16,22],[-4,28]],info.color,null);ctx.globalAlpha=1;drawPixelPowerSymbol(type,0,0,1.05,t);ctx.restore();}
 function drawPowerEvent(e,th){const open=Math.min(1,e.time/.42),p=Math.max(0,Math.min(1,(e.time-.3)/(e.duration-.3))),color=POWER_INFO[e.type].color;ctx.save();if(e.time<.48){const gap=open*21;polyShape(ctx,[[e.x-25-gap,e.y-18],[e.x-4-gap,e.y-22],[e.x-4-gap,e.y+22],[e.x-25-gap,e.y+17]],'#bcebf3','#416e82',2,1-open*.45);polyShape(ctx,[[e.x+4+gap,e.y-22],[e.x+25+gap,e.y-18],[e.x+25+gap,e.y+17],[e.x+4+gap,e.y+22]],'#8ecbd8','#416e82',2,1-open*.45);drawPixelPowerSymbol(e.type,e.x,e.y,1.25,state.time);ctx.restore();return;}const yy=e.type==='missile'?e.y-p*270:e.y-p*(e.type==='fly'?190:e.type==='fire'?105:48),s=e.type==='invisible'?1.3+p*3.4:1.5;drawPixelPowerSymbol(e.type,e.x,yy,s,state.time,1-p*(e.type==='invisible'?.9:.35));for(let i=0;i<4;i++)polyShape(ctx,[[e.x-3,yy+25+i*10],[e.x+3,yy+25+i*10],[e.x,yy+34+i*12]],i%2?color:'#fff3a0',null,0,(1-p)*(.7-i*.12));ctx.restore();}
 function drawShot(x,y,r,color){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=12;polyDisc(ctx,x,y,r,r,color,8,0,'#fff',1);ctx.restore();}
-function drawPortal(x,y,open,t,th){ctx.save();ctx.translate(x+39,y+60);const edge=open?th.accent:'#657084';if(open){ctx.shadowColor=edge;ctx.shadowBlur=17;polyDisc(ctx,0,0,35,57,shadeHex(edge,-.45),12,0,edge,4);ctx.shadowBlur=0;for(let i=0;i<9;i++){const a=t*1.7+i*.7,r=9+(i%3)*7;polyDisc(ctx,Math.cos(a)*r,Math.sin(a)*r*1.5,2.5,2.5,i%2?edge:'#fff',6,0,null,0);}}else{polyDisc(ctx,0,0,35,57,'#2a3446',12,0,edge,4);polyShape(ctx,[[-13,-9],[13,-9],[16,17],[-16,17]],'#aeb8c6','#344057',3);polyDisc(ctx,0,-10,10,10,'#8c98aa',8,0,'#344057',2);polyDisc(ctx,0,4,3,3,'#344057',7,0,null,0);}ctx.restore();}
+function drawFacetedPortal(x,y,open,t,th){ctx.save();ctx.translate(x+39,y+60);const edge=open?th.accent:'#657084';if(open){ctx.shadowColor=edge;ctx.shadowBlur=17;polyDisc(ctx,0,0,35,57,shadeHex(edge,-.45),12,0,edge,4);ctx.shadowBlur=0;for(let i=0;i<9;i++){const a=t*1.7+i*.7,r=9+(i%3)*7;polyDisc(ctx,Math.cos(a)*r,Math.sin(a)*r*1.5,2.5,2.5,i%2?edge:'#fff',6,0,null,0);}}else{polyDisc(ctx,0,0,35,57,'#2a3446',12,0,edge,4);polyShape(ctx,[[-13,-9],[13,-9],[16,17],[-16,17]],'#aeb8c6','#344057',3);polyDisc(ctx,0,-10,10,10,'#8c98aa',8,0,'#344057',2);polyDisc(ctx,0,4,3,3,'#344057',7,0,null,0);}ctx.restore();}
 
 
 function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
