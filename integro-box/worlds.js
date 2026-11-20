@@ -28473,6 +28473,7 @@ void main() {
     url(id) { return "./assets/fuitcort-pomar1/" + id + ".webp"; },
     cache: new Map(),
     tiles: ["apple", "orange", "watermelon", "kiwi", "plum", "pear", "gold", "bomb"],
+    tropicalTiles: ["carambola", "caju"],
     image(id) {
       if (!this.cache.has(id)) {
         const image = new Image();
@@ -28482,15 +28483,18 @@ void main() {
       return this.cache.get(id);
     },
     fruit(ctx, kind, x, y, radius, angle, half) {
-      const image = this.image(half ? "cut" : "whole");
-      const tile = this.tiles.indexOf(kind);
+      const tropicalIndex = this.tropicalTiles.indexOf(kind);
+      const isTropical = tropicalIndex >= 0;
+      const image = this.image(isTropical ? "carambola-caju" : half ? "cut" : "whole");
+      const tile = isTropical ? tropicalIndex + (half ? 2 : 0) : this.tiles.indexOf(kind);
       if (!image.complete || !image.naturalWidth || tile < 0) return false;
+      const columns = image.naturalWidth / 192;
       const size = radius * (half ? 1.62 : 2.14);
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
       if (half < 0) ctx.scale(-1, 1);
-      ctx.drawImage(image, tile % 4 * 192, Math.floor(tile / 4) * 192, 192, 192,
+      ctx.drawImage(image, tile % columns * 192, Math.floor(tile / columns) * 192, 192, 192,
         -size / 2, -size / 2, size, size);
       ctx.restore();
       return true;
@@ -28507,6 +28511,7 @@ void main() {
       return true;
     },
   };
+  const regularFruitKinds = ["apple", "orange", "watermelon", "kiwi", "plum", "pear", ...fruitArt.tropicalTiles];
   var yD = fruitArt.url("cover");
   window.BoxCatalogAssets = { ...window.BoxCatalogAssets, fuitcort: yD };
   var bD = [
@@ -28715,20 +28720,16 @@ void main() {
         let B = this.mode !== "zen" && this.time > 3 && this.rng() < 0.16,
           E = !B && this.rng() < 0.07,
           I = 120 + this.rng() * 760;
+        const kind = B ? "bomb" : E ? "gold" : regularFruitKinds[Math.floor(this.rng() * regularFruitKinds.length)];
+        const radius = B ? 30 : (34 + this.rng() * 9) * (kind === "watermelon" ? 1.55 : 1);
         this.objects.push({
           id: this.nextId++,
           x: I,
           y: this.h + 65 + g * 10,
           vx: (500 - I) * (0.22 + this.rng() * 0.2),
           vy: -Math.sqrt(2 * 950 * this.h * (0.62 + this.rng() * 0.2)),
-          r: B ? 30 : 34 + this.rng() * 9,
-          kind: B
-            ? "bomb"
-            : E
-              ? "gold"
-              : ["apple", "orange", "watermelon", "kiwi", "plum", "pear"][
-                  Math.floor(this.rng() * 6)
-                ],
+          r: radius,
+          kind,
           angle: this.rng() * 6,
           spin: (this.rng() - 0.5) * 3,
           cut: !1,
@@ -28848,6 +28849,8 @@ void main() {
     orange: ["#ffd16b", "#ec812d", "#ffe297"],
     watermelon: ["#9ddc69", "#309d71", "#fa7380"],
     kiwi: ["#b9df72", "#7c9850", "#e8fba4"],
+    carambola: ["#ffde57", "#ce9416", "#ffde68"],
+    caju: ["#ff9847", "#c83b28", "#ffd995"],
     plum: ["#be97eb", "#7359aa", "#e1bfed"],
     pear: ["#d2e675", "#88af42", "#edf3b0"],
     gold: ["#ffe984", "#e7a335", "#fff8c5"],
@@ -29144,6 +29147,7 @@ void main() {
       for (const item of tE) wA[item.id] = fruitArt.url(item.id);
       fruitArt.image("whole");
       fruitArt.image("cut");
+      fruitArt.image("carambola-caju");
     }
     function ZA() {
       ((i = 1e3),
