@@ -53,7 +53,7 @@ try {
   phase('Montando as aventuras 3D…');
   await script('./egg.js?v=20261118-ovo-guardioes16');
   await script('./fruit.js?v=20261016-fruit-compact1');
-  await script('./worlds.js?v=20261119-fuitcort2');
+  await script('./worlds.js?v=20261119-fuitcort-musica1');
   phase('Conectando amigos e salas…');
   await import('./multiplayer.js?v=20261103-original1');
   if(!unloaded)await import('./chat.js?v=20261016-intgem1');

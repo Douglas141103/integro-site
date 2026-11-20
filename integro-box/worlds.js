@@ -29110,6 +29110,19 @@ void main() {
         A("fcToast").classList.add("visible"),
         (L = performance.now() + 2500));
     }
+    let music;
+    function syncMusic() {
+      if (!Y || h || w?.state !== "playing" || !Q.sound || document.hidden) {
+        music?.pause();
+        return;
+      }
+      if (!music) {
+        music = new Audio("./assets/fuitcort-audio/mango_slice_rush.mp3");
+        music.loop = true;
+        music.volume = 0.28;
+      }
+      if (music.paused) music.play().catch(() => {});
+    }
     function V(F) {
       if (Q.sound)
         try {
@@ -29175,6 +29188,7 @@ void main() {
       ((a = null), (l = null), (c = []));
     }
     function aA() {
+      if (music) music.currentTime = 0;
       ((w = new fY(G)),
         (w.w = i),
         (w.h = D),
@@ -29188,6 +29202,7 @@ void main() {
         (e = performance.now()),
         q(),
         B.focus(),
+        syncMusic(),
         y("Arraste para cortar. Combine 3 frutas no mesmo corte!"));
     }
     function DA(F) {
@@ -29293,6 +29308,7 @@ void main() {
     function sA(F) {
       (cA(),
         (h = F),
+        syncMusic(),
         (A("fcOverlay").hidden = !1),
         _(),
         q(),
@@ -29304,6 +29320,7 @@ void main() {
         return;
       }
       ((h = null),
+        syncMusic(),
         (A("fcOverlay").hidden = !0),
         (e = performance.now()),
         B.focus(),
@@ -29405,7 +29422,7 @@ void main() {
         F === "resume" && TA(),
         ["shop", "help", "home"].includes(F) && sA(F),
         F === "finish" && DA("Voc\xEA encerrou a partida e guardou os ganhos."),
-        F === "sound" && ((Q.sound = !Q.sound), IA(), _(), V("slice")),
+        F === "sound" && ((Q.sound = !Q.sound), IA(), syncMusic(), _(), V("slice")),
         F === "fullscreen")
       )
         try {
@@ -29519,6 +29536,7 @@ void main() {
         a !== null ||
         (F.pointerType === "mouse" && F.button !== 0) ||
         (F.preventDefault(),
+        syncMusic(),
         (a = F.pointerId),
         (l = N(F)),
         w.startStroke(),
@@ -29586,6 +29604,7 @@ void main() {
         Y && !h && sA("pause");
       }),
       window.addEventListener("pagehide", () => {
+        music?.pause();
         (w &&
           w.state !== "finished" &&
           (w.finish("Partida encerrada."), w.settle(Q)),
@@ -29597,6 +29616,7 @@ void main() {
     function u() {
       Y &&
         ((Y = !1),
+        syncMusic(),
         cancelAnimationFrame(s),
         w?.state === "playing" && (h = "pause"),
         cA(),
