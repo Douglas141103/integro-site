@@ -9,23 +9,48 @@ export function createDescubra(root,exit,rpc){
  const resetInput=()=>{keys.clear();stick={x:0,y:0};root.querySelector('.dc-stick-knob')?.style.setProperty('transform','translate(0px,0px)');};
  const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
  const button=(text,fn,cls='dc-btn')=>{const b=el('button',cls,text);b.type='button';b.onclick=fn;return b;};
- root.innerHTML=`<header class="dc-top"><button class="dc-back" aria-label="Voltar ao catálogo">← Catálogo</button><strong>DESCUBRA! <small>NAVE INTEGRO</small></strong><div><button class="dc-sound" aria-label="Ativar ou desativar sons">Som: ligado</button><button class="dc-full" aria-label="Tela cheia">⛶</button></div></header><div class="dc-content"></div><p class="dc-toast" role="status" aria-live="polite"></p><div class="dc-modal" hidden></div>`;
+ root.innerHTML=`<header class="dc-top"><button class="dc-back" aria-label="Voltar ao catálogo">← Catálogo</button><strong>DESCUBRA! <small>NAVE INTEGRO</small></strong><div><button class="dc-sound" aria-pressed="true" aria-label="Ativar ou desativar sons">Som: ligado</button><button class="dc-full" aria-label="Tela cheia">⛶</button></div></header><div class="dc-content"></div><p class="dc-toast" role="status" aria-live="polite"></p><div class="dc-modal" hidden></div>`;
  const content=root.querySelector('.dc-content'),toast=root.querySelector('.dc-toast'),modal=root.querySelector('.dc-modal');
  const say=t=>{toast.textContent=t;};
  const closeModal=()=>{taskCleanup?.();taskCleanup=null;modal.hidden=true;modal.replaceChildren();modalKind='';taskToken++;};
  const showModal=(kind,title)=>{closeModal();modalKind=kind;resetInput();modal.hidden=false;const sheet=el('section','dc-sheet');sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label',title);sheet.append(el('h2','',title));modal.append(sheet);return sheet;};
  root.querySelector('.dc-back').onclick=()=>{if(state&&state.phase!=='ended'){const s=showModal('exit','Sair da nave?');s.append(el('p','','A partida individual será encerrada. Se você criou a sala online, ela será encerrada para todos.'),button('Continuar jogando',closeModal),button('Sair para o catálogo',()=>{hide();exit();},'dc-btn secondary'));}else{hide();exit();}};
- root.querySelector('.dc-sound').onclick=e=>{muted=!muted;e.currentTarget.textContent='Som: '+(muted?'desligado':'ligado');};
+ let soundtrack = null, aboard = false;
+ function syncMusic() {
+   if (!aboard || !active || muted || document.hidden) {
+     soundtrack?.pause();
+     return;
+   }
+   if (!soundtrack) {
+     soundtrack = new Audio(new URL('../assets/descubra-audio-v1/clues-in-the-greenhouse.mp3', import.meta.url).href);
+     soundtrack.loop = true;
+     soundtrack.volume = 0.32;
+   }
+   if (soundtrack.paused) void soundtrack.play().catch(() => {});
+ }
+ function stopMusic() {
+   aboard = false;
+   if (soundtrack) {
+     soundtrack.pause();
+     soundtrack.currentTime = 0;
+   }
+ }
+ root.querySelector('.dc-sound').onclick=e=>{
+   muted=!muted;
+   e.currentTarget.textContent='Som: '+(muted?'desligado':'ligado');
+   e.currentTarget.setAttribute('aria-pressed',String(!muted));
+   syncMusic();
+ };
  root.querySelector('.dc-full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen();}catch{say('Tela cheia não está disponível neste navegador.');}};
  let audio=null;function tone(hz=440){if(muted)return;try{audio||=new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=hz;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.15);o.start();o.stop(audio.currentTime+.16);}catch{}}
- const clear=()=>{resetInput();pending=[];sequence=0;resultRound=0;root.classList.remove('dc-in-game');closeModal();cancelAnimationFrame(raf);clearTimeout(poll);poll=null;solo=null;state=null;content.replaceChildren();};
+ const clear=()=>{stopMusic();resetInput();pending=[];sequence=0;resultRound=0;root.classList.remove('dc-in-game');closeModal();cancelAnimationFrame(raf);clearTimeout(poll);poll=null;solo=null;state=null;content.replaceChildren();};
  async function request(action,arg={}){const result=await rpc(action,{walking:true,...arg,...(action==='move'?{destination:arg.room}:{}),...(online?{room:online.id}:{})});if(result?.error)throw new Error(({not_member:'Você não está mais nesta sala.',room_unavailable:'Esta sala foi encerrada ou expirou.',room_full:'Esta sala está cheia.',started:'A partida já começou. Entre em outra sala.',not_owner:'Somente quem criou a sala pode iniciar.',rate_limit:'Aguarde um instante e tente novamente.',legacy_room:'Essa sala usa o mapa anterior. Crie uma nova sala para andar pela nave.',invalid_action:'Aproxime-se do objeto e tente novamente.'})[result.error]||'Não foi possível realizar a ação.');return result;}
  function titleCard(){const card=el('div','dc-cover');const img=el('img');img.src='./assets/catalog-v1/descubra.webp?v=20261023-descubra1';img.alt='Descubra! — astronautas cartoon na nave Integro';card.append(img);return card;}
  function menu(){clear();online=null;const layout=el('section','dc-menu');const copy=el('div','dc-menu-copy');copy.append(el('small','dc-eyebrow','MISTÉRIO A BORDO'),el('h1','','Alguém está sabotando a nave.'),el('p','','Observe a tripulação, conserte os sistemas e descubra o infiltrado. Ou seja você o segredo a bordo.'));
  const roles=el('div','dc-role-select');for(const [id,label]of [['crew','Tripulante'],['infiltrator','Infiltrado']]){const b=button(label,()=>{chosenRole=id;roles.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));},'dc-pill');b.setAttribute('aria-pressed',String(chosenRole===id));roles.append(b);}copy.append(roles,button('▶ Jogar sozinho',()=>startSolo()),button('◎ Salas online',()=>roomsMenu(),'dc-btn secondary'),button('Como jogar',help,'dc-link'),el('p','dc-caption','1 jogador + 5 bots · Online: até 6 pessoas, com bots nas vagas livres'));layout.append(titleCard(),copy);content.append(layout);say('');}
  function help(){const s=showModal('help','Como jogar');s.append(el('p','','Ande livremente: arraste o joystick no celular ou segure WASD/setas no computador. Atravesse as portas e os corredores. O botão Mapa mostra sua posição.'),el('p','','TRIPULANTE: aproxime-se dos terminais iluminados e toque em Usar (ou E) para concluir tarefas. Se o reator for sabotado, vá até ele e repare em 45 segundos. Encontrou um tripulante desativado? Reporte!'),el('p','','INFILTRADO: misture-se à tripulação, sabote o reator e aproxime-se de outros tripulantes para desativá-los. Respeite o intervalo entre ações.'),el('p','','REUNIÕES: leia as pistas e vote. Empate ou “Pular” não retira ninguém. Cada tripulante pode pedir uma reunião na Central. Quem é eliminado vira fantasma e pode explorar a nave, sem votar ou interferir.'),button('Entendi!',closeModal));}
  function startSolo(){clear();solo=new SoloGame(chosenRole);state=solo.view();mountBoard();last=performance.now();raf=requestAnimationFrame(frame);roleReveal();}
- function roleReveal(){const s=showModal('role',state.role==='crew'?'Você é TRIPULANTE':'Você é o INFILTRADO');s.prepend(portrait(state.slot));s.append(el('p','',state.role==='crew'?'Complete as tarefas e descubra quem está sabotando a nave.':'Mantenha seu papel em segredo. Sabote a nave e evite ser descoberto.'),button('Entrar na nave',closeModal));}
+ function roleReveal(){const s=showModal('role',state.role==='crew'?'Você é TRIPULANTE':'Você é o INFILTRADO');s.prepend(portrait(state.slot));s.append(el('p','',state.role==='crew'?'Complete as tarefas e descubra quem está sabotando a nave.':'Mantenha seu papel em segredo. Sabote a nave e evite ser descoberto.'),button('Entrar na nave',()=>{closeModal();aboard=true;syncMusic();}));}
  async function roomsMenu(){clear();const wrap=el('section','dc-rooms');wrap.append(el('small','dc-eyebrow','MISSÃO EM EQUIPE'),el('h1','','Salas da nave Integro'),el('p','','Entre com sua conta da família. Até 6 pessoas; as vagas livres recebem bots quando o comandante inicia.'));
  const tools=el('div','dc-room-tools');tools.append(button('+ Criar sala pública',()=>connect('create',{public:true})),button('+ Criar sala por convite',()=>connect('create',{public:false}),'dc-btn secondary'));
  const form=el('form','dc-join'),input=el('input');input.placeholder='Código da sala';input.maxLength=10;input.setAttribute('aria-label','Código da sala');input.autocapitalize='characters';form.append(input,button('Entrar',()=>form.requestSubmit()));form.onsubmit=e=>{e.preventDefault();const code=input.value.trim().replace(/^D-/i,'').toUpperCase();if(!/^[A-F0-9]{8}$/.test(code)){say('Confira as 8 letras e números do convite.');return;}connect('join',{code});};
@@ -50,7 +75,7 @@ export function createDescubra(root,exit,rpc){
  const position=e=>{const r=pad.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,len=Math.hypot(dx,dy),max=r.width*.32;stick={x:len<8?0:dx/Math.max(max,len),y:len<8?0:dy/Math.max(max,len)};pad.querySelector('.dc-stick-knob').style.transform=`translate(${stick.x*max}px,${stick.y*max}px)`;};
  pad.onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;pad.setPointerCapture(pointer);e.preventDefault();position(e);};pad.onpointermove=e=>{if(e.pointerId===pointer){e.preventDefault();position(e);}};
  const release=e=>{if(e.pointerId===pointer){pointer=null;resetInput();}};pad.onpointerup=release;pad.onpointercancel=release;pad.onlostpointercapture=release;renderUI();}
- function renderUI(){if(!state||state.phase==='lobby')return;const me=state.players[state.slot-1],clock=state.sabotage?state.sabotage.until-state.now:state.deadline-state.now;
+ function renderUI(){if(!state||state.phase==='lobby')return;if(aboard&&state.phase==='ended')stopMusic();const me=state.players[state.slot-1],clock=state.sabotage?state.sabotage.until-state.now:state.deadline-state.now;
  if(!content.querySelector('.dc-role'))return;if(!me.alive&&modalKind==='task')closeModal();content.querySelector('.dc-role').textContent=!me.alive?'FANTASMA':state.role==='crew'?'TRIPULANTE':'INFILTRADO';content.querySelector('.dc-role').dataset.role=state.role;
  content.querySelector('progress').value=state.progress;content.querySelector('.dc-progress').textContent=state.progress+'/'+state.target;content.querySelector('.dc-timer').textContent=(state.sabotage?'⚠ ':'')+Math.max(0,Math.floor(clock/60))+':'+String(Math.max(0,Math.floor(clock%60))).padStart(2,'0');content.querySelector('.dc-location').textContent=(ROOMS[me.room]?.name||'Corredor da nave');
  const nearby=nearTerminal(me),targets=state.players.filter(p=>p.alive&&p.slot!==state.slot&&p.room===me.room&&distance(me,p)<95),report=state.reports.some(r=>!r.reported&&r.room===me.room&&distance(me,r)<115);
@@ -83,7 +108,9 @@ export function createDescubra(root,exit,rpc){
  const canvas=content.querySelector('canvas.dc-map');if(canvas)drawShip(canvas,state,state.players[state.slot-1].room,now/1000);
  if(now-stopAt>100){renderUI();stopAt=now;}raf=requestAnimationFrame(frame);}
  function key(e){if(!active||!modal.hidden||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)&&state?.phase==='play'){e.preventDefault();keys.add(k);}else if(k==='e'&&!e.repeat){e.preventDefault();content.querySelector('.dc-actions button:not(:disabled)')?.click();}}
- window.addEventListener('keydown',key);window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetInput();});
+ window.addEventListener('keydown',key);window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetInput();syncMusic();});
+ window.addEventListener('pagehide',()=>soundtrack?.pause());
+ window.addEventListener('pageshow',syncMusic);
  function hide(){active=false;epoch++;void leave();clear();root.hidden=true;}
  return {open(rooms=false){active=true;root.hidden=false;menu();if(rooms)roomsMenu();},hide,stop:hide,getState:()=>({active,phase:state?.phase||'menu',online:!!online}),pause(){},};
 }

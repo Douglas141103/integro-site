@@ -70,7 +70,7 @@ try {
   if(!unloaded){const {installDino}=await import('./dino/loader.mjs?v=20261112-update1');installDino(supabase);}
   if(!unloaded){const {installEngole}=await import('./engole/loader.mjs?v=20261112-update1');installEngole(supabase,user);}
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
-  if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261119-descubra-arte1');installDescubra();}
+  if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261119-descubra-musica1');installDescubra();}
   if(!unloaded)await script('./xadrez-loader.js?v=20261115-chess-theme1');
   if(!unloaded)await script('./cristais/loader.js?v=20261118-cristais-hud1');
   phase('Organizando seu catálogo…');
