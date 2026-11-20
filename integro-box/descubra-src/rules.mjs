@@ -1,4 +1,4 @@
-import {remember,observe} from './jury.mjs?v=20261119-jury1';
+import {remember,observe} from './jury.mjs?v=20261119-jury2';
 import {ROOMS,movePlayer,nearTerminal,distance,enableWalking,placeCrew,botRoute} from './world.mjs?v=20261112-update1';
 export {ROOMS} from './world.mjs?v=20261112-update1';
 export const COLORS=['#4dc5ed','#f5ba4c','#ec6682','#8f7ae2','#7dce85','#f08b52'];

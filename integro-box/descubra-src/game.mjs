@@ -1,6 +1,6 @@
-import {mountJury} from './jury.mjs?v=20261119-jury1';
+import {mountJury} from './jury.mjs?v=20261119-jury2';
 import {mountTask} from './tasks.mjs?v=20261119-descubra-arte1';
-import {SoloGame,ROOMS,NAMES,neighbors} from './rules.mjs?v=20261119-jury1';
+import {SoloGame,ROOMS,NAMES,neighbors} from './rules.mjs?v=20261119-jury2';
 import {drawShip,drawOverview,portrait,prepareArt} from './render.mjs?v=20261119-descubra-arte1';
 export {prepareArt};
 import {movePlayer,nearTerminal,distance} from './world.mjs?v=20261112-update1';

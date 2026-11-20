@@ -23,6 +23,13 @@ test('discussion waits for player, gives each voter the defense privately, then 
  await new Promise(r=>setTimeout(r,0));assert.equal(calls.length,2);
  sheet.querySelector('input').value='Verde, você viu o Rosa no reator?';sheet.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true}));
  await new Promise(r=>setTimeout(r,0));assert.equal(calls.at(-1).who,5);const defense=calls.at(-1).history.at(-1);assert.equal(defense.other,3);assert.equal(defense.room,2);
+ for(const [phrase,kind] of [['Não sou eu gente','defend'],['Gente, calma aí','comment']]){
+  const input=sheet.querySelector('input');input.value=phrase;sheet.querySelector('form button').click();
+  await new Promise(r=>setTimeout(r,0));assert.equal(input.value,'');assert.ok(sheet.querySelector('[role="log"]').textContent.includes(phrase));
+  const heard=calls.at(-1).history.at(-1);assert.equal(heard.kind,kind);
+  if(kind==='defend')assert.equal(heard.subject,1);
+  assert.doesNotThrow(()=>validate(calls.at(-1)));
+ }
  sheet.querySelector('.dc-jury>button').click();await new Promise(r=>setTimeout(r,0));
  assert.equal(unlocked,1);assert.equal(calls.filter(c=>c.stage==='vote').length,5);assert.ok(calls.slice(-5).every(c=>c.history.some(h=>h.speaker===1)));
  assert.ok(s.players.every(p=>p.vote===null));assert.equal(g.view().juryBallots,undefined);

@@ -40,17 +40,19 @@ export function localDecision(context){
 const plain=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 // Convert player speech to ship events. Only this vocabulary travels to the API.
 export function readStatement(text){
-  const s=plain(text);
+  const s=plain(text).trim().replace(/\bn\b/g,'nao');
+  if(!s)return null;
   const people=names.map((name,i)=>({id:i+1,pos:s.search(new RegExp('\\b'+plain(name)+'\\b'))})).filter(p=>p.pos>=0).sort((a,b)=>a.pos-b.pos);
   const rooms=[/comando|ponte/,/laboratorio|amostras/,/reator/,/jardim/,/enfermaria/,/deposito|carga/,/central/,/corredor/];
   const id=rooms.findIndex(r=>r.test(s)),room=id===7?-1:id<0?-2:id;
+  const selfDefense=/\b(?:nao (?:sou (?:eu|(?:o |a )?infiltrad[oa])|fui (?:eu|quem|(?:o |a )?infiltrad[oa])|fiz (?:nada|isso)|sabotei|desativei)|sou (?:inocente|tripulante)|(?:fui|sou) eu nao)\b/.test(s);
+  if(selfDefense)return {speaker:1,kind:'defend',subject:1,other:people.find(p=>p.id!==1)?.id||0,room};
   const kind=/nao vi|nao tenho certeza|sem prova|nao sei|pular/.test(s)?'unsure':
     /inocente|nao foi|nao era|nao fui|comigo|ao meu lado/.test(s)?'defend':
     /\?|quem|onde|por que|alguem viu|confirma/.test(s)?'ask':
     /suspeit|acus|infiltrad|sabotou|desativou|mentiu|voto/.test(s)?'accuse':
     /eu estava|eu tava|eu fui|passei|estava no|estava na/.test(s)?'alibi':
-    /\bvi\b|cruzei|encontrei|saiu|entrou/.test(s)?'seen':null;
-  if(!kind)return null;
+    /\bvi\b|cruzei|encontrei|saiu|entrou/.test(s)?'seen':'comment';
   return {speaker:1,kind,subject:kind==='alibi'?1:people[0]?.id||(kind==='defend'?1:0),other:(kind==='alibi'?people[0]:people[1])?.id||0,room};
 }
 export function mountJury(sheet,game,call,allowVote){
@@ -76,7 +78,7 @@ export function mountJury(sheet,game,call,allowVote){
   function choose(){const who=people.find(p=>!heard.has(p))||people[cursor++%people.length];return who;}
   form.onsubmit=async e=>{e.preventDefault();if(working||finished||turns>=3||!field.value.trim())return;
     const msg=readStatement(field.value);
-    if(!msg){status.textContent='Tente uma pergunta ou pista da nave, como “Quem estava no reator?”';return;}
+    if(!msg)return;
     turns++;history.push(msg);line('Você',field.value.trim());field.value='';working=true;controls();
     await speak(people.includes(msg.subject)&&msg.kind==='ask'?msg.subject:choose());working=false;if(alive())controls();};
   done.onclick=async()=>{if(working||finished)return;working=true;controls();const transcript=history.slice();
