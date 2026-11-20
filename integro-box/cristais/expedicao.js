@@ -573,9 +573,10 @@ function addHeart(hearts, x, y){ hearts.push([Math.round(x), Math.round(y)]); }
 function festivalLevel(route, theme, worldIndex) {
   const width = 3140, floor = 620;
   const platforms = [[0,floor,width,100]];
-  const crystals = [], coins = [];
+  const crystals = [], coins = [], hazards = [];
   for (const center of [670,1530,2410]) {
     platforms.push([center-175,518,120,28],[center-30,422,150,28],[center+165,510,116,28]);
+    hazards.push([center-280,floor-48,48,48,theme.art.hazard]);
     crystals.push([center+44,380]);
     coins.push([center-116,478],[center+218,470]);
   }
@@ -584,7 +585,7 @@ function festivalLevel(route, theme, worldIndex) {
     phaseName:theme.name, locationTag:theme.tag, enemyNames:theme.enemyNames,
     storyIntro:theme.story, storyOutro:theme.outro, title:theme.name, theme,
     width, spawn:[120,520], portal:[width-190,500], boss:false, difficulty:1, bossArena:null,
-    safeZoneEnd:width, platforms, coins, crystals, powers:[], enemies:[], hearts:[], hazards:[]
+    safeZoneEnd:width, platforms, coins, crystals, powers:[], enemies:[], hearts:[], hazards
   };
 }
 
@@ -2252,6 +2253,11 @@ const cityPlatformSheet = new Image();
 cityPlatformSheet.decoding = 'async';
 cityPlatformSheet.src = './art/world-tour-platforms.webp';
 
+const cityPropFrames = {"sydney":{"barrier":[72,1,96,128],"portal":[5,132,229,298]},"capetown":{"barrier":[301,1,118,128],"portal":[243,132,234,293]},"belem":{"barrier":[542,1,115,128],"portal":[496,132,207,298]},"parintins":{"barrier":[782,1,115,128],"portal":[727,132,225,298]}};
+const cityPropSheet = new Image();
+cityPropSheet.decoding = 'async';
+cityPropSheet.src = './art/world-tour-obstacles-portals.webp';
+
 function routeSprite(theme, kind) {
   if (!routeSpriteSheet.complete || !routeSpriteSheet.naturalWidth) return null;
   return ROUTE_SPRITE_FRAMES[theme.regionIndex]?.[kind];
@@ -2290,13 +2296,17 @@ function drawPlatform(s, th) {
 
 function drawHazard(h, th) {
   if (h.x + h.w < state.cameraX - 16 || h.x > state.cameraX + W + 16) return;
-  const frame = routeSprite(th, 'barrier');
+  const cityFrame = cityPropFrames[th.id]?.barrier;
+  const sheet = cityFrame ? cityPropSheet : routeSpriteSheet;
+  const frame = cityFrame ? (sheet.complete && sheet.naturalWidth ? cityFrame : null) : routeSprite(th, 'barrier');
   if (!frame) return drawFacetedHazard(h, th);
-  ctx.drawImage(routeSpriteSheet, ...frame, h.x, h.y, h.w, h.h);
+  ctx.drawImage(sheet, ...frame, h.x, h.y, h.w, h.h);
 }
 
 function drawPortal(x, y, open, t, th) {
-  const frame = routeSprite(th, 'portal');
+  const cityFrame = cityPropFrames[th.id]?.portal;
+  const sheet = cityFrame ? cityPropSheet : routeSpriteSheet;
+  const frame = cityFrame ? (sheet.complete && sheet.naturalWidth ? cityFrame : null) : routeSprite(th, 'portal');
   if (!frame) return drawFacetedPortal(x, y, open, t, th);
   const [sx, sy, sw, sh] = frame;
   const scale = Math.min(150 / sh, 152 / sw);
@@ -2314,7 +2324,7 @@ function drawPortal(x, y, open, t, th) {
   ctx.arc(0, 0, 1, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  ctx.drawImage(routeSpriteSheet, sx, sy, sw, sh, cx - w / 2, floor - h, w, h);
+  ctx.drawImage(sheet, sx, sy, sw, sh, cx - w / 2, floor - h, w, h);
   if (open) {
     ctx.save();
     ctx.fillStyle = '#ecffff';

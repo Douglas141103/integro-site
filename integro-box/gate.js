@@ -72,7 +72,7 @@ try {
   if(!unloaded){const {startUsage}=await import('./usage.js?v=20261105-engole1');startUsage();}
   if(!unloaded){const {installDescubra}=await import('./descubra-loader.js?v=20261119-jury2');installDescubra();}
   if(!unloaded)await script('./xadrez-loader.js?v=20261115-chess-theme1');
-  if(!unloaded)await script('./cristais/loader.js?v=20261120-parintins-musica1');
+  if(!unloaded)await script('./cristais/loader.js?v=20261120-portais-mundo1');
   phase('Organizando seu catálogo…');
   if(!unloaded)await script('./catalog.js?v=20261120-cristais-parintins1');
   if(!unloaded){gate.setAttribute('aria-busy','false');document.body.classList.remove('box-locked');gate.hidden=true;const {startIntGem}=await import('./intgem.js?v=20261118-ovo-loja-artes1');await startIntGem({user});void window.BoxMultiplayer?.resumeDeparture();}
