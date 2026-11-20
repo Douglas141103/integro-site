@@ -28469,7 +28469,46 @@ void main() {
       }
     );
   }
-  var yD = "assets/60db30bbd0b3d722.png";
+  const fruitArt = {
+    url(id) { return "./assets/fuitcort-pomar1/" + id + ".webp"; },
+    cache: new Map(),
+    tiles: ["apple", "orange", "watermelon", "kiwi", "plum", "pear", "gold", "bomb"],
+    image(id) {
+      if (!this.cache.has(id)) {
+        const image = new Image();
+        image.src = this.url(id);
+        this.cache.set(id, image);
+      }
+      return this.cache.get(id);
+    },
+    fruit(ctx, kind, x, y, radius, angle, half) {
+      const image = this.image(half ? "cut" : "whole");
+      const tile = this.tiles.indexOf(kind);
+      if (!image.complete || !image.naturalWidth || tile < 0) return false;
+      const size = radius * (half ? 1.62 : 2.14);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      if (half < 0) ctx.scale(-1, 1);
+      ctx.drawImage(image, tile % 4 * 192, Math.floor(tile / 4) * 192, 192, 192,
+        -size / 2, -size / 2, size, size);
+      ctx.restore();
+      return true;
+    },
+    arena(ctx, width, height, id) {
+      const image = this.image(id);
+      if (!image.complete || !image.naturalWidth) return false;
+      const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+      const sw = width / scale, sh = height / scale;
+      ctx.drawImage(image, (image.naturalWidth - sw) / 2, (image.naturalHeight - sh) / 2,
+        sw, sh, 0, 0, width, height);
+      ctx.fillStyle = "rgba(3, 23, 28, 0.25)";
+      ctx.fillRect(0, 0, width, height);
+      return true;
+    },
+  };
+  var yD = fruitArt.url("cover");
+  window.BoxCatalogAssets = { ...window.BoxCatalogAssets, fuitcort: yD };
   var bD = [
       ["classic", "Brisa", 0, "#e7fff2"],
       ["mint", "Menta", 20, "#68f5ba"],
@@ -28815,6 +28854,7 @@ void main() {
     bomb: ["#647184", "#263744", "#b3c3c8"],
   };
   function gE(C, A, g, B, E, I = 0, Q = 0) {
+    if (fruitArt.fruit(C, A, g, B, E, I, Q)) return;
     let M = lD[A];
     (C.save(),
       C.translate(g, B),
@@ -28965,6 +29005,7 @@ void main() {
     (C.closePath(), C.fill());
   }
   function UD(C, A, g, B, E) {
+    if (fruitArt.arena(C, A, g, B.id)) return;
     let I = C.createLinearGradient(0, 0, A, g);
     (I.addColorStop(0, B.color),
       I.addColorStop(1, B.light),
@@ -29017,84 +29058,6 @@ void main() {
       Q.addColorStop(1, "#05192070"),
       (C.fillStyle = Q),
       C.fillRect(0, 0, A, g));
-  }
-  function Zi(C) {
-    let A = document.createElement("canvas");
-    ((A.width = 240), (A.height = 150));
-    let g = A.getContext("2d");
-    if (C.category === "arena")
-      (UD(g, 240, 150, C, 0),
-        gE(g, "orange", 190, 130, 35),
-        gE(g, "kiwi", 45, 150, 50));
-    else if (C.category === "blade") {
-      (g.translate(120, 76),
-        g.rotate(-0.65),
-        (g.shadowColor = C.color),
-        (g.shadowBlur = 18),
-        (g.fillStyle = C.color),
-        g.beginPath(),
-        g.moveTo(-5, 40),
-        g.lineTo(-7, -30),
-        g.quadraticCurveTo(-4, -65, 8, -65),
-        g.lineTo(9, 40),
-        g.closePath(),
-        g.fill(),
-        (g.shadowBlur = 0),
-        (g.fillStyle = "#fffce0"),
-        g.fillRect(-3, -30, 3, 65),
-        (g.fillStyle = "#bd9872"),
-        g.fillRect(-16, 33, 34, 7),
-        (g.fillStyle = "#446960"),
-        g.fillRect(-6, 40, 15, 28),
-        (g.strokeStyle = C.color),
-        (g.lineWidth = 2));
-      for (let B = 0; B < 4; B++)
-        (g.beginPath(),
-          g.moveTo(-6, 44 + B * 6),
-          g.lineTo(9, 48 + B * 6),
-          g.stroke());
-    } else if (C.category === "trail") {
-      ((g.strokeStyle = C.color),
-        (g.lineWidth = 5),
-        (g.lineCap = "round"),
-        g.beginPath(),
-        g.moveTo(35, 114),
-        g.bezierCurveTo(88, 15, 155, 138, 208, 35),
-        g.stroke());
-      for (let B = 0; B < 13; B++) {
-        g.fillStyle =
-          C.id === "rainbow"
-            ? ["#ff9292", "#ffe17e", "#8ce6b5", "#83d5ff", "#d4abff"][B % 5]
-            : C.color;
-        let E = 35 + B * 14,
-          I = 78 + Math.sin(B) * 24;
-        C.id === "stars" || C.id === "sparks"
-          ? IQ(g, E, I, 4 + (B % 3))
-          : (g.beginPath(),
-            g.ellipse(
-              E,
-              I,
-              3 + (B % 3),
-              C.id === "petals" ? 8 : 3 + (B % 3),
-              B,
-              0,
-              7,
-            ),
-            C.id === "bubbles" ? g.stroke() : g.fill());
-      }
-    } else
-      ((g.fillStyle = C.color),
-        (g.shadowBlur = 18),
-        (g.shadowColor = C.color),
-        (g.font = "bold 72px sans-serif"),
-        (g.textAlign = "center"),
-        (g.textBaseline = "middle"),
-        g.fillText(
-          C.id === "shield" ? "\u25C8" : C.id === "slow" ? "\u25F7" : "\xD72",
-          120,
-          77,
-        ));
-    return A.toDataURL("image/png");
   }
   function ji({ onExit: C }) {
     let A = (F) => document.getElementById(F),
@@ -29178,16 +29141,9 @@ void main() {
       CA = () => bD.find((F) => F.id === Q.equipped.blade),
       oA = () => rD.find((F) => F.id === Q.equipped.trail);
     function tA() {
-      if (!wA.apple) {
-        for (let F of tE) wA[F.id] = Zi(F);
-        for (let F of ["apple", "watermelon", "orange"]) {
-          let H = document.createElement("canvas");
-          ((H.width = 160),
-            (H.height = 160),
-            gE(H.getContext("2d"), F, 80, 86, 57, -0.2),
-            (wA[F] = H.toDataURL("image/png")));
-        }
-      }
+      for (const item of tE) wA[item.id] = fruitArt.url(item.id);
+      fruitArt.image("whole");
+      fruitArt.image("cut");
     }
     function ZA() {
       ((i = 1e3),
@@ -29336,7 +29292,7 @@ void main() {
         (A("fcOverlay").hidden = !1),
         _(),
         q(),
-        A("fcClose").focus());
+        (F === "home" ? A("fcBody").querySelector("[data-mode].selected") : A("fcClose")).focus({ preventScroll: true }));
     }
     function TA() {
       if (h === "home" || !w || w.state === "finished") {
@@ -29355,17 +29311,10 @@ void main() {
         v = "FUITCORT \xB7 INTEGRO BOX";
       (h === "home" &&
         ((F = `<img class="fc-main-logo" src="${yD}" alt="FuitCort">`),
-        (v = "UM CORTE. MUITA DIVERS\xC3O."),
-        (H = `<div class="fc-intro"><p>Corte frutas, fa\xE7a combos e conquiste sua cole\xE7\xE3o.</p><p class="fc-convert"><strong>10 pontos</strong> \u2192 <strong>1 integro \u25C6</strong></p></div><div class="fc-modes">${Object.entries(
-          CQ,
-        )
-          .map(
-            ([QA, T]) =>
-              `<button data-mode="${QA}" class="${G === QA ? "selected" : ""}"><strong>${T.name}</strong><small>${T.desc}</small><em>RECORDE ${Q.best[QA]}</em></button>`,
-          )
-          .join(
-            "",
-          )}</div><div class="fc-actions"><button class="fc-primary" data-action="start">Come\xE7ar a cortar \u2197</button><button data-action="shop">Loja \xB7 20 itens</button><button data-action="help">Como jogar</button></div><p class="fc-note">Use o dedo ou arraste com o mouse pressionado. ${M ? "Seu saldo e suas compras ficam salvos neste navegador." : "O navegador n\xE3o permitiu salvar: seu progresso ficar\xE1 nesta sess\xE3o."}</p>`)),
+        (v = "INTEGRO BOX"),
+        (H = `<h2>Escolha seu modo</h2><div class="fc-modes">${Object.entries(CQ).map(([id, mode]) =>
+          `<button type="button" data-mode="${id}" aria-pressed="${G === id}" class="${G === id ? "selected" : ""}"><img src="${fruitArt.url("mode-" + id)}" alt=""><strong>${mode.name}</strong><small>${mode.desc}</small><em>Recorde · ${Q.best[id]}</em></button>`
+        ).join("")}</div><div class="fc-actions"><button class="fc-primary" data-action="start">Começar a cortar</button><button data-action="shop"><img src="${fruitArt.url("shop")}" alt="">Loja</button><button data-action="help"><img src="${fruitArt.url("help")}" alt="">Como jogar</button><button data-action="catalog">Voltar aos jogos</button></div><p class="fc-note">${M ? "A cada 10 pontos, você ganha 1 integro." : "O progresso ficará disponível só nesta sessão."}</p>`)),
         h === "shop" &&
           ((F = "Sua cole\xE7\xE3o"),
           (v = `LOJA \xB7 ${Q.integros.toLocaleString("pt-BR")} INTEGROS`),
@@ -29379,7 +29328,7 @@ void main() {
           )
             .map(
               ([T, AA]) =>
-                `<button data-tab="${T}" class="${J === T ? "selected" : ""}">${AA}</button>`,
+                `<button data-tab="${T}" aria-pressed="${J === T}" class="${J === T ? "selected" : ""}">${AA}</button>`,
             )
             .join("")}</div><div class="fc-grid">${tE
             .filter((T) => T.category === J)
@@ -29403,7 +29352,8 @@ void main() {
         h === "help" &&
           ((F = "Corte, combine, conquiste"),
           (H = `<ol class="fc-help"><li><strong>Arraste o dedo ou segure o mouse.</strong> A l\xE2mina acompanha o gesto; apenas tocar n\xE3o corta.</li><li><strong>Combine 3 ou mais frutas num corte r\xE1pido.</strong> Cada fruta vale 10 pontos; a dourada vale 50. Combos d\xE3o pontos extras.</li><li><strong>Evite as bombas.</strong> No Cl\xE1ssico, uma bomba ou fruta perdida custa uma vida. Contra o tempo perde 50 pontos. Zen n\xE3o tem bombas.</li><li><strong>10 pontos rendem 1 integro.</strong> O saldo entra ao terminar ou encerrar a partida. Por exemplo, 250 pontos rendem 25 integros.</li><li><strong>Compre e equipe na loja.</strong> A l\xE2mina, o efeito e o cen\xE1rio mudam na hora. Ative os poderes nos bot\xF5es inferiores ou nas teclas 1, 2 e 3.</li><li><strong>Use a engrenagem ou Esc para pausar.</strong> A partida tamb\xE9m pausa quando voc\xEA sai da tela. Fechar a p\xE1gina encerra a rodada e guarda os ganhos quando o navegador permite.</li></ol><div class="fc-actions"><button class="fc-primary" data-action="resume">Entendi</button><button data-action="sound">Som: ${Q.sound ? "ligado" : "desligado"}</button></div><p class="fc-note">${M ? "Progresso salvo neste navegador e dispositivo." : "N\xE3o foi poss\xEDvel salvar neste navegador; progresso apenas nesta sess\xE3o."} Nenhum item usa dinheiro real.</p>`)),
-        (A("fcTitle").innerHTML = F),
+        (A("fcOverlay").dataset.panel = h),
+        (A("fcTitle").innerHTML = h === "home" ? F : `<img class="fc-panel-icon" src="${fruitArt.url(h)}" alt="">${F}`),
         (A("fcTag").textContent = v),
         (A("fcBody").innerHTML = H),
         (A("fcClose").hidden = h === "home"),
@@ -29412,7 +29362,7 @@ void main() {
           .forEach(
             (QA) =>
               (QA.onclick = () => {
-                ((G = QA.dataset.mode), _());
+                ((G = QA.dataset.mode), _(), A("fcBody").querySelector("[data-mode].selected").focus({ preventScroll: true }));
               }),
           ),
         A("fcBody")
@@ -29420,7 +29370,7 @@ void main() {
           .forEach(
             (QA) =>
               (QA.onclick = () => {
-                ((J = QA.dataset.tab), _());
+                ((J = QA.dataset.tab), _(), A("fcBody").querySelector("[data-tab].selected").focus({ preventScroll: true }));
               }),
           ),
         A("fcBody")
@@ -29446,7 +29396,8 @@ void main() {
     }
     function j(F) {
       if (
-        (F === "start" && aA(),
+        (F === "catalog" && A("fcExit").click(),
+        F === "start" && aA(),
         F === "resume" && TA(),
         ["shop", "help", "home"].includes(F) && sA(F),
         F === "finish" && DA("Voc\xEA encerrou a partida e guardou os ganhos."),

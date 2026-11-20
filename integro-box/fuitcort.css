@@ -1,0 +1,92 @@
+#fcApp {
+  --ink: #173d36;
+  --paper: #fff6de;
+  --leaf: #086455;
+  --line: #cabc96;
+  --mango: #ffca43;
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+}
+#fcApp .fc-overlay {
+  padding: max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  background: #082922a6;
+  backdrop-filter: blur(4px);
+}
+#fcApp .fc-dialog {
+  box-sizing: border-box;
+  width: min(790px,100%);
+  max-height: calc(100dvh - max(12px,env(safe-area-inset-top)) - max(12px,env(safe-area-inset-bottom)));
+  padding: clamp(15px,3vw,30px);
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid #f9d276;
+  border-radius: 20px;
+  box-shadow: 0 12px 48px #031d1ec4;
+  scrollbar-color: #879a78 var(--paper);
+  overscroll-behavior: contain;
+}
+#fcApp .fc-dialog-top { font-weight: 800; color: var(--leaf); }
+#fcApp .fc-dialog h1, #fcApp .fc-dialog h2 {color:var(--ink);font-family:Georgia,serif;letter-spacing:-.035em;}
+#fcApp .fc-dialog h1 {display:flex;align-items:center;gap:14px;font-size:clamp(26px,5vw,38px);}
+#fcApp .fc-dialog h2 {margin:0 0 10px;font-size:clamp(21px,3vw,28px);line-height:1.1;}
+#fcApp .fc-dialog p, #fcApp .fc-help {color:#385349;}
+#fcApp .fc-dialog .fc-note {color:#506455!important;margin:12px 0 0;text-align:center;}
+#fcApp .fc-dialog button {
+  background:#fffbef;border:1px solid var(--line);color:var(--ink);border-radius:11px;min-height:42px;
+}
+#fcApp .fc-dialog button:hover:not(:disabled) {background:#f1e4bd;}
+#fcApp button:focus-visible {outline:3px solid #178eaf;outline-offset:2px;}
+#fcApp .fc-dialog button.fc-primary {color:#2e2c14;background:var(--mango);border:1px solid #b78a20;box-shadow:0 2px 0 #977013;}
+#fcApp .fc-dialog button.fc-primary:hover:not(:disabled) {background:#ffdd70;}
+#fcApp .fc-dialog button:disabled {opacity:.65;}
+#fcApp .fc-panel-icon {width:66px;height:66px;object-fit:cover;border-radius:17px;}
+#fcApp [data-panel="home"] .fc-dialog {padding:0;}
+#fcApp [data-panel="home"] .fc-dialog-top {display:none;}
+#fcApp [data-panel="home"] #fcTitle {margin:0;background:#063e36;justify-content:center;}
+#fcApp .fc-main-logo {display:block;width:100%;max-width:100%;height:clamp(150px,29dvh,290px);object-fit:contain;border-radius:0;}
+#fcApp [data-panel="home"] #fcBody {padding:clamp(15px,3vw,28px);}
+#fcApp .fc-modes {margin:0 0 16px;gap:9px;}
+#fcApp .fc-modes button {display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:#fffcf2!important;border:1px solid var(--line)!important;padding:10px!important;min-width:0;line-height:1.2;}
+#fcApp .fc-modes button.selected {background:#e4f2cf!important;border:2px solid var(--leaf)!important;padding:9px!important;}
+#fcApp .fc-modes img {width:clamp(36px,6vw,62px);aspect-ratio:1;border-radius:12px;object-fit:cover;}
+#fcApp .fc-modes strong {font-size:clamp(13px,2.3vw,18px);}
+#fcApp .fc-modes small {color:#3a5446;font-size:clamp(11px,1.6vw,13px);margin:0 0 4px;}
+#fcApp .fc-modes em {margin:auto 0 0;font-size:11px;color:#426044;}
+#fcApp .fc-actions {gap:8px;margin:12px 0 0;}
+#fcApp .fc-actions button {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:0;}
+#fcApp .fc-actions img {width:27px;height:27px;border-radius:6px;}
+#fcApp [data-panel="home"] .fc-actions {display:grid;grid-template-columns:1.5fr 1fr 1fr;}
+#fcApp [data-panel="home"] [data-action="catalog"] {grid-column:1/-1;justify-self:center;border:0;background:transparent;text-decoration:underline;padding:4px 12px;font-size:13px;}
+#fcApp .fc-store-tabs .selected {background:var(--leaf)!important;color:white!important;}
+#fcApp .fc-item {background:#fffcf0;border:1px solid var(--line);border-radius:14px;}
+#fcApp .fc-item img {height:104px;object-fit:contain;border-radius:10px;}
+#fcApp .fc-item h3 {color:var(--ink);font-size:16px;}
+#fcApp .fc-item small {color:var(--leaf);}
+#fcApp .fc-help {padding-left:25px;}
+#fcApp .fc-help li {padding:4px 0;}
+#fcApp .fc-help li::marker {color:var(--leaf);font-weight:bold;}
+#fcApp .fc-convert, #fcApp .fc-results {color:var(--ink)!important;background:#e8efcf;border:1px solid #becba4;border-radius:12px;padding:12px 18px;}
+#fcApp .fc-results b {color:var(--leaf);}
+#fcApp .fc-results span {color:var(--ink);}
+#fcApp .fc-top, #fcApp .fc-hud {text-shadow:0 1px 5px #002821,0 0 10px #002821;}
+#fcApp .fc-top button, #fcApp .fc-powers button {background:#073830e8;color:#fff5d9;border:1px solid #e9d79172;}
+#fcApp .fc-wordmark span, #fcApp .fc-hud span {color:#ffdc79;}
+#fcApp .fc-powers img {width:26px;height:26px;border-radius:7px;}
+#fcApp .fc-powers button:disabled {opacity:.78;}
+@media (max-width:510px) {
+  #fcApp .fc-main-logo {height:clamp(145px,25dvh,215px);}
+  #fcApp [data-panel="home"] .fc-actions {grid-template-columns:1fr 1fr;}
+  #fcApp [data-panel="home"] [data-action="start"] {grid-column:1/-1;}
+  #fcApp .fc-modes {gap:5px;}
+  #fcApp .fc-modes button {padding:7px!important;}
+  #fcApp .fc-modes button.selected {padding:6px!important;}
+  #fcApp .fc-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (orientation:landscape) and (max-height:540px) and (min-width:590px) {
+  #fcApp [data-panel="home"] .fc-dialog {display:grid;grid-template-columns:30% 70%;}
+  #fcApp [data-panel="home"] #fcTitle {position:sticky;top:0;}
+  #fcApp .fc-main-logo {height:auto;max-height:100%;}
+  #fcApp .fc-modes img {width:32px;}
+  #fcApp [data-panel="home"] #fcBody {padding:14px;}
+  #fcApp .fc-modes {margin-bottom:8px;}
+  #fcApp .fc-actions button {padding:6px 8px;font-size:13px;}
+}
