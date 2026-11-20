@@ -14,6 +14,7 @@ let scenery;
 let sceneryCity;
 let enemyAtlas, enemyAtlasCity;
 function selectEnemyAtlas(city) {
+  if (['sydney','capetown','belem','parintins'].includes(city)) { enemyAtlasCity=city; enemyAtlas=null; return; }
   if (city === enemyAtlasCity && (!enemyAtlas.complete || enemyAtlas.naturalWidth)) return;
   enemyAtlasCity = city;
   enemyAtlas = new Image();
@@ -115,7 +116,7 @@ state.audio = save.audio;
 function loadSave(){
   try{
     const s = JSON.parse(tourStorage.getItem('aventuraCristaisWorldTour1') || '{}');
-    return { unlocked: Math.max(1, s.unlocked || 1), best: s.best || {}, fragments: s.fragments || {}, audio: s.audio !== false };
+    return { unlocked: Math.max(1, s.unlocked || 1, s.best?.[20] > 0 ? 22 : 1), best: s.best || {}, fragments: s.fragments || {}, audio: s.audio !== false };
   }catch{
     return { unlocked:1, best:{}, fragments:{}, audio:true };
   }
@@ -340,7 +341,7 @@ function drawTitleLogo(t,p,alpha){
   [[-92,-45,70,35],[-50,-10,48,28],[-15,22,38,60],[26,-58,82,32],[44,-20,74,40],[65,28,38,24]].forEach((q,i)=>introBlock(cx+q[0],cy+q[1],q[2],q[3],i%2?'#50a96c':'#79b866',.86));
   for(let i=0;i<21;i++){const a=-2.65+i*.265,r=146;introBlock(cx+Math.cos(a)*r-3,cy+Math.sin(a)*r*.68-3,6,6,i<8?'#ffd75e':'#65efff',.7);}
   drawPixelCrystalLogo(cx+Math.cos(t*.7)*155,cy+Math.sin(t*.7)*78,1,t,'#ffd75e');introCtx.restore();
-  drawIntroText('A AVENTURA DOS CRISTAIS',640,408,7,'#eaffff',alpha*ease);introBlock(222,472,836*ease,6,'#65efff',alpha);introBlock(310,485,660*ease,5,'#ff6fae',alpha);drawIntroText('O MUNDO',640,518,13,'#ffd75e',alpha*ease);drawIntroText('21 CIDADES · UMA GRANDE AVENTURA',640,635,4,'#82efff',alpha*Math.min(1,p*1.6));
+  drawIntroText('A AVENTURA DOS CRISTAIS',640,408,7,'#eaffff',alpha*ease);introBlock(222,472,836*ease,6,'#65efff',alpha);introBlock(310,485,660*ease,5,'#ff6fae',alpha);drawIntroText('O MUNDO',640,518,13,'#ffd75e',alpha*ease);drawIntroText('25 CIDADES · UMA GRANDE AVENTURA',640,635,4,'#82efff',alpha*Math.min(1,p*1.6));
 }
 let introRunning=false,introStartTime=0,introPhase=-1,introLoopStarted=false;
 function introFade(local,duration){return Math.min(1,local/.42,Math.max(0,(duration-local)/.48));}
@@ -413,12 +414,25 @@ const WORLD_THEMES = [
     scenes:[
       {id:'beijing',name:'Pequim',country:'China',tag:'Muralhas e telhados imperiais',story:'Dragões de papel metálico percorrem os telhados e a Grande Muralha guarda o primeiro fragmento asiático.',outro:'O sino do portão abre uma rota de luz rumo à Índia.',visual:'beijing',motif:'wall',enemyNames:['Leão de Pedra','Pipa-Dragão','Pagode Sentinela'],sky1:'#5aa0c8',sky2:'#f4bd87',far:'#6f7c71',mid:'#47594d',ground:'#79975c',soil:'#63503c',accent:'#f4d34e',enemy:['#c44d3e','#e1c24a','#384d49'],music:{root:220,scale:[0,2,4,7,9],tempo:110,wave:'sine'}},
       {id:'agra',name:'Agra',country:'Índia',tag:'Jardins do Taj Mahal',story:'Lótus luminosos flutuam pelos jardins enquanto elefantes mecânicos protegem os espelhos d’água.',outro:'O mármore reflete uma flor de cristal apontando para o Japão.',visual:'agra',motif:'lotus',enemyNames:['Elefante-Bot','Pavão de Luz','Cúpula de Mármore'],sky1:'#64b7df',sky2:'#f4d1a8',far:'#b69ba0',mid:'#866f83',ground:'#6ea875',soil:'#7b5b45',accent:'#ffbdde',enemy:['#7c6ec7','#23b1a5','#e5e2dd'],music:{root:196,scale:[0,1,4,5,7,8,11],tempo:118,wave:'sawtooth'}},
-      {id:'tokyo',name:'Tóquio',country:'Japão',tag:'A cidade do futuro',story:'Neons, portais torii e trens de luz conduzem Lumi à batalha final sob o Monte Fuji.',outro:'O Dragão de Neon devolve todos os cristais. A volta ao mundo está completa!',visual:'tokyo',motif:'neon',enemyNames:['Trenzinho Turbo','Tanuki Mecânico','Torre Neon'],sky1:'#25386e',sky2:'#e85d8f',far:'#47385e',mid:'#252844',ground:'#596478',soil:'#2d3345',accent:'#65f3ff',enemy:['#ff506f','#7e60d9','#40e3e8'],music:{root:220,scale:[0,2,3,7,9],tempo:132,wave:'square'}}
+      {id:'tokyo',name:'Tóquio',country:'Japão',tag:'A cidade do futuro',story:'Neons, portais torii e trens de luz conduzem Lumi à batalha sob o Monte Fuji.',outro:'O Dragão de Neon libera a passagem pelo Pacífico. Próxima parada, Sidney!',visual:'tokyo',motif:'neon',enemyNames:['Trenzinho Turbo','Tanuki Mecânico','Torre Neon'],sky1:'#25386e',sky2:'#e85d8f',far:'#47385e',mid:'#252844',ground:'#596478',soil:'#2d3345',accent:'#65f3ff',enemy:['#ff506f','#7e60d9','#40e3e8'],music:{root:220,scale:[0,2,3,7,9],tempo:132,wave:'square'}}
     ]
-  }
+  },
+  {world:'Rota 8', name:'Travessia dos Oceanos', color:'#188b98',bossName:'Guardião do Cais',bossType:'brazil',scenes:[
+    {"id":"sydney","name":"Sidney","country":"Austrália","tag":"Velas sobre a baía","story":"Salte entre os cais da baía e procure o último brilho sob as velas da Ópera.","outro":"Ao cruzar a baía, Lumi vê a bússola apontar para a Montanha da Mesa.","visual":"beach","motif":"wave","enemyNames":["Boia Saltadora","Gaivota do Cais","Farol da Baía"],"sky1":"#408ed1","sky2":"#ffdc9a","far":"#597da1","mid":"#267d91","ground":"#759b88","soil":"#405763","accent":"#ffdd84","enemy":["#267d91","#ffdd84","#597da1"]},
+    {"id":"capetown","name":"Cidade do Cabo","country":"África do Sul","tag":"A trilha da Montanha da Mesa","story":"Suba pelas plataformas de pedra e atravesse o porto sob o platô da Montanha da Mesa.","outro":"Do alto da montanha, o cristal traça um caminho sobre o Atlântico até Belém do Pará.","visual":"snowCoast","motif":"star","enemyNames":["Pedra Rolante","Asa do Cabo","Sentinela do Porto"],"sky1":"#e9a667","sky2":"#f7deac","far":"#816f85","mid":"#566e79","ground":"#ac9471","soil":"#69564b","accent":"#ffbd69","enemy":["#566e79","#ffbd69","#816f85"]},
+    {"id":"belem","name":"Belém do Pará","country":"Brasil","tag":"Manhã no Ver-o-Peso","story":"Siga pelas passarelas do mercado e encontre o guardião que guarda o caminho de volta ao Amazonas.","outro":"A última travessia começa no cais. Siga pelo rio até a festa em Parintins!","visual":"rainforest","motif":"leaf","enemyNames":["Cesto Saltador","Garça de Cobre","Guindaste do Cais"],"sky1":"#67b9cc","sky2":"#f9ce91","far":"#407c76","mid":"#357061","ground":"#b48c61","soil":"#68513e","accent":"#ffe26c","enemy":["#357061","#ffe26c","#407c76"]}
+  ]},
+  {world:'Especial',name:'Festival de Parintins',color:'#985aaf',scenes:[
+    {"id":"parintins","name":"Parintins","country":"Brasil","tag":"A festa dos dois bois","story":"Ilumine o coração vermelho, a estrela azul e o cristal da união para abrir o portal do Bumbódromo.","outro":"Do primeiro salto em Manaus ao último cristal no Bumbódromo, você levou Lumi por 25 cidades. Garantido e Caprichoso festejam a sua chegada!","visual":"rainforest","motif":"star","enemyNames":["Fita","Estrela","Tambor"],"sky1":"#352e72","sky2":"#fa91a0","far":"#694268","mid":"#334b70","ground":"#967b73","soil":"#514756","accent":"#ffdb68","enemy":["#334b70","#ffdb68","#694268"]}
+  ]}
 ];
 
 const LANDMARK_RESEARCH = {
+  sydney:{"landmark":"Ópera de Sidney"},
+  capetown:{"landmark":"Montanha da Mesa"},
+  belem:{"landmark":"Mercado do Ver-o-Peso"},
+  parintins:{"landmark":"Bumbódromo"},
+
   manaus:{landmark:'Teatro Amazonas',features:'fachada rosada e branca, colunas clássicas e cúpula mosaico verde, amarela e azul'},
   rio:{landmark:'Cristo Redentor no Corcovado',features:'estátua clara em estilo Art Déco, braços abertos e montanha coberta pela Mata Atlântica'},
   saopaulo:{landmark:'MASP',features:'galeria retangular de vidro suspensa por quatro grandes apoios e vigas vermelhas, com vão livre'},
@@ -443,6 +457,10 @@ const LANDMARK_RESEARCH = {
 };
 
 const MUSIC_RESEARCH = {
+  sydney:{"style":"Maré de vidro","tempo":116,"meter":4,"lead":"clean","notes":["D4","F#4","A4","E5","D5","A4","B4","E4"],"bass":["D2","A2","B2","G2"],"drums":[2,0,1,0,2,1,0,1],"chords":[["D3","F#3","A3"],["B2","D3","F#3"],["G3","B3","D4"],["A3","C#4","E4"]]},
+  capetown:{"style":"Vento sobre a montanha","tempo":108,"meter":4,"lead":"jazz","notes":["G4","B4","D5","A4","C5","E5","D5","B4"],"bass":["G2","C3","D3","G2"],"drums":[2,0,1,1,0,2,1,0],"chords":[["G3","B3","D4"],["C3","E3","G3"],["D3","F#3","A3"],["G3","B3","D4"]]},
+  belem:{"style":"Carimbó do cais","tempo":120,"meter":4,"lead":"pluck","notes":["A4","C#5","E5","B4","A4","F#4","E4","B4"],"bass":["A2","D3","E3","A2"],"drums":[2,1,0,2,1,0,2,1],"chords":[["A3","C#4","E4"],["D3","F#3","A3"],["E3","G#3","B3"],["A3","C#4","E4"]]},
+  parintins:{"style":"Toada da chegada","tempo":128,"meter":4,"lead":"brass","notes":["D4","A4","B4","A4","F#4","E4","D4","A4"],"bass":["D2","G2","A2","D2"],"drums":[2,0,2,1,2,1,1,0],"chords":[["D3","F#3","A3"],["G3","B3","D4"],["A3","C#4","E4"],["D3","F#3","A3"]]},
   manaus:{style:'Carimbó amazônico',tempo:112,meter:4,subdivision:'8n',lead:'pluck',notes:['D4','F#4','A4','B4','A4','F#4','E4','D4'],bass:['D2','D2','A2','D2'],drums:[2,0,1,2,0,1,2,1],chords:[['D3','F#3','A3'],['G3','B3','D4'],['A3','C#4','E4'],['D3','F#3','A3']]},
   rio:{style:'Samba e bossa nova',tempo:124,meter:4,subdivision:'8n',lead:'soft',notes:['G4','B4','D5','E5','D5','B4','A4','G4'],bass:['G2','D3','E3','D3'],drums:[2,1,0,1,2,1,0,1],chords:[['G3','B3','D4','F#4'],['A3','C4','E4','G4'],['D3','F#3','A3','C4'],['G3','B3','D4','F#4']]},
   saopaulo:{style:'Samba-jazz urbano',tempo:132,meter:4,subdivision:'8n',lead:'brass',notes:['C4','D#4','F4','G4','A#4','G4','F4','D#4'],bass:['C2','G2','A#2','G2'],drums:[2,1,1,0,2,1,0,1],chords:[['C3','D#3','G3'],['F3','G#3','C4'],['A#2','D3','F3'],['G2','A#2','D3']]},
@@ -467,6 +485,10 @@ const MUSIC_RESEARCH = {
 };
 
 const CITY_ART = {
+  sydney:{"hero":"visor","platform":"cais de madeira","hazard":"wave","hazardName":"boia do porto"},
+  capetown:{"hero":"explorer","platform":"arenito da montanha","hazard":"gear","hazardName":"engrenagem do teleférico"},
+  belem:{"hero":"explorer","platform":"tábuas da feira","hazard":"root","hazardName":"caixote da feira"},
+  parintins:{"hero":"neonband","platform":"tablados do festival","hazard":"neon","hazardName":"luz da arena"},
   manaus:{hero:'explorer',platform:'madeira amazônica',hazard:'root',hazardName:'caixa de cipós amazônicos'},
   rio:{hero:'visor',platform:'mosaico de ondas',hazard:'wave',hazardName:'caixa do calçadão'},
   saopaulo:{hero:'urban',platform:'concreto e vigas vermelhas',hazard:'barrier',hazardName:'caixa urbana refletiva'},
@@ -541,17 +563,60 @@ function nBetween(min,max,t){ return min + (max-min) * t; }
 function buildLevels(){
   const levels=[];
   WORLD_THEMES.forEach((theme, worldIndex)=>{
-    for(let phase=1; phase<=3; phase++) levels.push(generateLevel(worldIndex, phase));
+    for(let phase=1; phase<=theme.scenes.length; phase++) levels.push(generateLevel(worldIndex, phase));
   });
   return levels;
 }
 
 function addHeart(hearts, x, y){ hearts.push([Math.round(x), Math.round(y)]); }
 
+
+function festivalLevel(route, theme, worldIndex) {
+  const width = 3140, floor = 620;
+  const platforms = [[0,floor,width,100]];
+  const crystals = [], coins = [];
+  for (const center of [670,1530,2410]) {
+    platforms.push([center-175,518,120,28],[center-30,422,150,28],[center+165,510,116,28]);
+    crystals.push([center+44,380]);
+    coins.push([center-116,478],[center+218,470]);
+  }
+  return {
+    worldIndex, phase:1, world:route.world, worldName:route.name, country:theme.country,
+    phaseName:theme.name, locationTag:theme.tag, enemyNames:theme.enemyNames,
+    storyIntro:theme.story, storyOutro:theme.outro, title:theme.name, theme,
+    width, spawn:[120,520], portal:[width-190,500], boss:false, difficulty:1, bossArena:null,
+    safeZoneEnd:width, platforms, coins, crystals, powers:[], enemies:[], hearts:[], hazards:[]
+  };
+}
+
+function festivalLights(level) {
+  const colors = ['#ff4c64','#63beff','#ffd467'];
+  for (const [i,crystal] of level.crystals.entries()) {
+    const x=crystal.x-state.cameraX;
+    if (x < -110 || x > W+110) continue;
+    ctx.save();
+    ctx.translate(x,crystal.y-64);
+    ctx.globalAlpha=crystal.active ? .8 : 1;
+    ctx.shadowColor=colors[i]; ctx.shadowBlur=crystal.active ? 4 : 18;
+    ctx.fillStyle=colors[i]; ctx.font='bold 35px system-ui'; ctx.textAlign='center';
+    ctx.fillText(['♥','★','◆'][i],0,0);
+    ctx.restore();
+  }
+  if (!state.crystals) return;
+  ctx.save();
+  for(let i=0;i<state.crystals*15;i++){
+    ctx.fillStyle=colors[i%3];
+    const x=(i*137+Math.sin(state.time+i)*20)%W, y=(i*61+state.time*(24+i%13))%440;
+    ctx.fillRect(x,y,4,8);
+  }
+  ctx.restore();
+}
+
 function generateLevel(worldIndex, phase){
   const route = WORLD_THEMES[worldIndex];
   const scene = route.scenes[phase-1];
   const theme = {...scene,world:route.world,routeName:route.name,routeColor:route.color,bossName:route.bossName,bossType:route.bossType};
+  if (scene.id === 'parintins') return festivalLevel(route, theme, worldIndex);
   const boss = phase===3;
   const difficulty = worldIndex * 3 + phase;
   const lengthScale = 1.30;
@@ -757,7 +822,7 @@ function cloneLevel(def){
     ...def,
     platforms: def.platforms.map(p=>({x:p[0],y:p[1],w:p[2],h:p[3],type:'solid'})),
     coins: def.coins.map(c=>({x:c[0],y:c[1],r:14,active:true,bob:Math.random()*6.28})),
-    crystals: def.crystals.map(([x,y],index)=>({x,y,index,active:true,revealed:index!==2,bob:Math.random()*6.28})),
+    crystals: def.crystals.map(([x,y],index)=>({x,y,index,active:true,revealed:def.theme.id==='parintins' || index!==2,bob:Math.random()*6.28})),
     hearts: def.hearts.map(h=>({x:h[0],y:h[1],active:true,bob:Math.random()*6.28})),
     powers: def.powers.map(p=>({x:p[0],y:p[1],type:p[2],active:true,bob:Math.random()*6.28})),
     hazards: def.hazards.map(h=>({x:h[0],y:h[1],w:h[2],h:h[3],type:h[4],phase:Math.random()*6.28})),
@@ -806,7 +871,7 @@ function startLevel(index){
   state.player = createPlayer(...state.level.spawn);
   state.cameraX = 0; state.time = 0; state.coins = 0; state.crystals = 0; state.score = 0; state.flash=0; state.shake=0; state.locationCard=0; state.nightTime=0;
   state.screen='playing';
-  showToast(state.level.phaseName + ' · ' + state.level.theme.landmark, 2100);
+  showToast(state.level.theme.id==='parintins' ? state.level.storyIntro : state.level.phaseName + ' · ' + state.level.theme.landmark, state.level.theme.id==='parintins' ? 4800 : 2100);
   hideAllScreens(); ui.touch.classList.remove('hidden'); ui.top.classList.remove('hidden');
   ui.soundBtn.textContent = state.audio ? 'Desligar som' : 'Ligar som';
   refreshPowerButtons();
@@ -824,7 +889,7 @@ const atlasStops = [
   [165,159], [202,190], [196,193], [112,125], [142,118], [117,130],
   [170,90], [82,98], [80,96], [320,104], [317,106], [323,113],
   [324,61], [308,53], [327,82], [262,80], [254,69], [281,90],
-  [478,91], [395,122], [522,97]
+  [478,91], [395,122], [522,97], [533,211], [303,212], [184,154], [172,157]
 ];
 function availableStageCount(){
   return tourStorage.canPreviewCrystalStages === true ? LEVELS.length : save.unlocked;
@@ -938,8 +1003,14 @@ function finishLevel(){
   save.unlocked = Math.max(save.unlocked, Math.min(LEVELS.length, state.levelIndex + 2));
   persist();
   const last = state.levelIndex === LEVELS.length - 1;
-  ui.resultTitle.textContent = last ? 'Volta ao mundo concluída!' : (state.level.phase===3 ? 'Chefão derrotado!' : 'Destino concluído!');
+  ui.resultTitle.textContent = last ? 'Parabéns pela volta ao mundo!' : (state.level.phase===3 ? 'Chefão derrotado!' : 'Destino concluído!');
   ui.resultText.innerHTML = `${state.level.country} · ${state.level.phaseName}<br>${state.level.storyOutro}<br>Fragmentos: <b>${state.crystals}/3</b> · Moedas: <b>${state.coins}</b> · Energia: <b>${state.player.health}/${state.player.maxHealth}</b><br>Pontuação: <b>${state.score}</b>`;
+  if(last) {
+    ui.resultText.textContent = state.level.storyOutro;
+    sound.logoSting(2);
+  }
+  ui.result.classList.toggle('festival-finish',last);
+  ui.nextBtn.textContent = state.level.theme.id==='belem' ? 'Ir para Parintins' : 'Próxima fase';
   ui.nextBtn.classList.toggle('hidden', last);
   ui.result.classList.remove('hidden');
 }
@@ -947,6 +1018,7 @@ function finishLevel(){
 function gameOver(){
   clearPad();
   sound.stopMusic(); state.screen='result'; ui.touch.classList.add('hidden'); ui.top.classList.add('hidden');
+  ui.result.classList.remove('festival-finish');
   ui.resultTitle.textContent='Lumi precisa tentar outra vez';
   ui.resultText.textContent='Observe o caminho, use os poderes e tente novamente.';
   ui.nextBtn.classList.add('hidden'); ui.result.classList.remove('hidden');
@@ -1079,7 +1151,8 @@ function updateCollectibles(dt){
     if (previous !== save.fragments[state.levelIndex]) persist();
     spawnBurst(crystal.x, crystal.y, '#74f3ff', 18);
     sound.crystal(crystal.index);
-    showToast(['Exploração', 'Salto', 'Observação'][crystal.index] + ' · ' + state.crystals + '/3 fragmentos');
+    const labels = l.theme.id==='parintins' ? ['Coração do Garantido', 'Estrela do Caprichoso', 'Cristal da união'] : ['Exploração','Salto','Observação'];
+    showToast(labels[crystal.index] + ' · ' + state.crystals + '/3 fragmentos');
   }
   for(const h of l.hearts) if(h.active && circleRect(h.x,h.y,24,p)){
     h.active=false; spawnBurst(h.x,h.y,'#ff7a93',16);
@@ -1383,7 +1456,8 @@ function drawPortalTraveler(level,player){
 }
 
 function drawWorld(){
-  const l=state.level, theme=l.theme; drawBackground(theme,state.cameraX); drawCityLight(theme); ctx.save(); ctx.translate(-state.cameraX,0);
+  const l=state.level, theme=l.theme; drawBackground(theme,state.cameraX); drawCityLight(theme);
+  if(theme.id==='parintins') festivalLights(l); ctx.save(); ctx.translate(-state.cameraX,0);
   if(state.nightTime>0)drawTemporaryNight(state.cameraX,state.nightTime);
   for(const s of l.platforms) drawPlatform(s,theme);
   drawWelcomeMarker(l);
@@ -1546,6 +1620,31 @@ function drawResearchedMonument(th,x,base,ctx=canvas.getContext('2d')){
   ctx.save();ctx.globalAlpha=.18;E(0,8,260,28,'#020817',false);ctx.restore();
 
   switch(th.id){
+    case 'sydney':
+      B(-225,-24,450,24,'#bca083');
+      for(const [x,y,w] of [[-185,-120,95],[-111,-206,123],[-24,-162,132],[74,-107,98]]){
+        P([[x, -25],[x-24,y],[x+w,-25]],'#fff5db');
+        P([[x+10,-26],[x-23,y+5],[x+w*.52,-26]],'#b4d8df',false);
+      } break;
+    case 'capetown':
+      P([[-245,0],[-174,-80],[-112,-157],[-83,-199],[85,-204],[128,-187],[154,-123],[232,-38],[246,0]],'#785e60');
+      P([[-243,0],[-83,-196],[-104,-93],[-65,-143],[-75,-42]],'#a58170',false);
+      P([[-75,0],[33,-123],[83,-200],[65,-99],[157,0]],'#516271',false);
+      L([[-118,-140],[134,-27]],'#283e4b',3); B(31,-78,30,23,'#f2b350'); break;
+    case 'belem':
+      B(-180,-89,360,89,'#9dcbd3');P([[-195,-90],[-138,-142],[137,-142],[193,-90]],'#588ca5');
+      for(const x of [-171,-116,116,171]){
+        B(x-13,-114,26,113,'#a2cdd3');P([[x-19,-114],[x,-173],[x+19,-114]],'#416e89');
+        L([[x,-172],[x,-184]],'#447785',3);
+      }
+      for(let x=-88;x<=88;x+=29)arch(x,-52,18,51,'#436773');break;
+    case 'parintins':
+      E(0,-56,227,64,'#593861');
+      P([[-214,-60],[-23,-20],[-23,-85],[-185,-137]],'#ee526d');
+      P([[214,-60],[23,-20],[23,-85],[185,-137]],'#417abd');
+      E(0,-36,154,32,'#e6aa68');B(-13,-186,26,110,'#f4d29b');
+      P([[-64,-162],[0,-248],[64,-162]],'#e4b35f');
+      for(let i=0;i<9;i++){E(-183+i*18,-93+i*5,4,4,'#fff0d3',false);E(183-i*18,-93+i*5,4,4,'#c6efff',false);}break;
     case 'manaus':{
       B(-196,-116,392,116,'#d96d72');B(-164,-154,328,40,'#f0d19c');P([[-178,-154],[0,-205],[178,-154]],'#efe0bd');B(-58,-205,116,34,'#e7c886');
       for(let i=-5;i<=5;i++){B(i*29-7,-107,14,107,'#f4e3c2');B(i*29-10,-113,20,8,'#caa770');}
@@ -2066,6 +2165,11 @@ hudAtlas.src = './art/hud-ilustrado.webp';
 const hudFrames = {"Brasil": [2, 2, 104, 79], "México": [110, 2, 104, 79], "Estados Unidos": [218, 2, 104, 80], "Egito": [326, 2, 104, 79], "Rússia": [2, 88, 104, 81], "França": [110, 88, 104, 78], "Reino Unido": [218, 88, 104, 78], "Itália": [326, 88, 104, 78], "China": [2, 174, 103, 82], "Índia": [110, 174, 104, 81], "Japão": [218, 174, 104, 82], "heart": [326, 174, 101, 82], "gem": [2, 260, 49, 82], "coin": [110, 260, 78, 82]};
 
 function drawHudIcon(key, x, y, width, height) {
+  const extraFlag = {'Austrália':'🇦🇺','África do Sul':'🇿🇦'}[key];
+  if(extraFlag) {
+    ctx.save(); ctx.font=height+'px system-ui'; ctx.textBaseline='middle';
+    ctx.fillText(extraFlag,x,y+height/2,width); ctx.restore(); return;
+  }
   const frame = hudFrames[key];
   if (!frame || !hudAtlas.naturalWidth) return;
   const [sx, sy, sw, sh] = frame;

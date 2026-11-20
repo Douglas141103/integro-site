@@ -207,3 +207,15 @@
 @media (max-height:320px) {
   .atlas-tools { gap:2px; }
 }
+
+#resultScreen.festival-finish .panel {
+  border-color: #ffdb83;
+  background: radial-gradient(ellipse at top left, #782f53, transparent 63%),
+              radial-gradient(ellipse at bottom right, #214784, transparent 65%), #161d38;
+  box-shadow: 0 0 38px #ffc85c44;
+}
+#resultScreen.festival-finish #resultTitle { color: #ffe9a7; }
+#resultScreen.festival-finish .panel::before {
+  content: '♥   ◆   ★'; display: block; margin: 0 auto .4em;
+  color: #ffda86; font-size: clamp(18px, 3vw, 34px); letter-spacing: .3em;
+}

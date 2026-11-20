@@ -5,7 +5,7 @@
 
   const card = document.createElement('article');
   card.className = 'card';
-  card.innerHTML = '<div class="card-body"><h3>A Aventura dos Cristais · O Mundo</h3><p>Viaje com Lumi de Manaus a Tóquio. Encontre os três fragmentos de cada cidade e complete seu passaporte.</p><button class="btn" id="playCristais">Jogar</button></div>';
+  card.innerHTML = '<div class="card-body"><h3>A Aventura dos Cristais · O Mundo</h3><p>Dê a volta ao mundo com Lumi e festeje em Parintins. Encontre os três fragmentos de cada cidade e complete seu passaporte.</p><button class="btn" id="playCristais">Jogar</button></div>';
   lobby.querySelector('.cards').prepend(card);
   const play = card.querySelector('button');
   const stage = document.createElement('section');
@@ -36,7 +36,7 @@
       frame.title = stage.getAttribute('aria-label');
       frame.allowFullscreen = true;
       frame.style.cssText = 'display:block;width:100%;height:100%;border:0';
-      frame.src = './cristais/index.html?v=20261118-cristais-hud1';
+      frame.src = './cristais/index.html?v=20261120-cristais-parintins1';
       stage.append(frame);
       stage.hidden = false;
       frame.focus();
