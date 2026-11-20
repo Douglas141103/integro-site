@@ -1,3 +1,4 @@
+import {remember,observe} from './jury.mjs?v=20261119-jury1';
 import {ROOMS,movePlayer,nearTerminal,distance,enableWalking,placeCrew,botRoute} from './world.mjs?v=20261112-update1';
 export {ROOMS} from './world.mjs?v=20261112-update1';
 export const COLORS=['#4dc5ed','#f5ba4c','#ec6682','#8f7ae2','#7dce85','#f08b52'];
@@ -8,14 +9,14 @@ export function initialState(now=0){return {phase:'play',players:Array.from({len
 export function notice(s,text){s.clues.push(text);s.clues=s.clues.slice(-10);}
 export function finish(s,winner,reason){s.phase='ended';s.winner=winner;s.reason=reason;}
 export function checkWin(s,now){if(s.phase==='ended')return;if(!s.players[s.traitor-1].alive)finish(s,'crew','O infiltrado foi descoberto!');else if(s.progress>=s.target)finish(s,'crew','Todos os sistemas essenciais estão prontos!');else if(s.players.filter(p=>p.alive).length<=2)finish(s,'infiltrator','O infiltrado dominou a nave.');else if(s.sabotage&&now>=s.sabotage.until)finish(s,'infiltrator','O reator não foi reparado a tempo.');else if(now>=s.deadline)finish(s,'infiltrator','O tempo da missão terminou.');}
-export function meeting(s,now,report=false){s.phase='meeting';s.meetingEnd=now+25;s.round++;s.sabotage=null;s.players.forEach(p=>p.vote=null);notice(s,report?'Tripulante desativado encontrado. Reunião de emergência!':'Reunião na Central Integro. Compare as pistas antes de votar.');}
+export function meeting(s,now,report=false){delete s.juryReasons;delete s.juryBallots;s.phase='meeting';s.meetingEnd=now+25;s.round++;s.sabotage=null;s.players.forEach(p=>p.vote=null);notice(s,report?'Tripulante desativado encontrado. Reunião de emergência!':'Reunião na Central Integro. Compare as pistas antes de votar.');}
 export function resolveVote(s,now,random=Math.random){
  const alive=s.players.filter(p=>p.alive),votes={};
- for(const p of alive){if(p.bot&&p.vote===null){const suspects=alive.filter(q=>q.slot!==p.slot);p.vote=random()<.25?0:(random()<.55&&s.reports.length&&p.slot!==s.traitor?s.traitor:suspects[Math.floor(random()*suspects.length)].slot);}if(p.vote!==null)votes[p.vote]=(votes[p.vote]||0)+1;}
+ for(const p of alive){if(p.bot&&p.vote===null){const seen=s.memories?.[p.slot]?.findLast(f=>f.kind==='witness'&&alive.some(q=>q.slot===f.subject));p.vote=s.juryBallots?.[p.slot]??seen?.subject??0;}if(p.vote!==null)votes[p.vote]=(votes[p.vote]||0)+1;}
  const ranked=Object.entries(votes).sort((a,b)=>b[1]-a[1]);let out=0;
  if(ranked.length&&ranked[0][0]!=='0'&&(!ranked[1]||ranked[0][1]>ranked[1][1]))out=Number(ranked[0][0]);
  if(out){s.players[out-1].alive=false;notice(s,NAMES[out-1]+' foi enviado à cápsula de segurança.');}else notice(s,'Votação empatada ou pulada. Ninguém saiu.');
- s.lastVote={round:s.round,counts:votes,out};s.phase='play';s.killReady=now+18;s.sabotageReady=now+25;s.players.forEach(p=>p.room=6);if(s.walking)placeCrew(s,now);checkWin(s,now);
+ s.lastVote={round:s.round,counts:votes,out,...(s.juryReasons?{reasons:s.juryReasons}:{})};s.phase='play';s.killReady=now+18;s.sabotageReady=now+25;s.players.forEach(p=>p.room=6);if(s.walking)placeCrew(s,now);checkWin(s,now);
 }
 export function action(s,slot,type,arg={},now=0){
  const p=s.players[slot-1];if(!p||s.phase==='ended')return false;
@@ -32,7 +33,7 @@ export function action(s,slot,type,arg={},now=0){
  if(type==='task'&&p.room>=0&&p.room!==6&&!p.done.includes(p.room)&&slot!==s.traitor){p.done.push(p.room);s.progress++;checkWin(s,now);return true;}
  if(type==='repair'&&s.sabotage&&p.room===2){s.sabotage=null;notice(s,p.name+' restabeleceu a energia do reator.');return true;}
  if(type==='sabotage'&&slot===s.traitor&&!s.sabotage&&now>=s.sabotageReady){s.sabotage={until:now+45};s.sabotageReady=now+65;notice(s,'Alerta: sabotagem! Vá ao REATOR e estabilize a energia.');return true;}
- if(type==='stun'&&slot===s.traitor&&now>=s.killReady){const q=s.players.find(q=>q.slot===Number(arg.target)&&q.alive&&q.slot!==slot&&q.room===p.room);if(!q)return false;q.alive=false;s.killReady=now+25;s.reports.push({slot:q.slot,room:q.room,x:q.x,y:q.y,reported:false});const decoy=(slot%6)+1;notice(s,'Sensor: '+p.name+' ou '+NAMES[decoy-1]+' passou perto de '+(ROOMS[p.room]?.name||'Corredor')+'.');checkWin(s,now);return true;}
+ if(type==='stun'&&slot===s.traitor&&now>=s.killReady){const q=s.players.find(q=>q.slot===Number(arg.target)&&q.alive&&q.slot!==slot&&q.room===p.room);if(!q)return false;q.alive=false;s.killReady=now+25;s.reports.push({slot:q.slot,room:q.room,x:q.x,y:q.y,reported:false});for(const observer of s.players.filter(o=>o.alive&&o.bot&&o.slot!==slot&&o.room===p.room&&distance(o,p)<180&&distance(o,q)<180))remember(s,observer.slot,'witness',slot,p.room,now);notice(s,'Sensor de emergência acionado em '+(ROOMS[p.room]?.name||'um corredor')+'.');checkWin(s,now);return true;}
  if(type==='report'){const r=s.reports.find(r=>!r.reported&&r.room===p.room&&(!s.walking||distance(p,r)<115));if(!r)return false;r.reported=true;meeting(s,now,true);return true;}
  if(type==='meeting'&&p.room===6&&!p.meetingUsed){p.meetingUsed=true;meeting(s,now);return true;}
  return false;
@@ -53,10 +54,10 @@ export function tick(s,now,random=Math.random){
 export class SoloGame{
  constructor(role='crew',random=Math.random){this.random=random;this.time=0;this.state=enableWalking(initialState());this.state.players[0].bot=false;this.state.traitor=role==='infiltrator'?1:2+Math.floor(random()*5);notice(this.state,'Missão iniciada. Observe os trajetos e complete as tarefas.');}
  act(type,arg={}){return action(this.state,1,type,arg,this.time);}
- update(dt){this.time+=Math.min(dt,1);tick(this.state,this.time,this.random);}
+ update(dt){this.time+=Math.min(dt,1);if(this.state.phase==='play'&&this.time>=(this.nextLook||0)){observe(this.state,this.time);this.nextLook=this.time+3;}tick(this.state,this.time,this.random);}
  view(){return publicView(this.state,1,this.time);}
 }
-export function publicView(s,slot,now){const {traitor,...rest}=s;return {...structuredClone(rest),slot,role:slot===traitor?'infiltrator':'crew',now,reveal:s.phase==='ended'?traitor:null};}
+export function publicView(s,slot,now){const {traitor,memories,juryBallots,juryReasons,...rest}=s;return {...structuredClone(rest),slot,role:slot===traitor?'infiltrator':'crew',now,reveal:s.phase==='ended'?traitor:null};}
 
 export function walkBots(s,now,random=Math.random){
  const dt=Math.min(.1,Math.max(0,now-(s.botTick??now)));s.botTick=now;

@@ -34,3 +34,4 @@ body.descubra-playing #boxOnline,body.descubra-playing #boxChat{display:none!imp
 .dc-sheet[data-station="4"]::before {background-position:50% 33.333%;}
 .dc-sheet[data-station="5"]::before {background-position:100% 33.333%;}
 @media(max-height:550px){.dc-sheet[data-station]::before{width:78px;}}
+.dc-jury{text-align:left;margin:12px 0 20px}.dc-jury [role="log"]{max-height:24dvh;overflow:auto;padding:0 12px;border-left:3px solid #b29361}.dc-jury p{margin:.55rem 0}.dc-jury form{display:flex;gap:6px}.dc-jury input{flex:1;min-width:0;padding:10px;border-radius:9px;font:inherit}.dc-jury button{padding:9px 12px;border-radius:9px;font:inherit;cursor:pointer}.dc-jury>button{margin-top:8px}.dc-jury [hidden]{display:none}
