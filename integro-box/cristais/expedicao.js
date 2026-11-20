@@ -14,7 +14,6 @@ let scenery;
 let sceneryCity;
 let enemyAtlas, enemyAtlasCity;
 function selectEnemyAtlas(city) {
-  if (['sydney','capetown','belem','parintins'].includes(city)) { enemyAtlasCity=city; enemyAtlas=null; return; }
   if (city === enemyAtlasCity && (!enemyAtlas.complete || enemyAtlas.naturalWidth)) return;
   enemyAtlasCity = city;
   enemyAtlas = new Image();
@@ -587,6 +586,26 @@ function festivalLevel(route, theme, worldIndex) {
     width, spawn:[120,520], portal:[width-190,500], boss:false, difficulty:1, bossArena:null,
     safeZoneEnd:width, platforms, coins, crystals, powers:[], enemies:[], hearts:[], hazards:[]
   };
+}
+
+// The festival is a peaceful epilogue. Each collectible has a nearby host, placed clear of the jumping route.
+function drawFestivalHosts(level) {
+  if (enemyAtlasCity !== 'parintins' || !enemyAtlas?.complete || !enemyAtlas.naturalWidth) return;
+  const cell = 192, pivots = citySpritePivots.parintins;
+  level.crystals.forEach((crystal, index) => {
+    const pivot = pivots[index];
+    if (!pivot) return;
+    const stageX = crystal.x + 246;
+    if (stageX < state.cameraX - 100 || stageX > state.cameraX + W + 100) return;
+    const beat = state.time*(crystal.active ? 5 : 8) + index;
+    const steps = index === 2 ? [0,1,0,2] : [0,1,2,1];
+    const frame = steps[Math.floor(beat) % 4];
+    const aerial = index > 0;
+    const span = aerial ? 92 : 82;
+    const anchorY = aerial ? 423 + 7*Math.sin(beat*.64) : 620;
+    ctx.drawImage(enemyAtlas, frame*cell, index*cell, cell, cell,
+      stageX-span*pivot[0]/cell, anchorY-span*pivot[1]/cell, span, span);
+  });
 }
 
 function festivalLights(level) {
@@ -1460,6 +1479,7 @@ function drawWorld(){
   if(theme.id==='parintins') festivalLights(l); ctx.save(); ctx.translate(-state.cameraX,0);
   if(state.nightTime>0)drawTemporaryNight(state.cameraX,state.nightTime);
   for(const s of l.platforms) drawPlatform(s,theme);
+  if (theme.id === 'parintins') drawFestivalHosts(l);
   drawWelcomeMarker(l);
   drawEmergingPortal(l);
   for(const c of l.coins) if(c.active) drawCoin(c.x,c.y+Math.sin(state.time*4+c.bob)*6,state.time+c.bob);
@@ -2227,6 +2247,11 @@ const routeSpriteSheet = new Image();
 routeSpriteSheet.decoding = 'async';
 routeSpriteSheet.src = './art/route-sprites.webp';
 
+const cityPlatformFrames = {"sydney":[0,0,1024,125],"capetown":[0,127,1024,105],"belem":[0,234,1024,111],"parintins":[0,347,1024,110]};
+const cityPlatformSheet = new Image();
+cityPlatformSheet.decoding = 'async';
+cityPlatformSheet.src = './art/world-tour-platforms.webp';
+
 function routeSprite(theme, kind) {
   if (!routeSpriteSheet.complete || !routeSpriteSheet.naturalWidth) return null;
   return ROUTE_SPRITE_FRAMES[theme.regionIndex]?.[kind];
@@ -2235,12 +2260,16 @@ function routeSprite(theme, kind) {
 function drawPlatform(s, th) {
   if (state.screen !== 'title' &&
       (s.x + s.w < state.cameraX - 16 || s.x > state.cameraX + W + 16)) return;
-  const frame = routeSprite(th, 'platform');
+  const cityFrame = cityPlatformFrames[th.id];
+  const sheet = cityFrame ? cityPlatformSheet : routeSpriteSheet;
+  const frame = cityFrame
+    ? (sheet.complete && sheet.naturalWidth ? cityFrame : null)
+    : routeSprite(th, 'platform');
   if (!frame) return drawFacetedPlatform(s, th);
   const [sx, sy, sw, sh] = frame;
   const naturalWidth = sw * s.h / sh;
   if (s.w <= naturalWidth * 1.65) {
-    ctx.drawImage(routeSpriteSheet, sx, sy, sw, sh, s.x, s.y, s.w, s.h);
+    ctx.drawImage(sheet, sx, sy, sw, sh, s.x, s.y, s.w, s.h);
     return;
   }
   // Keep both illustrated ends intact. Repeat the central masonry on broad islands.
@@ -2250,12 +2279,12 @@ function drawPlatform(s, th) {
   const middleWidth = s.w - 2 * capWidth;
   const tiles = Math.max(1, Math.round(middleWidth / (middle * s.h / sh)));
   const at = i => Math.round(s.x + capWidth + i * middleWidth / tiles);
-  ctx.drawImage(routeSpriteSheet, sx, sy, cap, sh, s.x, s.y, at(0) - s.x, s.h);
+  ctx.drawImage(sheet, sx, sy, cap, sh, s.x, s.y, at(0) - s.x, s.h);
   for (let i = 0; i < tiles; i++) {
-    ctx.drawImage(routeSpriteSheet, sx + cap, sy, middle, sh,
+    ctx.drawImage(sheet, sx + cap, sy, middle, sh,
       at(i), s.y, at(i + 1) - at(i), s.h);
   }
-  ctx.drawImage(routeSpriteSheet, sx + sw - cap, sy, cap, sh,
+  ctx.drawImage(sheet, sx + sw - cap, sy, cap, sh,
     at(tiles), s.y, s.x + s.w - at(tiles), s.h);
 }
 
@@ -2314,6 +2343,7 @@ function drawHero(x,y,dir,anim,powers,invisibleTime,th){powers=powers||{};const 
   capsulePoly(ctx,-9,14,-11+leg,29,10,'#275489');capsulePoly(ctx,9,14,11-leg,29,10,'#183d6a');facetPanel(ctx,-18,-12,36,31,coat,accent,7);polyShape(ctx,[[-17,-9],[0,4],[0,18],[-17,14]],shadeHex(coat,.17),null,0,.68);polyShape(ctx,[[17,-9],[0,4],[0,18],[17,14]],shadeHex(coat,-.18),null,0,.62);polyShape(ctx,[[-5,-12],[5,-12],[3,18],[-3,18]],accent,'#061120',1);capsulePoly(ctx,-17,-5,-24+arm,14,9,accent);capsulePoly(ctx,17,-5,24-arm,14,9,accent);polyDisc(ctx,-25+arm,16,6,6,'#e7a77f',8,0,'#061120',2);polyDisc(ctx,25-arm,16,6,6,'#ffd0a4',8,0,'#061120',2);polyDisc(ctx,0,-24,17,15,'#ffd0a4',10,-Math.PI/2,'#061120',3);polyShape(ctx,[[-16,-29],[-10,-39],[10,-39],[17,-29],[7,-31],[-3,-28]],'#85523d','#061120',2);polyShape(ctx,[[-1,-27],[13,-27],[11,-21],[1,-22]],'#fff9e9',null);polyDisc(ctx,8,-24,2.5,2.5,'#17405f',7,0,null,0);polyShape(ctx,[[4,-15],[13,-16],[8,-12]],'#9c5260',null);const hatColor=['charro','sunhat','headwrap','ushanka'].includes(look)?shadeHex(th.accent,-.22):'#544033';if(['explorer','charro','sunhat','headwrap','ushanka','beret','detective'].includes(look)){polyShape(ctx,[[-23,-38],[-12,-46],[12,-46],[23,-38],[13,-34],[-15,-34]],hatColor,'#061120',2);polyShape(ctx,[[-13,-43],[12,-43],[5,-37],[-16,-37]],shadeHex(hatColor,.22),null);}else{polyShape(ctx,[[-16,-35],[-8,-40],[14,-38],[18,-33],[2,-30]],shadeHex(accent,-.22),'#061120',2);}if(['visor','urban','sunglasses','skigoggles','neonband'].includes(look))polyShape(ctx,[[-2,-27],[17,-27],[14,-20],[0,-21]],look==='neonband'?'#57eff5':'#66cce5','#061120',2,.9);if(powers.fly){polyShape(ctx,[[-19,-11],[-39,-24],[-32,6],[-19,12]],'#dff8ff','#54758e',2,.9);polyShape(ctx,[[19,-11],[39,-24],[32,6],[19,12]],'#bfe8ff','#54758e',2,.9);}if(powers.missile)polyShape(ctx,[[22,-2],[39,1],[43,5],[38,9],[22,8]],'#9de1ff','#061120',2);if(powers.fire)polyDisc(ctx,31,3,9,9,'#ff8b4f',7,0,'#6b2430',2);ctx.restore();}
 
 // Each city atlas has three columns. Its rows are walker, flyer, sentry and (at route ends) boss.
+const citySpritePivots = {"sydney":[[94.39,187.35],[105.1,113.2],[75.76,186.93]],"capetown":[[88.35,174.01],[133.26,62.81],[69.73,188.93]],"belem":[[93.75,185.5],[98.75,110.29],[61.87,173.05],[67.69,168.12]],"parintins":[[109.95,188.84],[113.67,70.01],[96.0,66.36]]};
 const enemySpriteRows = {ground:0, fly:1, turret:2, boss:3};
 function drawIllustratedEnemy(e) {
   if (e.theme.id !== enemyAtlasCity || !enemyAtlas?.complete || !enemyAtlas.naturalWidth) return false;
@@ -2324,14 +2354,19 @@ function drawIllustratedEnemy(e) {
     ? (e.phase - e.lastAttack < .2 ? 2 : e.cooldown <= .36 ? 1 : 0)
     : [0,1,2,1][Math.floor(e.phase * (kind === 'fly' ? 8 : 6)) % 4];
   const cell = 192;
-  const span = Math.max(e.w, e.h) * (kind === 'fly' ? 1.4 : 1.32);
+  const span = citySpritePivots[e.theme.id]
+    ? Math.max(e.w, e.h) * (isBoss ? 1.23 : kind === 'fly' ? 1.34 : 1.13)
+    : Math.max(e.w, e.h) * (kind === 'fly' ? 1.4 : 1.32);
   const facing = kind === 'turret' ? (state.player.x < e.x ? -1 : 1) : e.dir;
   ctx.save();
   ctx.translate(e.x + e.w/2, kind === 'fly' ? e.y + e.h/2 : e.y + e.h);
   ctx.scale(facing, 1);
-  const top = kind === 'fly' ? -span/2 : -span * (cell-2)/cell;
-  ctx.drawImage(enemyAtlas, frame*cell, enemySpriteRows[kind]*cell, cell, cell,
-    -span/2, top, span, span);
+  const row = enemySpriteRows[kind];
+  const pivot = citySpritePivots[e.theme.id]?.[row];
+  const left = pivot ? -span*pivot[0]/cell : -span/2;
+  const top = pivot ? -span*pivot[1]/cell : (kind === 'fly' ? -span/2 : -span*(cell-2)/cell);
+  ctx.drawImage(enemyAtlas, frame*cell, row*cell, cell, cell,
+    left, top, span, span);
   if (e.elite) {
     const y = kind === 'fly' ? -e.h/2-6 : -e.h-6;
     polyShape(ctx, [[0,y-4],[4,y],[0,y+4],[-4,y]], '#ffe48a','#74502c',1);
