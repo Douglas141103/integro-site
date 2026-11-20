@@ -456,7 +456,7 @@ const LANDMARK_RESEARCH = {
 };
 
 const MUSIC_RESEARCH = {
-  sydney:{"style":"Maré de vidro","tempo":116,"meter":4,"lead":"clean","notes":["D4","F#4","A4","E5","D5","A4","B4","E4"],"bass":["D2","A2","B2","G2"],"drums":[2,0,1,0,2,1,0,1],"chords":[["D3","F#3","A3"],["B2","D3","F#3"],["G3","B3","D4"],["A3","C#4","E4"]]},
+  sydney:{"style":"Morning on the Bay","recording":"./audio/morning-on-the-bay.mp3","tempo":116,"meter":4,"lead":"clean","notes":["D4","F#4","A4","E5","D5","A4","B4","E4"],"bass":["D2","A2","B2","G2"],"drums":[2,0,1,0,2,1,0,1],"chords":[["D3","F#3","A3"],["B2","D3","F#3"],["G3","B3","D4"],["A3","C#4","E4"]]},
   capetown:{"style":"Vento sobre a montanha","tempo":108,"meter":4,"lead":"jazz","notes":["G4","B4","D5","A4","C5","E5","D5","B4"],"bass":["G2","C3","D3","G2"],"drums":[2,0,1,1,0,2,1,0],"chords":[["G3","B3","D4"],["C3","E3","G3"],["D3","F#3","A3"],["G3","B3","D4"]]},
   belem:{"style":"Carimbó do cais","tempo":120,"meter":4,"lead":"pluck","notes":["A4","C#5","E5","B4","A4","F#4","E4","B4"],"bass":["A2","D3","E3","A2"],"drums":[2,1,0,2,1,0,2,1],"chords":[["A3","C#4","E4"],["D3","F#3","A3"],["E3","G#3","B3"],["A3","C#4","E4"]]},
   parintins:{"style":"Toada da chegada","tempo":128,"meter":4,"lead":"brass","notes":["D4","A4","B4","A4","F#4","E4","D4","A4"],"bass":["D2","G2","A2","D2"],"drums":[2,0,2,1,2,1,1,0],"chords":[["D3","F#3","A3"],["G3","B3","D4"],["A3","C#4","E4"],["D3","F#3","A3"]]},
