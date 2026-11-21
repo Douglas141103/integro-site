@@ -1160,7 +1160,6 @@ function updateCollectibles(dt){
     if (!crystal.revealed && Math.abs(p.x + p.w/2 - crystal.x) < 175) {
       crystal.revealed = true;
       spawnBurst(crystal.x, crystal.y, '#aefff1', 14);
-      showToast('A pista revelou um fragmento!');
     }
     if (!crystal.revealed || !circleRect(crystal.x, crystal.y, 27, p)) continue;
     crystal.active = false;
@@ -1171,20 +1170,14 @@ function updateCollectibles(dt){
     if (previous !== save.fragments[state.levelIndex]) persist();
     spawnBurst(crystal.x, crystal.y, '#74f3ff', 18);
     sound.crystal(crystal.index);
-    const labels = l.theme.id==='parintins' ? ['Coração do Garantido', 'Estrela do Caprichoso', 'Cristal da união'] : ['Exploração','Salto','Observação'];
-    showToast(labels[crystal.index] + ' · ' + state.crystals + '/3 fragmentos');
   }
   for(const h of l.hearts) if(h.active && circleRect(h.x,h.y,24,p)){
     h.active=false; spawnBurst(h.x,h.y,'#ff7a93',16);
-    if(p.health < p.maxHealth){ p.health++; showToast('Vida coletada! Energia aumentada.'); }
-    else { state.score += 180; showToast('Coração extra convertido em pontos.'); }
+    if(p.health < p.maxHealth) p.health++;
+    else state.score += 180;
   }
   for(const q of l.powers) if(q.active && circleRect(q.x,q.y,25,p)){
     q.active=false; state.score+=250; sound.power(); spawnBurst(q.x,q.y,POWER_INFO[q.type].color,16); p.powers[q.type]=true;l.powerEvents.push({type:q.type,x:q.x,y:q.y,time:0,duration:q.type==='invisible'?2.35:2.2});if(q.type==='invisible')state.nightTime=5;refreshPowerButtons();
-    if(q.type==='missile') showToast('Poder desbloqueado: Míssil teleguiado');
-    if(q.type==='fire') showToast('Poder desbloqueado: Fogo');
-    if(q.type==='fly') showToast('Poder desbloqueado: Voar');
-    if(q.type==='invisible') showToast('Poder desbloqueado: Invisibilidade');
   }
 }
 

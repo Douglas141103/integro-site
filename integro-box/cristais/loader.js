@@ -36,7 +36,7 @@
       frame.title = stage.getAttribute('aria-label');
       frame.allowFullscreen = true;
       frame.style.cssText = 'display:block;width:100%;height:100%;border:0';
-      frame.src = './cristais/index.html?v=20261121-cristais-meialua1';
+      frame.src = './cristais/index.html?v=20261121-cristais-coleta1';
       stage.append(frame);
       stage.hidden = false;
       frame.focus();
