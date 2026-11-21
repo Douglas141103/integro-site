@@ -2484,7 +2484,7 @@ for (const pad of padArea.querySelectorAll('.movable-pad')) {
     try { localStorage.setItem(layoutKey,JSON.stringify(padLayout)); } catch {}
   }
   handle.addEventListener('pointerdown', e => {
-    if (e.button !== 0 || drag || state.screen !== 'playing' || heldPointers.has(pad.firstElementChild)) return;
+    if (e.button !== 0 || drag || state.screen !== 'playing' || [...heldPointers.keys()].some(el => pad.contains(el))) return;
     e.preventDefault();
     const rect = pad.getBoundingClientRect();
     handle.setPointerCapture(e.pointerId);

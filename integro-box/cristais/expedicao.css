@@ -176,24 +176,15 @@
 #joystick.active { cursor:grabbing; }
 #joystick.active .stick-cap { transition:none; border-color:#d3ffdf; }
 #touchControls #jumpBtn {
-  position:relative; isolation:isolate; flex:none;
-  width:clamp(112px,18vw,182px); height:var(--stick-diameter);
-  padding:0; border:0; border-radius:0; background:transparent; box-shadow:none;
-  color:#0d3432; font-size:clamp(17px,2.4vw,23px);
+  --jump-size:clamp(60px,18vh,72px);
+  width:var(--jump-size); height:var(--jump-size); border-radius:50%; clip-path:none;
+  color:#0d3432; background:linear-gradient(#b2f4cd,#80d7b0); border:1px solid #bdf4d4;
+  box-shadow:inset 0 -3px 0 #599e87; font-size:clamp(14px,2vw,18px);
   text-transform:uppercase; letter-spacing:.035em;
 }
-/* Keep the entire rectangle touchable, including the space around the rounded face. */
-#touchControls #jumpBtn::before {
-  content:""; position:absolute; inset:3px 4px; z-index:-1; pointer-events:none;
-  border:1px solid #bdf4d4; border-radius:12px;
-  background:linear-gradient(#b2f4cd,#80d7b0); box-shadow:inset 0 -3px 0 #599e87;
-}
-#touchControls #jumpBtn.active { background:transparent; transform:none; }
-#touchControls #jumpBtn.active::before { background:#71cfaa; box-shadow:inset 0 2px 3px #478d78; }
+#touchControls #jumpBtn.active { background:#71cfaa; box-shadow:inset 0 2px 3px #478d78; }
 @media (max-width:480px) and (orientation:landscape) {
   #gameWrap { --rail:calc(98px + env(safe-area-inset-bottom,0px)); }
-  #powerPad { display:grid; grid-template-columns:repeat(2,auto); gap:2px; }
-  #touchControls #jumpBtn { width:clamp(80px,23vw,110px); }
 }
 #touchControls #pauseBtn { color:#bed8d5; border-color:transparent; background:transparent; }
 #touchControls button.active { background:#527c80; transform:scale(.94); }
@@ -222,7 +213,22 @@
   display:grid; place-items:center; background:transparent; border:0;
   cursor:grab; z-index:1; user-select:none;
 }
-#actionControls .pad-handle { left:0; right:auto; }
+/* Reserve all four slots so picking up a power never moves a thumb target. */
+#touchControls #actionControls {
+  width:164px; height:164px; padding:0;
+}
+#actionControls #jumpBtn, #actionControls .powerBtn {
+  position:absolute; translate:-50% -50%;
+}
+#actionControls #jumpBtn { left:91px; top:91px; }
+#actionControls #powerPad { display:contents; }
+#actionControls .powerBtn { pointer-events:auto; }
+/* Four stable points along the semicircle facing the playfield. */
+#actionControls #missileBtn { left:23px; top:73px; }
+#actionControls #fireBtn { left:73px; top:23px; }
+#actionControls #flyBtn { left:42px; top:140px; }
+#actionControls #invisBtn { left:140px; top:42px; }
+#actionControls .pad-handle { left:111px; top:111px; right:auto; }
 #touchControls .pad-handle::before {
   content:""; width:18px; height:18px; border:1.5px solid #ffe8db;
   border-radius:50%; background:radial-gradient(circle at 37% 31%,#ff8e83,#d83243 65%);
