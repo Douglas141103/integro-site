@@ -197,6 +197,45 @@
 }
 #touchControls #pauseBtn { color:#bed8d5; border-color:transparent; background:transparent; }
 #touchControls button.active { background:#527c80; transform:scale(.94); }
+/* Two independent thumb controls share a safe drag area across the game. */
+#touchControls {
+  inset:0; height:auto; padding:0; border:0; display:block;
+  background:linear-gradient(to top,#0c232b 0 var(--rail),transparent var(--rail));
+}
+.pad-area {
+  position:absolute; inset:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right))
+    max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left)); pointer-events:none;
+}
+#touchControls .movable-pad {
+  position:absolute; left:var(--pad-x); top:var(--pad-y); right:auto; bottom:auto;
+  transform:translate(calc(0% - var(--pad-x)),calc(0% - var(--pad-y)));
+  display:grid; width:max-content; height:max-content; padding:8px 8px 0;
+  margin:0; pointer-events:none;
+}
+#moveControls { --pad-x:0%; --pad-y:100%; }
+#actionControls { --pad-x:100%; --pad-y:100%; }
+.movable-pad > * { pointer-events:auto; }
+#joystick, #touchControls #jumpBtn { opacity:.65; }
+#joystick.active, #touchControls #jumpBtn.active { opacity:.82; }
+#touchControls .pad-handle {
+  position:absolute; right:0; top:0; width:38px; height:38px; min-width:0; min-height:0;
+  display:grid; place-items:center; background:transparent; border:0;
+  cursor:grab; z-index:1; user-select:none;
+}
+#actionControls .pad-handle { left:0; right:auto; }
+#touchControls .pad-handle::before {
+  content:""; width:18px; height:18px; border:1.5px solid #ffe8db;
+  border-radius:50%; background:radial-gradient(circle at 37% 31%,#ff8e83,#d83243 65%);
+  box-shadow:0 1px 4px #2d0618a8; opacity:.83;
+}
+#touchControls .pad-handle:active { cursor:grabbing; }
+#touchControls .pad-handle:focus-visible { outline:2px solid white; }
+.control-dock {
+  position:absolute; bottom:env(safe-area-inset-bottom,0px); left:50%;
+  height:calc(var(--rail) - env(safe-area-inset-bottom,0px)); transform:translateX(-50%);
+  display:flex; align-items:center; gap:4px; pointer-events:none;
+}
+.control-dock button { pointer-events:auto; }
 #orientationGate[hidden] { display:none; }
 #orientationGate { position:absolute; inset:0; z-index:100; display:grid; place-items:center; background:#0b2730; color:#e4f2ed; text-align:center; padding:24px; }
 #orientationGate h2 { margin:22px 0 6px; font:700 30px/1.1 Georgia,serif; color:#ffe8b2; }

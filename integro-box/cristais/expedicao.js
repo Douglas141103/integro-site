@@ -2443,6 +2443,77 @@ function clearPad() {
   }
   for (const key in controls) controls[key] = false;
 }
+const padArea = ui.touch.querySelector('.pad-area');
+const layoutKey = 'integro.cristais.volta.controles.v1';
+let padLayout = {};
+try {
+  const saved = JSON.parse(localStorage.getItem(layoutKey));
+  if (saved && typeof saved === 'object' && !Array.isArray(saved)) padLayout = saved;
+} catch {}
+function placePad(pad, position) {
+  for (const axis of ['x','y']) {
+    const n = position?.[axis];
+    if (Number.isFinite(n)) pad.style.setProperty('--pad-' + axis, (Math.min(1,Math.max(0,n))*100) + '%');
+    else pad.style.removeProperty('--pad-' + axis);
+  }
+}
+function blockedPlacement(pad) {
+  const rect = pad.getBoundingClientRect();
+  return [...ui.touch.querySelectorAll('.movable-pad, .control-dock button')].some(other => {
+    if (other === pad || !other.getClientRects().length) return false;
+    const r = other.getBoundingClientRect();
+    return rect.left < r.right && rect.right > r.left && rect.top < r.bottom && rect.bottom > r.top;
+  });
+}
+for (const pad of padArea.querySelectorAll('.movable-pad')) {
+  const handle = pad.querySelector('.pad-handle');
+  placePad(pad,padLayout[pad.id]);
+  let drag = null;
+  function moveTo(x,y) {
+    const area = padArea.getBoundingClientRect();
+    const position = {
+      x: Math.min(1,Math.max(0,(x-area.left)/Math.max(1,area.width-pad.offsetWidth))),
+      y: Math.min(1,Math.max(0,(y-area.top)/Math.max(1,area.height-pad.offsetHeight)))
+    };
+    placePad(pad,position);
+    return position;
+  }
+  function finish(position) {
+    if (!position || blockedPlacement(pad)) { placePad(pad,padLayout[pad.id]); return; }
+    padLayout[pad.id] = position;
+    try { localStorage.setItem(layoutKey,JSON.stringify(padLayout)); } catch {}
+  }
+  handle.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || drag || state.screen !== 'playing' || heldPointers.has(pad.firstElementChild)) return;
+    e.preventDefault();
+    const rect = pad.getBoundingClientRect();
+    handle.setPointerCapture(e.pointerId);
+    drag = {id:e.pointerId,dx:e.clientX-rect.left,dy:e.clientY-rect.top};
+  });
+  handle.addEventListener('pointermove', e => {
+    if (drag?.id === e.pointerId) moveTo(e.clientX-drag.dx,e.clientY-drag.dy);
+  });
+  handle.addEventListener('pointerup', e => {
+    if (drag?.id !== e.pointerId) return;
+    const position = moveTo(e.clientX-drag.dx,e.clientY-drag.dy);
+    drag = null;
+    finish(position);
+  });
+  function cancel(e) {
+    if (drag?.id !== e.pointerId) return;
+    drag = null;
+    placePad(pad,padLayout[pad.id]);
+  }
+  handle.addEventListener('pointercancel',cancel);
+  handle.addEventListener('lostpointercapture',cancel);
+  handle.addEventListener('keydown', e => {
+    const dir = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
+    if (!dir) return;
+    e.preventDefault(); e.stopPropagation();
+    const rect = pad.getBoundingClientRect();
+    finish(moveTo(rect.left+12*dir[0],rect.top+12*dir[1]));
+  });
+}
 const stick = $('joystick');
 const base = stick.querySelector('.stick-base');
 function steer(event) {

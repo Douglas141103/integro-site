@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>A Aventura dos Cristais: O Mundo</title>
-  <link rel="stylesheet" href="./expedicao.css?v=20261120-cristais-parintins1">
+  <link rel="stylesheet" href="./expedicao.css?v=20261121-cristais-controles1">
 </head>
 <body>
 <div id="app">
@@ -31,20 +31,26 @@
     </section>
 
     <div id="touchControls" class="hidden" aria-label="Controles por toque">
-      <div id="moveControls" class="controlGroup">
+      <div class="pad-area">
+      <div id="moveControls" class="movable-pad">
         <div id="joystick" role="group" aria-label="Joystick de movimento horizontal">
           <span class="stick-base" aria-hidden="true"><span class="stick-cap"></span></span>
         </div>
+        <button type="button" class="pad-handle" aria-label="Reposicionar direcional" title="Arraste para mover o direcional"></button>
       </div>
+      <div id="actionControls" class="movable-pad">
+        <button class="touchBtn" id="jumpBtn" aria-label="Pular">Pular</button>
+        <button type="button" class="pad-handle" aria-label="Reposicionar botão Pular" title="Arraste para mover o botão Pular"></button>
+      </div>
+      </div>
+      <div class="control-dock">
       <div id="topButtons" class="hidden"><button id="pauseBtn" class="roundBtn" aria-label="Pausar">Ⅱ</button></div>
-      <div id="actionControls" class="controlGroup">
         <div id="powerPad">
           <button class="powerBtn hidden" id="missileBtn" aria-label="Disparar míssil teleguiado"></button>
           <button class="powerBtn hidden" id="fireBtn" aria-label="Fogo"></button>
           <button class="powerBtn hidden" id="flyBtn" aria-label="Voar"></button>
           <button class="powerBtn hidden" id="invisBtn" aria-label="Invisibilidade"></button>
         </div>
-        <button class="touchBtn" id="jumpBtn" aria-label="Pular">Pular</button>
       </div>
     </div>
 
@@ -89,8 +95,8 @@
       <div class="panel">
         <h2 style="font-size:clamp(28px,5vw,52px);margin:0">Como jogar</h2>
         <div class="helpGrid">
-          <div class="helpItem"><b>Joystick</b><br>Deslize para a esquerda ou direita. Quanto mais afastar do centro, mais rápido Lumi anda. No teclado, use A e D ou as setas.</div>
-          <div class="helpItem"><b>Pular</b><br>Toque para um salto curto ou segure para saltar mais alto. Você pode pular enquanto usa o joystick. No teclado, use a barra de espaço.</div>
+          <div class="helpItem"><b>Joystick</b><br>Deslize para a esquerda ou direita. Quanto mais afastar do centro, mais rápido Lumi anda. Arraste a bolinha vermelha na borda para reposicionar o direcional. No teclado, use A e D ou as setas.</div>
+          <div class="helpItem"><b>Pular</b><br>Toque para um salto curto ou segure para saltar mais alto. Você pode pular enquanto usa o joystick. Arraste a bolinha vermelha do botão Pular para ajustar sua posição. No teclado, use a barra de espaço.</div>
           <div class="helpItem"><b>🚀 Míssil teleguiado</b><br>Mire na direção do vilão. O míssil faz a curva para segui-lo, até mesmo no ar.</div>
           <div class="helpItem"><b>🔥 Fogo</b><br>Lança bolas de fogo contra inimigos da fase.</div>
           <div class="helpItem"><b>🪽 Voar</b><br>Segure o botão para subir por um tempo. A energia de voo recarrega sozinha.</div>
@@ -137,6 +143,6 @@
 
 
 <script src="./vendor/Tone.js"></script>
-<script src="./expedicao.js?v=20261120-portais-mundo1"></script>
+<script src="./expedicao.js?v=20261121-cristais-controles1"></script>
 </body>
 </html>
